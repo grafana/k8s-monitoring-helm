@@ -31,7 +31,7 @@ Replace any of the following from the template files:
     # To see the valid options, please see the [REPLACE_WITH_Feature Name feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-REPLACE_WITH_feature-name).
     # @default -- Disabled
     # @section -- Features - REPLACE_WITH_Feature Name
-    nodeLogs:
+    REPLACE_WITH_featureName:
       # -- Enable gathering REPLACE_WITH_Feature Name.
       # @section -- Features - REPLACE_WITH_Feature Name
       enabled: false
@@ -43,7 +43,7 @@ Replace any of the following from the template files:
       # -- Which collector to assign this feature to. Do not change this unless you are sure of what you are doing.
       # @section -- Features - REPLACE_WITH_Feature Name
       # @ignored
-      collector: REPLACE_WITH_DEFAULT_COLLECTOR
+      collector: ""
     
       # To see additional options, please see the [REPLACE_WITH_Feature Name feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-REPLACE_WITH_feature-name).
     ```

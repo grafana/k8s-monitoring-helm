@@ -78,5 +78,5 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| labelsToKeep | list | `["instance","job","level","name","unit","service.name","source"]` | The list of labels to keep on the logs, all other pipeline labels will be dropped. |
-| structuredMetadata | object | `{}` | The structured metadata mappings to set. To not set any structured metadata, set this to an empty object (e.g. `{}`) Format: `<key>: <extracted_key>`. Example: structuredMetadata:   detected_level: level |
+| journalLabels | object | `{}` | Log labels to set from extracted journal fields. Format: `<label>: <journal_field>`. Available journal fields: `boot_id`, `cap_effective`, `cmdline`, `comm`, `exe`, `gid`, `hostname`, `machine_id`, `pid`, `stream_id`, `systemd_cgroup`, `systemd_invocation_id`, `systemd_slice`, `systemd_unit`, `transport`, `uid`. More Info: https://www.freedesktop.org/software/systemd/man/systemd.journal-fields.html |
+| structuredMetadata | object | `{}` | The structured metadata mappings to set. To not set any structured metadata, set this to an empty object (e.g. `{}`) Format: `<key>: <journal_field>`. Available journal fields: `boot_id`, `cap_effective`, `cmdline`, `comm`, `exe`, `gid`, `hostname`, `machine_id`, `pid`, `stream_id`, `systemd_cgroup`, `systemd_invocation_id`, `systemd_slice`, `systemd_unit`, `transport`, `uid`. |

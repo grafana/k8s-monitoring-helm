@@ -13,32 +13,6 @@ declare "node_logs" {
     }
     {{- end }}
 
-    // copy all journal labels and make the available to the pipeline stages as labels, there is a label
-    // keep defined to filter out unwanted labels, these pipeline labels can be set as structured metadata
-    // as well, the following labels are available:
-    // - boot_id
-    // - cap_effective
-    // - cmdline
-    // - comm
-    // - exe
-    // - gid
-    // - hostname
-    // - machine_id
-    // - pid
-    // - stream_id
-    // - systemd_cgroup
-    // - systemd_invocation_id
-    // - systemd_slice
-    // - systemd_unit
-    // - transport
-    // - uid
-    //
-    // More Info: https://www.freedesktop.org/software/systemd/man/systemd.journal-fields.html
-    rule {
-      action = "labelmap"
-      regex = "__journal__(.+)"
-    }
-
     rule {
       action = "replace"
       source_labels = ["__journal__systemd_unit"]
@@ -54,6 +28,28 @@ declare "node_logs" {
       replacement = "$1"
       target_label = "service_name"
     }
+
+  {{- /* Extract journal fields needed for journalLabels */}}
+  {{- range $label, $field := .Values.journalLabels }}
+    rule {
+      action = "replace"
+      source_labels = ["__journal__{{ $field }}"]
+      replacement = "$1"
+      target_label = {{ $label | quote }}
+    }
+  {{- end }}
+
+  {{- /* Extract journal fields needed for structuredMetadata (if not already extracted by journalLabels) */}}
+  {{- range $key, $field := .Values.structuredMetadata }}
+    {{- if not (hasKey $.Values.journalLabels $field) }}
+    rule {
+      action = "replace"
+      source_labels = ["__journal__{{ $field }}"]
+      replacement = "$1"
+      target_label = {{ $field | quote }}
+    }
+    {{- end }}
+  {{- end }}
   {{- if .Values.extraDiscoveryRules }}
   {{ .Values.extraDiscoveryRules | indent 2 }}
   {{- end }}
@@ -79,7 +75,7 @@ declare "node_logs" {
         // add a static source label to the logs so they can be differentiated / restricted if necessary
         "source" = "journal",
         // default level to unknown
-        level = "unknown",
+        level = "UNKNOWN",
       }
     }
 
@@ -105,6 +101,12 @@ declare "node_logs" {
       stage.replace {
         source = "level"
         expression = "(W)"
+        replace = "WARN"
+      }
+      // standardize on WARN
+      stage.replace {
+        source = "level"
+        expression = "(warning)"
         replace = "WARN"
       }
 
@@ -147,9 +149,11 @@ declare "node_logs" {
       }
     }
 
-    {{- if .Values.extraLogProcessingStages }}
-    {{ tpl .Values.extraLogProcessingStages . | indent 4 }}
-    {{ end }}
+    // Standardize on upper-case
+    stage.template {
+      source   = "level"
+      template = "{{ "{{ ToUpper .Value }}"}}"
+    }
 
     {{- /* the stage.structured_metadata block needs to be conditionalized because the support for enabling structured metadata can be disabled */ -}}
     {{- /* through the loki limits_conifg on a per-tenant basis, even if there are no values defined or there are values defined but it is disabled */ -}}
@@ -165,18 +169,9 @@ declare "node_logs" {
     }
     {{- end }}
 
-{{- if .Values.labelsToKeep }}
-  {{- $alwaysKeepLabels := list "__tenant_id__" }}
-  {{- $lokiLabels := $alwaysKeepLabels }}
-  {{- range $label := .Values.labelsToKeep }}
-    {{- $lokiLabels = append $lokiLabels (include "escape_label" $label) }}
-  {{- end }}
-
-    // Only keep the labels that are defined in the `keepLabels` list.
-    stage.label_keep {
-      values = {{ $lokiLabels | toJson }}
-    }
-{{- end }}
+    {{- if .Values.extraLogProcessingStages }}
+    {{ tpl .Values.extraLogProcessingStages . | indent 4 }}
+    {{ end }}
 
     forward_to = argument.logs_destinations.value
   }

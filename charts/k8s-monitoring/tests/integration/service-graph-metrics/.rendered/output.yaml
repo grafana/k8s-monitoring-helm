@@ -76,11 +76,6 @@ data:
             "k8s.node.name",
           ]
           annotation {
-            key_regex = "(.*)"
-            tag_name  = "$1"
-            from      = "pod"
-          }
-          annotation {
             key_regex = "resource.opentelemetry.io/(.*)"
             tag_name  = "$1"
             from      = "pod"
@@ -89,11 +84,6 @@ data:
             tag_name = "job"
             key      = "k8s.grafana.com/logs.job"
             from     = "pod"
-          }
-          label {
-            key_regex = "(.*)"
-            tag_name  = "$1"
-            from      = "pod"
           }
           label {
             tag_name = "app_kubernetes_io_name"
@@ -134,9 +124,7 @@ data:
             `set(attributes["service.version"], attributes["app.kubernetes.io/version"]) where attributes["service.version"] == nil`,
     
             `set(attributes["service.instance.id"], Concat([attributes["k8s.namespace.name"], attributes["k8s.pod.name"], attributes["k8s.container.name"]], ".")) where attributes["service.instance.id"] == nil`,
-    
-            `set(attributes["loki.resource.labels"], "app.kubernetes.io/name,container,instance,job,level,namespace,pod,service.name,service.namespace,deployment.environment,deployment.environment_name,k8s.pod.name,k8s.namespace.name,k8s.deployment.name,k8s.statefulset.name,k8s.daemonset.name,k8s.cronjob.name,k8s.job.name,k8s.node.name,color")`,   // Used to preserve the labels when converting to Loki
-            `keep_matching_keys(attributes, "loki.resource.labels|app.kubernetes.io/name|container|instance|job|level|namespace|pod|service.name|service.namespace|deployment.environment|deployment.environment_name|k8s.pod.name|k8s.namespace.name|k8s.deployment.name|k8s.statefulset.name|k8s.daemonset.name|k8s.cronjob.name|k8s.job.name|k8s.node.name|color")`,
+            `set(attributes["loki.resource.labels"], "k8s.namespace.name,k8s.container.name,k8s.pod.name,k8s.deployment.name,k8s.statefulset.name,k8s.daemonset.name,k8s.cronjob.name,k8s.job.name,k8s.node.name,service.name,service.namespace,service.version,service.instance.id,app_kubernetes_io_name,job,color,k8s.pod.name,pod,service.instance.id")`,
           ]
         }
     
@@ -201,11 +189,6 @@ data:
             "pod" = "pod",
             "service_instance_id" = "service_instance_id",
           }
-        }
-    
-        // Only keep the labels that are defined in the `keepLabels` list.
-        stage.label_keep {
-          values = ["__tenant_id__","app_kubernetes_io_name","container","instance","job","level","namespace","pod","service_name","service_namespace","deployment_environment","deployment_environment_name","k8s_pod_name","k8s_namespace_name","k8s_deployment_name","k8s_statefulset_name","k8s_daemonset_name","k8s_cronjob_name","k8s_job_name","k8s_node_name","color"]
         }
     
         forward_to = argument.logs_destinations.value

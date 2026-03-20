@@ -54,11 +54,6 @@ otelcol.processor.k8sattributes "pod_logs" {
       "k8s.node.name",
     ]
     annotation {
-      key_regex = "(.*)"
-      tag_name  = "$1"
-      from      = "pod"
-    }
-    annotation {
       key_regex = "resource.opentelemetry.io/(.*)"
       tag_name  = "$1"
       from      = "pod"
@@ -84,11 +79,6 @@ otelcol.processor.k8sattributes "pod_logs" {
       from     = "namespace"
     }
 {{- end }}
-    label {
-      key_regex = "(.*)"
-      tag_name  = "$1"
-      from      = "pod"
-    }
 {{- range $attribute, $label := .Values.labels }}
     label {
       tag_name = {{ $attribute | quote }}
@@ -139,9 +129,15 @@ otelcol.processor.transform "pod_logs" {
       `set(attributes["service.version"], attributes["app.kubernetes.io/version"]) where attributes["service.version"] == nil`,
 
       `set(attributes["service.instance.id"], Concat([attributes["k8s.namespace.name"], attributes["k8s.pod.name"], attributes["k8s.container.name"]], ".")) where attributes["service.instance.id"] == nil`,
-
-      `set(attributes["loki.resource.labels"], {{ .Values.labelsToKeep | join "," | quote }})`,   // Used to preserve the labels when converting to Loki
-      `keep_matching_keys(attributes, "loki.resource.labels|{{ .Values.labelsToKeep | join "|" }}")`,
+      {{- $resourceLabels := list "k8s.namespace.name" "k8s.container.name" "k8s.pod.name" "k8s.deployment.name" "k8s.statefulset.name" "k8s.daemonset.name" "k8s.cronjob.name" "k8s.job.name" "k8s.node.name" "service.name" "service.namespace" "service.version" "service.instance.id" }}
+      {{- range $key, $_ := .Values.labels }}{{ $resourceLabels = append $resourceLabels $key }}{{ end }}
+      {{- range $key, $_ := .Values.annotations }}{{ $resourceLabels = append $resourceLabels $key }}{{ end }}
+      {{- range $key, $_ := .Values.nodeLabels }}{{ $resourceLabels = append $resourceLabels $key }}{{ end }}
+      {{- range $key, $_ := .Values.nodeAnnotations }}{{ $resourceLabels = append $resourceLabels $key }}{{ end }}
+      {{- range $key, $_ := .Values.namespaceLabels }}{{ $resourceLabels = append $resourceLabels $key }}{{ end }}
+      {{- range $key, $_ := .Values.namespaceAnnotations }}{{ $resourceLabels = append $resourceLabels $key }}{{ end }}
+      {{- range $key, $_ := .Values.structuredMetadata }}{{ $resourceLabels = append $resourceLabels $key }}{{ end }}
+      `set(attributes["loki.resource.labels"], {{ $resourceLabels | join "," | quote }})`,
     ]
   }
 

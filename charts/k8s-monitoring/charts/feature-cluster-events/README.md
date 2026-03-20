@@ -56,8 +56,8 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | includeLevels | list | `[]` | List of event levels to include (`[]` means allow all event levels). e.g. `["Normal", "Warning"]` |
 | includeReasons | list | `[]` | List of event reasons to include (`[]` means allow all event reasons). e.g. `["Failed"]` |
 | jobLabel | string | `"integrations/kubernetes/eventhandler"` | The value for the job label. |
-| labels | object | `{"node":"node","reason":"reason"}` | Log labels to set from extracted event fields. Note: "level" is always set as a label for log level normalization and filtering. Format: `<label>: <extracted_key>`. Available extracted keys: `component`, `kind`, `name`, `node`, `reason`. |
-| structuredMetadata | object | `{"name":"name"}` | The structured metadata mappings to set. To not set any structured metadata, set this to an empty object (e.g. `{}`) Format: `<key>: <extracted_key>`. Example: structuredMetadata:   component: component   kind: kind   name: name |
+| labels | object | `{"reason":"reason"}` | Log labels to set from extracted event fields. Note: "level" is always set as a label for log level normalization and filtering. Format: `<label>: <extracted_key>`. Available extracted keys: `component`, `kind`, `name`, `node`, `reason`. |
+| structuredMetadata | object | `{"name":"name","node":"node"}` | The structured metadata mappings to set. Format: `<key>: <extracted_key>`. Example: structuredMetadata:   component: component   kind: kind   name: name |
 
 ### Gather settings
 

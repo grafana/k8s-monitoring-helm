@@ -40,20 +40,6 @@ discovery.relabel "filtered_pods" {
     target_label = "tmp_container_runtime"
   }
 
-  // make all labels on the pod available to the pipeline as labels,
-  // they are omitted before write to loki via stage.label_keep unless explicitly set
-  rule {
-    action = "labelmap"
-    regex = "__meta_kubernetes_pod_label_(.+)"
-  }
-
-  // make all annotations on the pod available to the pipeline as labels,
-  // they are omitted before write to loki via stage.label_keep unless explicitly set
-  rule {
-    action = "labelmap"
-    regex = "__meta_kubernetes_pod_annotation_(.+)"
-  }
-
   // explicitly set service_name. if not set, loki will automatically try to populate a default.
   // see https://grafana.com/docs/loki/latest/get-started/labels/#default-labels-for-all-users
   //

@@ -11,32 +11,6 @@ declare "node_logs" {
       regex = "kubelet.service|containerd.service"
     }
 
-    // copy all journal labels and make the available to the pipeline stages as labels, there is a label
-    // keep defined to filter out unwanted labels, these pipeline labels can be set as structured metadata
-    // as well, the following labels are available:
-    // - boot_id
-    // - cap_effective
-    // - cmdline
-    // - comm
-    // - exe
-    // - gid
-    // - hostname
-    // - machine_id
-    // - pid
-    // - stream_id
-    // - systemd_cgroup
-    // - systemd_invocation_id
-    // - systemd_slice
-    // - systemd_unit
-    // - transport
-    // - uid
-    //
-    // More Info: https://www.freedesktop.org/software/systemd/man/systemd.journal-fields.html
-    rule {
-      action = "labelmap"
-      regex = "__journal__(.+)"
-    }
-
     rule {
       action = "replace"
       source_labels = ["__journal__systemd_unit"]
@@ -74,7 +48,7 @@ declare "node_logs" {
         // add a static source label to the logs so they can be differentiated / restricted if necessary
         "source" = "journal",
         // default level to unknown
-        level = "unknown",
+        level = "UNKNOWN",
       }
     }
 
@@ -100,6 +74,12 @@ declare "node_logs" {
       stage.replace {
         source = "level"
         expression = "(W)"
+        replace = "WARN"
+      }
+      // standardize on WARN
+      stage.replace {
+        source = "level"
+        expression = "(warning)"
         replace = "WARN"
       }
 
@@ -142,9 +122,10 @@ declare "node_logs" {
       }
     }
 
-    // Only keep the labels that are defined in the `keepLabels` list.
-    stage.label_keep {
-      values = ["__tenant_id__","instance","job","level","name","unit","service_name","source"]
+    // Standardize on upper-case
+    stage.template {
+      source   = "level"
+      template = "{{ ToUpper .Value }}"
     }
 
     forward_to = argument.logs_destinations.value
@@ -174,8 +155,13 @@ otelcol.exporter.loki "loki" {
 
 loki.write "loki" {
   endpoint {
-    url = "http://loki.loki.svc:3100/api/push"
+    url = "http://loki.loki.svc:3100/loki/api/v1/push"
     retry_on_http_429 = true
+    tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+      password = remote.kubernetes.secret.loki.data["password"]
+    }
     tls_config {
       insecure_skip_verify = false
     }
@@ -187,5 +173,10 @@ loki.write "loki" {
     "cluster" = "node-logs-cluster",
     "k8s_cluster_name" = "node-logs-cluster",
   }
+}
+
+remote.kubernetes.secret "loki" {
+  name      = "loki-k8smon-k8s-monitoring"
+  namespace = "default"
 }
 
