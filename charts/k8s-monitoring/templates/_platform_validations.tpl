@@ -18,8 +18,8 @@
 {{- end }}
 
 {{ define "validations.platform.aks" -}}
-  {{- range $collectorName := (include "collectors.list.enabled" .) | fromYamlArray }}
-    {{- $collectorValues := (include "collector.alloy.values" (deepCopy $ | merge (dict "collectorName" $collectorName)) | fromYaml) }}
+  {{- range $collectorName := keys .Values.collectors | sortAlpha }}
+    {{- $collectorValues := (include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml) }}
     {{- if ne (dig "controller" "podAnnotations" "kubernetes.azure.com/set-kube-service-host-fqdn" "false" $collectorValues) "true" }}
       {{- $msg := list "" "This Kubernetes cluster appears to be Azure AKS." }}
       {{- $msg = append $msg "To ensure connectivity to the API server, please set:" }}

@@ -172,6 +172,7 @@ podLogs:
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     jaeger:
       thriftHttp:
@@ -193,17 +194,11 @@ applicationObservability:
         - k8s.container.name
 
 # Collectors
-alloy-singleton:
-  enabled: true
-
-alloy-receiver:
-  enabled: true
-  alloy:
-    extraPorts:
-      - name: jaeger-http
-        port: 14268
-        targetPort: 14268
-        protocol: TCP
+collectors:
+  alloy-singleton:
+    presets: [singleton]
+  alloy-receiver:
+    presets: [deployment]
 
 telemetryServices:
   kube-state-metrics:

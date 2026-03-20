@@ -32,29 +32,33 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
 integrations:
+  collector: alloy-metrics
   alloy:
     instances:
       - name: alloy
         labelSelectors:
           app.kubernetes.io/name: [alloy-metrics, alloy-singleton, alloy-logs]
 
-alloy-metrics:
-  enabled: true
-alloy-singleton:
-  enabled: true
-alloy-logs:
-  enabled: true
-  alloy:
-    mounts:
-      dockercontainers: false
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+
+  alloy-singleton:
+    presets: [singleton]
+
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 
 telemetryServices:
   kube-state-metrics:

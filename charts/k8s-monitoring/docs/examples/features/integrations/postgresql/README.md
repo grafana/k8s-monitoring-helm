@@ -28,6 +28,7 @@ destinations:
       password: lokipassword
 
 integrations:
+  collector: alloy-metrics
   postgresql:
     instances:
       - name: test-database
@@ -48,11 +49,12 @@ integrations:
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
-alloy-metrics:
-  enabled: true
-
-alloy-logs:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 ```
 <!-- textlint-enable terminology -->

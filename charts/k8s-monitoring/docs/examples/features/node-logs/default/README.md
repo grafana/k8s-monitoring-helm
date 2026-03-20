@@ -22,12 +22,14 @@ destinations:
 
 nodeLogs:
   enabled: true
+  collector: alloy-logs
   journal:
     units:
       - kubelet.service
       - containerd.service
 
-alloy-logs:
-  enabled: true
+collectors:
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 ```
 <!-- textlint-enable terminology -->

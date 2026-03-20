@@ -28,24 +28,24 @@ destinations:
 selfReporting:
   enabled: false
 
-alloy-metrics:
-  enabled: true
-  includeDestinations: [prometheus-kubernetes]
-  extraConfig: |
-    discovery.kubernetes "animal_service" {
-      role = "service"
-      namespaces {
-        names = ["zoo"]
-      }
-      selectors {
+collectors:
+  alloy:
+    includeDestinations: [prometheus-kubernetes]
+    extraConfig: |
+      discovery.kubernetes "animal_service" {
         role = "service"
-        label = "app.kubernetes.io/name=animal-service"
+        namespaces {
+          names = ["zoo"]
+        }
+        selectors {
+          role = "service"
+          label = "app.kubernetes.io/name=animal-service"
+        }
       }
-    }
-    prometheus.scrape "animal_service" {
-      job_name   = "animal_service"
-      targets    = discovery.kubernetes.animal_service.targets
-      forward_to = [prometheus.remote_write.prometheus_kubernetes.receiver]
-    }
+      prometheus.scrape "animal_service" {
+        job_name   = "animal_service"
+        targets    = discovery.kubernetes.animal_service.targets
+        forward_to = [prometheus.remote_write.prometheus_kubernetes.receiver]
+      }
 ```
 <!-- textlint-enable terminology -->

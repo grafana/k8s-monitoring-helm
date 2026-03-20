@@ -139,9 +139,11 @@ destinations:
                     - UNSET
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
   windowsHosts:
@@ -149,8 +151,10 @@ hostMetrics:
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       http:
@@ -160,20 +164,15 @@ applicationObservability:
     grafanaCloudMetrics:
       enabled: true
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
-alloy-logs:
-  enabled: true
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 
-alloy-receiver:
-  enabled: true
-  alloy:
-    extraPorts:
-      - name: otlp-http
-        port: 4318
-        targetPort: 4318
-        protocol: TCP
+  alloy-receiver:
+    presets: [deployment]
 
 telemetryServices:
   kube-state-metrics:

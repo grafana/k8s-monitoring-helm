@@ -30,14 +30,14 @@ releases:
           name: helmfile-test
 
         destinations:
-          - name: localPrometheus
+          localPrometheus:
             type: prometheus
             url: http://prometheus-server.prometheus.svc:9090/api/v1/write
             auth:
               type: basic
               username: promuser
               password: prometheuspassword
-          - name: localLoki
+          localLoki:
             type: loki
             url: http://loki.loki.svc:3100/loki/api/v1/push
             tenantId: "1"
@@ -48,12 +48,15 @@ releases:
 
         clusterMetrics:
           enabled: true
+          collector: alloy-metrics
 
-        costMetics:
+        costMetrics:
           enabled: true
+          collector: alloy-metrics
 
         hostMetrics:
           enabled: true
+          collector: alloy-metrics
           linuxHosts:
             enabled: true
           windowsHosts:
@@ -63,18 +66,19 @@ releases:
 
         clusterEvents:
           enabled: true
+          collector: alloy-singleton
 
         podLogs:
           enabled: true
+          collector: alloy-logs
 
-        alloy-metrics:
-          enabled: true
-
-        alloy-singleton:
-          enabled: true
-
-        alloy-logs:
-          enabled: true
+        collectors:
+          alloy-metrics:
+            presets: [clustered, statefulset]
+          alloy-logs:
+            presets: [filesystem-log-reader, daemonset]
+          alloy-singleton:
+            presets: [singleton]
 
         telemetryServices:
           kube-state-metrics:

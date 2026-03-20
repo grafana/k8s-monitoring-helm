@@ -1,3 +1,13 @@
+{{/* Inputs: destinations (array of destination names), type (string), featureName (string) */}}
+{{- define "destinations.validate.destinationListNotEmpty" }}
+{{- if empty .destinations }}
+  {{- $msg := list "" (printf "No destinations found that can accept %s from the %s feature." .type .featureName) }}
+  {{- $msg = append $msg (printf "Please add a destination with %s support." .type) }}
+  {{- $msg = append $msg "See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md for more details." }}
+  {{- fail (join "\n" $msg) }}
+{{- end }}
+{{- end }}
+
 {{/* Does some basic destination validation */}}
 {{/* Inputs: . (Values) */}}
 {{- define "destinations.validate" }}

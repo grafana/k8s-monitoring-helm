@@ -13,6 +13,9 @@
   {{- $msg := list "" "Node Logs feature requires Alloy to mount /var/log." }}
   {{- $msg = append $msg "Please set:"}}
   {{- $msg = append $msg (printf "%s:" .CollectorName) }}
+  {{- $msg = append $msg "  presets: [filesystem-log-reader]"}}
+  {{- $msg = append $msg "OR"}}
+  {{- $msg = append $msg (printf "%s:" .CollectorName) }}
   {{- $msg = append $msg "  alloy:"}}
   {{- $msg = append $msg "    mounts:"}}
   {{- $msg = append $msg "      varlog: true" }}

@@ -1,6 +1,6 @@
-{{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
+{{- range $collectorName := keys .Values.collectors | sortAlpha }}
 {{- include "crdValidation" $ }}
-{{- $values := (deepCopy $ | merge (dict "collectorName" $collectorName)) }}
+{{- $values := dict "Values" $.Values "Files" $.Files "Release" $.Release "collectorName" $collectorName }}
 {{- $alloyValues := (include "collector.alloy.values" $values | fromYaml) | merge (dict "nameOverride" $collectorName) }}
 {{- $alloySpec := include "collector.alloy.valuesToSpec" $alloyValues }}
 ---

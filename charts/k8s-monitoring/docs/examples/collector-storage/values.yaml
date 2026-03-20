@@ -13,9 +13,11 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
   windowsHosts:
@@ -23,43 +25,45 @@ hostMetrics:
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
-alloy-metrics:
-  enabled: true
-  alloy:
-    storagePath: /var/lib/alloy
-    mounts:
-      extra:
-        - name: alloy-wal
-          mountPath: /var/lib/alloy
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    alloy:
+      storagePath: /var/lib/alloy
+      mounts:
+        extra:
+          - name: alloy-wal
+            mountPath: /var/lib/alloy
 
-  controller:
-    enableStatefulSetAutoDeletePVC: true
-    volumeClaimTemplates:
-      - metadata:
-          name: alloy-wal
-        spec:
-          accessModes: ["ReadWriteOnce"]
-          storageClassName: "standard"
-          resources:
-            requests:
-              storage: 5Gi
+    controller:
+      enableStatefulSetAutoDeletePVC: true
+      volumeClaimTemplates:
+        - metadata:
+            name: alloy-wal
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            storageClassName: "standard"
+            resources:
+              requests:
+                storage: 5Gi
 
-alloy-logs:
-  enabled: true
-  alloy:
-    storagePath: /var/lib/alloy
-    mounts:
-      extra:
-        - name: alloy-log-positions
-          mountPath: /var/lib/alloy
-  controller:
-    volumes:
-      extra:
-        - name: alloy-log-positions
-          hostPath:
-            path: /var/alloy-log-storage
-            type: DirectoryOrCreate
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+    alloy:
+      storagePath: /var/lib/alloy
+      mounts:
+        extra:
+          - name: alloy-log-positions
+            mountPath: /var/lib/alloy
+    controller:
+      volumes:
+        extra:
+          - name: alloy-log-positions
+            hostPath:
+              path: /var/alloy-log-storage
+              type: DirectoryOrCreate
 
 telemetryServices:
   kube-state-metrics:

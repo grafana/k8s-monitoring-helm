@@ -86,9 +86,11 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
   windowsHosts:
@@ -96,9 +98,11 @@ hostMetrics:
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       http:
@@ -127,20 +131,13 @@ applicationObservability:
         # This adds the team label to the datapoints and similarly you can add to traces and logs
         - set(attributes["team"], resource.attributes["team"])
 
-alloy-metrics:
-  enabled: true
-
-alloy-logs:
-  enabled: true
-
-alloy-receiver:
-  enabled: true
-  alloy:
-    extraPorts:
-      - name: otlp-http
-        port: 4318
-        targetPort: 4318
-        protocol: TCP
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+  alloy-receiver:
+    presets: [deployment]
 
 telemetryServices:
   kube-state-metrics:

@@ -24,6 +24,7 @@ destinations:
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   traces:
     transforms:
       span:
@@ -43,21 +44,12 @@ applicationObservability:
 
 podLogs:
   enabled: true
+  collector: alloy-logs
   destinations:
     - otlp-gateway
 
-alloy-logs:
-  enabled: true
-
-alloy-receiver:
-  enabled: true
-  alloy:
-    extraPorts:
-      - name: otlp-http
-        port: 4318
-        targetPort: 4318
-        protocol: TCP
-      - name: otlp-grpc
-        port: 4317
-        targetPort: 4317
-        protocol: TCP
+collectors:
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+  alloy-receiver:
+    presets: [deployment]

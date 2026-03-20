@@ -48,6 +48,7 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
   kube-state-metrics:
     extraMetricProcessingRules: |-
       rule {
@@ -58,6 +59,7 @@ clusterMetrics:
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
   windowsHosts:
@@ -65,6 +67,7 @@ hostMetrics:
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
   namespaces:
     - production
   extraProcessingStages: |-
@@ -95,6 +98,7 @@ clusterEvents:
 
 podLogs:
   enabled: true
+  collector: alloy-logs
   extraDiscoveryRules: |-
     rule {
       source_labels = ["__meta_kubernetes_namespace"]
@@ -124,28 +128,29 @@ podLogs:
   staticLabelsFrom:
     color: env("COLOR")
 
-alloy-metrics:
-  enabled: true
-  alloy:
-    extraEnv:
-      - name: REGION
-        value: northwest
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    alloy:
+      extraEnv:
+        - name: REGION
+          value: northwest
 
-alloy-singleton:
-  enabled: true
-  alloy:
-    extraEnv:
-      - name: REGION
-        value: northwest
+  alloy-singleton:
+    presets: [singleton]
+    alloy:
+      extraEnv:
+        - name: REGION
+          value: northwest
 
-alloy-logs:
-  enabled: true
-  alloy:
-    extraEnv:
-      - name: REGION
-        value: northwest
-      - name: COLOR
-        value: blue
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+    alloy:
+      extraEnv:
+        - name: REGION
+          value: northwest
+        - name: COLOR
+          value: blue
 
 telemetryServices:
   kube-state-metrics:

@@ -1,7 +1,7 @@
 allows you to disable retry on failure:
   1: |
     |
-      // Destination:  (otlp)
+      // Destination: test (otlp)
       otelcol.receiver.prometheus "test" {
         output {
           metrics = [otelcol.processor.attributes.test.input]
@@ -12,7 +12,6 @@ allows you to disable retry on failure:
           logs = [otelcol.processor.attributes.test.input]
         }
       }
-
       otelcol.processor.attributes "test" {
         output {
           metrics = [otelcol.processor.transform.test.input]
@@ -185,7 +184,7 @@ allows you to disable retry on failure:
 allows you to use basic authentication:
   1: |
     |
-      // Destination:  (otlp)
+      // Destination: test (otlp)
       otelcol.receiver.prometheus "test" {
         output {
           metrics = [otelcol.processor.attributes.test.input]
@@ -196,7 +195,6 @@ allows you to use basic authentication:
           logs = [otelcol.processor.attributes.test.input]
         }
       }
-
       otelcol.processor.attributes "test" {
         output {
           metrics = [otelcol.processor.transform.test.input]
@@ -369,18 +367,18 @@ allows you to use basic authentication:
       }
 
       otelcol.auth.basic "test" {
-        username = convert.nonsensitive(remote.kubernetes.secret..data["username"])
-        password = remote.kubernetes.secret..data["password"]
+        username = convert.nonsensitive(remote.kubernetes.secret.test.data["username"])
+        password = remote.kubernetes.secret.test.data["password"]
       }
 
-      remote.kubernetes.secret "" {
-        name      = "-release-name-k8s-monitoring"
+      remote.kubernetes.secret "test" {
+        name      = "test-release-name-k8s-monitoring"
         namespace = "NAMESPACE"
       }
 allows you to use basic authentication with a numeric username:
   1: |
     |
-      // Destination:  (otlp)
+      // Destination: test (otlp)
       otelcol.receiver.prometheus "test" {
         output {
           metrics = [otelcol.processor.attributes.test.input]
@@ -391,7 +389,6 @@ allows you to use basic authentication with a numeric username:
           logs = [otelcol.processor.attributes.test.input]
         }
       }
-
       otelcol.processor.attributes "test" {
         output {
           metrics = [otelcol.processor.transform.test.input]
@@ -564,18 +561,18 @@ allows you to use basic authentication with a numeric username:
       }
 
       otelcol.auth.basic "test" {
-        username = convert.nonsensitive(remote.kubernetes.secret..data["username"])
-        password = remote.kubernetes.secret..data["password"]
+        username = convert.nonsensitive(remote.kubernetes.secret.test.data["username"])
+        password = remote.kubernetes.secret.test.data["password"]
       }
 
-      remote.kubernetes.secret "" {
-        name      = "-release-name-k8s-monitoring"
+      remote.kubernetes.secret "test" {
+        name      = "test-release-name-k8s-monitoring"
         namespace = "NAMESPACE"
       }
 creates the Alloy components for an OTLP destination:
   1: |
     |
-      // Destination:  (otlp)
+      // Destination: test (otlp)
       otelcol.receiver.prometheus "test" {
         output {
           metrics = [otelcol.processor.attributes.test.input]
@@ -586,7 +583,6 @@ creates the Alloy components for an OTLP destination:
           logs = [otelcol.processor.attributes.test.input]
         }
       }
-
       otelcol.processor.attributes "test" {
         output {
           metrics = [otelcol.processor.transform.test.input]

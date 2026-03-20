@@ -38,6 +38,7 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
   kube-state-metrics:
     namespace: openshift-monitoring
     labelMatchers:
@@ -48,6 +49,7 @@ clusterMetrics:
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
     namespace: openshift-monitoring
@@ -64,28 +66,32 @@ telemetryServices:
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
 integrations:
+  collector: alloy-metrics
   alloy:
     instances:
       - name: alloy
         labelSelectors:
           app.kubernetes.io/name: [alloy-metrics, alloy-singleton, alloy-logs]
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
-alloy-singleton:
-  enabled: true
+  alloy-singleton:
+    presets: [singleton]
 
-alloy-logs:
-  enabled: true
-  global:
-    podSecurityContext:
-      seLinuxOptions:
-        type: container_logreader_t
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+    global:
+      podSecurityContext:
+        seLinuxOptions:
+          type: container_logreader_t
 ```
 <!-- textlint-enable terminology -->

@@ -40,12 +40,15 @@ global:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
 costMetrics:
   enabled: true
+  collector: alloy-metrics
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   energyMetrics:
     enabled: true
   linuxHosts:
@@ -55,22 +58,23 @@ hostMetrics:
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       http:
         enabled: true
 
-alloy-metrics:
-  enabled: true
-
-alloy-logs:
-  enabled: true
-
-alloy-receiver:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+  alloy-receiver:
+    presets: [deployment]
 
 telemetryServices:
   # Kepler does not utilize the global image registry settings

@@ -28,6 +28,7 @@ destinations:
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
   extraLogProcessingStages: |-
     stage.metrics {
@@ -43,6 +44,7 @@ podLogs:
     }
 
 integrations:
+  collector: alloy-metrics
   alloy:
     instances:
       - name: alloy
@@ -52,10 +54,10 @@ integrations:
           tuning:
             includeMetrics: [my_custom_tracking_.*]
 
-alloy-metrics:
-  enabled: true
-
-alloy-logs:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 ```
 <!-- textlint-enable terminology -->

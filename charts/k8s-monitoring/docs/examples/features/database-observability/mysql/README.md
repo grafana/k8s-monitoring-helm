@@ -54,13 +54,15 @@ integrations:
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
-alloy-singleton:
-  enabled: true
-  alloy:
-    stabilityLevel: experimental
+collectors:
+  alloy-singleton:
+    presets: [singleton]
+    alloy:
+      stabilityLevel: experimental
 
-alloy-logs:
-  enabled: true
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 ```
 <!-- textlint-enable terminology -->

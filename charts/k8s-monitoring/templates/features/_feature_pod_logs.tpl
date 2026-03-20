@@ -1,11 +1,5 @@
 {{- define "features.podLogs.enabled" }}{{ .Values.podLogs.enabled }}{{- end }}
 
-{{- define "features.podLogs.collectors" }}
-{{- if .Values.podLogs.enabled -}}
-- {{ .Values.podLogs.collector }}
-{{- end }}
-{{- end }}
-
 {{- define "features.podLogs.include" }}
 {{- if .Values.podLogs.enabled -}}
 {{- $extraDiscoveryRulesFromIntegrations := cat (include "features.integrations.logs.discoveryRules" .) "\n" .Values.podLogs.extraDiscoveryRules | trim }}
@@ -25,7 +19,7 @@ pod_logs "feature" {
 
 {{- define "features.podLogs.destinations" }}
 {{- if .Values.podLogs.enabled -}}
-{{- include "destinations.get" (dict "destinations" $.Values.destinations "type" "logs" "ecosystem" "loki" "filter" $.Values.podLogs.destinations) -}}
+  {{- include "destinations.get" (dict "destinations" $.Values.destinations "type" "logs" "ecosystem" "loki" "filter" $.Values.podLogs.destinations) -}}
 {{- end -}}
 {{- end -}}
 
@@ -43,16 +37,18 @@ pod_logs "feature" {
 
 {{- define "features.podLogs.collector.values" }}{{- end -}}
 
+{{- define "features.podLogs.chooseCollector" -}}{{- end -}}
+
 {{- define "features.podLogs.validate" }}
 {{- if .Values.podLogs.enabled -}}
+{{- $featureKey := "podLogs" }}
 {{- $featureName := "Kubernetes Pod logs" }}
 {{- $destinations := include "features.podLogs.destinations" . | fromYamlArray }}
-{{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "feature" $featureName) }}
+{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "featureName" $featureName) }}
 
-{{- range $collectorName := include "features.podLogs.collectors" . | fromYamlArray }}
-  {{- $collectorValues := include "collector.alloy.values" (deepCopy $ | merge (dict "collectorName" $collectorName)) | fromYaml }}
-  {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collectorName "feature" $featureName) }}
-  {{- include "feature.podLogs.collector.validate" (dict "Values" $.Values.podLogs "Collector" $collectorValues "CollectorName" $collectorName) }}
-{{- end -}}
+{{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
+{{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}
+{{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
+{{- include "feature.podLogs.collector.validate" (dict "Values" $.Values.podLogs "Collector" $collectorValues "CollectorName" $collectorName) }}
 {{- end -}}
 {{- end -}}
