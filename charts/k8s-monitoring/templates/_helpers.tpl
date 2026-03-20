@@ -72,3 +72,17 @@
 {{- define "pod_annotation" -}}
 {{ printf "__meta_kubernetes_pod_annotation_%s" (include "escape_label" .) }}
 {{- end }}
+
+{{- define "enrichment_label_name" -}}
+{{- if kindIs "string" . -}}{{ . }}{{- else -}}{{ .name }}{{- end -}}
+{{- end }}
+
+{{- define "enrichment_label_as" -}}
+{{- if kindIs "string" . -}}
+{{ include "escape_label" . }}
+{{- else if .as -}}
+{{ .as }}
+{{- else -}}
+{{ include "escape_label" .name }}
+{{- end -}}
+{{- end }}
