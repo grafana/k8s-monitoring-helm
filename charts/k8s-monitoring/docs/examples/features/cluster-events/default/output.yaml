@@ -13,6 +13,18 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
+# Source: k8s-monitoring/templates/destination_secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "loki-k8smon-k8s-monitoring"
+  namespace: "default"
+type: Opaque
+data:
+  tenantId: "MQ=="
+  username: "bG9raQ=="
+  password: "bG9raXBhc3N3b3Jk"
+---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -53,16 +65,13 @@ data:
             "reason" = "",
           }
         }
-        // set these values as labels, they may or may not be used as index labels in Loki as they can be dropped
-        // prior to being written to Loki, but this makes them available
+        // set the extracted values as labels
         stage.labels {
           values = {
-            "component" = "",
             "kind" = "",
             "level" = "",
-            "name" = "",
-            "node" = "",
-            "reason" = "",
+            "service_name" = "job",
+            "reason" = "reason",
           }
         }
     
@@ -90,18 +99,15 @@ data:
         stage.structured_metadata {
           values = {
             "name" = "name",
+            "node" = "node",
           }
         }
     
-        // Only keep the labels that are defined in the `keepLabels` list.
-        stage.label_keep {
-          values = ["job","level","namespace","node","source","reason"]
+        // Drop pipeline-only labels that are not needed in the final output.
+        stage.label_drop {
+          values = ["kind"]
         }
-        stage.labels {
-          values = {
-            "service_name" = "job",
-          }
-        }
+    
         forward_to = argument.logs_destinations.value
       }
     }
@@ -132,8 +138,13 @@ data:
     
     loki.write "loki" {
       endpoint {
-        url = "http://loki.loki.svc:3100/api/push"
+        url = "http://loki.loki.svc:3100/loki/api/v1/push"
         retry_on_http_429 = true
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+          password = remote.kubernetes.secret.loki.data["password"]
+        }
         tls_config {
           insecure_skip_verify = false
         }
@@ -145,6 +156,11 @@ data:
         "cluster" = "cluster-events-cluster",
         "k8s_cluster_name" = "cluster-events-cluster",
       }
+    }
+    
+    remote.kubernetes.secret "loki" {
+      name      = "loki-k8smon-k8s-monitoring"
+      namespace = "default"
     }
   self-reporting-metric.prom: |
 ---

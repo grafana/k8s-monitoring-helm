@@ -3,16 +3,13 @@ suite: Feature - Cluster Events - Labels
 templates:
   - test/configmap.yaml
 tests:
-  - it: should create a ConfigMap that sets custom labels to keep
+  - it: should create a ConfigMap that sets custom labels from extracted fields
     set:
       testing: {enabled: true}
-      labelsToKeep:
-        - job
-        - namespace
-        - level
-        - node
-        - name
-        - source
+      labels:
+        node: node
+        reason: reason
+        component: component
     asserts:
       - isKind:
           of: ConfigMap
