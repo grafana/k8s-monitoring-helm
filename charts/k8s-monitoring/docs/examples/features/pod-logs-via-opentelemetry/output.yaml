@@ -13,6 +13,18 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
+# Source: k8s-monitoring/templates/destination_secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "localloki-k8smon-k8s-monitoring"
+  namespace: "default"
+type: Opaque
+data:
+  tenantId: "MQ=="
+  username: "bG9raQ=="
+  password: "bG9raXBhc3N3b3Jk"
+---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -28,7 +40,10 @@ data:
       }
     
       otelcol.receiver.filelog "pod_logs" {
-        include = ["/var/log/pods/*/*/*.log"]
+        include = [
+          "/var/log/pods/development_*/*/*.log",
+          "/var/log/pods/production_*/*/*.log",
+        ]
         start_at = "beginning"
         include_file_name = false
         include_file_path = true
@@ -73,6 +88,11 @@ data:
             tag_name = "app_kubernetes_io_name"
             key      = "app.kubernetes.io/name"
             from     = "pod"
+          }
+          label {
+            tag_name = "color"
+            key      = "color"
+            from     = "namespace"
           }
         }
     
@@ -120,7 +140,7 @@ data:
     }
     pod_logs_via_opentelemetry "feature" {
       logs_destinations = [
-        otelcol.exporter.loki.loki.input,
+        otelcol.exporter.loki.localloki.input,
       ]
     }
     
@@ -134,15 +154,20 @@ data:
     
     
     
-    // Destination: loki (loki)
-    otelcol.exporter.loki "loki" {
-      forward_to = [loki.write.loki.receiver]
+    // Destination: localLoki (loki)
+    otelcol.exporter.loki "localloki" {
+      forward_to = [loki.write.localloki.receiver]
     }
     
-    loki.write "loki" {
+    loki.write "localloki" {
       endpoint {
-        url = "http://loki.loki.svc:3100/api/push"
+        url = "http://loki.loki.svc:3100/loki/api/v1/push"
         retry_on_http_429 = true
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
+          password = remote.kubernetes.secret.localloki.data["password"]
+        }
         tls_config {
           insecure_skip_verify = false
         }
@@ -151,9 +176,14 @@ data:
         max_backoff_retries = "10"
       }
       external_labels = {
-        "cluster" = "pod-logs-cluster",
-        "k8s_cluster_name" = "pod-logs-cluster",
+        "cluster" = "pod-logs-via-opentelemetry",
+        "k8s_cluster_name" = "pod-logs-via-opentelemetry",
       }
+    }
+    
+    remote.kubernetes.secret "localloki" {
+      name      = "localloki-k8smon-k8s-monitoring"
+      namespace = "default"
     }
   self-reporting-metric.prom: |
 ---

@@ -12,15 +12,25 @@ This example demonstrates how to gather logs from the Pods in your Kubernetes cl
 ```yaml
 ---
 cluster:
-  name: pod-logs-cluster
+  name: pod-logs-via-opentelemetry
 
 destinations:
-  loki:
+  localLoki:
     type: loki
-    url: http://loki.loki.svc:3100/api/push
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
 
 podLogsViaOpenTelemetry:
   enabled: true
+  namespaces:
+    - development
+    - production
+  namespaceLabels:
+    color: color
 
 collectors:
   alloy-logs:
