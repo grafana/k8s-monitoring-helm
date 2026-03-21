@@ -149,17 +149,6 @@ podLogsViaLoki:
     architecture:
     instance_type:
 
-  labelsToKeep:
-    - app
-    - app_kubernetes_io_name
-    - component
-    - container
-    - job
-    - level
-    - namespace
-    - pod
-    - service_name
-
   namespaces:
     - collectors
     - logs
