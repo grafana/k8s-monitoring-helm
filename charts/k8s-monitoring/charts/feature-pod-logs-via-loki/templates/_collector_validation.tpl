@@ -3,7 +3,7 @@
 {{- define "feature.podLogsViaLoki.collector.validate" }}
 {{- $stabilityLevel := (dig "alloy" "stabilityLevel" "generally-available" .Collector)}}
   {{- if ne (dig "controller" "type" "daemonset" .Collector) "daemonset" }}
-    {{- $msg := list "" "Pod Logs feature requires Alloy to be a DaemonSet when using the \"volumes\" gather method." }}
+    {{- $msg := list "" "Pod Logs feature requires Alloy to be a DaemonSet." }}
     {{- $msg = append $msg "Please set:"}}
     {{- $msg = append $msg (printf "%s:" .CollectorName) }}
     {{- $msg = append $msg "  presets: [daemonset]"}}
@@ -14,7 +14,7 @@
     {{- fail (join "\n" $msg) }}
   {{- end -}}
   {{- if (not (dig "alloy" "mounts" "varlog" false .Collector)) }}
-    {{- $msg := list "" "Pod Logs feature requires Alloy to mount /var/log when using the \"volumes\" gather method." }}
+    {{- $msg := list "" "Pod Logs feature requires Alloy to mount /var/log." }}
     {{- $msg = append $msg "Please set:"}}
     {{- $msg = append $msg (printf "%s:" .CollectorName) }}
     {{- $msg = append $msg "  presets: [filesystem-log-reader]"}}

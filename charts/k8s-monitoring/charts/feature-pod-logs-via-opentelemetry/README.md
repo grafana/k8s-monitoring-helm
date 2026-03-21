@@ -67,4 +67,4 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| onlyGatherNewLogLines | bool | `false` | Only gather new log lines since this was deployed. Do not gather historical log lines. |
+| onlyGatherNewLogLines | bool | `true` | Only gather new log lines since this was deployed. Do not gather historical log lines. |
