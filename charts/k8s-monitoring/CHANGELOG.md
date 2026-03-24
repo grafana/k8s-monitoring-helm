@@ -1,6 +1,14 @@
 # Changelog
 
-## Unreleased
+## 4.0.0
+
+*   Rebuild log features to remove `labelsToKeep` and split Loki and OpenTelemetry log gathering (@petewall)
+*   Introducce `collectors` as map, and remove named Alloy instances (@petewall)
+*   Convert destinations into a map (@petewall)
+*   Remove Prometheus Operator Object CRDs (@petewall)
+*   Extract supplemental telemetry services from config features into their own subchart (@petewall)
+
+## 3.8.5
 
 *   Update Beyla, Node Exporter, OpenCost, and Prometheus Operator CRDs. (@petewall)
 *   Fix Application Observability failing to start when only traces are enabled and metrics are disabled. (@petewall)
