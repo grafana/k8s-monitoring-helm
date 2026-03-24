@@ -59,6 +59,7 @@ integrations:
 podLogsViaLoki:
   enabled: true
   collector: alloy-logs
+  onlyGatherNewLogLines: false
 
 collectors:
   alloy-singleton:
