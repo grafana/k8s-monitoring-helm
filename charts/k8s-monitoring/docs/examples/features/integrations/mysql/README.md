@@ -59,7 +59,7 @@ integrations:
           labelSelectors:
             app.kubernetes.io/instance: prod-db
 
-podLogs:
+podLogsViaLoki:
   enabled: true
   collector: alloy-logs
 

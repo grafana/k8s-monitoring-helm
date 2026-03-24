@@ -91,7 +91,7 @@ hostMetrics:
   windowsHosts:
     enabled: true
 
-podLogs:
+podLogsViaLoki:
   enabled: true
   collector: alloy-logs
   namespaces: [alpha, bravo, delta]

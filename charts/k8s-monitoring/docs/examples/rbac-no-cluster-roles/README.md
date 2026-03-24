@@ -73,7 +73,7 @@ clusterEvents:
   collector: alloy-singleton
   namespaces: [default]
 
-podLogs:
+podLogsViaLoki:
   enabled: true
   collector: alloy-logs
   namespaces: [default]

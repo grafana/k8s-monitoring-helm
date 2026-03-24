@@ -117,9 +117,10 @@ charts/feature-{name}/
 -   `feature-host-metrics` - Gathers Kubernetes Host metrics
 -   `feature-integrations` - Service integrations
 -   `feature-node-logs` - Kubernetes Observability feature for gathering Cluster Node logs.
--   `feature-pod-logs` - Kubernetes Observability feature for gathering Pod logs.
 -   `feature-pod-logs-objects` - Kubernetes Observability feature for gathering logs using PodLogs objects.
 -   `feature-pod-logs-via-kubernetes-api` - Kubernetes Observability feature for gathering Pod logs by streaming them from the Kubernetes API.
+-   `feature-pod-logs-via-loki` - Kubernetes Observability feature for gathering Pod logs.
+-   `feature-pod-logs-via-opentelemetry` - Kubernetes Observability feature for gathering Pod logs.
 -   `feature-profiles-receiver` - Kubernetes Observability feature for receiving profiles.
 -   `feature-profiling` - Gathers profiles from eBPF, Java, and pprof sources.
 -   `feature-prometheus-operator-objects` - Gathers metrics using Prometheus Operator Objects
@@ -134,7 +135,7 @@ charts/feature-{name}/
 clusterMetrics:
   enabled: true
 
-podLogs:
+podLogsViaLoki:
   enabled: true
 ```
 
@@ -296,7 +297,7 @@ See `docs/examples/destinations/otlp-endpoint/` for a complete example.
 ### Add pod labels to logs
 
 See `docs/examples/pod-labels-and-annotations/` for a complete example.
-Key settings: `podLogs.labels`, `podLogs.labelsToKeep`.
+Key settings: `podLogs.labels`.
 
 ### Add custom scrape targets
 

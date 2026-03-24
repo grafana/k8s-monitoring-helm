@@ -104,7 +104,7 @@ prometheusOperatorObjects:
   enabled: true
   collector: alloy-metrics
 
-podLogs:
+podLogsViaLoki:
   enabled: true
   collector: alloy-logs
 

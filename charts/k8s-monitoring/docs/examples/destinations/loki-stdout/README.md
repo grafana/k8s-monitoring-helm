@@ -36,7 +36,7 @@ destinations:
       }
 
 # Will automatically go to both loki and lokiStdout destinations
-podLogs:
+podLogsViaLoki:
   enabled: true
 
 collectors:

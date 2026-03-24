@@ -1,4 +1,5 @@
 ---
+# yamllint disable rule:line-length
 name: Integration Test
 # yamllint disable-line rule:truthy
 on:
@@ -43,9 +44,14 @@ jobs:
               exit 0
           fi
 
-          tests=$(find . -name test-plan.yaml -not \( -path "./tests/platform/*" \) -exec dirname {} \; | sed -e "s/^\.\///g")
+          tests=$(find . -name test-plan.yaml -not \( -path "./tests/platform/*" \) -exec dirname {} \; | sed -e "s/^\.\///g" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')
+          manualOnlyTests=$(find . -name .manual-only -type f -not \( -path "./tests/platform/*" \) -exec dirname {} \; | sed "s|^\./||" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')
+
+          # remove manual only tests
+          tests=$(jq --null-input --compact-output --argjson tests "${tests}" --argjson manualOnlyTests "${manualOnlyTests}" '$tests | map(select(. as $test | $manualOnlyTests | index($test) | not))')
+
           echo "Tests: ${tests}"
-          echo "tests=$(echo "${tests}" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
+          echo "tests=${tests}" >> "${GITHUB_OUTPUT}"
 
   run-tests:
     name: Integration Test

@@ -28,7 +28,6 @@ destinations:
     traces: {enabled: true}
 
 integrations:
-  collector: alloy-singleton
   # attach available node labels to all integration metrics collection
   nodeLabels:
     nodepool: true
@@ -46,7 +45,7 @@ integrations:
         namespaces:
           - logs
         labelSelectors:
-          app.kubernetes.io/name: alloy-singleton
+          app.kubernetes.io/name: alloy
 
       # monitor the collectors gathering and sending metrics/logs to the local cluster
       - name: alloy
@@ -96,7 +95,6 @@ integrations:
 
 clusterEvents:
   enabled: true
-  collector: alloy-singleton
   namespaces:
     - collectors
     - logs
@@ -105,7 +103,6 @@ clusterEvents:
 
 clusterMetrics:
   enabled: true
-  collector: alloy-singleton
   kubelet:
     enabled: false
   kubeletResource:
@@ -125,15 +122,15 @@ clusterMetrics:
 
 hostMetrics:
   enabled: true
-  collector: alloy-singleton
   linuxHosts:
     enabled: true
     metricsTuning:
       useIntegrationAllowList: true
 
-podLogs:
+podLogsViaLoki:
   enabled: true
-  collector: alloy-singleton
+  includeNamespaces: [collectors, logs, metrics, o11y]
+
   nodeLabels:
     nodePool: true
     region: true
@@ -152,18 +149,6 @@ podLogs:
     architecture:
     instance_type:
 
-  labelsToKeep:
-    - app
-    - app_kubernetes_io_name
-    - component
-    - container
-    - job
-    - level
-    - namespace
-    - pod
-    - service_name
-
-  gatherMethod: kubernetesApi
   namespaces:
     - collectors
     - logs
@@ -172,7 +157,6 @@ podLogs:
 
 applicationObservability:
   enabled: true
-  collector: alloy-receiver
   receivers:
     jaeger:
       thriftHttp:
@@ -195,10 +179,8 @@ applicationObservability:
 
 # Collectors
 collectors:
-  alloy-singleton:
-    presets: [singleton]
-  alloy-receiver:
-    presets: [deployment]
+  alloy:
+    presets: [daemonset, filesystem-log-reader]
 
 telemetryServices:
   kube-state-metrics:

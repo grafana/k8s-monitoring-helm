@@ -55,7 +55,7 @@ destinations:
       enabled: true
       target: otelcol.processor.filter.debug.input
 
-podLogs:
+podLogsViaLoki:
   enabled: true
   collector: alloy-logs
   namespaces: [default]

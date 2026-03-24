@@ -59,12 +59,11 @@ is set to the `name` label on the log message, and the `example.com/environment`
 `environment` label on the log message:
 
 ```yaml
-podLogs:
+podLogsViaLoki:
   labels:
     name: example.com/name
   annotations:
     environment: example.com/environment
-  labelsToKeep: [name, environment]
 ```
 
 ## Values
@@ -106,14 +105,13 @@ hostMetrics:
   windowsHosts:
     enabled: true
 
-podLogs:
+podLogsViaLoki:
   enabled: true
   collector: alloy-logs
   labels:       # Capture the `example.com/name` Pod label as the `name` log label
     name: example.com/name
   annotations:  # Capture the `example.com/environment` Pod annotation as the `environment` log label
     environment: example.com/environment
-  labelsToKeep: [name, environment]
 
 applicationObservability:
   enabled: true

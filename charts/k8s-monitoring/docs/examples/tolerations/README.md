@@ -52,7 +52,7 @@ autoInstrumentation:
         effect: NoSchedule
         operator: Exists
 
-podLogs:
+podLogsViaLoki:
   enabled: true
   collector: alloy-logs
 

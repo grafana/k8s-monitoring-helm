@@ -90,12 +90,12 @@
   {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "featureName" $featureName) }}
 {{- end }}
 
-{{- $podLogsEnabled := include "features.podLogs.enabled" $ }}
+{{- $podLogsEnabled := include "features.podLogsViaLoki.enabled" $ }}
 {{- $logIntegrations := include "feature.integrations.configured.logRules" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
 {{- if and $logIntegrations (ne $podLogsEnabled "true") }}
   {{- $msg := list "" "Service integrations that include logs requires enabling the Pod Logs feature." }}
   {{- $msg = append $msg "Please set:" }}
-  {{- $msg = append $msg "podLogs:" }}
+  {{- $msg = append $msg "podLogsViaLoki:" }}
   {{- $msg = append $msg "  enabled: true" }}
   {{- fail (join "\n" $msg) }}
 {{- end }}

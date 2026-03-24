@@ -96,7 +96,7 @@ clusterEvents:
       }
     }
 
-podLogs:
+podLogsViaLoki:
   enabled: true
   collector: alloy-logs
   extraDiscoveryRules: |-

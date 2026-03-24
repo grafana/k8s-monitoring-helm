@@ -30,7 +30,7 @@ integrations:
         namespaces:
           - o11y
 
-podLogs:
+podLogsViaLoki:
   enabled: true
   collector: alloy-logs
 

@@ -1,0 +1,134 @@
+---
+# -- Only capture logs from pods in these namespaces (`[]` means all namespaces).
+# @section -- Pod Discovery
+namespaces: []
+
+# -- Do not capture logs from any pods in these namespaces.
+# @section -- Pod Discovery
+excludeNamespaces: []
+
+# -- Filter the list of discovered nodes by labels. Only for the "volumes" gather method.
+# Example: `nodeSelectors: { 'kubernetes.io/os': 'linux' }`
+# @section -- Pod Discovery
+nodeSelectors: {}
+
+# -- Filter the list of discovered pods and services by labels. Only for the "volumes" gather method.
+# Example: `labelSelectors: { 'app': 'myapp' }` will only discover pods with the label `app=myapp`.
+# Example: `labelSelectors: { 'app': ['myapp', 'myotherapp'] }` will only discover pods with the label `app=myapp` or `app=myotherapp`.
+# @section -- Pod Discovery
+labelSelectors: {}
+
+# -- Rules to filter pods for log gathering. Only used for "volumes" or "kubernetesApi" gather methods.
+# @section -- Pod Discovery
+extraDiscoveryRules: ""
+
+# Configures which node labels to attach to the logs
+nodeLabels:
+  # -- Whether or not to attach the nodepool label
+  # @section -- Node Labels
+  nodePool: false
+  # -- Whether or not to add the region label
+  # @section -- Node Labels
+  region: false
+  # -- Whether or not to add the availability\_zone label
+  # @section -- Node Labels
+  availabilityZone: false
+  # -- Whether or not to add the node\_role label
+  # @section -- Node Labels
+  nodeRole: false
+  # -- Whether or not to add the os label
+  # @section -- Node Labels
+  nodeOS: false
+  # -- Whether or not to add the node architecture label
+  # @section -- Node Labels
+  nodeArchitecture: false
+  # -- Whether or not to add the instance\_type label
+  # @section -- Node Labels
+  instanceType: false
+
+# -- Log labels to set with values copied from the Kubernetes Pod labels.
+# Format: `<log_label>: <kubernetes_label>`.
+# @section -- Log Processing
+labels:
+  app_kubernetes_io_name: app.kubernetes.io/name
+
+# -- Log labels to set with static values.
+# @section -- Log Processing
+staticLabels: {}
+
+# -- Log labels to set with static values, not quoted so it can reference config components.
+# @section -- Log Processing
+staticLabelsFrom: {}
+
+# -- Log labels to set with values copied from the Kubernetes Pod annotations.
+# Format: `<log_label>: <kubernetes_annotation>`.
+# @section -- Log Processing
+annotations:
+  job: k8s.grafana.com/logs.job
+
+# -- Only gather new log lines since this was deployed. Do not gather historical log lines.
+# @section -- Volume Log Gathering
+onlyGatherNewLogLines: true
+
+# -- Default parsing format if it cannot be determined from container UID. Options are `null`, `cri`, or `docker`.
+# @section -- Log Processing
+defaultLogFormat: cri
+
+# CRI stage processing settings.
+# ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#stagecri))
+# @section -- Log Processing
+cri:
+  # -- Maximum number of partial lines to hold in memory before forcing a merge.
+  # Increase this value if logs are being lost due to partial line limits.
+  # @section -- Log Processing
+  maxPartialLines: 100
+
+# -- The structured metadata mappings to set.
+# Format: `<key>: <extracted_key>`.
+# Example:
+# structuredMetadata:
+#   component: component
+#   kind: kind
+#   name: name
+# @section -- Processing settings
+structuredMetadata:
+  k8s.pod.name: k8s.pod.name
+  pod: pod
+  service.instance.id: service.instance.id
+
+# Check logs for secrets and mask them.
+secretFilter:
+  # -- Enable secret filtering.
+  # @section -- Secret Filtering
+  enabled: false
+
+  # -- Loki selector to send processed logs to the secret filter. Anything not matching will be excluded.
+  # Example: `{app=="payment-processor"}`. If empty, all pod logs will be sent through the secret filter.
+  # @section -- Secret Filtering
+  inclusionSelector: ""
+
+  # -- Template for the redaction placeholder. Use $SECRET_NAME and $SECRET_HASH. E.g.: "<$SECRET_NAME:$SECRET_HASH>"
+  # @section -- Secret Filtering
+  redactWith:
+
+  # -- When redactWith is not set: the percent of the secrets to redact (1–100), where 100 is full redaction.
+  # @section -- Secret Filtering
+  redactPercent: 80
+
+  # -- List of regular expressions to allowlist matching secrets.
+  # @section -- Secret Filtering
+  allowlist: []
+
+  # -- Path to the custom gitleaks.toml file.
+  # @section -- Secret Filtering
+  gitleaksConfigPath: ""
+
+  # -- Raw path to the custom gitleaks.toml file. Use this to reference an Alloy component
+  # @section -- Secret Filtering
+  gitleaksConfigPathFrom: ""
+
+# -- Stage blocks to be added to the loki.process component for pod logs.
+# ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks))
+# This value is templated so that you can refer to other values from this file.
+# @section -- Processing settings
+extraLogProcessingStages: ""

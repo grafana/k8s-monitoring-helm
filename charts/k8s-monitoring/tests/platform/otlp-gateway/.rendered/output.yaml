@@ -21,10 +21,18 @@ metadata:
   namespace: default
 data:
   config.alloy: |
-    // Feature: Pod Logs
-    declare "pod_logs" {
+    // Feature: Pod Logs (Loki)
+    declare "pod_logs_via_loki" {
       argument "logs_destinations" {
         comment = "Must be a list of log destinations where collected logs should be forwarded to"
+      }
+    
+      discovery.kubernetes "pods" {
+        role = "pod"
+        selectors {
+          role = "pod"
+          field = "spec.nodeName=" + sys.env("HOSTNAME")
+        }
       }
     
       discovery.relabel "filtered_pods" {
@@ -59,20 +67,6 @@ data:
           regex = "^(\\S+):\\/\\/.+$"
           replacement = "$1"
           target_label = "tmp_container_runtime"
-        }
-    
-        // make all labels on the pod available to the pipeline as labels,
-        // they are omitted before write to loki via stage.label_keep unless explicitly set
-        rule {
-          action = "labelmap"
-          regex = "__meta_kubernetes_pod_label_(.+)"
-        }
-    
-        // make all annotations on the pod available to the pipeline as labels,
-        // they are omitted before write to loki via stage.label_keep unless explicitly set
-        rule {
-          action = "labelmap"
-          regex = "__meta_kubernetes_pod_annotation_(.+)"
         }
     
         // explicitly set service_name. if not set, loki will automatically try to populate a default.
@@ -143,19 +137,8 @@ data:
           regex = "(.+)"
           target_label = "app_kubernetes_io_name"
         }
-      }
     
-      discovery.kubernetes "pods" {
-        role = "pod"
-        selectors {
-          role = "pod"
-          field = "spec.nodeName=" + sys.env("HOSTNAME")
-        }
-      }
-    
-      discovery.relabel "filtered_pods_with_paths" {
-        targets = discovery.relabel.filtered_pods.output
-    
+        // Set the pod log path.
         rule {
           source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
           separator = "/"
@@ -177,11 +160,12 @@ data:
       }
     
       local.file_match "pod_logs" {
-        path_targets = discovery.relabel.filtered_pods_with_paths.output
+        path_targets = discovery.relabel.filtered_pods.output
       }
     
       loki.source.file "pod_logs" {
         targets    = local.file_match.pod_logs.targets
+        tail_from_end = true
         forward_to = [loki.process.pod_logs.receiver]
       }
     
@@ -230,15 +214,10 @@ data:
           }
         }
     
-        // Only keep the labels that are defined in the `keepLabels` list.
-        stage.label_keep {
-          values = ["__tenant_id__","app_kubernetes_io_name","container","instance","job","level","namespace","service_name","service_namespace","deployment_environment","deployment_environment_name","k8s_namespace_name","k8s_deployment_name","k8s_statefulset_name","k8s_daemonset_name","k8s_cronjob_name","k8s_job_name","k8s_node_name","k8s_pod_name","pod"]
-        }
-    
         forward_to = argument.logs_destinations.value
       }
     }
-    pod_logs "feature" {
+    pod_logs_via_loki "feature" {
       logs_destinations = [
         otelcol.receiver.loki.otlp_gateway.receiver,
       ]
@@ -1017,16 +996,13 @@ data:
             "reason" = "",
           }
         }
-        // set these values as labels, they may or may not be used as index labels in Loki as they can be dropped
-        // prior to being written to Loki, but this makes them available
+        // set the extracted values as labels
         stage.labels {
           values = {
-            "component" = "",
             "kind" = "",
             "level" = "",
-            "name" = "",
-            "node" = "",
-            "reason" = "",
+            "service_name" = "job",
+            "reason" = "reason",
           }
         }
     
@@ -1054,18 +1030,15 @@ data:
         stage.structured_metadata {
           values = {
             "name" = "name",
+            "node" = "node",
           }
         }
     
-        // Only keep the labels that are defined in the `keepLabels` list.
-        stage.label_keep {
-          values = ["job","level","namespace","node","source","reason"]
+        // Drop pipeline-only labels that are not needed in the final output.
+        stage.label_drop {
+          values = ["kind"]
         }
-        stage.labels {
-          values = {
-            "service_name" = "job",
-          }
-        }
+    
         forward_to = argument.logs_destinations.value
       }
     }
@@ -1324,7 +1297,7 @@ data:
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="podLogsViaLoki", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="alloy", version="1.0.0"} 1
     # EOF
 ---

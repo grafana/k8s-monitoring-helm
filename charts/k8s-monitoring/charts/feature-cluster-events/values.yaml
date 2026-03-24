@@ -7,6 +7,10 @@ namespaces: []
 # @section -- Gather settings
 excludeNamespaces: []
 
+# -- Log format used to forward cluster events. Allowed values: `logfmt` (default), `json`.
+# @section -- Gather settings
+logFormat: logfmt
+
 # -- List of event reasons to include (`[]` means allow all event reasons). e.g. `["Failed"]`
 # @section -- Processing settings
 includeReasons: []
@@ -23,33 +27,19 @@ includeLevels: []
 # @section -- Processing settings
 excludeLevels: []
 
-
-# -- Log format used to forward cluster events. Allowed values: `logfmt` (default), `json`.
-# @section -- Gather settings
-logFormat: logfmt
-
 # -- The value for the job label.
 # @section -- Processing settings
 jobLabel: "integrations/kubernetes/eventhandler"
 
-# -- Stage blocks to be added to the loki.process component for cluster events.
-# ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks))
-# This value is templated so that you can refer to other values from this file.
+# -- Log labels to set from extracted event fields.
+# Note: "level" is always set as a label for log level normalization and filtering.
+# Format: `<label>: <extracted_key>`.
+# Available extracted keys: `component`, `kind`, `name`, `node`, `reason`.
 # @section -- Processing settings
-extraLogProcessingStages: ""
-
-# -- The list of labels to keep on the logs, all other pipeline labels will be dropped.
-# @section -- Processing settings
-labelsToKeep:
-  - job
-  - level
-  - namespace
-  - node
-  - source
-  - reason
+labels:
+  reason: reason
 
 # -- The structured metadata mappings to set.
-# To not set any structured metadata, set this to an empty object (e.g. `{}`)
 # Format: `<key>: <extracted_key>`.
 # Example:
 # structuredMetadata:
@@ -59,3 +49,10 @@ labelsToKeep:
 # @section -- Processing settings
 structuredMetadata:
   name: name
+  node: node
+
+# -- Stage blocks to be added to the loki.process component for cluster events.
+# ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks))
+# This value is templated so that you can refer to other values from this file.
+# @section -- Processing settings
+extraLogProcessingStages: ""

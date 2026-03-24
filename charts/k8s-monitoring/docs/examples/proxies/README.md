@@ -115,7 +115,7 @@ applicationObservability:
     zipkin:
       enabled: true
 
-podLogs:
+podLogsViaLoki:
   enabled: true
   collector: alloy-logs
 

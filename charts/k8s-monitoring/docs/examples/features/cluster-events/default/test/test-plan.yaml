@@ -1,0 +1,66 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: cluster-events
+
+subject:
+  releaseName: k8smon
+  path: ../../../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - directory: dependencies
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Loki
+              type: loki
+              url: http://loki.loki.svc:3100
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                httpHeaderValue1: "1"
+              isDefault: true
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: cluster-events-cluster
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+
+          queries:
+            # Any cluster events are being collected
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
+
+            # Normal events exist (from the healthy-app deployment)
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler", level="Info"}[1h])
+              type: logql
+
+            # Warning events exist (from the bad-image pod)
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler", level="Warning"}[1h])
+              type: logql
+
+            # Events from the event-sources namespace
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler", namespace="event-sources"}[1h])
+              type: logql
+
+            # Events with a reason label (e.g. Scheduled, Pulling, Failed)
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler", reason=~".+"}[1h])
+              type: logql
+
+            # Events with a node label
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler"} | node != "" [1h])
+              type: logql
