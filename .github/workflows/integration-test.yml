@@ -43,9 +43,14 @@ jobs:
               exit 0
           fi
 
-          tests=$(find . -name test-plan.yaml -not \( -path "./tests/platform/*" \) -exec dirname {} \; | sed -e "s/^\.\///g")
+          tests=$(find . -name test-plan.yaml -not \( -path "./tests/platform/*" \) -exec dirname {} \; | sed -e "s/^\.\///g" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')
+          manualOnlyTests=$(find . -name .manual-only -type f -not \( -path "./tests/platform/*" \) -exec dirname {} \; | sed "s|^\./||" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')
+
+          # remove manual only tests
+          tests=$(jq --null-input --compact-output --argjson tests "${tests}" --argjson manualOnlyTests "${manualOnlyTests}" '$tests | map(select(. as $test | $manualOnlyTests | index($test) | not))')
+
           echo "Tests: ${tests}"
-          echo "tests=$(echo "${tests}" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
+          echo "tests=${tests}" >> "${GITHUB_OUTPUT}"
 
   run-tests:
     name: Integration Test
@@ -93,7 +98,6 @@ jobs:
           TEST: ${{ matrix.test }}
         run: |
           yq eval '"cluster-type=" + .cluster.type // "kind"' "${TEST}/test-plan.yaml" > "${GITHUB_OUTPUT}"
-          yq eval '"driver-type=" + .cluster.driver // ""' "${TEST}/test-plan.yaml" >> "${GITHUB_OUTPUT}"
           yq eval '"subject-type=" + .subject.type // "helm"' "${TEST}/test-plan.yaml" >> "${GITHUB_OUTPUT}"
 
       - name: Install Kind CLI
@@ -101,13 +105,6 @@ jobs:
         uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc  # v1.14.0
         with:
           install_only: true
-
-      - name: Install QEMU
-        if: ${{ steps.test-config.outputs.cluster-type == 'minikube' && steps.test-config.outputs.driver-type == 'qemu' }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y qemu-system-x86 qemu-utils ovmf
-          sudo ln -sf /usr/share/OVMF/OVMF_CODE_4M.fd /usr/share/OVMF/OVMF_CODE.fd
 
       - name: Install Minikube CLI
         if: ${{ steps.test-config.outputs.cluster-type == 'minikube' }}
