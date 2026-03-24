@@ -149,7 +149,7 @@ declare "pod_logs_via_opentelemetry" {
     }
 
     output {
-      logs = [otelcol.exporter.loki.pod_logs.input]
+      logs = argument.logs_destinations.value
     }
   }
 }

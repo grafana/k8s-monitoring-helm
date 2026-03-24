@@ -12,7 +12,7 @@ cluster:
   type: kind
 
 dependencies:
-  - file: dependencies/workloads.yaml
+  - file: workloads.yaml
   - preset: loki
   - preset: grafana
     overrides:
@@ -42,7 +42,7 @@ tests:
 
           queries:
             # Gets Pod logs with namespace labels
-            - query: count_over_time({k8s_cluster_name="$CLUSTER", job="production/prod-pod", k8s_namespace_name="production", color="red"}[1h])
+            - query: count_over_time({k8s_cluster_name="$CLUSTER", service_name="prod-pod", k8s_namespace_name="production"} | color = "red"[1h])
               type: logql
-            - query: count_over_time({k8s_cluster_name="$CLUSTER", job="development/dev-pod", k8s_namespace_name="development", color="blue"}[1h])
+            - query: count_over_time({k8s_cluster_name="$CLUSTER", service_name="dev-pod", k8s_namespace_name="development"} | color = "blue"[1h])
               type: logql

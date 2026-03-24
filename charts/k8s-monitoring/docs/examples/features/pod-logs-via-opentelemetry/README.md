@@ -15,14 +15,18 @@ cluster:
   name: pod-logs-via-opentelemetry
 
 destinations:
-  localLoki:
-    type: loki
-    url: http://loki.loki.svc:3100/loki/api/v1/push
+  log-storage:
+    type: otlp
+    protocol: http
+    url: http://loki.loki.svc:3100/otlp
     tenantId: "1"
     auth:
       type: basic
       username: loki
       password: lokipassword
+    metrics: {enabled: false}
+    logs: {enabled: true}
+    traces: {enabled: false}
 
 podLogsViaOpenTelemetry:
   enabled: true
