@@ -41,11 +41,11 @@ pod_logs_via_opentelemetry "feature" {
 {{- $featureKey := "podLogsViaOpenTelemetry" }}
 {{- $featureName := "Kubernetes Pod logs via OpenTelemetry" }}
 {{- $destinations := include "features.podLogsViaOpenTelemetry.destinations" . | fromYamlArray }}
-{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "featureName" $featureName) }}
+{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "otlp" "featureName" $featureName) }}
 
 {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
 {{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}
 {{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
-{{- include "feature.podLogsViaOpenTelemetry.collector.validate" (dict "Values" $.Values.podLogs "Collector" $collectorValues "CollectorName" $collectorName) }}
+{{- include "feature.podLogsViaOpenTelemetry.collector.validate" (dict "Values" $.Values.podLogsViaOpenTelemetry "Collector" $collectorValues "CollectorName" $collectorName) }}
 {{- end -}}
 {{- end -}}
