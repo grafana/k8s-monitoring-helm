@@ -3,10 +3,10 @@ cluster:
   name: service-graph-metrics-test
 
 destinations:
-  - name: localPrometheus
+  localPrometheus:
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
-  - name: localLoki
+  localLoki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -14,7 +14,7 @@ destinations:
       type: basic
       username: loki
       password: lokipassword
-  - name: localTempo
+  localTempo:
     type: otlp
     url: tempo.tempo.svc:4317
     tls:
@@ -45,6 +45,7 @@ destinations:
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   traces:
     transforms:
       span:
@@ -58,53 +59,26 @@ applicationObservability:
       http:
         enabled: true
 
-podLogs:
+podLogsViaOpenTelemetry:
   enabled: true
-  gatherMethod: filelog
+  collector: alloy-logs
   namespaceLabels:
     color: color
 
-  labelsToKeep:
-    - app.kubernetes.io/name
-    - container
-    - instance
-    - job
-    - level
-    - namespace
-    - pod
-    - service.name
-    - service.namespace
-    - deployment.environment
-    - deployment.environment_name
-    - k8s.pod.name
-    - k8s.namespace.name
-    - k8s.deployment.name
-    - k8s.statefulset.name
-    - k8s.daemonset.name
-    - k8s.cronjob.name
-    - k8s.job.name
-    - k8s.node.name
-    - color
+collectors:
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+    alloy:
+      stabilityLevel: public-preview
 
-alloy-logs:
-  enabled: true
-  alloy:
-    stabilityLevel: public-preview
+  alloy-receiver:
+    presets: [deployment]
 
-alloy-receiver:
-  enabled: true
-  alloy:
-    extraPorts:
-      - name: otlp-http
-        port: 4318
-        targetPort: 4318
-        protocol: TCP
-      - name: otlp-grpc
-        port: 4317
-        targetPort: 4317
-        protocol: TCP
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
 integrations:
+  collector: alloy-metrics
   alloy:
     instances:
       - name: alloy-receiver
@@ -119,6 +93,3 @@ integrations:
         metrics:
           tuning:
             includeMetrics: [traces_service_graph_request_.*]
-
-alloy-metrics:
-  enabled: true

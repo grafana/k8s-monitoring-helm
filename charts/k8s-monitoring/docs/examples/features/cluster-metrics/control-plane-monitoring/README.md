@@ -16,26 +16,38 @@ cluster:
   name: cluster-metrics-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/api/push
 
 # Features
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
   controlPlane:
     enabled: true
 
-podLogs:
+hostMetrics:
   enabled: true
+  collector: alloy-metrics
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
+
+podLogsViaLoki:
+  enabled: true
+  collector: alloy-logs
 
 integrations:
+  collector: alloy-metrics
   etcd:
     instances:
       - name: k8s-controlplane-etcd
@@ -43,13 +55,22 @@ integrations:
           app.kubernetes.io/component: etcd
 
 # Collectors
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
-alloy-logs:
-  enabled: true
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 
-alloy-singleton:
-  enabled: true
+  alloy-singleton:
+    presets: [singleton]
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

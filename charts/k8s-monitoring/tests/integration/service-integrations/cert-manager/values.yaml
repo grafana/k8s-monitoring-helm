@@ -3,11 +3,12 @@ cluster:
   name: cert-manager-integration-test
 
 destinations:
-  - name: localPrometheus
+  localPrometheus:
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
 
 integrations:
+  collector: alloy-metrics
   cert-manager:
     instances:
       - name: cert-manager
@@ -17,5 +18,6 @@ integrations:
           tuning:
             includeMetrics: [scrape_samples_scraped, certmanager_.*]
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]

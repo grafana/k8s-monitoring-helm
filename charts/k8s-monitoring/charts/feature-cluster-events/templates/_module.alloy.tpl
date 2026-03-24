@@ -53,16 +53,15 @@ declare "cluster_events" {
       }
     }
     {{- end }}
-    // set these values as labels, they may or may not be used as index labels in Loki as they can be dropped
-    // prior to being written to Loki, but this makes them available
+    // set the extracted values as labels
     stage.labels {
       values = {
-        "component" = "",
         "kind" = "",
         "level" = "",
-        "name" = "",
-        "node" = "",
-        "reason" = "",
+        "service_name" = "job",
+{{- range $label, $extractedKey := .Values.labels }}
+        {{ $label | quote }} = {{ if $extractedKey }}{{ $extractedKey | quote }}{{ else }}""{{ end }},
+{{- end }}
       }
     }
 
@@ -149,10 +148,6 @@ declare "cluster_events" {
       }
     }
 
-    {{- if .Values.extraLogProcessingStages }}
-    {{ tpl .Values.extraLogProcessingStages $ | indent 4 }}
-    {{ end }}
-
     {{- /* the stage.structured_metadata block needs to be conditionalized because the support for enabling structured metadata can be disabled */ -}}
     {{- /* through the loki limits_conifg on a per-tenant basis, even if there are no values defined or there are values defined but it is disabled */ -}}
     {{- /* in Loki, the write will fail. */ -}}
@@ -166,15 +161,15 @@ declare "cluster_events" {
     }
     {{- end }}
 
-    // Only keep the labels that are defined in the `keepLabels` list.
-    stage.label_keep {
-      values = {{ .Values.labelsToKeep | toJson }}
+    // Drop pipeline-only labels that are not needed in the final output.
+    stage.label_drop {
+      values = ["kind"]
     }
-    stage.labels {
-      values = {
-        "service_name" = "job",
-      }
-    }
+
+    {{- if .Values.extraLogProcessingStages }}
+    {{ tpl .Values.extraLogProcessingStages $ | indent 4 }}
+    {{ end }}
+
     forward_to = argument.logs_destinations.value
   }
 }

@@ -32,16 +32,13 @@ can restrict events from a given list of reasons:
               "reason" = "",
             }
           }
-          // set these values as labels, they may or may not be used as index labels in Loki as they can be dropped
-          // prior to being written to Loki, but this makes them available
+          // set the extracted values as labels
           stage.labels {
             values = {
-              "component" = "",
               "kind" = "",
               "level" = "",
-              "name" = "",
-              "node" = "",
-              "reason" = "",
+              "node" = "node",
+              "reason" = "reason",
             }
           }
 
@@ -77,9 +74,9 @@ can restrict events from a given list of reasons:
             }
           }
 
-          // Only keep the labels that are defined in the `keepLabels` list.
-          stage.label_keep {
-            values = ["job","level","namespace","node","source","reason"]
+          // Drop pipeline-only labels that are not needed in the final output.
+          stage.label_drop {
+            values = ["kind"]
           }
           stage.labels {
             values = {
@@ -123,16 +120,13 @@ can restrict events to a given list of reasons:
               "reason" = "",
             }
           }
-          // set these values as labels, they may or may not be used as index labels in Loki as they can be dropped
-          // prior to being written to Loki, but this makes them available
+          // set the extracted values as labels
           stage.labels {
             values = {
-              "component" = "",
               "kind" = "",
               "level" = "",
-              "name" = "",
-              "node" = "",
-              "reason" = "",
+              "node" = "node",
+              "reason" = "reason",
             }
           }
 
@@ -184,9 +178,9 @@ can restrict events to a given list of reasons:
             }
           }
 
-          // Only keep the labels that are defined in the `keepLabels` list.
-          stage.label_keep {
-            values = ["job","level","namespace","node","source","reason"]
+          // Drop pipeline-only labels that are not needed in the final output.
+          stage.label_drop {
+            values = ["kind"]
           }
           stage.labels {
             values = {

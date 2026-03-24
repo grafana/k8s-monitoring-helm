@@ -3,7 +3,7 @@ cluster:
   name: pod-logs-feature-test
 
 destinations:
-  - name: localLoki
+  localLoki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     batchSize: "1MiB"
@@ -14,8 +14,10 @@ destinations:
       username: loki
       password: lokipassword
 
-podLogs:
+podLogsViaLoki:
   enabled: true
+  collector: alloy-logs
 
-alloy-logs:
-  enabled: true
+collectors:
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]

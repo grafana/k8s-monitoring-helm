@@ -8,32 +8,6 @@ should create a ConfigMap that sets structured metadata k/v pairs:
 
         loki.relabel "journal" {
 
-          // copy all journal labels and make the available to the pipeline stages as labels, there is a label
-          // keep defined to filter out unwanted labels, these pipeline labels can be set as structured metadata
-          // as well, the following labels are available:
-          // - boot_id
-          // - cap_effective
-          // - cmdline
-          // - comm
-          // - exe
-          // - gid
-          // - hostname
-          // - machine_id
-          // - pid
-          // - stream_id
-          // - systemd_cgroup
-          // - systemd_invocation_id
-          // - systemd_slice
-          // - systemd_unit
-          // - transport
-          // - uid
-          //
-          // More Info: https://www.freedesktop.org/software/systemd/man/systemd.journal-fields.html
-          rule {
-            action = "labelmap"
-            regex = "__journal__(.+)"
-          }
-
           rule {
             action = "replace"
             source_labels = ["__journal__systemd_unit"]
@@ -48,6 +22,36 @@ should create a ConfigMap that sets structured metadata k/v pairs:
             source_labels = ["__journal__systemd_unit"]
             replacement = "$1"
             target_label = "service_name"
+          }
+          rule {
+            action = "replace"
+            source_labels = ["__journal__cmdline"]
+            replacement = "$1"
+            target_label = "cmdline"
+          }
+          rule {
+            action = "replace"
+            source_labels = ["__journal__comm"]
+            replacement = "$1"
+            target_label = "comm"
+          }
+          rule {
+            action = "replace"
+            source_labels = ["__journal__exe"]
+            replacement = "$1"
+            target_label = "exe"
+          }
+          rule {
+            action = "replace"
+            source_labels = ["__journal__pid"]
+            replacement = "$1"
+            target_label = "pid"
+          }
+          rule {
+            action = "replace"
+            source_labels = ["__journal__unit"]
+            replacement = "$1"
+            target_label = "unit"
           }
 
           forward_to = [] // No forward_to is used in this component, the defined rules are used in the loki.source.journal component
@@ -147,11 +151,6 @@ should create a ConfigMap that sets structured metadata k/v pairs:
               "pid" = "pid",
               "unit" = "unit",
             }
-          }
-
-          // Only keep the labels that are defined in the `keepLabels` list.
-          stage.label_keep {
-            values = ["__tenant_id__","instance","job","level","name","unit","service_name","source"]
           }
 
           forward_to = argument.logs_destinations.value

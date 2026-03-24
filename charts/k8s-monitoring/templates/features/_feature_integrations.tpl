@@ -4,13 +4,6 @@
 {{- if or $metricIntegrations $logRuleIntegrations }}true{{ else }}false{{ end }}
 {{- end }}
 
-{{- define "features.integrations.collectors" }}
-{{- $metricIntegrations := include "feature.integrations.configured.metrics" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
-{{- if (not (empty $metricIntegrations)) }}
-- {{ .Values.integrations.collector }}
-{{- end }}
-{{- end }}
-
 {{- define "features.integrations.metrics.include" }}
 {{- $values := dict "Chart" $.Subcharts.integrations.Chart "Values" .Values.integrations "Files" $.Subcharts.integrations.Files "Release" $.Release }}
 {{- $destinations := include "features.integrations.destinations" . | fromYamlArray }}
@@ -20,11 +13,11 @@
 {{- include (printf "integrations.%s.module.metrics" $integrationType) $values | indent 0 }}
 {{ include "helper.alloy_name" $integrationType }}_integration "integration" {
   metrics_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
+    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
   ]
 {{- if has $integrationType $logOutputIntegrations }}
   logs_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
+    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
   ]
 {{- end }}
 }
@@ -79,6 +72,8 @@
 
 {{- define "features.integrations.collector.values" }}{{ end -}}
 
+{{- define "features.integrations.chooseCollector" -}}{{- end -}}
+
 {{- define "features.integrations.validate" }}
 {{- if eq (include "features.integrations.enabled" .) "true" }}
 {{- $featureName := "Service Integrations" }}
@@ -87,20 +82,20 @@
 {{- $destinations := include "features.integrations.destinations" . | fromYamlArray }}
 {{/*{{- fail (printf "\n%s\n"  ($destinations | toYaml))}}*/}}
 {{- if $metricIntegrations }}
-  {{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "feature" $featureName) }}
+  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "featureName" $featureName) }}
 {{- end }}
 
 {{- $logOutputIntegrations := include "feature.integrations.configured.logOutput" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
 {{- if $logOutputIntegrations }}
-  {{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "feature" $featureName) }}
+  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "featureName" $featureName) }}
 {{- end }}
 
-{{- $podLogsEnabled := include "features.podLogs.enabled" $ }}
+{{- $podLogsEnabled := include "features.podLogsViaLoki.enabled" $ }}
 {{- $logIntegrations := include "feature.integrations.configured.logRules" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
 {{- if and $logIntegrations (ne $podLogsEnabled "true") }}
   {{- $msg := list "" "Service integrations that include logs requires enabling the Pod Logs feature." }}
   {{- $msg = append $msg "Please set:" }}
-  {{- $msg = append $msg "podLogs:" }}
+  {{- $msg = append $msg "podLogsViaLoki:" }}
   {{- $msg = append $msg "  enabled: true" }}
   {{- fail (join "\n" $msg) }}
 {{- end }}

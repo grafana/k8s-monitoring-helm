@@ -11,24 +11,25 @@
 {{ $removeList | uniq | toYaml }}
 {{ end }}
 
+{{/* Print an OTLP destination Alloy config components */}}
+{{/* Inputs: . (root object),  destination (string, name of destination), destinationName (name of this destination) */}}
 {{- define "destinations.otlp.alloy" }}
 {{- with .destination }}
 {{- if eq (include "destinations.otlp.supports_metrics" .) "true" }}
-otelcol.receiver.prometheus {{ include "helper.alloy_name" .name | quote }} {
+otelcol.receiver.prometheus {{ include "helper.alloy_name" $.destinationName | quote }} {
   output {
-    metrics = [{{ include "destinations.otlp.alloy.otlp.metrics.target" . | trim }}]
+    metrics = [{{ include "destinations.otlp.alloy.otlp.metrics.target" (dict "destination" . "destinationName" $.destinationName) | trim }}]
   }
 }
 {{- end }}
 {{- if eq (include "destinations.otlp.supports_logs" .) "true" }}
-otelcol.receiver.loki {{ include "helper.alloy_name" .name | quote }} {
+otelcol.receiver.loki {{ include "helper.alloy_name" $.destinationName | quote }} {
   output {
-    logs = [{{ include "destinations.otlp.alloy.otlp.logs.target" . | trim }}]
+    logs = [{{ include "destinations.otlp.alloy.otlp.logs.target" (dict "destination" . "destinationName" $.destinationName) | trim }}]
   }
 }
 {{- end }}
-
-otelcol.processor.attributes {{ include "helper.alloy_name" .name | quote }} {
+otelcol.processor.attributes {{ include "helper.alloy_name" $.destinationName | quote }} {
 {{- range $action := .processors.attributes.actions }}
   action {
     key = {{ $action.key | quote }}
@@ -54,18 +55,18 @@ otelcol.processor.attributes {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
   output {
 {{- if ne .metrics.enabled false }}
-    metrics = [otelcol.processor.transform.{{ include "helper.alloy_name" .name }}.input]
+    metrics = [otelcol.processor.transform.{{ include "helper.alloy_name" $.destinationName }}.input]
 {{- end }}
 {{- if ne .logs.enabled false }}
-    logs = [otelcol.processor.transform.{{ include "helper.alloy_name" .name }}.input]
+    logs = [otelcol.processor.transform.{{ include "helper.alloy_name" $.destinationName }}.input]
 {{- end }}
 {{- if ne .traces.enabled false }}
-    traces = [otelcol.processor.transform.{{ include "helper.alloy_name" .name }}.input]
+    traces = [otelcol.processor.transform.{{ include "helper.alloy_name" $.destinationName }}.input]
 {{- end }}
   }
 }
 
-otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
+otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | quote }} {
   error_mode = {{ .processors.transform.errorMode | quote }}
 
 {{- if ne .metrics.enabled false }}
@@ -228,18 +229,18 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
 
   output {
 {{- if ne .metrics.enabled false }}
-    metrics = [otelcol.processor.filter.{{ include "helper.alloy_name" .name }}.input]
+    metrics = [otelcol.processor.filter.{{ include "helper.alloy_name" $.destinationName }}.input]
 {{- end }}
 {{- if ne .logs.enabled false }}
-    logs = [otelcol.processor.filter.{{ include "helper.alloy_name" .name }}.input]
+    logs = [otelcol.processor.filter.{{ include "helper.alloy_name" $.destinationName }}.input]
 {{- end }}
 {{- if ne .traces.enabled false }}
-    traces = [otelcol.processor.filter.{{ include "helper.alloy_name" .name }}.input]
+    traces = [otelcol.processor.filter.{{ include "helper.alloy_name" $.destinationName }}.input]
 {{- end }}
   }
 }
 
-otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
+otelcol.processor.filter {{ include "helper.alloy_name" $.destinationName | quote }} {
   error_mode = {{ .processors.filters.errorMode | quote }}
 
 {{- if and .metrics.enabled (or .processors.filters.metrics.metric .processors.filters.metrics.datapoint) }}
@@ -291,27 +292,27 @@ otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
 
   output {
 {{- if ne .metrics.enabled false }}
-    metrics = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
+    metrics = [{{ include "destinations.otlp.alloy.exporter.target" (dict "destination" . "destinationName" $.destinationName) }}]
 {{- end }}
 {{- if ne .logs.enabled false }}
-    logs = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
+    logs = [{{ include "destinations.otlp.alloy.exporter.target" (dict "destination" . "destinationName" $.destinationName) }}]
 {{- end }}
 {{- if ne .traces.enabled false }}
 {{- /* If sampling is enabled, override traces target and enable loadbalancing exporter if sampling is enabled */}}
 {{- if and .processors.tailSampling.enabled .processors.serviceGraphMetrics.enabled }}
     traces = [
-      otelcol.exporter.loadbalancing.{{ printf "%s_sampler" (include "helper.alloy_name" .name) }}.input,
-      otelcol.exporter.loadbalancing.{{ printf "%s_servicegraph" (include "helper.alloy_name" .name) }}.input,
+      otelcol.exporter.loadbalancing.{{ printf "%s_sampler" (include "helper.alloy_name" $.destinationName) }}.input,
+      otelcol.exporter.loadbalancing.{{ printf "%s_servicegraph" (include "helper.alloy_name" $.destinationName) }}.input,
     ]
 {{- else if .processors.tailSampling.enabled }}
-    traces = [otelcol.exporter.loadbalancing.{{ printf "%s_sampler" (include "helper.alloy_name" .name) }}.input]
+    traces = [otelcol.exporter.loadbalancing.{{ printf "%s_sampler" (include "helper.alloy_name" $.destinationName) }}.input]
 {{- else if .processors.serviceGraphMetrics.enabled }}
     traces = [
-      otelcol.exporter.loadbalancing.{{ printf "%s_servicegraph" (include "helper.alloy_name" .name) }}.input,
-      {{ include "destinations.otlp.alloy.exporter.target" . }},
+      otelcol.exporter.loadbalancing.{{ printf "%s_servicegraph" (include "helper.alloy_name" $.destinationName) }}.input,
+      {{ include "destinations.otlp.alloy.exporter.target" (dict "destination" . "destinationName" $.destinationName) }},
     ]
 {{- else }}
-    traces = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
+    traces = [{{ include "destinations.otlp.alloy.exporter.target" (dict "destination" . "destinationName" $.destinationName) }}]
 {{- end }}
 {{- end }}
   }
@@ -319,11 +320,11 @@ otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
 
 {{- if .processors.tailSampling.enabled }}
 
-otelcol.exporter.loadbalancing {{ printf "%s_sampler" (include "helper.alloy_name" .name) | quote }} {
+otelcol.exporter.loadbalancing {{ printf "%s_sampler" (include "helper.alloy_name" $.destinationName) | quote }} {
   resolver {
     kubernetes {
       {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
-      {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-sampler" .name)) | trunc $maxLength | trimSuffix "-" | lower }}
+      {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-sampler" $.destinationName)) | trunc $maxLength | trimSuffix "-" | lower }}
       service = "{{ $collectorName }}"
     }
   }
@@ -341,11 +342,11 @@ otelcol.exporter.loadbalancing {{ printf "%s_sampler" (include "helper.alloy_nam
 
 {{- if .processors.serviceGraphMetrics.enabled }}
 
-otelcol.exporter.loadbalancing {{ printf "%s_servicegraph" (include "helper.alloy_name" .name) | quote }} {
+otelcol.exporter.loadbalancing {{ printf "%s_servicegraph" (include "helper.alloy_name" $.destinationName) | quote }} {
   resolver {
     kubernetes {
       {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
-      {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-servicegraph" .name)) | trunc $maxLength | trimSuffix "-" | lower }}
+      {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-servicegraph" $.destinationName)) | trunc $maxLength | trimSuffix "-" | lower }}
       service = "{{ $collectorName }}"
     }
   }
@@ -360,25 +361,26 @@ otelcol.exporter.loadbalancing {{ printf "%s_servicegraph" (include "helper.allo
   }
 }
 {{- end }}
-{{ include "destinations.otlp.alloy.exporter" . }}
+{{ include "destinations.otlp.alloy.exporter" $ }}
 {{- end }}
 {{- end }}
 
 {{- define "destinations.otlp.alloy.exporter.target" }}
-{{- if .processors.batch.enabled -}}
-otelcol.processor.batch.{{ include "helper.alloy_name" .name }}.input
-{{- else if .processors.memoryLimiter.enabled -}}
-otelcol.processor.memory_limiter.{{ include "helper.alloy_name" .name }}.input
-{{- else if eq .protocol "grpc" -}}
-otelcol.exporter.otlp.{{ include "helper.alloy_name" .name }}.input
-{{- else if eq .protocol "http" -}}
-otelcol.exporter.otlphttp.{{ include "helper.alloy_name" .name }}.input
+{{- if .destination.processors.batch.enabled -}}
+otelcol.processor.batch.{{ include "helper.alloy_name" $.destinationName }}.input
+{{- else if .destination.processors.memoryLimiter.enabled -}}
+otelcol.processor.memory_limiter.{{ include "helper.alloy_name" $.destinationName }}.input
+{{- else if eq .destination.protocol "grpc" -}}
+otelcol.exporter.otlp.{{ include "helper.alloy_name" $.destinationName }}.input
+{{- else if eq .destination.protocol "http" -}}
+otelcol.exporter.otlphttp.{{ include "helper.alloy_name" $.destinationName }}.input
 {{- end }}
 {{- end }}
 
 {{- define "destinations.otlp.alloy.exporter" }}
+{{- with .destination }}
 {{- if .processors.batch.enabled }}
-otelcol.processor.batch {{ include "helper.alloy_name" .name | quote }} {
+otelcol.processor.batch {{ include "helper.alloy_name" $.destinationName | quote }} {
   timeout = {{ .processors.batch.timeout | quote }}
   send_batch_size = {{ .processors.batch.size | int }}
   send_batch_max_size = {{ .processors.batch.maxSize | int }}
@@ -387,11 +389,11 @@ otelcol.processor.batch {{ include "helper.alloy_name" .name | quote }} {
   output {
 {{- $target := "" }}
 {{- if .processors.memoryLimiter.enabled }}
-  {{- $target = printf "otelcol.processor.memory_limiter.%s.input" (include "helper.alloy_name" .name) }}
+  {{- $target = printf "otelcol.processor.memory_limiter.%s.input" (include "helper.alloy_name" $.destinationName) }}
 {{- else if eq .protocol "grpc" }}
-  {{- $target = printf "otelcol.exporter.otlp.%s.input" (include "helper.alloy_name" .name) }}
+  {{- $target = printf "otelcol.exporter.otlp.%s.input" (include "helper.alloy_name" $.destinationName) }}
 {{- else if eq .protocol "http" }}
-  {{- $target = printf "otelcol.exporter.otlphttp.%s.input" (include "helper.alloy_name" .name) }}
+  {{- $target = printf "otelcol.exporter.otlphttp.%s.input" (include "helper.alloy_name" $.destinationName) }}
 {{- end }}
 {{- if ne .metrics.enabled false }}
     metrics = [{{ $target }}]
@@ -406,15 +408,15 @@ otelcol.processor.batch {{ include "helper.alloy_name" .name | quote }} {
 }
 {{- if .processors.memoryLimiter.enabled }}
 
-otelcol.processor.memory_limiter {{ include "helper.alloy_name" .name | quote }} {
+otelcol.processor.memory_limiter {{ include "helper.alloy_name" $.destinationName | quote }} {
   check_interval = {{ .processors.memoryLimiter.checkInterval | quote }}
   limit = {{ .processors.memoryLimiter.limit | quote }}
 
   output {
 {{- if eq .protocol "grpc" }}
-  {{- $target = printf "otelcol.exporter.otlp.%s.input" (include "helper.alloy_name" .name) }}
+  {{- $target = printf "otelcol.exporter.otlp.%s.input" (include "helper.alloy_name" $.destinationName) }}
 {{- else if eq .protocol "http" }}
-  {{- $target = printf "otelcol.exporter.otlphttp.%s.input" (include "helper.alloy_name" .name) }}
+  {{- $target = printf "otelcol.exporter.otlphttp.%s.input" (include "helper.alloy_name" $.destinationName) }}
 {{- end }}
 {{- if ne .metrics.enabled false }}
     metrics = [{{ $target }}]
@@ -430,9 +432,9 @@ otelcol.processor.memory_limiter {{ include "helper.alloy_name" .name | quote }}
 {{- end }}
 
 {{- if eq .protocol "grpc" }}
-otelcol.exporter.otlp {{ include "helper.alloy_name" .name | quote }} {
+otelcol.exporter.otlp {{ include "helper.alloy_name" $.destinationName | quote }} {
 {{- else if eq .protocol "http" }}
-otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
+otelcol.exporter.otlphttp {{ include "helper.alloy_name" $.destinationName | quote }} {
 {{- end }}
   client {
 {{- if .urlFrom }}
@@ -444,18 +446,18 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
     proxy_url = {{ .proxyURL | quote }}
 {{- end }}
 {{- if eq .auth.type "basic" }}
-    auth = otelcol.auth.basic.{{ include "helper.alloy_name" .name }}.handler
+    auth = otelcol.auth.basic.{{ include "helper.alloy_name" $.destinationName }}.handler
 {{- else if eq .auth.type "bearerToken" }}
-    auth = otelcol.auth.bearer.{{ include "helper.alloy_name" .name }}.handler
+    auth = otelcol.auth.bearer.{{ include "helper.alloy_name" $.destinationName }}.handler
 {{- else if eq .auth.type "oauth2" }}
-    auth = otelcol.auth.oauth2.{{ include "helper.alloy_name" .name }}.handler
+    auth = otelcol.auth.oauth2.{{ include "helper.alloy_name" $.destinationName }}.handler
 {{- else if eq .auth.type "sigv4" }}
-    auth = otelcol.auth.sigv4.{{ include "helper.alloy_name" .name }}.handler
+    auth = otelcol.auth.sigv4.{{ include "helper.alloy_name" $.destinationName }}.handler
 {{- end }}
-{{- if or (eq (include "secrets.usesSecret" (dict "object" . "key" "tenantId")) "true") .extraHeaders .extraHeadersFrom }}
+{{- if or (eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "tenantId")) "true") .extraHeaders .extraHeadersFrom }}
     headers = {
-{{- if eq (include "secrets.usesSecret" (dict "object" . "key" "tenantId")) "true" }}
-      "X-Scope-OrgID" = {{ include "secrets.read" (dict "object" . "key" "tenantId" "nonsensitive" true) }},
+{{- if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "tenantId")) "true" }}
+      "X-Scope-OrgID" = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "tenantId" "nonsensitive" true) }},
 {{- end }}
 {{- range $key, $value := .extraHeaders }}
       {{ $key | quote }} = {{ $value | quote }},
@@ -478,18 +480,18 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
       insecure_skip_verify = {{ .tls.insecureSkipVerify | default false }}
       {{- if .tls.caFile }}
       ca_file = {{ .tls.caFile | quote }}
-      {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.ca")) "true" }}
-      ca_pem = {{ include "secrets.read" (dict "object" . "key" "tls.ca" "nonsensitive" true) }}
+      {{- else if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "tls.ca")) "true" }}
+      ca_pem = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "tls.ca" "nonsensitive" true) }}
       {{- end }}
       {{- if .tls.certFile }}
       cert_file = {{ .tls.certFile | quote }}
-      {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.cert")) "true" }}
-      cert_pem = {{ include "secrets.read" (dict "object" . "key" "tls.cert" "nonsensitive" true) }}
+      {{- else if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "tls.cert")) "true" }}
+      cert_pem = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "tls.cert" "nonsensitive" true) }}
       {{- end }}
       {{- if .tls.keyFile }}
       key_file = {{ .tls.keyFile | quote }}
-      {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.key")) "true" }}
-      key_pem = {{ include "secrets.read" (dict "object" . "key" "tls.key") }}
+      {{- else if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "tls.key")) "true" }}
+      key_pem = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "tls.key") }}
       {{- end }}
     }
 {{- end }}
@@ -531,36 +533,36 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
 }
 {{- if eq (include "secrets.authType" .) "basic" }}
 
-otelcol.auth.basic {{ include "helper.alloy_name" .name | quote }} {
-  username = {{ include "secrets.read" (dict "object" . "key" "auth.username" "nonsensitive" true) }}
-  password = {{ include "secrets.read" (dict "object" . "key" "auth.password") }}
+otelcol.auth.basic {{ include "helper.alloy_name" $.destinationName | quote }} {
+  username = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.username" "nonsensitive" true) }}
+  password = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.password") }}
 }
 {{- else if eq (include "secrets.authType" .) "bearerToken" }}
 {{- if .auth.bearerTokenFile }}
 
-local.file {{ include "helper.alloy_name" .name | quote }} {
+local.file {{ include "helper.alloy_name" $.destinationName | quote }} {
   filename = {{ .auth.bearerTokenFile | quote }}
 }
 
-otelcol.auth.bearer {{ include "helper.alloy_name" .name | quote }} {
-  token = local.file.{{ include "helper.alloy_name" .name }}.content
+otelcol.auth.bearer {{ include "helper.alloy_name" $.destinationName | quote }} {
+  token = local.file.{{ include "helper.alloy_name" $.destinationName }}.content
 }
 {{- else }}
 
-otelcol.auth.bearer {{ include "helper.alloy_name" .name | quote }} {
-  token = {{ include "secrets.read" (dict "object" . "key" "auth.bearerToken") }}
+otelcol.auth.bearer {{ include "helper.alloy_name" $.destinationName | quote }} {
+  token = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.bearerToken") }}
 }
 {{- end }}
 {{- else if eq (include "secrets.authType" .) "oauth2" }}
 
-otelcol.auth.oauth2 {{ include "helper.alloy_name" .name | quote }} {
-  {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "auth.oauth2.clientId")) "true" }}
-  client_id = {{ include "secrets.read" (dict "object" . "key" "auth.oauth2.clientId" "nonsensitive" true) }}
+otelcol.auth.oauth2 {{ include "helper.alloy_name" $.destinationName | quote }} {
+  {{- if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "auth.oauth2.clientId")) "true" }}
+  client_id = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.oauth2.clientId" "nonsensitive" true) }}
   {{- end }}
   {{- if .auth.oauth2.clientSecretFile }}
   client_secret_file = {{ .auth.oauth2.clientSecretFile | quote }}
-  {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "auth.oauth2.clientSecret")) "true" }}
-  client_secret = {{ include "secrets.read" (dict "object" . "key" "auth.oauth2.clientSecret") }}
+  {{- else if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "auth.oauth2.clientSecret")) "true" }}
+  client_secret = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.oauth2.clientSecret") }}
   {{- end }}
   {{- if .auth.oauth2.endpointParams }}
   endpoint_params = {
@@ -596,25 +598,25 @@ otelcol.auth.oauth2 {{ include "helper.alloy_name" .name | quote }} {
     insecure_skip_verify = {{ .auth.oauth2.tls.insecureSkipVerify | default false }}
     {{- if .auth.oauth2.tls.caFile }}
     ca_file = {{ .auth.oauth2.tls.caFile | quote }}
-    {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "auth.oauth2.tls.ca")) "true" }}
-    ca_pem = {{ include "secrets.read" (dict "object" . "key" "auth.oauth2.tls.ca" "nonsensitive" true) }}
+    {{- else if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "auth.oauth2.tls.ca")) "true" }}
+    ca_pem = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.oauth2.tls.ca" "nonsensitive" true) }}
     {{- end }}
     {{- if .auth.oauth2.tls.certFile }}
     cert_file = {{ .auth.oauth2.tls.certFile | quote }}
-    {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "auth.oauth2.tls.cert")) "true" }}
-    cert_pem = {{ include "secrets.read" (dict "object" . "key" "auth.oauth2.tls.cert" "nonsensitive" true) }}
+    {{- else if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "auth.oauth2.tls.cert")) "true" }}
+    cert_pem = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.oauth2.tls.cert" "nonsensitive" true) }}
     {{- end }}
     {{- if .auth.oauth2.tls.keyFile }}
     key_file = {{ .auth.oauth2.tls.keyFile | quote }}
-    {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "auth.oauth2.tls.key")) "true" }}
-    key_pem = {{ include "secrets.read" (dict "object" . "key" "auth.oauth2.tls.key") }}
+    {{- else if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "auth.oauth2.tls.key")) "true" }}
+    key_pem = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.oauth2.tls.key") }}
     {{- end }}
   }
   {{- end }}
 }
 {{- else if eq (include "secrets.authType" .) "sigv4" }}
 
-otelcol.auth.sigv4 {{ include "helper.alloy_name" .name | quote }} {
+otelcol.auth.sigv4 {{ include "helper.alloy_name" $.destinationName | quote }} {
   {{- if .auth.sigv4.region }}
   region = {{ .auth.sigv4.region | quote }}
   {{- end }}
@@ -637,6 +639,7 @@ otelcol.auth.sigv4 {{ include "helper.alloy_name" .name | quote }} {
 }
 {{- end }}
 {{- end }}
+{{- end }}
 
 {{- define "secrets.list.otlp" -}}
 - tenantId
@@ -653,9 +656,9 @@ otelcol.auth.sigv4 {{ include "helper.alloy_name" .name | quote }} {
 - tls.key
 {{- end -}}
 
-{{- define "destinations.otlp.alloy.prometheus.metrics.target" }}otelcol.receiver.prometheus.{{ include "helper.alloy_name" .name }}.receiver{{ end }}
-{{- define "destinations.otlp.alloy.loki.logs.target" }}otelcol.receiver.loki.{{ include "helper.alloy_name" .name }}.receiver{{ end }}
-{{- define "destinations.otlp.alloy.otlp.target" }}otelcol.processor.attributes.{{ include "helper.alloy_name" .name }}.input{{ end }}
+{{- define "destinations.otlp.alloy.prometheus.metrics.target" }}otelcol.receiver.prometheus.{{ include "helper.alloy_name" $.destinationName }}.receiver{{ end }}
+{{- define "destinations.otlp.alloy.loki.logs.target" }}otelcol.receiver.loki.{{ include "helper.alloy_name" $.destinationName }}.receiver{{ end }}
+{{- define "destinations.otlp.alloy.otlp.target" }}otelcol.processor.attributes.{{ include "helper.alloy_name" $.destinationName }}.input{{ end }}
 {{- define "destinations.otlp.alloy.otlp.metrics.target" }}{{ include "destinations.otlp.alloy.otlp.target" . }}{{- end }}
 {{- define "destinations.otlp.alloy.otlp.logs.target" }}{{ include "destinations.otlp.alloy.otlp.target" . }}{{- end }}
 {{- define "destinations.otlp.alloy.otlp.traces.target" }}{{ include "destinations.otlp.alloy.otlp.target" . }}{{- end }}

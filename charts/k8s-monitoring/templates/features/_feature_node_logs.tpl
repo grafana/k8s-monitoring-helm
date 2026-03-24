@@ -1,11 +1,5 @@
 {{- define "features.nodeLogs.enabled" }}{{ .Values.nodeLogs.enabled }}{{- end }}
 
-{{- define "features.nodeLogs.collectors" }}
-{{- if .Values.nodeLogs.enabled -}}
-- {{ .Values.nodeLogs.collector }}
-{{- end }}
-{{- end }}
-
 {{- define "features.nodeLogs.include" }}
 {{- if .Values.nodeLogs.enabled -}}
 {{- $destinations := include "features.nodeLogs.destinations" . | fromYamlArray }}
@@ -14,7 +8,7 @@
 {{- include "feature.nodeLogs.module" (dict "Values" .Values.nodeLogs "Files" $.Subcharts.nodeLogs.Files) }}
 node_logs "feature" {
   logs_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
+    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
   ]
 }
 {{- end -}}
@@ -40,16 +34,18 @@ node_logs "feature" {
 
 {{- define "features.nodeLogs.collector.values" }}{{- end -}}
 
+{{- define "features.nodeLogs.chooseCollector" -}}{{- end -}}
+
 {{- define "features.nodeLogs.validate" }}
 {{- if .Values.nodeLogs.enabled -}}
+{{- $featureKey := "nodeLogs" }}
 {{- $featureName := "Kubernetes Node logs" }}
 {{- $destinations := include "features.nodeLogs.destinations" . | fromYamlArray }}
-{{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "feature" $featureName) }}
+{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "featureName" $featureName) }}
 
-{{- range $collectorName := include "features.nodeLogs.collectors" . | fromYamlArray }}
-  {{- $collectorValues := include "collector.alloy.values" (deepCopy $ | merge (dict "collectorName" $collectorName)) | fromYaml }}
-  {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collectorName "feature" $featureName) }}
-  {{- include "feature.nodeLogs.collector.validate" (dict "Values" $.Values.nodeLogs "Collector" $collectorValues "CollectorName" $collectorName) }}
-{{- end -}}
+{{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
+{{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}
+{{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
+{{- include "feature.nodeLogs.collector.validate" (dict "Values" $.Values.nodeLogs "Collector" $collectorValues "CollectorName" $collectorName) }}
 {{- end -}}
 {{- end -}}

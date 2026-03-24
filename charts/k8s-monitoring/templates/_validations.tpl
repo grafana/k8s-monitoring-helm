@@ -4,13 +4,18 @@
   {{- include "validations.platform" . }}
 
   {{- include "destinations.validate" . -}}
+  {{- include "collectors.validate.atLeastOneEnabled" . }}
 
   {{- /* Feature Config Influence */}}
-  {{- $updatedValues := dict }}
-  {{- range $feature := ((include "features.list" .) | fromYamlArray) }}
-    {{- $updatedValues = merge $.Values (include (printf "features.%s.collector.values" $feature) $ | fromYaml) }}
+  {{- $updatedValues := $.Values }}
+  {{- range $featureKey := ((include "features.list.enabled" .) | fromYamlArray) }}
+    {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) }}
+    {{- if $collectorName }}
+      {{- $valuesWithFeatureModification := (include (printf "features.%s.collector.values" $featureKey) $ | fromYaml) }}
+      {{- $updatedValues = merge $.Values $valuesWithFeatureModification }}
+    {{- end }}
   {{- end }}
-  {{- $updatedValues = merge $.Values (include "collectors.remoteConfig.collector.values" (dict "Values" $updatedValues "Files" $.Files "Release" $.Release) | fromYaml) }}
+  {{- $updatedValues = merge $.Values (include "collectors.remoteConfig.collector.values" (dict "Values" $updatedValues "Files" $.Files "Release" $.Release "Chart" $.Chart) | fromYaml) }}
 
   {{- /* Feature Validations */}}
   {{- include "validations.features_enabled" . }}
@@ -19,9 +24,10 @@
   {{- end }}
 
   {{- include "collectors.validate.featuresEnabled" . }}
-  {{- range $collectorName := ((include "collectors.list.enabled" .) | fromYamlArray) }}
+  {{- range $collectorName := keys .Values.collectors | sortAlpha }}
     {{- include "collectors.validate.remoteConfig" (deepCopy $ | merge (dict "collectorName" $collectorName)) }}
   {{- end }}
+  {{- include "telemetryServices.validate" . }}
 {{- end }}
 
 {{/* Checks if a V1 values file was used */}}
@@ -55,9 +61,10 @@
   {{- $aFeatureIsEnabled = or $aFeatureIsEnabled (eq (include (printf "features.%s.enabled" $feature) $) "true") }}
 {{- end }}
 
-{{- range $collector := ((include "collectors.list" .) | fromYamlArray ) }}
-  {{- $aFeatureIsEnabled = or $aFeatureIsEnabled (dig "remoteConfig" "enabled" false (index $.Values $collector)) }}
-  {{- $aFeatureIsEnabled = or $aFeatureIsEnabled ((index $.Values $collector).extraConfig) }}
+{{- range $collectorName := keys .Values.collectors | sortAlpha }}
+  {{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
+  {{- $aFeatureIsEnabled = or $aFeatureIsEnabled (dig "remoteConfig" "enabled" false $collectorValues) }}
+  {{- $aFeatureIsEnabled = or $aFeatureIsEnabled (hasKey $collectorValues "extraConfig") }}
 {{- end }}
 
 {{- if not $aFeatureIsEnabled }}

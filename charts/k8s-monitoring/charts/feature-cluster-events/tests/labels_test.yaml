@@ -1,18 +1,15 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test namespaces
+suite: Feature - Cluster Events - Labels
 templates:
-  - configmap.yaml
+  - test/configmap.yaml
 tests:
-  - it: should create a ConfigMap that sets custom labels to keep
+  - it: should create a ConfigMap that sets custom labels from extracted fields
     set:
-      deployAsConfigMap: true
-      labelsToKeep:
-        - job
-        - namespace
-        - level
-        - node
-        - name
-        - source
+      testing: {enabled: true}
+      labels:
+        node: node
+        reason: reason
+        component: component
     asserts:
       - isKind:
           of: ConfigMap

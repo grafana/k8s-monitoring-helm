@@ -161,14 +161,14 @@ cluster:
   name: applications-cluster
 
 destinations:
-  - name: otlp-gateway
+  otlp-gateway:
     type: otlp
     url: http://otlp-gateway.example.com
     metrics: {enabled: true}
     logs: {enabled: true}
     traces: {enabled: false}  # Disable traces in other destinations as all traces should be sent to the tail-sampler
 
-  - name: tail-sampler
+  tail-sampler:
     type: otlp
     url: tail-sampler-deployment.default.svc.cluster.local:4317  # Update if using a different namespace or deployment name
     protocol: grpc
@@ -180,18 +180,14 @@ destinations:
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       http:
         enabled: true
 
-alloy-receiver:
-  enabled: true
-  alloy:
-    extraPorts:
-      - name: otlp-http
-        port: 4318
-        targetPort: 4318
-        protocol: TCP
+collectors:
+  alloy-receiver:
+    presets: [deployment]
 ```
 <!-- textlint-enable terminology -->

@@ -1,12 +1,12 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test MySQL Integration - Metrics
+suite: Feature - Integration - MySQL - Metrics
 templates:
-  - configmap.yaml
+  - test/configmap.yaml
   - mysql-secret.yaml
 tests:
   - it: should create the MySQL config
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       mysql:
         instances:
           - name: my-database
@@ -18,7 +18,7 @@ tests:
                   password: db-password
             logs: {enabled: false}
     asserts:
-      - template: configmap.yaml
+      - template: test/configmap.yaml
         matchSnapshot:
           path: data["metrics.alloy"]
 
@@ -40,7 +40,7 @@ tests:
 
   - it: works with multiple MySQL Instances
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       mysql:
         instances:
           - name: test-db
@@ -61,7 +61,7 @@ tests:
                   password: db-password
             logs: {enabled: false}
     asserts:
-      - template: configmap.yaml
+      - template: test/configmap.yaml
         matchSnapshot:
           path: data["metrics.alloy"]
 
@@ -86,7 +86,7 @@ tests:
 
   - it: works when referencing the MySQL Secret
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       mysql:
         instances:
           - name: test-database
@@ -102,7 +102,7 @@ tests:
               namespace: mysql
             logs: {enabled: false}
     asserts:
-      - template: configmap.yaml
+      - template: test/configmap.yaml
         matchSnapshot:
           path: data["metrics.alloy"]
 
@@ -112,7 +112,7 @@ tests:
 
   - it: allows you to set the network protocol
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       mysql:
         instances:
           - name: test-database
@@ -125,13 +125,13 @@ tests:
                   password: db-password
             logs: {enabled: false}
     asserts:
-      - template: configmap.yaml
+      - template: test/configmap.yaml
         matchSnapshot:
           path: data["metrics.alloy"]
 
   - it: allows you to set the tls
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       mysql:
         instances:
           - name: test-database
@@ -145,13 +145,13 @@ tests:
                   password: db-password
             logs: {enabled: false}
     asserts:
-      - template: configmap.yaml
+      - template: test/configmap.yaml
         matchSnapshot:
           path: data["metrics.alloy"]
 
   - it: allows configuring perf_schema.eventsstatements options
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       mysql:
         instances:
           - name: test-database
@@ -169,6 +169,6 @@ tests:
                   timeLimit: 43200
             logs: {enabled: false}
     asserts:
-      - template: configmap.yaml
+      - template: test/configmap.yaml
         matchSnapshot:
           path: data["metrics.alloy"]

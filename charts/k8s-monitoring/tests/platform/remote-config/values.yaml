@@ -2,28 +2,22 @@
 cluster:
   name: remote-config-test
 
-alloy-metrics:
-  enabled: true
-  remoteConfig:
-    enabled: true
-    url: https://fleet-management-prod-008.grafana.net
-    auth:
-      type: basic
-      usernameKey: GRAFANA_CLOUD_FLEET_MGMT_USER
-      passwordKey: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
-    secret:
-      create: false
-      name: grafana-cloud-credentials
+collectorCommon:
+  alloy:
+    remoteConfig:
+      enabled: true
+      url: https://fleet-management-prod-008.grafana.net
+      auth:
+        type: basic
+        usernameKey: GRAFANA_CLOUD_FLEET_MGMT_USER
+        passwordKey: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
+      secret:
+        create: false
+        name: grafana-cloud-credentials
 
-alloy-logs:
-  enabled: true
-  remoteConfig:
-    enabled: true
-    url: https://fleet-management-prod-008.grafana.net
-    auth:
-      type: basic
-      usernameKey: GRAFANA_CLOUD_FLEET_MGMT_USER
-      passwordKey: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
-    secret:
-      create: false
-      name: grafana-cloud-credentials
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]

@@ -3,7 +3,7 @@ cluster:
   name: pod-logs-feature-test
 
 destinations:
-  - name: localLoki
+  localLoki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -12,14 +12,16 @@ destinations:
       username: loki
       password: lokipassword
 
-podLogs:
+podLogsViaLoki:
   enabled: true
+  collector: alloy-logs
   secretFilter:
     enabled: true
     redactWith: "<REDACTED:$SECRET_NAME>"
     inclusionSelector: '{namespace="development"}'
 
-alloy-logs:
-  enabled: true
-  alloy:
-    stabilityLevel: experimental
+collectors:
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+    alloy:
+      stabilityLevel: experimental

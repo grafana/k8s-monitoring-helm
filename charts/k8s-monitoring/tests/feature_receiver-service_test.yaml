@@ -7,9 +7,9 @@ tests:
   - it: does not create a Service by default
     set:
       cluster: {name: test-cluster}
-      alloy-receiver:
-        enabled: true
-        extraConfig: " "
+      collectors:
+        alloy-receiver:
+          extraConfig: " "
     asserts:
       - hasDocuments:
           count: 0
@@ -17,11 +17,11 @@ tests:
   - it: creates a Service when enabled
     set:
       cluster: {name: test-cluster}
-      alloy-receiver:
-        enabled: true
-        extraConfig: " "
-        extraService:
-          enabled: true
+      collectors:
+        alloy-receiver:
+          extraConfig: " "
+          extraService:
+            enabled: true
     asserts:
       - hasDocuments:
           count: 1
@@ -34,12 +34,12 @@ tests:
   - it: creates a Service with a specified name
     set:
       cluster: {name: test-cluster}
-      alloy-receiver:
-        enabled: true
-        extraConfig: " "
-        extraService:
-          enabled: true
-          name: alloy-ingester
+      collectors:
+        alloy-receiver:
+          extraConfig: " "
+          extraService:
+            enabled: true
+            name: alloy-ingester
     asserts:
       - hasDocuments:
           count: 1
@@ -52,12 +52,12 @@ tests:
   - it: creates a Service with a specified full name
     set:
       cluster: {name: test-cluster}
-      alloy-receiver:
-        enabled: true
-        extraConfig: " "
-        extraService:
-          enabled: true
-          fullname: alloy-ingester
+      collectors:
+        alloy-receiver:
+          extraConfig: " "
+          extraService:
+            enabled: true
+            fullname: alloy-ingester
     asserts:
       - hasDocuments:
           count: 1
@@ -70,21 +70,21 @@ tests:
   - it: has the same extraPorts as the main receiver
     set:
       cluster: {name: test-cluster}
-      alloy-receiver:
-        enabled: true
-        extraConfig: " "
-        alloy:
-          extraPorts:
-            - name: otlp-http
-              port: 4318
-              targetPort: 4318
-              protocol: TCP
-            - name: otlp-grpc
-              port: 4317
-              targetPort: 4317
-              protocol: TCP
-        extraService:
-          enabled: true
+      collectors:
+        alloy-receiver:
+          extraConfig: " "
+          extraService:
+            enabled: true
+          alloy:
+            extraPorts:
+              - name: otlp-http
+                port: 4318
+                targetPort: 4318
+                protocol: TCP
+              - name: otlp-grpc
+                port: 4317
+                targetPort: 4317
+                protocol: TCP
     asserts:
       - hasDocuments:
           count: 1
@@ -109,12 +109,12 @@ tests:
   - it: has the right selectors
     set:
       cluster: {name: test-cluster}
-      alloy-receiver:
-        enabled: true
-        extraConfig: " "
-        extraService:
-          enabled: true
-          fullname: alloy-ingester
+      collectors:
+        alloy-receiver:
+          extraConfig: " "
+          extraService:
+            enabled: true
+            fullname: alloy-ingester
     asserts:
       - hasDocuments:
           count: 1

@@ -3,15 +3,17 @@ cluster:
   name: profiling-feature-test
 
 destinations:
-  - name: pyro
+  pyro:
     type: pyroscope
     url: http://pyroscope.pyroscope.svc:4040
 
 profiling:
   enabled: true
+  collector: alloy-profiles
 
-alloy-profiles:
-  enabled: true
+collectors:
+  alloy-profiles:
+    presets: [privileged, daemonset]
 
 extraObjects:
   - apiVersion: collectors.grafana.com/v1alpha1

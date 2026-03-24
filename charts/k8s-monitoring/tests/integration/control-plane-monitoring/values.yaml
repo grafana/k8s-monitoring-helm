@@ -3,10 +3,10 @@ cluster:
   name: control-plane-monitoring-test
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -17,6 +17,7 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
   controlPlane:
     enabled: true
   kubeletProbes:
@@ -24,19 +25,34 @@ clusterMetrics:
     metricsTuning:
       includeMetrics: [".*"]
 
+hostMetrics:
+  enabled: true
+  collector: alloy-metrics
+  linuxHosts:
+    enabled: true
+
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
-podLogs:
+podLogsViaLoki:
   enabled: true
+  collector: alloy-logs
 
-alloy-metrics:
-  enabled: true
-  controller:
-    replicas: 2
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    controller:
+      replicas: 2
 
-alloy-singleton:
-  enabled: true
+  alloy-singleton:
+    presets: [singleton]
 
-alloy-logs:
-  enabled: true
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true

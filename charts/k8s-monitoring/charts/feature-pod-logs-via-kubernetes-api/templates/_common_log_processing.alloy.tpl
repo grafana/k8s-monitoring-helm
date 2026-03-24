@@ -79,19 +79,6 @@ loki.process "pod_logs" {
 {{- if .Values.extraLogProcessingStages }}
 {{ tpl .Values.extraLogProcessingStages $ | indent 2 }}
 {{- end }}
-
-{{- if .Values.labelsToKeep }}
-  {{- $alwaysKeepLabels := list "__tenant_id__" }}
-  {{- $lokiLabels := $alwaysKeepLabels }}
-  {{- range $label := .Values.labelsToKeep }}
-    {{- $lokiLabels = append $lokiLabels (include "escape_label" $label) }}
-  {{- end }}
-
-  // Only keep the labels that are defined in the `keepLabels` list.
-  stage.label_keep {
-    values = {{ $lokiLabels | toJson }}
-  }
-{{- end }}
 {{ if .Values.secretFilter.enabled }}
 {{- if .Values.secretFilter.inclusionSelector }}
   forward_to = [loki.process.secret_filter_prefilter.receiver]

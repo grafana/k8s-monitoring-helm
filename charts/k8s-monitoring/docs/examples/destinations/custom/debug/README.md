@@ -16,10 +16,10 @@ cluster:
   name: debug-custom-destination
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -27,7 +27,7 @@ destinations:
       type: basic
       username: loki
       password: lokipassword
-  - name: debug
+  debug:
     type: custom
     config: |
       otelcol.processor.filter "debug" {
@@ -55,13 +55,15 @@ destinations:
       enabled: true
       target: otelcol.processor.filter.debug.input
 
-podLogs:
+podLogsViaLoki:
   enabled: true
+  collector: alloy-logs
   namespaces: [default]
   labelSelectors:
     app.kubernetes.io/name: alloy-metrics
 
 integrations:
+  collector: alloy-metrics
   destinations: [prometheus, debug]
   alloy:
     instances:
@@ -69,12 +71,13 @@ integrations:
         labelSelectors:
           app.kubernetes.io/name: alloy-metrics
 
-alloy-metrics:
-  enabled: true
-  alloy:
-    stabilityLevel: experimental
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    alloy:
+      stabilityLevel: experimental
 
-alloy-logs:
-  enabled: true
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 ```
 <!-- textlint-enable terminology -->

@@ -1,11 +1,11 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test level filtering
+suite: Feature - Cluster Events - Level filtering
 templates:
-  - configmap.yaml
+  - test/configmap.yaml
 tests:
   - it: can restrict events to a given list of levels
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       includeReasons: ["Warning", "Error"]
     asserts:
       - isKind:
@@ -15,7 +15,7 @@ tests:
 
   - it: can restrict events from a given list of levels
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       excludeReasons: ["Normal"]
     asserts:
       - isKind:

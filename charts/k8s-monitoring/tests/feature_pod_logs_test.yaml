@@ -9,34 +9,38 @@ tests:
     set:
       cluster:
         name: ci-test-cluster
-      podLogs:
+      podLogsViaLoki:
         enabled: true
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
     asserts:
       - failedTemplate:
           errorMessage: |-
-            No destinations found that can accept logs from Kubernetes Pod logs
+            No destinations found that can accept logs from the Kubernetes Pod logs feature.
             Please add a destination with logs support.
             See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md for more details.
 
-  - it: requires the alloy-logs collector
+  - it: requires a collector
     template: validations.yaml
     set:
       cluster:
         name: ci-test-cluster
       destinations:
-        - name: loki
+        loki:
           type: loki
           url: http://loki.loki.svc:3100/api/push
-      podLogs:
+      podLogsViaLoki:
         enabled: true
     asserts:
       - failedTemplate:
           errorMessage: |-
-            The Kubernetes Pod logs feature requires the use of the alloy-logs collector.
-            
-            Please enable it by setting:
-            alloy-logs:
-              enabled: true
+            At least one collector should be enabled
+            Please enable one by setting:
+            collectors:
+              <collector-name>:
+                <collector-settings>
+            See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/README.md for more details.
 
   - it: renders the config to gather Kubernetes Pod logs
     template: alloy-config.yaml
@@ -44,41 +48,19 @@ tests:
       cluster:
         name: ci-test-cluster
       destinations:
-        - name: loki
+        loki:
           type: loki
           url: http://loki.loki.svc:3100/api/push
-      podLogs:
+      podLogsViaLoki:
         enabled: true
-      alloy-logs:
-        enabled: true
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
     asserts:
       - isKind:
           of: ConfigMap
       - matchSnapshot:
           path: data["config.alloy"]
-
-  - it: requires public-preview stability level if filelog gathering is enabled
-    template: validations.yaml
-    set:
-      cluster:
-        name: ci-test-cluster
-      destinations:
-        - name: loki
-          type: loki
-          url: http://loki.loki.svc:3100/api/push
-      podLogs:
-        enabled: true
-        gatherMethod: filelog
-      alloy-logs:
-        enabled: true
-    asserts:
-      - failedTemplate:
-          errorMessage: |-
-            Pod Logs feature requires Alloy to use the public-preview stability level when using the "filelog" gather method.
-            Please set:
-            alloy-logs:
-              alloy:
-                stabilityLevel: public-preview
 
   - it: requires experimental stability level if secret filtering is enabled
     template: validations.yaml
@@ -86,15 +68,16 @@ tests:
       cluster:
         name: ci-test-cluster
       destinations:
-        - name: loki
+        loki:
           type: loki
           url: http://loki.loki.svc:3100/api/push
-      podLogs:
+      podLogsViaLoki:
         enabled: true
         secretFilter:
           enabled: true
-      alloy-logs:
-        enabled: true
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
     asserts:
       - failedTemplate:
           errorMessage: |-

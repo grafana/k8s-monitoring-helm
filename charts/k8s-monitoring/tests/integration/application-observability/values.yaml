@@ -1,11 +1,12 @@
 ---
 cluster:
   name: application-observability-test
+
 destinations:
-  - name: localPrometheus
+  localPrometheus:
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
-  - name: localTempo
+  localTempo:
     type: otlp
     url: tempo.tempo.svc:4317
     tls:
@@ -14,8 +15,10 @@ destinations:
     metrics: {enabled: false}
     logs: {enabled: false}
     traces: {enabled: true}
+
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       grpc:
@@ -36,6 +39,7 @@ applicationObservability:
       enabled: true
   logs:
     enabled: false
+
 integrations:
   collector: alloy-receiver
   alloy:
@@ -47,8 +51,9 @@ integrations:
           tuning:
             useDefaultAllowList: false
             includeMetrics: [alloy_build_info]
-alloy-receiver:
-  enabled: true
-  extraService:
-    enabled: true
-    name: extra-receiver
+
+collectors:
+  alloy-receiver:
+    extraService:
+      enabled: true
+      name: extra-receiver

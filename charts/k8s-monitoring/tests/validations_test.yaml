@@ -12,18 +12,19 @@ tests:
             cluster:
               name: my-cluster-name
 
-  - it: asks you to set a feature
+  - it: asks you to add a collector
     set:
       cluster:
         name: test-cluster
     asserts:
       - failedTemplate:
           errorMessage: |-
-            No features are enabled. Please choose a feature to start monitoring. For example:
-            clusterMetrics:
-              enabled: true
-            
-            See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/Features.md for the list of available features.
+            At least one collector should be enabled
+            Please enable one by setting:
+            collectors:
+              <collector-name>:
+                <collector-settings>
+            See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/README.md for more details.
 
   - it: detects if you're using a v1 values file
     set:

@@ -1,16 +1,14 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test labels
+suite: Feature - Node Logs - labels
 templates:
-  - configmap.yaml
+  - test/configmap.yaml
 tests:
-  - it: should create a ConfigMap that sets custom labels to keep
+  - it: should create a ConfigMap that sets custom journal labels
     set:
-      deployAsConfigMap: true
-      labelsToKeep:
-        - exe
-        - hostname
-        - level
-        - unit
+      testing: {enabled: true}
+      journalLabels:
+        exe: exe
+        hostname: hostname
     asserts:
       - isKind:
           of: ConfigMap

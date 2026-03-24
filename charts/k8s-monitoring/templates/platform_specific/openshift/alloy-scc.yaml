@@ -1,20 +1,20 @@
 {{- if eq $.Values.global.platform "openshift" }}
-{{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
-{{- $values := (deepCopy $ | merge (dict "collectorName" $collectorName)) }}
-{{- $alloyValues := (include "collector.alloy.values" $values | fromYaml) | merge (dict "nameOverride" $collectorName) }}
+{{- range $collectorName := keys .Values.collectors | sortAlpha }}
+{{- $values := (dict "Values" $.Values "Files" $.Files "Release" $.Release "collectorName" $collectorName) }}
+{{- $collectorValues := (include "collector.alloy.values" $values | fromYaml) }}
 {{- $alloyFullName := include "collector.alloy.fullname" $values }}
 ---
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
   name: {{ $alloyFullName }}
-allowHostDirVolumePlugin: {{ $alloyValues.alloy.mounts.varlog }}
+allowHostDirVolumePlugin: {{ dig "alloy" "mounts" "varlog" false $collectorValues }}
 allowHostIPC: false
 allowHostNetwork: false
-allowHostPID: {{ dig "controller" "hostPID" false $alloyValues }}
+allowHostPID: {{ dig "controller" "hostPID" false $collectorValues }}
 allowHostPorts: false
-allowPrivilegeEscalation: {{ dig "alloy" "securityContext" "allowPrivilegeEscalation" false $alloyValues }}
-allowPrivilegedContainer: {{ dig "alloy" "securityContext" "privileged" false $alloyValues }}
+allowPrivilegeEscalation: {{ dig "alloy" "securityContext" "allowPrivilegeEscalation" false $collectorValues }}
+allowPrivilegedContainer: {{ dig "alloy" "securityContext" "privileged" false $collectorValues }}
 allowedCapabilities:
 - CHOWN
 - DAC_OVERRIDE
@@ -52,7 +52,7 @@ users: []
 volumes:
 - configMap
 - emptyDir
-{{- if $alloyValues.alloy.mounts.varlog }}
+{{- if (dig "alloy" "mounts" "varlog" false $collectorValues) }}
 - hostPath
 {{- end }}
 - persistentVolumeClaim

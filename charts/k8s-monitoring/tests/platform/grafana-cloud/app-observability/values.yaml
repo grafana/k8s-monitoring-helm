@@ -3,7 +3,7 @@ cluster:
   name: application-observability-gc-feature-test
 
 destinations:
-  - name: otlp-gateway
+  otlp-gateway:
     type: otlp
     url: https://otlp-gateway-prod-us-east-0.grafana.net/otlp
     protocol: http
@@ -24,6 +24,7 @@ destinations:
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   traces:
     transforms:
       span:
@@ -41,23 +42,14 @@ applicationObservability:
     k8sattributes:
       otelAnnotations: true
 
-podLogs:
+podLogsViaLoki:
   enabled: true
+  collector: alloy-logs
   destinations:
     - otlp-gateway
 
-alloy-logs:
-  enabled: true
-
-alloy-receiver:
-  enabled: true
-  alloy:
-    extraPorts:
-      - name: otlp-http
-        port: 4318
-        targetPort: 4318
-        protocol: TCP
-      - name: otlp-grpc
-        port: 4317
-        targetPort: 4317
-        protocol: TCP
+collectors:
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+  alloy-receiver:
+    presets: [deployment]

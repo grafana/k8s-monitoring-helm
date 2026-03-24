@@ -30,16 +30,13 @@ declare "cluster_events" {
         "reason" = "",
       }
     }
-    // set these values as labels, they may or may not be used as index labels in Loki as they can be dropped
-    // prior to being written to Loki, but this makes them available
+    // set the extracted values as labels
     stage.labels {
       values = {
-        "component" = "",
         "kind" = "",
         "level" = "",
-        "name" = "",
-        "node" = "",
-        "reason" = "",
+        "service_name" = "job",
+        "reason" = "reason",
       }
     }
 
@@ -67,18 +64,15 @@ declare "cluster_events" {
     stage.structured_metadata {
       values = {
         "name" = "name",
+        "node" = "node",
       }
     }
 
-    // Only keep the labels that are defined in the `keepLabels` list.
-    stage.label_keep {
-      values = ["job","level","namespace","node","source","reason"]
+    // Drop pipeline-only labels that are not needed in the final output.
+    stage.label_drop {
+      values = ["kind"]
     }
-    stage.labels {
-      values = {
-        "service_name" = "job",
-      }
-    }
+
     forward_to = argument.logs_destinations.value
   }
 }
@@ -133,6 +127,29 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
 
 
 
+// Destination: loki (loki)
+otelcol.exporter.loki "loki" {
+  forward_to = [loki.write.loki.receiver]
+}
+
+loki.write "loki" {
+  endpoint {
+    url = "http://loki.example.com/loki/api/v1/push"
+    retry_on_http_429 = true
+    proxy_url = "https://myproxy.default.svc:8080"
+    tls_config {
+      insecure_skip_verify = false
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+  external_labels = {
+    "cluster" = "proxies-example-cluster",
+    "k8s_cluster_name" = "proxies-example-cluster",
+  }
+}
+
 // Destination: prometheus (prometheus)
 otelcol.exporter.prometheus "prometheus" {
   add_metric_suffixes = true
@@ -185,28 +202,6 @@ prometheus.remote_write "prometheus" {
     truncate_frequency = "2h"
     min_keepalive_time = "5m"
     max_keepalive_time = "8h"
-  }
-}
-// Destination: loki (loki)
-otelcol.exporter.loki "loki" {
-  forward_to = [loki.write.loki.receiver]
-}
-
-loki.write "loki" {
-  endpoint {
-    url = "http://loki.example.com/loki/api/v1/push"
-    retry_on_http_429 = true
-    proxy_url = "https://myproxy.default.svc:8080"
-    tls_config {
-      insecure_skip_verify = false
-    }
-    min_backoff_period = "500ms"
-    max_backoff_period = "5m"
-    max_backoff_retries = "10"
-  }
-  external_labels = {
-    "cluster" = "proxies-example-cluster",
-    "k8s_cluster_name" = "proxies-example-cluster",
   }
 }
 

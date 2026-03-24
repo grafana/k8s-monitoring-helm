@@ -3,13 +3,13 @@ cluster:
   name: loki-meta-monitoring-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/api/push
-  - name: tempo
+  tempo:
     type: otlp
     protocol: http
     url: http://tempo.tempo.svc:443/otlp
@@ -18,7 +18,6 @@ destinations:
     traces: {enabled: true}
 
 integrations:
-  collector: alloy-singleton
   # attach available node labels to all integration metrics collection
   nodeLabels:
     nodepool: true
@@ -36,7 +35,7 @@ integrations:
         namespaces:
           - logs
         labelSelectors:
-          app.kubernetes.io/name: alloy-singleton
+          app.kubernetes.io/name: alloy
 
       # monitor the collectors gathering and sending metrics/logs to the local cluster
       - name: alloy
@@ -86,7 +85,6 @@ integrations:
 
 clusterEvents:
   enabled: true
-  collector: alloy-singleton
   namespaces:
     - collectors
     - logs
@@ -95,16 +93,6 @@ clusterEvents:
 
 clusterMetrics:
   enabled: true
-  collector: alloy-singleton
-  nodeLabels:
-    nodePool: true
-    region: true
-    availabilityZone: true
-    nodeRole: true
-    os: true
-    architecture: true
-    instanceType: true
-
   kubelet:
     enabled: false
   kubeletResource:
@@ -117,43 +105,22 @@ clusterMetrics:
         source_labels = ["namespace"]
         regex = "collectors|logs|metrics|o11y"
       }
-  apiServer:
-    enabled: false
-  kubeControllerManager:
-    enabled: false
-  kubeDNS:
-    enabled: false
-  kubeProxy:
-    enabled: false
-  kubeScheduler:
-    enabled: false
   kube-state-metrics:
-    enabled: true
-    namespaces: collectors,logs,metrics,o11y
     metricsTuning:
       useDefaultAllowList: false
       includeMetrics: [(.+)]
-  node-exporter:
+
+hostMetrics:
+  enabled: true
+  linuxHosts:
     enabled: true
-    deploy: true
     metricsTuning:
       useIntegrationAllowList: true
-  windows-exporter:
-    enabled: false
-    deploy: false
-  kepler:
-    enabled: false
-    deploy: false
-  opencost:
-    enabled: false
-    deploy: false
 
-nodeLogs:
-  enabled: false
-
-podLogs:
+podLogsViaLoki:
   enabled: true
-  collector: alloy-singleton
+  includeNamespaces: [collectors, logs, metrics, o11y]
+
   nodeLabels:
     nodePool: true
     region: true
@@ -172,18 +139,6 @@ podLogs:
     architecture:
     instance_type:
 
-  labelsToKeep:
-    - app
-    - app_kubernetes_io_name
-    - component
-    - container
-    - job
-    - level
-    - namespace
-    - pod
-    - service_name
-
-  gatherMethod: kubernetesApi
   namespaces:
     - collectors
     - logs
@@ -213,23 +168,13 @@ applicationObservability:
         - k8s.container.name
 
 # Collectors
-alloy-singleton:
-  enabled: true
-
-alloy-metrics:
-  enabled: false
-
-alloy-logs:
-  enabled: false
-
-alloy-profiles:
-  enabled: false
-
-alloy-receiver:
-  enabled: true
+collectors:
   alloy:
-    extraPorts:
-      - name: jaeger-http
-        port: 14268
-        targetPort: 14268
-        protocol: TCP
+    presets: [daemonset, filesystem-log-reader]
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+    namespaces: collectors,logs,metrics,o11y
+  node-exporter:
+    deploy: true

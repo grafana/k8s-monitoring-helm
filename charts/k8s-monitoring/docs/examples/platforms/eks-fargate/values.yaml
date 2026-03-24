@@ -3,38 +3,38 @@ cluster:
   name: eks-fargate-example-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
 
 clusterMetrics:
   enabled: true
-  node-exporter:
-    deploy: false
-    enabled: false
+  collector: alloy-metrics
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
 podLogsViaKubernetesApi:
   enabled: true
+  collector: alloy-logs
 
-alloy-metrics:
-  enabled: true
-alloy-singleton:
-  enabled: true
-alloy-logs:
-  enabled: true
-  alloy:
-    clustering:
-      enabled: true
-    mounts:
-      varlog: false
-      dockercontainers: false
-  controller:
-    replicas: 2
-    type: deployment
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+
+  alloy-singleton:
+    presets: [singleton]
+
+  alloy-logs:
+    presets: [clustered, deployment]
+    controller:
+      replicas: 2
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true

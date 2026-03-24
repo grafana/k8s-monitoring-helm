@@ -12,7 +12,6 @@ discovery.kubernetes "kube_controller_manager" {
     role = "pod"
     label = {{ .Values.kubeControllerManager.selectorLabel | quote }}
   }
-{{- include "feature.clusterMetrics.attachNodeMetadata" . | indent 2 }}
 }
 
 discovery.relabel "kube_controller_manager" {
@@ -22,7 +21,6 @@ discovery.relabel "kube_controller_manager" {
     replacement = "$1:{{ .Values.kubeControllerManager.port }}"
     target_label = "__address__"
   }
-{{- include "feature.clusterMetrics.nodeDiscoveryRules" . | indent 2 }}
 {{- if .Values.kubeControllerManager.extraDiscoveryRules }}
 {{ .Values.kubeControllerManager.extraDiscoveryRules | indent 2 }}
 {{- end }}

@@ -4,8 +4,11 @@
 - autoInstrumentation
 - clusterMetrics
 - clusterEvents
+- costMetrics
+- hostMetrics
 - nodeLogs
-- podLogs
+- podLogsViaLoki
+- podLogsViaOpenTelemetry
 - podLogsViaKubernetesApi
 - podLogsObjects
 - profilesReceiver

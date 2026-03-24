@@ -15,19 +15,21 @@ cluster:
   name: annotation-autodiscovery-prom-annotations-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
 annotationAutodiscovery:
   enabled: true
+  collector: alloy-metrics
   annotations:
     scrape: prometheus.io/scrape
     metricsPath: prometheus.io/path
     metricsPortNumber: prometheus.io/port
     metricsScheme: prometheus.io/scheme
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
 ```
 <!-- textlint-enable terminology -->

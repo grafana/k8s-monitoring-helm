@@ -15,7 +15,7 @@ cluster:
   name: sigv4-auth-example-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
     auth:
@@ -24,7 +24,7 @@ destinations:
         region: ap-southeast-2
         accessKey: my-access-key
         secretKey: my-secret-key
-  - name: otlp-endpoint
+  otlp-endpoint:
     type: otlp
     url: http://otlp-endpoing.example.com:4317
     auth:
@@ -39,7 +39,12 @@ destinations:
 clusterMetrics:
   enabled: true
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

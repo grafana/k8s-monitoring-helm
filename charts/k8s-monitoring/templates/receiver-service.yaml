@@ -1,31 +1,29 @@
-{{- $collectorName := "alloy-receiver" }}
-{{- $collectorValues := include "collector.alloy.values" (deepCopy $ | merge (dict "collectorName" $collectorName)) | fromYaml }}
+{{- range $collectorName := keys .Values.collectors | sortAlpha }}
+  {{- if (dig "extraService" "enabled" false (get $.Values.collectors $collectorName | default dict)) }}
+    {{- $values := dict "Values" $.Values "Chart" $.Chart "Release" $.Release "Files" $.Files "collectorName" $collectorName }}
+    {{- $collectorValues := include "collector.alloy.valuesWithUpstream" $values | fromYaml }}
 
-{{- if and $collectorValues.enabled $collectorValues.extraService.enabled -}}
-{{- $name := printf "%s-%s" .Release.Name $collectorValues.extraService.name | trunc 63 | trimSuffix "-" }}
-{{- if $collectorValues.extraService.fullname }}
-  {{- $name = $collectorValues.extraService.fullname }}
-{{- end }}
-
+    {{- $name := printf "%s-%s" $.Release.Name ($collectorValues.extraService.name | default "alloy")| trunc 63 | trimSuffix "-" }}
+    {{- if $collectorValues.extraService.fullname }}
+      {{- $name = $collectorValues.extraService.fullname }}
+    {{- end }}
+---
 apiVersion: v1
 kind: Service
 metadata:
   name: {{ $name }}
-  labels:
-    {{- include "collector.alloy.labels" (deepCopy $ | merge (dict "collectorName" $collectorName)) | nindent 4 }}
+  labels:{{ include "collector.alloy.labels" $values | nindent 4 }}
     app.kubernetes.io/component: networking
   {{- with $collectorValues.service.annotations }}
-  annotations:
-    {{- toYaml . | nindent 4 }}
+  annotations:{{ toYaml . | nindent 4 }}
   {{- end }}
 spec:
   type: {{ $collectorValues.service.type }}
   {{- if $collectorValues.service.clusterIP }}
   clusterIP: {{ $collectorValues.service.clusterIP }}
   {{- end }}
-  selector:
-    {{- include "collector.alloy.selectorLabels" (deepCopy $ | merge (dict "collectorName" $collectorName)) | nindent 4 }}
-  {{- if semverCompare ">=1.26-0" .Capabilities.KubeVersion.Version }}
+  selector:{{ include "collector.alloy.selectorLabels" $values | nindent 4 }}
+  {{- if semverCompare ">=1.26-0" $.Capabilities.KubeVersion.Version }}
   internalTrafficPolicy: {{ $collectorValues.service.internalTrafficPolicy}}
   {{- end }}
   ports:
@@ -42,4 +40,5 @@ spec:
       targetPort: {{ $portMap.targetPort }}
       protocol: {{ coalesce $portMap.protocol "TCP" }}
 {{- end }}
+  {{- end }}
 {{- end }}

@@ -91,50 +91,41 @@ postgresql_integration "integration" {
     loki.write.localloki.receiver,
   ]
 }
-// Self Reporting
-prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
-  set_collectors = ["textfile"]
-  textfile {
-    directory = "/etc/alloy"
+
+
+
+
+// Destination: localLoki (loki)
+otelcol.exporter.loki "localloki" {
+  forward_to = [loki.write.localloki.receiver]
+}
+
+loki.write "localloki" {
+  endpoint {
+    url = "http://loki.loki.svc:3100/loki/api/v1/push"
+    retry_on_http_429 = true
+    tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
+      password = remote.kubernetes.secret.localloki.data["password"]
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+  external_labels = {
+    "cluster" = "db-o11y-postgresql-test-cluster",
+    "k8s_cluster_name" = "db-o11y-postgresql-test-cluster",
   }
 }
 
-discovery.relabel "kubernetes_monitoring_telemetry" {
-  targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
-  rule {
-    target_label = "instance"
-    action = "replace"
-    replacement = "k8smon"
-  }
-  rule {
-    target_label = "job"
-    action = "replace"
-    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-  }
+remote.kubernetes.secret "localloki" {
+  name      = "localloki-k8smon-k8s-monitoring"
+  namespace = "default"
 }
-
-prometheus.scrape "kubernetes_monitoring_telemetry" {
-  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-  targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
-  scrape_interval = "60s"
-  clustering {
-    enabled = true
-  }
-  forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-}
-
-prometheus.relabel "kubernetes_monitoring_telemetry" {
-  rule {
-    source_labels = ["__name__"]
-    regex = "grafana_kubernetes_monitoring_.*"
-    action = "keep"
-  }
-  forward_to = [
-    prometheus.remote_write.prometheus.receiver,
-  ]
-}
-
-
 
 
 // Destination: prometheus (prometheus)
@@ -185,36 +176,5 @@ prometheus.remote_write "prometheus" {
     min_keepalive_time = "5m"
     max_keepalive_time = "8h"
   }
-}
-// Destination: localLoki (loki)
-otelcol.exporter.loki "localloki" {
-  forward_to = [loki.write.localloki.receiver]
-}
-
-loki.write "localloki" {
-  endpoint {
-    url = "http://loki.loki.svc:3100/loki/api/v1/push"
-    retry_on_http_429 = true
-    tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
-    basic_auth {
-      username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
-      password = remote.kubernetes.secret.localloki.data["password"]
-    }
-    tls_config {
-      insecure_skip_verify = false
-    }
-    min_backoff_period = "500ms"
-    max_backoff_period = "5m"
-    max_backoff_retries = "10"
-  }
-  external_labels = {
-    "cluster" = "db-o11y-postgresql-test-cluster",
-    "k8s_cluster_name" = "db-o11y-postgresql-test-cluster",
-  }
-}
-
-remote.kubernetes.secret "localloki" {
-  name      = "localloki-k8smon-k8s-monitoring"
-  namespace = "default"
 }
 

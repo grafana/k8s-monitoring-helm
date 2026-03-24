@@ -7,12 +7,14 @@ subject:
   releaseName: k8smon
   repository: https://grafana.github.io/helm-charts
   chart: k8s-monitoring
-  valuesFile: values.yaml
-  version: previous-major
+  #  version: previous-major
+  version: ^3
+  valuesFile: v3-values.yaml
 
   upgrade:
     path: ../../../..
     version: latest
+    valuesFile: v4-values.yaml
 
 cluster:
   type: kind
@@ -63,7 +65,7 @@ tests:
               type: promql
             - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", chart_version="$version", feature="clusterEvents"}
               type: promql
-            - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", chart_version="$version", feature="podLogs", method="volumes"}
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", chart_version="$version", feature="podLogsViaLoki"}
               type: promql
 
             # Cluster metrics

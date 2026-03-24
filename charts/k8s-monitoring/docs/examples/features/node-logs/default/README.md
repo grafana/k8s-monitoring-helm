@@ -16,18 +16,25 @@ cluster:
   name: node-logs-cluster
 
 destinations:
-  - name: loki
+  loki:
     type: loki
-    url: http://loki.loki.svc:3100/api/push
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
 
 nodeLogs:
   enabled: true
+  collector: alloy-logs
   journal:
     units:
       - kubelet.service
       - containerd.service
 
-alloy-logs:
-  enabled: true
+collectors:
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 ```
 <!-- textlint-enable terminology -->

@@ -10,32 +10,32 @@ variable "cluster-name" {
 
 variable "prometheus-url" {
   type    = string
-  default = "https://prometheus.example.com/api/v1/write"
+  default = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
 }
 
 variable "prometheus-username" {
   type    = string
-  default = "12345"
+  default = "promuser"
 }
 
 variable "prometheus-password" {
   type    = string
-  default = "It's a secret to everyone"
+  default = "prometheuspassword"
 }
 
 variable "loki-url" {
   type    = string
-  default = "https://loki.example.com/loki/api/v1/push"
+  default = "http://loki.loki.svc:3100/loki/api/v1/push"
 }
 
 variable "loki-username" {
   type    = string
-  default = "12345"
+  default = "loki"
 }
 
 variable "loki-password" {
   type    = string
-  default = "It's a secret to everyone"
+  default = "lokipassword"
 }
 
 variable "loki-tenantid" {

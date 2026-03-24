@@ -3,7 +3,7 @@ cluster:
   name: pod-logs-via-k8s-api-cluster
 
 destinations:
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -16,8 +16,6 @@ podLogsViaKubernetesApi:
   enabled: true
   namespaces: [production]
 
-alloy-logs:
-  enabled: true
-  alloy:
-    clustering:
-      enabled: true
+collectors:
+  alloy-logs:
+    presets: [clustered]

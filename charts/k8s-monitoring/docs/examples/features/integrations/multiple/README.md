@@ -15,14 +15,15 @@ cluster:
   name: multiple-integrations-example
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/api/push
 
 integrations:
+  collector: alloy-metrics
   cert-manager:
     instances:
       - name: cert-manager
@@ -51,12 +52,14 @@ integrations:
           tuning:
             excludeMetrics: [mysql_exporter_collector_duration_seconds, mysql_exporter_collector_success]
 
-podLogs:
+podLogsViaLoki:
   enabled: true
+  collector: alloy-logs
 
-alloy-logs:
-  enabled: true
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 ```
 <!-- textlint-enable terminology -->

@@ -85,13 +85,13 @@ The tail sampling configuration allows you to optimize trace storage costs while
 cluster:
   name: tail-sampling
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/api/push
-  - name: tempo
+  tempo:
     type: otlp
     url: http://tempo.tempo.svc
     metrics:
@@ -139,11 +139,22 @@ destinations:
                     - UNSET
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
-podLogs:
+hostMetrics:
   enabled: true
+  collector: alloy-metrics
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
+
+podLogsViaLoki:
+  enabled: true
+  collector: alloy-logs
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       http:
@@ -153,19 +164,22 @@ applicationObservability:
     grafanaCloudMetrics:
       enabled: true
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
-alloy-logs:
-  enabled: true
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 
-alloy-receiver:
-  enabled: true
-  alloy:
-    extraPorts:
-      - name: otlp-http
-        port: 4318
-        targetPort: 4318
-        protocol: TCP
+  alloy-receiver:
+    presets: [deployment]
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

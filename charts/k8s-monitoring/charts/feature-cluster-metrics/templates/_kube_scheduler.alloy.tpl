@@ -12,7 +12,6 @@ discovery.kubernetes "kube_scheduler" {
     role = "pod"
     label = {{ .Values.kubeScheduler.selectorLabel | quote }}
   }
-{{- include "feature.clusterMetrics.attachNodeMetadata" . | indent 2 }}
 }
 
 discovery.relabel "kube_scheduler" {
@@ -22,7 +21,6 @@ discovery.relabel "kube_scheduler" {
     replacement = "$1:{{ .Values.kubeScheduler.port }}"
     target_label = "__address__"
   }
-{{- include "feature.clusterMetrics.nodeDiscoveryRules" . | indent 2 }}
 {{- if .Values.kubeScheduler.extraDiscoveryRules }}
 {{ .Values.kubeScheduler.extraDiscoveryRules | indent 2 }}
 {{- end }}

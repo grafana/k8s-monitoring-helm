@@ -1,20 +1,21 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test - Cluster Metrics - Custom Metrics Tuning Settings
+suite: Feature - Cluster Metrics - Custom Metrics Tuning Settings
 templates:
-  - configmap.yaml
+  - test/configmap.yaml
 tests:
   - it: should render with modified metrics tuning settings
     set:
-      deployAsConfigMap: true
+      testing:
+        enabled: true
+        telemetryServices:
+          kube-state-metrics:
+            deploy: true
       cadvisor:
         metricsTuning:
           useDefaultAllowList: false
       kube-state-metrics:
         metricsTuning:
           excludeMetrics: ["kube_replicaset.*"]
-      node-exporter:
-        metricsTuning:
-          useIntegrationAllowList: true
     asserts:
       - isKind:
           of: ConfigMap

@@ -59,12 +59,11 @@ is set to the `name` label on the log message, and the `example.com/environment`
 `environment` label on the log message:
 
 ```yaml
-podLogs:
+podLogsViaLoki:
   labels:
     name: example.com/name
   annotations:
     environment: example.com/environment
-  labelsToKeep: [name, environment]
 ```
 
 ## Values
@@ -76,13 +75,13 @@ cluster:
   name: pod-labels-and-annotations
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/api/push
-  - name: tempo
+  tempo:
     type: otlp
     url: http://tempo.tempo.svc
     metrics: {enabled: false}
@@ -91,26 +90,32 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
   kube-state-metrics:
     metricsTuning:
       includeMetrics:
         - kube_pod_annotations
         - kube_pod_labels
-    metricLabelsAllowlist:       # Configures kube-state-metrics to capture Pod labels as kube_pod_labels metrics
-      - pods=[*]
-    metricAnnotationsAllowList:  # Configures kube-state-metrics to capture Pod annotations as kube_pod_annotations metrics
-      - pods=[*]
 
-podLogs:
+hostMetrics:
   enabled: true
+  collector: alloy-metrics
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
+
+podLogsViaLoki:
+  enabled: true
+  collector: alloy-logs
   labels:       # Capture the `example.com/name` Pod label as the `name` log label
     name: example.com/name
   annotations:  # Capture the `example.com/environment` Pod annotation as the `environment` log label
     environment: example.com/environment
-  labelsToKeep: [name, environment]
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   processors:
     k8sattributes:
       labels:
@@ -122,19 +127,24 @@ applicationObservability:
       grpc:
         enabled: true
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+  alloy-receiver:
+    presets: [deployment]
 
-alloy-logs:
-  enabled: true
-
-alloy-receiver:
-  enabled: true
-  alloy:
-    extraPorts:
-      - name: otlp-grpc
-        port: 4317
-        targetPort: 4317
-        protocol: TCP
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+    metricLabelsAllowlist:  # Configures kube-state-metrics to capture Pod labels as kube_pod_labels metrics
+      - pods=[*]
+    metricAnnotationsAllowList:  # Configures kube-state-metrics to capture Pod annotations as kube_pod_annotations metrics
+      - pods=[*]
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

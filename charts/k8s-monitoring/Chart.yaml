@@ -6,8 +6,8 @@ type: application
 icon: https://raw.githubusercontent.com/grafana/grafana/main/public/img/grafana_icon.svg
 sources:
   - https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring
-version: 3.8.5
-appVersion: 3.8.5
+version: 4.0.0-rc.1
+appVersion: 4.0.0-rc.1
 maintainers:
   - email: pete.wall@grafana.com
     name: petewall
@@ -39,6 +39,16 @@ dependencies:
     repository: ""
     version: 1.0.0
     condition: clusterMetrics.enabled
+  - alias: costMetrics
+    name: feature-cost-metrics
+    repository: ""
+    version: 1.0.0
+    condition: costMetrics.enabled
+  - alias: hostMetrics
+    name: feature-host-metrics
+    repository: ""
+    version: 1.0.0
+    condition: hostMetrics.enabled
   - alias: integrations
     name: feature-integrations
     repository: ""
@@ -48,11 +58,16 @@ dependencies:
     repository: ""
     version: 1.0.0
     condition: nodeLogs.enabled
-  - alias: podLogs
-    name: feature-pod-logs
+  - alias: podLogsViaLoki
+    name: feature-pod-logs-via-loki
     repository: ""
     version: 1.0.0
-    condition: podLogs.enabled
+    condition: podLogsViaLoki.enabled
+  - alias: podLogsViaOpenTelemetry
+    name: feature-pod-logs-via-opentelemetry
+    repository: ""
+    version: 1.0.0
+    condition: podLogsViaOpenTelemetry.enabled
   - alias: podLogsViaKubernetesApi
     name: feature-pod-logs-via-kubernetes-api
     repository: ""
@@ -78,6 +93,9 @@ dependencies:
     repository: ""
     version: 1.0.0
     condition: prometheusOperatorObjects.enabled
+  - alias: telemetryServices
+    name: telemetry-services
+    version: 1.0.0
   - name: alloy-operator
     version: 0.5.2
     repository: https://grafana.github.io/helm-charts

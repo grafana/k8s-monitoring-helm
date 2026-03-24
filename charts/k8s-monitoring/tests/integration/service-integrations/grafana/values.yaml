@@ -3,14 +3,14 @@ cluster:
   name: grafana-integration-test
 
 destinations:
-  - name: localPrometheus
+  localPrometheus:
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
     auth:
       type: basic
       username: promuser
       password: prometheuspassword
-  - name: localLoki
+  localLoki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -21,8 +21,15 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
+
+hostMetrics:
+  collector: alloy-metrics
+  linuxHosts:
+    enabled: true
 
 integrations:
+  collector: alloy-metrics
   grafana:
     instances:
       - name: grafana
@@ -33,15 +40,25 @@ integrations:
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
-podLogs:
+podLogsViaLoki:
   enabled: true
+  collector: alloy-logs
+  onlyGatherNewLogLines: false
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
-alloy-singleton:
-  enabled: true
+  alloy-singleton:
+    presets: [singleton]
 
-alloy-logs:
-  enabled: true
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true

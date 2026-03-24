@@ -19,7 +19,7 @@ cluster:
   name: applications-cluster
 
 destinations:
-  - name: otlp-gateway
+  otlp-gateway:
     type: otlp
     url: http://otlp-gateway.example.com
     metrics: {enabled: true}
@@ -28,12 +28,14 @@ destinations:
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       http:
         enabled: true
 
-alloy-receiver:
-  enabled: true
+collectors:
+  alloy-receiver:
+    presets: [deployment]
 ```
 <!-- textlint-enable terminology -->

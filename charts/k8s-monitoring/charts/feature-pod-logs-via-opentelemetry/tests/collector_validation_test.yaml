@@ -1,0 +1,66 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Feature - Pod Logs via OpenTelemetry - Collector validation
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should fail if not a daemonset
+    set:
+      testing:
+        enabled: true
+        Collector:
+          controller:
+            type: deployment
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Pod Logs feature requires Alloy to be a DaemonSet.
+            Please set:
+            alloy-test:
+              presets: [daemonset]
+            OR
+            alloy-test:
+              controller:
+                type: daemonset
+
+  - it: should fail if /var/log is not mounted
+    set:
+      testing:
+        enabled: true
+        Collector:
+          alloy:
+            mounts:
+              varlog: false
+          controller:
+            type: daemonset
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Pod Logs feature requires Alloy to mount /var/log.
+            Please set:
+            alloy-test:
+              presets: [filesystem-log-reader]
+            OR
+            alloy-test:
+              alloy:
+                mounts:
+                  varlog: true
+
+  - it: should fail if not using the public-preview stability level
+    set:
+      testing:
+        enabled: true
+        Collector:
+          alloy:
+            stabilityLevel: stable
+            mounts:
+              varlog: true
+          controller:
+            type: daemonset
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Pod Logs feature requires Alloy to use the public-preview stability level.
+            Please set:
+            alloy-test:
+              alloy:
+                stabilityLevel: public-preview

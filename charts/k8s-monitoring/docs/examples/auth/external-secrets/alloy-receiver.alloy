@@ -133,8 +133,86 @@ application_observability "feature" {
     otelcol.processor.attributes.traces_service.input,
   ]
 }
+// Self Reporting
+prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
+  set_collectors = ["textfile"]
+  textfile {
+    directory = "/etc/alloy"
+  }
+}
+
+discovery.relabel "kubernetes_monitoring_telemetry" {
+  targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
+  rule {
+    target_label = "instance"
+    action = "replace"
+    replacement = "k8smon"
+  }
+  rule {
+    target_label = "job"
+    action = "replace"
+    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  }
+}
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+  scrape_interval = "60s"
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+}
+
+prometheus.relabel "kubernetes_monitoring_telemetry" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "grafana_kubernetes_monitoring_.*"
+    action = "keep"
+  }
+  forward_to = [
+    prometheus.remote_write.metrics_service.receiver,
+  ]
+}
 
 
+
+
+// Destination: logs-service (loki)
+otelcol.exporter.loki "logs_service" {
+  forward_to = [loki.write.logs_service.receiver]
+}
+
+loki.write "logs_service" {
+  endpoint {
+    url = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["loki-host"]) + "/loki/api/v1/push"
+    retry_on_http_429 = true
+    tenant_id = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["loki-username"])
+      password = remote.kubernetes.secret.logs_service.data["access-token"]
+    }
+    tls_config {
+      insecure_skip_verify = false
+      ca_pem = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["ca"])
+      cert_pem = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["cert"])
+      key_pem = remote.kubernetes.secret.logs_service.data["key"]
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+  external_labels = {
+    "cluster" = "external-secrets-example-cluster",
+    "k8s_cluster_name" = "external-secrets-example-cluster",
+  }
+}
+
+remote.kubernetes.secret "logs_service" {
+  name      = "my-monitoring-secret"
+  namespace = "monitoring"
+}
 
 
 // Destination: metrics-service (prometheus)
@@ -200,43 +278,8 @@ remote.kubernetes.secret "metrics_service" {
   namespace = "monitoring"
 }
 
-// Destination: logs-service (loki)
-otelcol.exporter.loki "logs_service" {
-  forward_to = [loki.write.logs_service.receiver]
-}
-
-loki.write "logs_service" {
-  endpoint {
-    url = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["loki-host"]) + "/loki/api/v1/push"
-    retry_on_http_429 = true
-    tenant_id = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
-    basic_auth {
-      username = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["loki-username"])
-      password = remote.kubernetes.secret.logs_service.data["access-token"]
-    }
-    tls_config {
-      insecure_skip_verify = false
-      ca_pem = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["ca"])
-      cert_pem = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["cert"])
-      key_pem = remote.kubernetes.secret.logs_service.data["key"]
-    }
-    min_backoff_period = "500ms"
-    max_backoff_period = "5m"
-    max_backoff_retries = "10"
-  }
-  external_labels = {
-    "cluster" = "external-secrets-example-cluster",
-    "k8s_cluster_name" = "external-secrets-example-cluster",
-  }
-}
-
-remote.kubernetes.secret "logs_service" {
-  name      = "my-monitoring-secret"
-  namespace = "monitoring"
-}
 
 // Destination: traces-service (otlp)
-
 otelcol.processor.attributes "traces_service" {
   output {
     traces = [otelcol.processor.transform.traces_service.input]

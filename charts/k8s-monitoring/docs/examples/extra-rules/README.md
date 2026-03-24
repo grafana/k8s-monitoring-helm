@@ -24,7 +24,7 @@ cluster:
   name: extra-rules-example-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
     extraLabels:
@@ -38,7 +38,7 @@ destinations:
         action = "drop"
       }
 
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     extraLabels:
@@ -48,6 +48,7 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
   kube-state-metrics:
     extraMetricProcessingRules: |-
       rule {
@@ -56,8 +57,17 @@ clusterMetrics:
         action = "keep"
       }
 
+hostMetrics:
+  enabled: true
+  collector: alloy-metrics
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
+
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
   namespaces:
     - production
   extraProcessingStages: |-
@@ -86,8 +96,9 @@ clusterEvents:
       }
     }
 
-podLogs:
+podLogsViaLoki:
   enabled: true
+  collector: alloy-logs
   extraDiscoveryRules: |-
     rule {
       source_labels = ["__meta_kubernetes_namespace"]
@@ -117,27 +128,36 @@ podLogs:
   staticLabelsFrom:
     color: env("COLOR")
 
-alloy-metrics:
-  enabled: true
-  alloy:
-    extraEnv:
-      - name: REGION
-        value: northwest
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    alloy:
+      extraEnv:
+        - name: REGION
+          value: northwest
 
-alloy-singleton:
-  enabled: true
-  alloy:
-    extraEnv:
-      - name: REGION
-        value: northwest
+  alloy-singleton:
+    presets: [singleton]
+    alloy:
+      extraEnv:
+        - name: REGION
+          value: northwest
 
-alloy-logs:
-  enabled: true
-  alloy:
-    extraEnv:
-      - name: REGION
-        value: northwest
-      - name: COLOR
-        value: blue
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+    alloy:
+      extraEnv:
+        - name: REGION
+          value: northwest
+        - name: COLOR
+          value: blue
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

@@ -3,12 +3,13 @@ cluster:
   name: profiles-receiver-feature-test
 
 destinations:
-  - name: pyro
+  pyro:
     type: pyroscope
     url: http://pyroscope.pyroscope.svc:4040
 
 profilesReceiver:
   enabled: true
+  collector: alloy-receiver
 
   profileProcessingRules: |
     rule {
@@ -16,9 +17,9 @@ profilesReceiver:
       replacement = "blue"
     }
 
-alloy-receiver:
-  enabled: true
-
+collectors:
+  alloy-receiver:
+    presets: [deployment]
 
 extraObjects:
   - apiVersion: collectors.grafana.com/v1alpha1

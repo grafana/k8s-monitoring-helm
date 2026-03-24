@@ -13,10 +13,10 @@ cluster:
   name: db-o11y-postgresql-test-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
-  - name: localLoki
+  localLoki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -26,6 +26,7 @@ destinations:
       password: lokipassword
 
 integrations:
+  collector: alloy-singleton
   postgresql:
     instances:
       - name: test-database
@@ -55,15 +56,18 @@ integrations:
             app.kubernetes.io/instance: test-database
 
 
-podLogs:
+podLogsViaLoki:
   enabled: true
+  collector: alloy-logs
+  onlyGatherNewLogLines: false
 
-alloy-metrics:
-  enabled: true
-  alloy:
-    stabilityLevel: experimental
+collectors:
+  alloy-singleton:
+    presets: [singleton]
+    alloy:
+      stabilityLevel: experimental
 
-alloy-logs:
-  enabled: true
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 ```
 <!-- textlint-enable terminology -->

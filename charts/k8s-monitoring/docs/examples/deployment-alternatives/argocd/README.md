@@ -54,14 +54,14 @@ spec:
         cluster:
           name: argocd-deployment-test
         destinations:
-          - name: localPrometheus
+          localPrometheus:
             type: prometheus
             url: http://prometheus-server.prometheus.svc:9090/api/v1/write
             auth:
               type: basic
               username: promuser
               password: prometheuspassword
-          - name: localLoki
+          localLoki:
             type: loki
             url: http://loki.loki.svc:3100/loki/api/v1/push
             tenantId: "1"
@@ -71,13 +71,59 @@ spec:
               password: lokipassword
         clusterMetrics:
           enabled: true
-          kepler:
+          collector: alloy-metrics
+
+        costMetrics:
+          enabled: true
+          collector: alloy-metrics
+
+        hostMetrics:
+          enabled: true
+          collector: alloy-metrics
+          linuxHosts:
             enabled: true
-          opencost:
+          windowsHosts:
             enabled: true
+          energyMetrics:
+            enabled: true
+
+        clusterEvents:
+          enabled: true
+          collector: alloy-singleton
+
+        podLogsViaLoki:
+          enabled: true
+          collector: alloy-logs
+          structuredMetadata:
+            pod: ""
+
+        collectors:
+          alloy-metrics:
+            presets: [clustered, statefulset]
+          alloy-logs:
+            presets: [filesystem-log-reader, daemonset]
+          alloy-singleton:
+            presets: [singleton]
+
+        collectorCommon:
+          alloy:
             annotations:
               argocd.argoproj.io/sync-wave: "1"
+
+        telemetryServices:
+          kube-state-metrics:
+            deploy: true
+          node-exporter:
+            deploy: true
+          windows-exporter:
+            deploy: true
+          kepler:
+            deploy: true
+          opencost:
+            deploy: true
             metricsSource: localPrometheus
+            annotations:
+              argocd.argoproj.io/sync-wave: "1"
             opencost:
               exporter:
                 defaultClusterId: argocd-deployment-test
@@ -85,18 +131,4 @@ spec:
                 existingSecretName: localprometheus-k8smon-k8s-monitoring
                 external:
                   url: http://prometheus-server.prometheus.svc:9090
-        clusterEvents:
-          enabled: true
-        podLogs:
-          enabled: true
-        alloy-metrics:
-          enabled: true
-        alloy-singleton:
-          enabled: true
-        alloy-logs:
-          enabled: true
-        collectorCommon:
-          alloy:
-            annotations:
-              argocd.argoproj.io/sync-wave: "1"
 ```

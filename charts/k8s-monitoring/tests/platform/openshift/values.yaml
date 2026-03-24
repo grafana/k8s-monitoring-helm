@@ -6,7 +6,7 @@ global:
   platform: openshift
 
 destinations:
-  - name: grafanaCloudMetrics
+  grafanaCloudMetrics:
     type: prometheus
     url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push
     auth:
@@ -16,7 +16,7 @@ destinations:
     secret:
       create: false
       name: grafana-cloud-credentials
-  - name: grafanaCloudLogs
+  grafanaCloudLogs:
     type: loki
     url: https://logs-prod-006.grafana.net/loki/api/v1/push
     auth:
@@ -29,6 +29,7 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
   kube-state-metrics:
     deploy: false
     namespace: openshift-monitoring
@@ -46,47 +47,52 @@ clusterMetrics:
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
 autoInstrumentation:
   enabled: true
+  collector: alloy-metrics
 
-podLogs:
+podLogsViaLoki:
   enabled: true
+  collector: alloy-logs
 
 integrations:
+  collector: alloy-metrics
   alloy:
     instances:
       - name: alloy
         labelSelectors:
           app.kubernetes.io/name: [alloy-metrics, alloy-singleton, alloy-logs]
 
-alloy-metrics:
-  enabled: true
-  alloy:
-    storagePath: /var/lib/alloy
-    mounts:
-      extra:
-        - name: alloy-storage
-          mountPath: /var/lib/alloy
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    alloy:
+      storagePath: /var/lib/alloy
+      mounts:
+        extra:
+          - name: alloy-storage
+            mountPath: /var/lib/alloy
 
-  controller:
-    enableStatefulSetAutoDeletePVC: true
-    volumeClaimTemplates:
-      - metadata:
-          name: alloy-storage
-        spec:
-          accessModes: ["ReadWriteOnce"]
-          storageClassName: "standard-csi"
-          resources:
-            requests:
-              storage: 1Gi
+    controller:
+      enableStatefulSetAutoDeletePVC: true
+      volumeClaimTemplates:
+        - metadata:
+            name: alloy-storage
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            storageClassName: "standard-csi"
+            resources:
+              requests:
+                storage: 1Gi
 
-alloy-singleton:
-  enabled: true
+  alloy-singleton:
+    presets: [singleton]
 
-alloy-logs:
-  enabled: true
-  global:
-    podSecurityContext:
-      seLinuxOptions:
-        type: container_logreader_t
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+    global:
+      podSecurityContext:
+        seLinuxOptions:
+          type: container_logreader_t

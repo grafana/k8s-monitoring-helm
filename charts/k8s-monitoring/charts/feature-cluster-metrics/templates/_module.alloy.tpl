@@ -25,7 +25,6 @@ declare "cluster_metrics" {
       replacement = "kubernetes"
       target_label = "source"
     }
-    {{ include "feature.clusterMetrics.nodeDiscoveryRules" . | indent 4 }}
   }
   {{- end }}
   {{- include "feature.clusterMetrics.kubelet.alloy" . | indent 2 }}
@@ -38,9 +37,5 @@ declare "cluster_metrics" {
   {{- include "feature.clusterMetrics.kubeProxy.alloy" . | indent 2 }}
   {{- include "feature.clusterMetrics.kubeScheduler.alloy" . | indent 2 }}
   {{- include "feature.clusterMetrics.kube_state_metrics.alloy" . | indent 2 }}
-  {{- include "feature.clusterMetrics.node_exporter.alloy" . | indent 2 }}
-  {{- include "feature.clusterMetrics.windows_exporter.alloy" . | indent 2 }}
-  {{- include "feature.clusterMetrics.kepler.alloy" . | indent 2 }}
-  {{- include "feature.clusterMetrics.opencost.alloy" . | indent 2 }}
 }
 {{- end -}}
