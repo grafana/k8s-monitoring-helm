@@ -93,6 +93,7 @@ jobs:
           TEST: ${{ matrix.test }}
         run: |
           yq eval '"cluster-type=" + .cluster.type // "kind"' "${TEST}/test-plan.yaml" > "${GITHUB_OUTPUT}"
+          yq eval '"driver-type=" + .cluster.driver // ""' "${TEST}/test-plan.yaml" >> "${GITHUB_OUTPUT}"
           yq eval '"subject-type=" + .subject.type // "helm"' "${TEST}/test-plan.yaml" >> "${GITHUB_OUTPUT}"
 
       - name: Install Kind CLI
@@ -100,6 +101,12 @@ jobs:
         uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc  # v1.14.0
         with:
           install_only: true
+
+      - name: Set up QEMU
+        if: ${{ steps.test-config.outputs.cluster-type == 'minikube' && steps.test-config.outputs.driver-type == 'qemu' }}
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a  # v4
+        with:
+          platforms: "linux/amd64"
 
       - name: Install Minikube CLI
         if: ${{ steps.test-config.outputs.cluster-type == 'minikube' }}
