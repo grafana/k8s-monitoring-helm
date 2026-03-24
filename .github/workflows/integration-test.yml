@@ -102,11 +102,11 @@ jobs:
         with:
           install_only: true
 
-      - name: Set up QEMU
+      - name: Install QEMU
         if: ${{ steps.test-config.outputs.cluster-type == 'minikube' && steps.test-config.outputs.driver-type == 'qemu' }}
-        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a  # v4
-        with:
-          platforms: "linux/amd64"
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-system-x86 qemu-utils
 
       - name: Install Minikube CLI
         if: ${{ steps.test-config.outputs.cluster-type == 'minikube' }}
