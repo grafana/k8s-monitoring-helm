@@ -8,9 +8,9 @@ should add the attach_metadata block to the discovery.kubernetes:
 
         discovery.kubernetes "pods" {
           role = "pod"
-        attach_metadata {
-          node = true
-        }
+          attach_metadata {
+            node = true
+          }
         }
 
         discovery.relabel "filtered_pods" {
@@ -134,9 +134,11 @@ should add the attach_metadata block to the discovery.kubernetes:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -190,9 +192,9 @@ should add the node architecture label rules to the discovery relabel:
 
         discovery.kubernetes "pods" {
           role = "pod"
-        attach_metadata {
-          node = true
-        }
+          attach_metadata {
+            node = true
+          }
         }
 
         discovery.relabel "filtered_pods" {
@@ -313,9 +315,11 @@ should add the node architecture label rules to the discovery relabel:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -370,9 +374,9 @@ should add the node availability zone label rules to the discovery relabel:
 
         discovery.kubernetes "pods" {
           role = "pod"
-        attach_metadata {
-          node = true
-        }
+          attach_metadata {
+            node = true
+          }
         }
 
         discovery.relabel "filtered_pods" {
@@ -494,9 +498,11 @@ should add the node availability zone label rules to the discovery relabel:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -551,9 +557,9 @@ should add the node instance type label rules to the discovery relabel:
 
         discovery.kubernetes "pods" {
           role = "pod"
-        attach_metadata {
-          node = true
-        }
+          attach_metadata {
+            node = true
+          }
         }
 
         discovery.relabel "filtered_pods" {
@@ -674,9 +680,11 @@ should add the node instance type label rules to the discovery relabel:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -731,9 +739,9 @@ should add the node os label rules to the discovery relabel:
 
         discovery.kubernetes "pods" {
           role = "pod"
-        attach_metadata {
-          node = true
-        }
+          attach_metadata {
+            node = true
+          }
         }
 
         discovery.relabel "filtered_pods" {
@@ -855,9 +863,11 @@ should add the node os label rules to the discovery relabel:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -912,9 +922,9 @@ should add the node pool label rules to the discovery relabel:
 
         discovery.kubernetes "pods" {
           role = "pod"
-        attach_metadata {
-          node = true
-        }
+          attach_metadata {
+            node = true
+          }
         }
 
         discovery.relabel "filtered_pods" {
@@ -1038,9 +1048,11 @@ should add the node pool label rules to the discovery relabel:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -1095,9 +1107,9 @@ should add the node region label rules to the discovery relabel:
 
         discovery.kubernetes "pods" {
           role = "pod"
-        attach_metadata {
-          node = true
-        }
+          attach_metadata {
+            node = true
+          }
         }
 
         discovery.relabel "filtered_pods" {
@@ -1218,9 +1230,11 @@ should add the node region label rules to the discovery relabel:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -1275,9 +1289,9 @@ should add the node role label rules to the discovery relabel:
 
         discovery.kubernetes "pods" {
           role = "pod"
-        attach_metadata {
-          node = true
-        }
+          attach_metadata {
+            node = true
+          }
         }
 
         discovery.relabel "filtered_pods" {
@@ -1400,9 +1414,11 @@ should add the node role label rules to the discovery relabel:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {

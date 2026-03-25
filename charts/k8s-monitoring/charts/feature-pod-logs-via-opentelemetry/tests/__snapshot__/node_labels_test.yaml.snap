@@ -8,7 +8,7 @@ should add the attach_metadata block to the discovery.kubernetes:
 
         otelcol.receiver.filelog "pod_logs" {
           include = ["/var/log/pods/*/*/*.log"]
-          start_at = "beginning"
+          start_at = "end"
           include_file_name = false
           include_file_path = true
 
@@ -34,6 +34,7 @@ should add the attach_metadata block to the discovery.kubernetes:
           }
 
           extract {
+            otel_annotations = false
             metadata = [
               "k8s.deployment.name",
               "k8s.statefulset.name",
@@ -46,11 +47,6 @@ should add the attach_metadata block to the discovery.kubernetes:
               key_regex = "resource.opentelemetry.io/(.*)"
               tag_name  = "$1"
               from      = "pod"
-            }
-            annotation {
-              tag_name = "job"
-              key      = "k8s.grafana.com/logs.job"
-              from     = "pod"
             }
             label {
               tag_name = "app_kubernetes_io_name"
@@ -91,7 +87,6 @@ should add the attach_metadata block to the discovery.kubernetes:
               `set(attributes["service.version"], attributes["app.kubernetes.io/version"]) where attributes["service.version"] == nil`,
 
               `set(attributes["service.instance.id"], Concat([attributes["k8s.namespace.name"], attributes["k8s.pod.name"], attributes["k8s.container.name"]], ".")) where attributes["service.instance.id"] == nil`,
-              `set(attributes["loki.resource.labels"], "k8s.namespace.name,k8s.container.name,k8s.pod.name,k8s.deployment.name,k8s.statefulset.name,k8s.daemonset.name,k8s.cronjob.name,k8s.job.name,k8s.node.name,service.name,service.namespace,service.version,service.instance.id,app_kubernetes_io_name,job,nodePool,k8s.pod.name,pod,service.instance.id")`,
             ]
           }
 
@@ -103,7 +98,7 @@ should add the attach_metadata block to the discovery.kubernetes:
           }
 
           output {
-            logs = [otelcol.exporter.loki.pod_logs.input]
+            logs = argument.logs_destinations.value
           }
         }
       }
@@ -117,7 +112,7 @@ should add the node architecture label rules to the discovery relabel:
 
         otelcol.receiver.filelog "pod_logs" {
           include = ["/var/log/pods/*/*/*.log"]
-          start_at = "beginning"
+          start_at = "end"
           include_file_name = false
           include_file_path = true
 
@@ -143,6 +138,7 @@ should add the node architecture label rules to the discovery relabel:
           }
 
           extract {
+            otel_annotations = false
             metadata = [
               "k8s.deployment.name",
               "k8s.statefulset.name",
@@ -155,11 +151,6 @@ should add the node architecture label rules to the discovery relabel:
               key_regex = "resource.opentelemetry.io/(.*)"
               tag_name  = "$1"
               from      = "pod"
-            }
-            annotation {
-              tag_name = "job"
-              key      = "k8s.grafana.com/logs.job"
-              from     = "pod"
             }
             label {
               tag_name = "app_kubernetes_io_name"
@@ -200,7 +191,6 @@ should add the node architecture label rules to the discovery relabel:
               `set(attributes["service.version"], attributes["app.kubernetes.io/version"]) where attributes["service.version"] == nil`,
 
               `set(attributes["service.instance.id"], Concat([attributes["k8s.namespace.name"], attributes["k8s.pod.name"], attributes["k8s.container.name"]], ".")) where attributes["service.instance.id"] == nil`,
-              `set(attributes["loki.resource.labels"], "k8s.namespace.name,k8s.container.name,k8s.pod.name,k8s.deployment.name,k8s.statefulset.name,k8s.daemonset.name,k8s.cronjob.name,k8s.job.name,k8s.node.name,service.name,service.namespace,service.version,service.instance.id,app_kubernetes_io_name,job,nodeArchitecture,architecture,k8s.pod.name,pod,service.instance.id")`,
             ]
           }
 
@@ -212,7 +202,7 @@ should add the node architecture label rules to the discovery relabel:
           }
 
           output {
-            logs = [otelcol.exporter.loki.pod_logs.input]
+            logs = argument.logs_destinations.value
           }
         }
       }
@@ -226,7 +216,7 @@ should add the node availability zone label rules to the discovery relabel:
 
         otelcol.receiver.filelog "pod_logs" {
           include = ["/var/log/pods/*/*/*.log"]
-          start_at = "beginning"
+          start_at = "end"
           include_file_name = false
           include_file_path = true
 
@@ -252,6 +242,7 @@ should add the node availability zone label rules to the discovery relabel:
           }
 
           extract {
+            otel_annotations = false
             metadata = [
               "k8s.deployment.name",
               "k8s.statefulset.name",
@@ -264,11 +255,6 @@ should add the node availability zone label rules to the discovery relabel:
               key_regex = "resource.opentelemetry.io/(.*)"
               tag_name  = "$1"
               from      = "pod"
-            }
-            annotation {
-              tag_name = "job"
-              key      = "k8s.grafana.com/logs.job"
-              from     = "pod"
             }
             label {
               tag_name = "app_kubernetes_io_name"
@@ -309,7 +295,6 @@ should add the node availability zone label rules to the discovery relabel:
               `set(attributes["service.version"], attributes["app.kubernetes.io/version"]) where attributes["service.version"] == nil`,
 
               `set(attributes["service.instance.id"], Concat([attributes["k8s.namespace.name"], attributes["k8s.pod.name"], attributes["k8s.container.name"]], ".")) where attributes["service.instance.id"] == nil`,
-              `set(attributes["loki.resource.labels"], "k8s.namespace.name,k8s.container.name,k8s.pod.name,k8s.deployment.name,k8s.statefulset.name,k8s.daemonset.name,k8s.cronjob.name,k8s.job.name,k8s.node.name,service.name,service.namespace,service.version,service.instance.id,app_kubernetes_io_name,job,availabilityZone,availability_zone,k8s.pod.name,pod,service.instance.id")`,
             ]
           }
 
@@ -321,7 +306,7 @@ should add the node availability zone label rules to the discovery relabel:
           }
 
           output {
-            logs = [otelcol.exporter.loki.pod_logs.input]
+            logs = argument.logs_destinations.value
           }
         }
       }
@@ -335,7 +320,7 @@ should add the node instance type label rules to the discovery relabel:
 
         otelcol.receiver.filelog "pod_logs" {
           include = ["/var/log/pods/*/*/*.log"]
-          start_at = "beginning"
+          start_at = "end"
           include_file_name = false
           include_file_path = true
 
@@ -361,6 +346,7 @@ should add the node instance type label rules to the discovery relabel:
           }
 
           extract {
+            otel_annotations = false
             metadata = [
               "k8s.deployment.name",
               "k8s.statefulset.name",
@@ -373,11 +359,6 @@ should add the node instance type label rules to the discovery relabel:
               key_regex = "resource.opentelemetry.io/(.*)"
               tag_name  = "$1"
               from      = "pod"
-            }
-            annotation {
-              tag_name = "job"
-              key      = "k8s.grafana.com/logs.job"
-              from     = "pod"
             }
             label {
               tag_name = "app_kubernetes_io_name"
@@ -418,7 +399,6 @@ should add the node instance type label rules to the discovery relabel:
               `set(attributes["service.version"], attributes["app.kubernetes.io/version"]) where attributes["service.version"] == nil`,
 
               `set(attributes["service.instance.id"], Concat([attributes["k8s.namespace.name"], attributes["k8s.pod.name"], attributes["k8s.container.name"]], ".")) where attributes["service.instance.id"] == nil`,
-              `set(attributes["loki.resource.labels"], "k8s.namespace.name,k8s.container.name,k8s.pod.name,k8s.deployment.name,k8s.statefulset.name,k8s.daemonset.name,k8s.cronjob.name,k8s.job.name,k8s.node.name,service.name,service.namespace,service.version,service.instance.id,app_kubernetes_io_name,job,instanceType,instance_type,k8s.pod.name,pod,service.instance.id")`,
             ]
           }
 
@@ -430,7 +410,7 @@ should add the node instance type label rules to the discovery relabel:
           }
 
           output {
-            logs = [otelcol.exporter.loki.pod_logs.input]
+            logs = argument.logs_destinations.value
           }
         }
       }
@@ -444,7 +424,7 @@ should add the node os label rules to the discovery relabel:
 
         otelcol.receiver.filelog "pod_logs" {
           include = ["/var/log/pods/*/*/*.log"]
-          start_at = "beginning"
+          start_at = "end"
           include_file_name = false
           include_file_path = true
 
@@ -470,6 +450,7 @@ should add the node os label rules to the discovery relabel:
           }
 
           extract {
+            otel_annotations = false
             metadata = [
               "k8s.deployment.name",
               "k8s.statefulset.name",
@@ -482,11 +463,6 @@ should add the node os label rules to the discovery relabel:
               key_regex = "resource.opentelemetry.io/(.*)"
               tag_name  = "$1"
               from      = "pod"
-            }
-            annotation {
-              tag_name = "job"
-              key      = "k8s.grafana.com/logs.job"
-              from     = "pod"
             }
             label {
               tag_name = "app_kubernetes_io_name"
@@ -527,7 +503,6 @@ should add the node os label rules to the discovery relabel:
               `set(attributes["service.version"], attributes["app.kubernetes.io/version"]) where attributes["service.version"] == nil`,
 
               `set(attributes["service.instance.id"], Concat([attributes["k8s.namespace.name"], attributes["k8s.pod.name"], attributes["k8s.container.name"]], ".")) where attributes["service.instance.id"] == nil`,
-              `set(attributes["loki.resource.labels"], "k8s.namespace.name,k8s.container.name,k8s.pod.name,k8s.deployment.name,k8s.statefulset.name,k8s.daemonset.name,k8s.cronjob.name,k8s.job.name,k8s.node.name,service.name,service.namespace,service.version,service.instance.id,app_kubernetes_io_name,job,nodeOS,k8s.pod.name,os,pod,service.instance.id")`,
             ]
           }
 
@@ -539,7 +514,7 @@ should add the node os label rules to the discovery relabel:
           }
 
           output {
-            logs = [otelcol.exporter.loki.pod_logs.input]
+            logs = argument.logs_destinations.value
           }
         }
       }
@@ -553,7 +528,7 @@ should add the node pool label rules to the discovery relabel:
 
         otelcol.receiver.filelog "pod_logs" {
           include = ["/var/log/pods/*/*/*.log"]
-          start_at = "beginning"
+          start_at = "end"
           include_file_name = false
           include_file_path = true
 
@@ -579,6 +554,7 @@ should add the node pool label rules to the discovery relabel:
           }
 
           extract {
+            otel_annotations = false
             metadata = [
               "k8s.deployment.name",
               "k8s.statefulset.name",
@@ -591,11 +567,6 @@ should add the node pool label rules to the discovery relabel:
               key_regex = "resource.opentelemetry.io/(.*)"
               tag_name  = "$1"
               from      = "pod"
-            }
-            annotation {
-              tag_name = "job"
-              key      = "k8s.grafana.com/logs.job"
-              from     = "pod"
             }
             label {
               tag_name = "app_kubernetes_io_name"
@@ -636,7 +607,6 @@ should add the node pool label rules to the discovery relabel:
               `set(attributes["service.version"], attributes["app.kubernetes.io/version"]) where attributes["service.version"] == nil`,
 
               `set(attributes["service.instance.id"], Concat([attributes["k8s.namespace.name"], attributes["k8s.pod.name"], attributes["k8s.container.name"]], ".")) where attributes["service.instance.id"] == nil`,
-              `set(attributes["loki.resource.labels"], "k8s.namespace.name,k8s.container.name,k8s.pod.name,k8s.deployment.name,k8s.statefulset.name,k8s.daemonset.name,k8s.cronjob.name,k8s.job.name,k8s.node.name,service.name,service.namespace,service.version,service.instance.id,app_kubernetes_io_name,job,nodePool,k8s.pod.name,nodepool,pod,service.instance.id")`,
             ]
           }
 
@@ -648,7 +618,7 @@ should add the node pool label rules to the discovery relabel:
           }
 
           output {
-            logs = [otelcol.exporter.loki.pod_logs.input]
+            logs = argument.logs_destinations.value
           }
         }
       }
@@ -662,7 +632,7 @@ should add the node region label rules to the discovery relabel:
 
         otelcol.receiver.filelog "pod_logs" {
           include = ["/var/log/pods/*/*/*.log"]
-          start_at = "beginning"
+          start_at = "end"
           include_file_name = false
           include_file_path = true
 
@@ -688,6 +658,7 @@ should add the node region label rules to the discovery relabel:
           }
 
           extract {
+            otel_annotations = false
             metadata = [
               "k8s.deployment.name",
               "k8s.statefulset.name",
@@ -700,11 +671,6 @@ should add the node region label rules to the discovery relabel:
               key_regex = "resource.opentelemetry.io/(.*)"
               tag_name  = "$1"
               from      = "pod"
-            }
-            annotation {
-              tag_name = "job"
-              key      = "k8s.grafana.com/logs.job"
-              from     = "pod"
             }
             label {
               tag_name = "app_kubernetes_io_name"
@@ -745,7 +711,6 @@ should add the node region label rules to the discovery relabel:
               `set(attributes["service.version"], attributes["app.kubernetes.io/version"]) where attributes["service.version"] == nil`,
 
               `set(attributes["service.instance.id"], Concat([attributes["k8s.namespace.name"], attributes["k8s.pod.name"], attributes["k8s.container.name"]], ".")) where attributes["service.instance.id"] == nil`,
-              `set(attributes["loki.resource.labels"], "k8s.namespace.name,k8s.container.name,k8s.pod.name,k8s.deployment.name,k8s.statefulset.name,k8s.daemonset.name,k8s.cronjob.name,k8s.job.name,k8s.node.name,service.name,service.namespace,service.version,service.instance.id,app_kubernetes_io_name,job,region,k8s.pod.name,pod,region,service.instance.id")`,
             ]
           }
 
@@ -757,7 +722,7 @@ should add the node region label rules to the discovery relabel:
           }
 
           output {
-            logs = [otelcol.exporter.loki.pod_logs.input]
+            logs = argument.logs_destinations.value
           }
         }
       }
@@ -771,7 +736,7 @@ should add the node role label rules to the discovery relabel:
 
         otelcol.receiver.filelog "pod_logs" {
           include = ["/var/log/pods/*/*/*.log"]
-          start_at = "beginning"
+          start_at = "end"
           include_file_name = false
           include_file_path = true
 
@@ -797,6 +762,7 @@ should add the node role label rules to the discovery relabel:
           }
 
           extract {
+            otel_annotations = false
             metadata = [
               "k8s.deployment.name",
               "k8s.statefulset.name",
@@ -809,11 +775,6 @@ should add the node role label rules to the discovery relabel:
               key_regex = "resource.opentelemetry.io/(.*)"
               tag_name  = "$1"
               from      = "pod"
-            }
-            annotation {
-              tag_name = "job"
-              key      = "k8s.grafana.com/logs.job"
-              from     = "pod"
             }
             label {
               tag_name = "app_kubernetes_io_name"
@@ -854,7 +815,6 @@ should add the node role label rules to the discovery relabel:
               `set(attributes["service.version"], attributes["app.kubernetes.io/version"]) where attributes["service.version"] == nil`,
 
               `set(attributes["service.instance.id"], Concat([attributes["k8s.namespace.name"], attributes["k8s.pod.name"], attributes["k8s.container.name"]], ".")) where attributes["service.instance.id"] == nil`,
-              `set(attributes["loki.resource.labels"], "k8s.namespace.name,k8s.container.name,k8s.pod.name,k8s.deployment.name,k8s.statefulset.name,k8s.daemonset.name,k8s.cronjob.name,k8s.job.name,k8s.node.name,service.name,service.namespace,service.version,service.instance.id,app_kubernetes_io_name,job,nodeRole,k8s.pod.name,node_role,pod,service.instance.id")`,
             ]
           }
 
@@ -866,7 +826,7 @@ should add the node role label rules to the discovery relabel:
           }
 
           output {
-            logs = [otelcol.exporter.loki.pod_logs.input]
+            logs = argument.logs_destinations.value
           }
         }
       }
