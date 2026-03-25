@@ -8,9 +8,11 @@ INTEGRATION_DOCS_FILES = $(INTEGRATION_VALUES_FILES:integrations/%-values.yaml=.
 INTEGRATION_SCHEMA_FILES = $(INTEGRATION_VALUES_FILES:integrations/%-values.yaml=./schema-mods/definitions/%-integration.schema.json)
 
 templates/secrets/_helpers.tpl: ../../templates/secrets/_helpers.tpl
+	@mkdir -p $(shell dirname $@)
 	cp $< $@
 
 templates/secrets/_secret.alloy.tpl: ../../templates/secrets/_secret.alloy.tpl
+	@mkdir -p $(shell dirname $@)
 	cp $< $@
 
 Chart.lock: Chart.yaml
@@ -22,7 +24,8 @@ docs/integrations/%.md: integrations/%-values.yaml $$(wildcard docs/integrations
 	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --file /chart/$< --template /chart/docs/integrations/.doc_templates/$(shell basename -s -values.yaml $<).gotmpl > $@
 
 schema-mods/definitions/%-integration.schema.json: integrations/%-values.yaml
-	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --file /chart/$< > $@
+	@mkdir -p $(shell dirname $@)
+	@docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --file /chart/$< > $@
 
 NUMBER_OF_INTEGRATION_VALUES_FILES := $(words $(INTEGRATION_VALUES_FILES))
 schema-mods/integration-list.json: $(INTEGRATION_VALUES_FILES)

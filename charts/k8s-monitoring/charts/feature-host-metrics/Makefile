@@ -16,6 +16,7 @@ values.schema.json: values.yaml $$(wildcard schema-mods/*)
 	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --chart /chart > $@
 
 default-allow-lists/%.yaml: ../../../../allowLists/%.yaml
+	mkdir -p $(shell dirname $@)
 	cp $< $@
 
 .PHONY: clean
