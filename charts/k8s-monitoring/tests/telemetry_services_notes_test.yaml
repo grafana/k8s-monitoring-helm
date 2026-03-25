@@ -1,0 +1,67 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Telemetry Services - Notes
+templates:
+  - NOTES.txt
+tests:
+  - it: should list node-exporter and windows-exporter
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090
+      collectors: {my-collector: {}}
+      telemetry-services:
+        node-exporter:
+          deploy: true
+        windows-exporter:
+          deploy: true
+    asserts:
+      - matchSnapshotRaw: {}
+
+  - it: should list all telemetry services when all are enabled
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090
+      collectors: {my-collector: {}}
+      telemetry-services:
+        node-exporter:
+          deploy: true
+        windows-exporter:
+          deploy: true
+        kube-state-metrics:
+          deploy: true
+        kepler:
+          deploy: true
+        opencost:
+          deploy: true
+    asserts:
+      - matchSnapshotRaw: {}
+
+  - it: should list nothing when all telemetry services are disabled
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090
+      collectors: {my-collector: {}}
+      telemetry-services:
+        node-exporter:
+          deploy: false
+        windows-exporter:
+          deploy: false
+        kube-state-metrics:
+          deploy: false
+        kepler:
+          deploy: false
+        opencost:
+          deploy: false
+    asserts:
+      - matchSnapshotRaw: {}

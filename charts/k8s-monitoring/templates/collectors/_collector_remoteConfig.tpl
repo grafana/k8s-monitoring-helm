@@ -19,7 +19,7 @@
     {{- end }}
 
     {{- if eq (include "collectors.hasExtraEnv" (deepCopy $ | merge (dict "collectorName" $collectorName "envVarName" "GCLOUD_RW_API_KEY"))) "false" }}
-      {{- $remoteConfigValues := merge ((get $.Values.collectors $collectorName).remoteConfig) (dict "type" "remoteConfig") }}
+      {{- $remoteConfigValues := merge (dict "type" "remoteConfig") (get $collectorValues "remoteConfig") }}
       {{- if eq (include "secrets.usesKubernetesSecret" $remoteConfigValues ) "true" }}
         {{- $secretName := include "secrets.kubernetesSecretName" (dict "Values" $.Values "Chart" $.Chart "Release" $.Release "object" $remoteConfigValues "name" (printf "%s-remote-cfg" $collectorName)) }}
         {{- $secretKey := include "secrets.getSecretKey" (dict "object" $remoteConfigValues "key" "auth.password") }}

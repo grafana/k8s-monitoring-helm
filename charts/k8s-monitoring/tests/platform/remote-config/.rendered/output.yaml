@@ -378,6 +378,11 @@ spec:
           fieldPath: spec.nodeName
     - name: GCLOUD_FM_COLLECTOR_ID
       value: k8smon-$(CLUSTER_NAME)-$(NAMESPACE)-alloy-logs-$(NODE_NAME)
+    - name: GCLOUD_RW_API_KEY
+      valueFrom:
+        secretKeyRef:
+          key: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
+          name: grafana-cloud-credentials
     mounts:
       dockercontainers: true
       varlog: true
@@ -445,6 +450,11 @@ spec:
           fieldPath: metadata.name
     - name: GCLOUD_FM_COLLECTOR_ID
       value: k8smon-$(CLUSTER_NAME)-$(NAMESPACE)-$(POD_NAME)
+    - name: GCLOUD_RW_API_KEY
+      valueFrom:
+        secretKeyRef:
+          key: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
+          name: grafana-cloud-credentials
     resources: {}
     securityContext:
       allowPrivilegeEscalation: false
