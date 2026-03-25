@@ -1104,7 +1104,7 @@ data:
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
       textfile {
-        directory = "/etc/alloy"
+        directory = "/etc/release-info"
       }
     }
     
@@ -1286,6 +1286,15 @@ data:
         enabled = true
       }
     }
+---
+# Source: k8s-monitoring/templates/release-info.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-k8s-monitoring-release-info
+  namespace: default
+data:
+  cluster: "loki-meta-monitoring-cluster"
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
@@ -2044,6 +2053,10 @@ spec:
       targetPort: 14268
     mounts:
       dockercontainers: true
+      extra:
+      - mountPath: /etc/release-info
+        name: release-info
+        readOnly: true
       varlog: true
     resources: {}
     securityContext:
@@ -2077,6 +2090,11 @@ spec:
     - effect: NoSchedule
       operator: Exists
     type: daemonset
+    volumes:
+      extra:
+      - configMap:
+          name: k8smon-k8s-monitoring-release-info
+        name: release-info
   crds:
     create: false
   nameOverride: alloy

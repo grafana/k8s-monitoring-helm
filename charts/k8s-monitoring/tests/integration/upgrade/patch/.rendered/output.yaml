@@ -1145,7 +1145,7 @@ data:
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
       textfile {
-        directory = "/etc/alloy"
+        directory = "/etc/release-info"
       }
     }
     
@@ -1285,6 +1285,24 @@ data:
       name      = "localprometheus-k8smon-k8s-monitoring"
       namespace = "default"
     }
+---
+# Source: k8s-monitoring/templates/extra-objects.yaml
+apiVersion: v1
+data:
+  version: '4.0.0-rc.1'
+kind: ConfigMap
+metadata:
+  name: k8smon-version
+  namespace: toolbox
+---
+# Source: k8s-monitoring/templates/release-info.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-k8s-monitoring-release-info
+  namespace: default
+data:
+  cluster: "patch-upgrade-test"
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
@@ -1302,15 +1320,6 @@ data:
     grafana_kubernetes_monitoring_collector_info{kind="statefulset", name="alloy-metrics", presets="clustered,statefulset", replicas="1", type="alloy"} 1
     grafana_kubernetes_monitoring_collector_info{kind="deployment", name="alloy-singleton", presets="singleton", replicas="1", type="alloy"} 1
     # EOF
----
-# Source: k8s-monitoring/templates/extra-objects.yaml
-apiVersion: v1
-data:
-  version: '4.0.0-rc.1'
-kind: ConfigMap
-metadata:
-  name: k8smon-version
-  namespace: toolbox
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -2733,6 +2742,11 @@ spec:
   alloy:
     configMap:
       create: false
+    mounts:
+      extra:
+      - mountPath: /etc/release-info
+        name: release-info
+        readOnly: true
     resources: {}
     securityContext:
       allowPrivilegeEscalation: false
@@ -2763,6 +2777,11 @@ spec:
       k8s.grafana.com/logs.job: integrations/alloy
     replicas: 1
     type: deployment
+    volumes:
+      extra:
+      - configMap:
+          name: k8smon-k8s-monitoring-release-info
+        name: release-info
   crds:
     create: false
   nameOverride: alloy-singleton
