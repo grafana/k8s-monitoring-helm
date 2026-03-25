@@ -216,19 +216,15 @@ should render with modified metrics tuning settings:
 
           selectors {
             role = "endpoints"
-            label = "app.kubernetes.io/name=kube-state-metrics"
+            label = "release=RELEASE-NAME,app.kubernetes.io/name=kube-state-metrics"
+          }
+          namespaces {
+            names = ["NAMESPACE"]
           }
         }
 
         discovery.relabel "kube_state_metrics" {
           targets = discovery.kubernetes.kube_state_metrics.targets
-
-          // only keep targets with a matching port name
-          rule {
-            source_labels = ["__meta_kubernetes_pod_container_port_name"]
-            regex = "http"
-            action = "keep"
-          }
 
           rule {
             action = "replace"

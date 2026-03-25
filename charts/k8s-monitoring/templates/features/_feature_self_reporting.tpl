@@ -100,6 +100,19 @@ grafana_kubernetes_monitoring_build_info{version="{{ .Chart.Version }}", namespa
 grafana_kubernetes_monitoring_feature_info{{ include "label_list" (merge $featureSummary (dict "feature" $feature)) }} 1
     {{- end }}
   {{- end }}
+# HELP grafana_kubernetes_monitoring_collector_info A metric to report the collectors of the Kubernetes Monitoring Helm chart
+# TYPE grafana_kubernetes_monitoring_collector_info gauge
+{{- range $collectorName, $collectorValues := .Values.collectors }}
+  {{- $resolvedValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
+  {{- $kind := dig "controller" "type" "deployment" $resolvedValues }}
+  {{- $presets := join "," ($collectorValues.presets | default list) }}
+  {{- $labels := dict "name" $collectorName "type" "alloy" "kind" $kind "presets" $presets }}
+  {{- if ne $kind "daemonset" }}
+    {{- $replicas := dig "controller" "replicas" 1 $resolvedValues }}
+    {{- $_ := set $labels "replicas" (printf "%d" (int $replicas)) }}
+  {{- end }}
+grafana_kubernetes_monitoring_collector_info{{ include "label_list" $labels }} 1
+{{- end }}
 # EOF
 {{- end }}
 {{- end }}

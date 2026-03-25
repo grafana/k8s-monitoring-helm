@@ -221,19 +221,15 @@ can discover kube-state-metrics via pods:
 
           selectors {
             role = "pod"
-            label = "app.kubernetes.io/name=kube-state-metrics"
+            label = "release=RELEASE-NAME,app.kubernetes.io/name=kube-state-metrics"
+          }
+          namespaces {
+            names = ["NAMESPACE"]
           }
         }
 
         discovery.relabel "kube_state_metrics" {
           targets = discovery.kubernetes.kube_state_metrics.targets
-
-          // only keep targets with a matching port name
-          rule {
-            source_labels = ["__meta_kubernetes_pod_container_port_name"]
-            regex = "http"
-            action = "keep"
-          }
 
           rule {
             action = "replace"
@@ -496,19 +492,15 @@ can discover kube-state-metrics via service:
 
           selectors {
             role = "service"
-            label = "app.kubernetes.io/name=kube-state-metrics"
+            label = "release=RELEASE-NAME,app.kubernetes.io/name=kube-state-metrics"
+          }
+          namespaces {
+            names = ["NAMESPACE"]
           }
         }
 
         discovery.relabel "kube_state_metrics" {
           targets = discovery.kubernetes.kube_state_metrics.targets
-
-          // only keep targets with a matching port name
-          rule {
-            source_labels = ["__meta_kubernetes_service_port_name"]
-            regex = "http"
-            action = "keep"
-          }
 
           rule {
             action = "replace"

@@ -57,7 +57,7 @@ should create a ConfigMap that sets custom journal labels:
               // add a static source label to the logs so they can be differentiated / restricted if necessary
               "source" = "journal",
               // default level to unknown
-              level = "unknown",
+              level = "UNKNOWN",
             }
           }
 
@@ -83,6 +83,12 @@ should create a ConfigMap that sets custom journal labels:
             stage.replace {
               source = "level"
               expression = "(W)"
+              replace = "WARN"
+            }
+            // standardize on WARN
+            stage.replace {
+              source = "level"
+              expression = "(warning)"
               replace = "WARN"
             }
 
@@ -123,6 +129,12 @@ should create a ConfigMap that sets custom journal labels:
                 level = "",
               }
             }
+          }
+
+          // Standardize on upper-case
+          stage.template {
+            source   = "level"
+            template = "{{ ToUpper .Value }}"
           }
 
           forward_to = argument.logs_destinations.value

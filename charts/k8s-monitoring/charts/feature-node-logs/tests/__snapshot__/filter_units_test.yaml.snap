@@ -50,7 +50,7 @@ should create a ConfigMap that only includes certain units:
               // add a static source label to the logs so they can be differentiated / restricted if necessary
               "source" = "journal",
               // default level to unknown
-              level = "unknown",
+              level = "UNKNOWN",
             }
           }
 
@@ -76,6 +76,12 @@ should create a ConfigMap that only includes certain units:
             stage.replace {
               source = "level"
               expression = "(W)"
+              replace = "WARN"
+            }
+            // standardize on WARN
+            stage.replace {
+              source = "level"
+              expression = "(warning)"
               replace = "WARN"
             }
 
@@ -116,6 +122,12 @@ should create a ConfigMap that only includes certain units:
                 level = "",
               }
             }
+          }
+
+          // Standardize on upper-case
+          stage.template {
+            source   = "level"
+            template = "{{ ToUpper .Value }}"
           }
 
           forward_to = argument.logs_destinations.value

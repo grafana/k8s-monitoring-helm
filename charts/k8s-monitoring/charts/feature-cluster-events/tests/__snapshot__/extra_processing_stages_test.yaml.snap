@@ -37,7 +37,7 @@ should create a ConfigMap with extra processing stages:
             values = {
               "kind" = "",
               "level" = "",
-              "node" = "node",
+              "service_name" = "job",
               "reason" = "reason",
             }
           }
@@ -63,6 +63,17 @@ should create a ConfigMap with extra processing stages:
               }
             }
           }
+          stage.structured_metadata {
+            values = {
+              "name" = "name",
+              "node" = "node",
+            }
+          }
+
+          // Drop pipeline-only labels that are not needed in the final output.
+          stage.label_drop {
+            values = ["kind"]
+          }
               stage.metrics {
             metric.counter {
               name        = "failures"
@@ -76,21 +87,7 @@ should create a ConfigMap with extra processing stages:
             }
           }
 
-          stage.structured_metadata {
-            values = {
-              "name" = "name",
-            }
-          }
 
-          // Drop pipeline-only labels that are not needed in the final output.
-          stage.label_drop {
-            values = ["kind"]
-          }
-          stage.labels {
-            values = {
-              "service_name" = "job",
-            }
-          }
           forward_to = argument.logs_destinations.value
         }
       }
