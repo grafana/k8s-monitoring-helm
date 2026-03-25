@@ -1820,7 +1820,7 @@ data:
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
       textfile {
-        directory = "/etc/alloy"
+        directory = "/etc/release-info"
       }
     }
     
@@ -2061,6 +2061,15 @@ data:
       name      = "otel-endpoint-k8smon-k8s-monitoring"
       namespace = "default"
     }
+---
+# Source: k8s-monitoring/templates/release-info.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-k8s-monitoring-release-info
+  namespace: default
+data:
+  cluster: "oauth2-auth-example"
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
@@ -3042,6 +3051,11 @@ spec:
   alloy:
     configMap:
       create: false
+    mounts:
+      extra:
+      - mountPath: /etc/release-info
+        name: release-info
+        readOnly: true
     resources: {}
     securityContext:
       allowPrivilegeEscalation: false
@@ -3072,6 +3086,11 @@ spec:
       k8s.grafana.com/logs.job: integrations/alloy
     replicas: 1
     type: deployment
+    volumes:
+      extra:
+      - configMap:
+          name: k8smon-k8s-monitoring-release-info
+        name: release-info
   crds:
     create: false
   nameOverride: alloy-singleton

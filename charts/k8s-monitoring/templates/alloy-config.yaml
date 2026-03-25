@@ -1,12 +1,8 @@
 {{- range $collectorName := keys .Values.collectors | sortAlpha }}
-{{- $selfReportingEnabled := false }}
 {{- $destinationNames := (get $.Values.collectors $collectorName).includeDestinations | default list }}
 {{- range $featureKey := include "features.list" $ | fromYamlArray }}
   {{- $featureCollectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) }}
   {{- if eq $collectorName $featureCollectorName }}
-    {{- if eq $featureKey "selfReporting" }}
-      {{- $selfReportingEnabled = true }}
-    {{- end }}
     {{- $destinationNames = concat $destinationNames ((include (printf "features.%s.destinations" $featureKey) $) | fromYamlArray) }}
   {{- end }}
 {{- end }}
@@ -37,7 +33,4 @@ metadata:
   namespace: {{ $.Release.Namespace }}
 data:
   config.alloy: |{{ $alloyConfig | trim | nindent 4 }}
-{{- if $selfReportingEnabled }}
-  self-reporting-metric.prom: |{{ printf "%s\n" (include "features.selfReporting.metrics" $values | trim) | nindent 4 }}
-{{- end }}
 {{- end }}

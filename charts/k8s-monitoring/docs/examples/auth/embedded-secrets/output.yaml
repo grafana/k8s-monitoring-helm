@@ -515,7 +515,7 @@ data:
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
       textfile {
-        directory = "/etc/alloy"
+        directory = "/etc/release-info"
       }
     }
     
@@ -709,6 +709,15 @@ data:
       username = "my-username"
       password = "my-password"
     }
+---
+# Source: k8s-monitoring/templates/release-info.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-k8s-monitoring-release-info
+  namespace: default
+data:
+  cluster: "embedded-secrets-example-cluster"
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
@@ -1104,6 +1113,11 @@ spec:
       port: 4317
       protocol: TCP
       targetPort: 4317
+    mounts:
+      extra:
+      - mountPath: /etc/release-info
+        name: release-info
+        readOnly: true
     resources: {}
     securityContext:
       allowPrivilegeEscalation: false
@@ -1134,6 +1148,11 @@ spec:
       k8s.grafana.com/logs.job: integrations/alloy
     replicas: 1
     type: deployment
+    volumes:
+      extra:
+      - configMap:
+          name: k8smon-k8s-monitoring-release-info
+        name: release-info
   crds:
     create: false
   nameOverride: alloy-receiver

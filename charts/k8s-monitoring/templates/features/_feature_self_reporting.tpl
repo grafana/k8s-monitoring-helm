@@ -36,7 +36,25 @@
 {{- end }}
 {{- end }}
 
-{{- define "features.selfReporting.collector.values" }}{{ end }}
+{{- define "features.selfReporting.collector.values" }}
+{{- if eq (include "features.selfReporting.enabled" .) "true" }}
+  {{- $collectorName := include "features.selfReporting.chooseCollector" . | trim }}
+  {{- $collectorValues := (include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml) }}
+  {{- $configMapName := printf "%s-release-info" (include "helper.fullname" .) }}
+  {{- $extraMounts := deepCopy (dig "alloy" "mounts" "extra" list $collectorValues) }}
+  {{- $extraMounts = append $extraMounts (dict "name" "release-info" "mountPath" "/etc/release-info" "readOnly" true) }}
+  {{- $extraVolumes := deepCopy (dig "controller" "volumes" "extra" list $collectorValues) }}
+  {{- $extraVolumes = append $extraVolumes (dict "name" "release-info" "configMap" (dict "name" $configMapName)) }}
+collectors:
+  {{ $collectorName }}:
+    alloy:
+      mounts:
+        extra: {{ $extraMounts | toYaml | nindent 10 }}
+    controller:
+      volumes:
+        extra: {{ $extraVolumes | toYaml | nindent 10 }}
+{{- end }}
+{{- end }}
 {{- define "features.selfReporting.validate" }}{{ end }}
 {{- define "features.selfReporting.include" }}
 {{- if eq (include "features.selfReporting.enabled" .) "true" }}
@@ -46,7 +64,7 @@
 prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   set_collectors = ["textfile"]
   textfile {
-    directory = "/etc/alloy"
+    directory = "/etc/release-info"
   }
 }
 
