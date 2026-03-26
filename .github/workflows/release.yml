@@ -67,10 +67,15 @@ jobs:
         run: |
           name=$(yq ".name" < Chart.yaml)
           version=$(yq ".version" < Chart.yaml)
+          prerelease=false
+          if [[ "$version" == *-* ]]; then
+            prerelease=true
+          fi
           {
             echo "chartpath=charts/$(basename "$(pwd)")";
             echo "tagname=${name}-${version}";
             echo "packagename=${name}-${version}";
+            echo "prerelease=${prerelease}";
           } >> "${GITHUB_OUTPUT}"
 
       - name: Add dependency chart repos
@@ -146,4 +151,5 @@ jobs:
             ${{ env.CR_PACKAGE_PATH }}/${{ steps.parse-chart.outputs.packagename }}.tgz
           tag_name: ${{ steps.parse-chart.outputs.tagname }}
           token: ${{ env.AUTHTOKEN }}
+          prerelease: ${{ steps.parse-chart.outputs.prerelease }}
           fail_on_unmatched_files: true
