@@ -2,7 +2,7 @@
 
 ## 4.0.0
 
-*   Add loki thanos metrics to default allow list (@kinolaev)
+*   Add Loki thanos metrics to the default allowList (@kinolaev)
 *   Rebuild log features to remove `labelsToKeep` and split Loki and OpenTelemetry log gathering (@petewall)
 *   Introducce `collectors` as map, and remove named Alloy instances (@petewall)
 *   Convert destinations into a map (@petewall)
