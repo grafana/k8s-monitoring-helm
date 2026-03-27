@@ -108,10 +108,13 @@ profiling:
   enabled: true
   collector: alloy-daemonset
   ebpf:
+    enabled: true
     excludeNamespaces: [kube-system, kube-public, confidential]
   java:
+    enabled: true
     excludeNamespaces: [kube-system, kube-public, confidential]
   pprof:
+    enabled: true
     excludeNamespaces: [kube-system, kube-public, confidential]
 
 prometheusOperatorObjects:

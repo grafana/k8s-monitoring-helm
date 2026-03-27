@@ -100,10 +100,13 @@ profiling:
   enabled: true
   collector: alloy-profiles
   ebpf:
+    enabled: true
     namespaces: [alpha, bravo, delta]
   java:
+    enabled: true
     namespaces: [alpha, bravo, delta]
   pprof:
+    enabled: true
     namespaces: [alpha, bravo, delta]
 
 prometheusOperatorObjects:

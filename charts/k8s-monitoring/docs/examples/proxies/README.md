@@ -122,6 +122,12 @@ podLogsViaLoki:
 profiling:
   enabled: true
   collector: alloy-profiles
+  ebpf:
+    enabled: true
+  java:
+    enabled: true
+  pprof:
+    enabled: true
 
 collectors:
   alloy-metrics:
