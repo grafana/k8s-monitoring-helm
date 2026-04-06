@@ -4,6 +4,7 @@
 
 *   Add node labels to host metrics feature (@petewall)
 *   Update Alloy Operator, Beyla, Node Exporter, and Windows Exporter (@petewall)
+*   Fix serviceGraphMetrics routing metrics to the wrong OTLP destination when multiple destinations are defined (@petewall)
 
 ## 4.0.0
 
