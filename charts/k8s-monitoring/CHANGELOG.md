@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Add node labels to host metrics feature (@petewall)
+
 ## 4.0.0
 
 *   Add Loki thanos metrics to the default allowList (@kinolaev)

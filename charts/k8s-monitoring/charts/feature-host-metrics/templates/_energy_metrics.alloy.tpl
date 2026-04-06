@@ -39,6 +39,8 @@ discovery.kubernetes "kepler" {
     names = [{{ .Values.energyMetrics.namespace | quote }}]
   }
 {{- end }}
+
+{{- include "feature.hostMetrics.attachNodeMetadata" . | trim | nindent 2 }}
 }
 
 discovery.relabel "kepler" {
@@ -48,8 +50,10 @@ discovery.relabel "kepler" {
     action = "replace"
     target_label = "instance"
   }
+
+{{- include "feature.hostMetrics.nodeDiscoveryRules" . | trim | nindent 2 }}
 {{- if .Values.energyMetrics.extraDiscoveryRules }}
-{{ .Values.energyMetrics.extraDiscoveryRules | indent 2 }}
+  {{- .Values.energyMetrics.extraDiscoveryRules | nindent 2 }}
 {{- end }}
 }
 
@@ -86,7 +90,7 @@ prometheus.relabel "kepler" {
   }
 {{- end }}
 {{- if .Values.energyMetrics.extraMetricProcessingRules }}
-{{ .Values.energyMetrics.extraMetricProcessingRules | indent 2 }}
+  {{ .Values.energyMetrics.extraMetricProcessingRules | nindent 2 }}
 {{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value

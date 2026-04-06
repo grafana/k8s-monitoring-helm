@@ -700,6 +700,9 @@ data:
         namespaces {
           names = ["default"]
         }
+        attach_metadata {
+          node = true
+        }
       }
     
       discovery.relabel "node_exporter" {
@@ -791,6 +794,15 @@ data:
           replacement = "kubernetes"
           target_label = "source"
         }
+        rule {
+          source_labels = [
+            "__meta_kubernetes_node_label_kubernetes_io_os",
+            "__meta_kubernetes_node_label_os_kubernetes_io",
+            "__meta_kubernetes_node_label_os",
+          ]
+          regex = "^(?:;*)?([^;]+).*$"
+          target_label = "os"
+        }
       }
     
       prometheus.scrape "node_exporter" {
@@ -839,6 +851,9 @@ data:
         namespaces {
           names = [""]
         }
+        attach_metadata {
+          node = true
+        }
       }
     
       discovery.relabel "kepler" {
@@ -847,6 +862,15 @@ data:
           source_labels = ["__meta_kubernetes_pod_node_name"]
           action = "replace"
           target_label = "instance"
+        }
+        rule {
+          source_labels = [
+            "__meta_kubernetes_node_label_kubernetes_io_os",
+            "__meta_kubernetes_node_label_os_kubernetes_io",
+            "__meta_kubernetes_node_label_os",
+          ]
+          regex = "^(?:;*)?([^;]+).*$"
+          target_label = "os"
         }
       }
     
