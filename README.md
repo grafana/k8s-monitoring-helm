@@ -27,10 +27,17 @@
 [Helm](https://helm.sh/) must be installed to use the chart. Please refer to
 Helm's [documentation](https://helm.sh/docs/) to get started.
 
-After Helm is set up properly, add the repository as follows:
+### Install from the Helm repository
 
 ```console
 helm repo add grafana https://grafana.github.io/helm-charts
+helm install k8s-monitoring grafana/k8s-monitoring --values values.yaml
+```
+
+### Install from the OCI registry
+
+```console
+helm install k8s-monitoring oci://ghcr.io/grafana/helm-charts/k8s-monitoring --values values.yaml
 ```
 
 Refer to the [Chart Documentation](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/helm-chart-config/helm-chart/)
