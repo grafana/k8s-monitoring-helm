@@ -3,6 +3,7 @@
 ## Unreleased
 
 *   Add node labels to host metrics feature (@petewall)
+*   Update Alloy Operator, Beyla, Node Exporter, and Windows Exporter (@petewall)
 
 ## 4.0.0
 
