@@ -57,11 +57,18 @@ v2 introduces some significant changes to the chart configuration values. Refer 
 
 ## Usage
 
-### Set up Grafana chart repository
+### Install from the Helm repository
 
 ```shell
 helm repo add grafana https://grafana.github.io/helm-charts
 helm repo update
+helm install k8s-monitoring grafana/k8s-monitoring --values values.yaml
+```
+
+### Install from the OCI registry
+
+```shell
+helm install k8s-monitoring oci://ghcr.io/grafana/helm-charts/k8s-monitoring --values values.yaml
 ```
 
 ### Build your values
