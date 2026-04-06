@@ -44,6 +44,8 @@ discovery.kubernetes "node_exporter" {
     names = [{{ .Release.Namespace | quote }}]
   }
 {{- end }}
+
+{{- include "feature.hostMetrics.attachNodeMetadata" . | trim | nindent 2 }}
 }
 
 discovery.relabel "node_exporter" {
@@ -136,8 +138,9 @@ discovery.relabel "node_exporter" {
     target_label = "source"
   }
 
+{{- include "feature.hostMetrics.nodeDiscoveryRules" . | trim | nindent 2 }}
 {{- if .Values.linuxHosts.extraDiscoveryRules }}
-  {{ .Values.linuxHosts.extraDiscoveryRules | nindent 2 }}
+  {{- .Values.linuxHosts.extraDiscoveryRules | nindent 2 }}
 {{- end }}
 }
 
@@ -193,7 +196,7 @@ prometheus.relabel "node_exporter" {
 {{- end }}
 
 {{- if .Values.linuxHosts.extraMetricProcessingRules }}
-  {{ .Values.linuxHosts.extraMetricProcessingRules | nindent 2}}
+  {{- .Values.linuxHosts.extraMetricProcessingRules | nindent 2}}
 {{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value

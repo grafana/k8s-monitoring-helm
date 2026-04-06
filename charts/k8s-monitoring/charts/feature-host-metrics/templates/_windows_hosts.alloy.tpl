@@ -43,6 +43,8 @@ discovery.kubernetes "windows_exporter_pods" {
     names = [{{ .Release.Namespace | quote }}]
   }
 {{- end }}
+
+{{- include "feature.hostMetrics.attachNodeMetadata" . | trim | nindent 2 }}
 }
 
 discovery.relabel "windows_exporter" {
@@ -65,8 +67,10 @@ discovery.relabel "windows_exporter" {
     source_labels = ["__meta_kubernetes_pod_node_name"]
     target_label = "instance"
   }
+
+{{- include "feature.hostMetrics.nodeDiscoveryRules" . | trim | nindent 2 }}
 {{- if .Values.windowsHosts.extraDiscoveryRules }}
-  {{ .Values.windowsHosts.extraDiscoveryRules | nindent 2 }}
+  {{- .Values.windowsHosts.extraDiscoveryRules | nindent 2 }}
 {{- end }}
 }
 
@@ -102,7 +106,7 @@ prometheus.relabel "windows_exporter" {
   }
 {{- end }}
 {{- if .Values.windowsHosts.extraMetricProcessingRules }}
-{{ .Values.windowsHosts.extraMetricProcessingRules | indent 2 }}
+  {{- .Values.windowsHosts.extraMetricProcessingRules | nindent 2 }}
 {{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
