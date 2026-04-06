@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Update Alloy Operator, Beyla, Node Exporter, and Windows Exporter (@petewall)
+
 ## 4.0.0
 
 *   Add Loki thanos metrics to the default allowList (@kinolaev)
