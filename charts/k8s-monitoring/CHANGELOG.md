@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 3.8.6
+
+*   Update Alloy Operator, Beyla, Node Exporter, Windows Exporter, OpenCost, kube-state-metrics, and Prometheus Operator CRDs. (@petewall)
+
+## 3.8.5
 
 *   Update Beyla, Node Exporter, OpenCost, and Prometheus Operator CRDs. (@petewall)
 *   Fix Application Observability failing to start when only traces are enabled and metrics are disabled. (@petewall)
