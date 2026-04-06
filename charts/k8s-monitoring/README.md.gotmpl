@@ -11,6 +11,74 @@
 
 ## Breaking change announcements
 
+### Version 4.0
+
+v4.0 introduces several significant changes to the chart configuration values. Refer to the migration
+[documentation](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/helm-chart-config/helm-chart/migrate-helm-chart/)
+for strategies to migrate from v3. You can also use the
+[migration utility](https://github.com/grafana/k8s-monitoring-helm-migrator) to automatically convert your v3 values
+file to v4 format.
+
+#### Destinations converted to map
+
+Destinations are now defined as a map instead of a list. Each destination is given a name as its key.
+
+Before (v3):
+
+```yaml
+destinations:
+  - type: prometheus
+    url: https://prometheus.example.com/api/prom/push
+```
+
+After (v4):
+
+```yaml
+destinations:
+  myPrometheus:
+    type: prometheus
+    url: https://prometheus.example.com/api/prom/push
+```
+
+#### Collectors converted to map
+
+Named Alloy instances (e.g. `alloy-metrics`, `alloy-logs`) have been replaced by a `collectors` map. You can now
+define collectors with any name.
+
+Before (v3):
+
+```yaml
+alloy-metrics:
+  enabled: true
+alloy-singleton:
+  enabled: true
+```
+
+After (v4):
+
+```yaml
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-singleton: {}
+```
+
+#### Prometheus Operator Object CRDs removed
+
+Prometheus Operator Object CRDs (ServiceMonitor, PodMonitor, Probe) are no longer bundled with this chart. If you use
+the `prometheusOperatorObjects` feature, you must install the CRDs separately before deploying the chart.
+
+#### Pod logs features rebuilt
+
+The pod logs features have been rebuilt. The `labelsToKeep` option has been removed, and the features have been split
+into `podLogsViaLoki` and `podLogsViaOpenTelemetry` to better match destination types.
+
+#### Telemetry services extracted
+
+Supplemental telemetry services (kube-state-metrics, Node Exporter, OpenCost, Kepler, Windows Exporter) have been
+extracted from feature charts into their own `telemetryServices` subchart. These are now configured under the
+`telemetryServices` section.
+
 ### Version 3.4
 
 <!--alex disable hook-->
@@ -73,7 +141,10 @@ There are some required values that will need to be used with this chart. The ba
 cluster: # Cluster configuration, including the cluster name
   name: my-cluster
 
-destinations: [...] # List of destinations where telemetry data will be sent
+destinations: # Map of destinations where telemetry data will be sent
+  myPrometheus:
+    type: prometheus
+    url: https://prometheus.example.com/api/prom/push
 
 # Features to enable, which determines what data to collect
 clusterMetrics:
@@ -81,13 +152,12 @@ clusterMetrics:
 clusterEvents:
   enabled: true
 # etc...
-...
 
 # Telemetry collector definitions
-alloy-metrics:
-  enabled: true
-alloy-singleton:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-singleton: {}
 ```
 
 Here is more detail about the different sections:
@@ -144,24 +214,19 @@ destinations:
 ([Documentation](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/helm-chart-config/helm-chart/collector-reference/))
 
 Collectors are workloads that are dedicated to gathering metrics, logs, traces, and profiles from the cluster and
-from workloads on the cluster. There are multiple collector instances to optimize around the collection requirements.
+from workloads on the cluster. Collectors are defined as a map under the `collectors` key, where each key is the name
+of the collector.
 
-The list of collectors are:
-
-*   **alloy-metrics** is a StatefulSet that scrapes metrics from sources like cAdvisor, Kubelet, and kube-state-metrics.
-*   **alloy-logs** is the logs collector. It is deployed as a DaemonSet and gathers Pod and Node logs.
-*   **alloy-receiver** is a DaemonSet to collect telemetry data sent via HTTP, gRPC, Zipkin, etc...
-*   **alloy-singleton** is a 1-replica Deployment to collect cluster events.
-*   **alloy-profiles** is a DaemonSet used to instrument and collect profiling data.
-
-To enable a collector, add a new section to your values file. Example:
+To define collectors, add entries to the `collectors` map in your values file. Example:
 
 ```YAML
-alloy-{collector_name}:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-singleton: {}
 ```
 
-**Specific features require specific collector configuration**. For example, the applicationObservability feature requires the alloy-receiver, with specific ports open for select protocols. Check [individual feature documentation](./docs/Features.md) to find out about collector requirements.
+**Specific features require specific collector configuration**. For example, the applicationObservability feature requires a collector with receiver ports open for select protocols. Check [individual feature documentation](./docs/Features.md) to find out about collector requirements.
 
 #### Features
 
