@@ -3,6 +3,7 @@
 ## 3.8.7
 
 *   Fix pre-delete hook failing when the finalizer is not present (@petewall)
+*   Remove extra `/var/configs` volume mount from OpenCost (@petewall)
 
 ## 3.8.6
 
