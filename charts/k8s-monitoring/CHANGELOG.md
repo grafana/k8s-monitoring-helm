@@ -4,6 +4,7 @@
 
 *   Add node labels to host metrics feature (@petewall)
 *   Update Alloy Operator, Beyla, Node Exporter, and Windows Exporter (@petewall)
+*   Fix pre-delete hook failing when the finalizer is not present (@petewall)
 
 ## 4.0.0
 
