@@ -5,8 +5,12 @@
 
 # k8s-monitoring
 
-![Version: 1.6.50](https://img.shields.io/badge/Version-1.6.50-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.25.3](https://img.shields.io/badge/AppVersion-2.25.3-informational?style=flat-square)
+![Version: 1.6.51](https://img.shields.io/badge/Version-1.6.51-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.29.0](https://img.shields.io/badge/AppVersion-2.29.0-informational?style=flat-square)
 A Helm chart for gathering, scraping, and forwarding Kubernetes telemetry data to a Grafana Stack.
+
+## Upcoming Deprecation
+
+The 1.x version will be deprecated on June 1st, 2026. Please make plans to upgrade from version 1 to version 3 or 4.
 
 ## Breaking change announcements
 
