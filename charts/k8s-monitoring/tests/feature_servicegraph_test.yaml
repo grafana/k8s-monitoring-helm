@@ -51,3 +51,26 @@ tests:
     asserts:
       - matchSnapshot:
           path: spec.alloy.configMap.content
+
+  - it: routes metrics to the correct destination with multiple OTLP destinations
+    set:
+      destinations:
+        datadoggateway:
+          type: otlp
+          url: https://datadog.example.com/otlp
+          metrics: {enabled: true}
+          logs: {enabled: true}
+          traces: {enabled: true}
+        otlpGateway:
+          type: otlp
+          url: https://otlp.example.com/otlp
+          metrics: {enabled: true}
+          logs: {enabled: true}
+          traces: {enabled: true}
+          processors:
+            serviceGraphMetrics:
+              enabled: true
+
+    asserts:
+      - matchSnapshot:
+          path: spec.alloy.configMap.content

@@ -1297,7 +1297,7 @@ spec:
   
           output {
               metrics = [
-                otelcol.exporter.prometheus.localtempo.input,
+                otelcol.exporter.prometheus.localprometheus.input,
               ]
           }
         }
@@ -1307,13 +1307,13 @@ spec:
   
   
         // Destination: localPrometheus (prometheus)
-        otelcol.exporter.prometheus "localtempo" {
+        otelcol.exporter.prometheus "localprometheus" {
           add_metric_suffixes = true
           resource_to_telemetry_conversion = false
-          forward_to = [prometheus.remote_write.localtempo.receiver]
+          forward_to = [prometheus.remote_write.localprometheus.receiver]
         }
   
-        prometheus.remote_write "localtempo" {
+        prometheus.remote_write "localprometheus" {
           endpoint {
             url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
             headers = {

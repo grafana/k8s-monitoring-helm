@@ -1,3 +1,132 @@
+routes metrics to the correct destination with multiple OTLP destinations:
+  1: |
+    |-
+      otelcol.receiver.otlp "service_graph_receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"
+        }
+
+        output {
+          traces = [otelcol.connector.servicegraph.service_graph_metrics.input]
+        }
+      }
+      otelcol.connector.servicegraph "service_graph_metrics" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.connector.servicegraph/
+
+        cache_loop = "1m"
+
+        database_name_attributes = ["db.name"]
+
+        dimensions = [
+            "cloud.availability_zone",
+            "cloud.region",
+            "deployment.environment",
+            "k8s.cluster.name",
+            "k8s.namespace.name",
+            "service.namespace",
+            "service.version",
+        ]
+
+        latency_histogram_buckets = [
+            "2ms",
+            "4ms",
+            "6ms",
+            "8ms",
+            "10ms",
+            "50ms",
+            "100ms",
+            "200ms",
+            "400ms",
+            "800ms",
+            "1s",
+            "1400ms",
+            "2s",
+            "5s",
+            "10s",
+            "15s",
+        ]
+
+        metrics_flush_interval = "60s"
+
+        store_expiration_loop = "2s"
+
+        output {
+            metrics = [
+              otelcol.processor.batch.datadoggateway.input,
+              otelcol.processor.batch.otlpgateway.input,
+            ]
+        }
+      }
+
+
+
+
+
+      // Destination: datadoggateway (otlp)
+      otelcol.processor.batch "datadoggateway" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.datadoggateway.input]
+          logs = [otelcol.exporter.otlp.datadoggateway.input]
+          traces = [otelcol.exporter.otlp.datadoggateway.input]
+        }
+      }
+      otelcol.exporter.otlp "datadoggateway" {
+        client {
+          endpoint = "https://datadog.example.com/otlp"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+
+        sending_queue {
+          enabled = true
+        }
+      }
+
+      // Destination: otlpGateway (otlp)
+      otelcol.processor.batch "otlpgateway" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.otlpgateway.input]
+          logs = [otelcol.exporter.otlp.otlpgateway.input]
+          traces = [otelcol.exporter.otlp.otlpgateway.input]
+        }
+      }
+      otelcol.exporter.otlp "otlpgateway" {
+        client {
+          endpoint = "https://otlp.example.com/otlp"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+
+        sending_queue {
+          enabled = true
+        }
+      }
 uses destination secret:
   1: |
     |-
@@ -50,7 +179,7 @@ uses destination secret:
 
         output {
             metrics = [
-              otelcol.exporter.prometheus.tempo.input,
+              otelcol.exporter.prometheus.prometheus.input,
             ]
         }
       }
@@ -60,27 +189,27 @@ uses destination secret:
 
 
       // Destination: prometheus (prometheus)
-      otelcol.exporter.prometheus "tempo" {
+      otelcol.exporter.prometheus "prometheus" {
         add_metric_suffixes = true
         resource_to_telemetry_conversion = false
-        forward_to = [prometheus.remote_write.tempo.receiver]
+        forward_to = [prometheus.remote_write.prometheus.receiver]
       }
 
-      prometheus.remote_write "tempo" {
+      prometheus.remote_write "prometheus" {
         endpoint {
           url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
           headers = {
-            "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.tempo.data["tenantId"]),
+            "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["tenantId"]),
           }
           basic_auth {
-            username = convert.nonsensitive(remote.kubernetes.secret.tempo.data["promUser"])
-            password = remote.kubernetes.secret.tempo.data["promPass"]
+            username = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["promUser"])
+            password = remote.kubernetes.secret.prometheus.data["promPass"]
           }
           tls_config {
             insecure_skip_verify = false
-            ca_pem = convert.nonsensitive(remote.kubernetes.secret.tempo.data["ca"])
-            cert_pem = convert.nonsensitive(remote.kubernetes.secret.tempo.data["cert"])
-            key_pem = remote.kubernetes.secret.tempo.data["key"]
+            ca_pem = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["ca"])
+            cert_pem = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["cert"])
+            key_pem = remote.kubernetes.secret.prometheus.data["key"]
           }
           send_native_histograms = false
 
@@ -120,7 +249,7 @@ uses destination secret:
         }
       }
 
-      remote.kubernetes.secret "tempo" {
+      remote.kubernetes.secret "prometheus" {
         name      = "my-prom-secret"
         namespace = "default"
       }
