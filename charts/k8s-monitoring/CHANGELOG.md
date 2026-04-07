@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 4.0.1
 
 *   Remove extra `/var/configs` volume mount from OpenCost (@petewall)
 *   Add node labels to host metrics feature (@petewall)
