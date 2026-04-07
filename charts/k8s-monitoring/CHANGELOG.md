@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Remove extra `/var/configs` volume mount from OpenCost (@petewall)
 *   Add node labels to host metrics feature (@petewall)
 *   Update Alloy Operator, Beyla, Node Exporter, and Windows Exporter (@petewall)
 <<<<<<< petewall/fix-cluster-events-journal
