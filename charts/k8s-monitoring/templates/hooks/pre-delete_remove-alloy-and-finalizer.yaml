@@ -95,8 +95,8 @@ spec:
 {{ end }}
               kubectl patch \
                 --namespace={{ .Release.Namespace }} \
-                --type json \
-                --patch='[{"op": "remove", "path": "/metadata/finalizers"}]' \
+                --type merge \
+                --patch='{"metadata":{"finalizers":null}}' \
                 deployment/{{ include "alloy-operator.fullname" (index .Subcharts "alloy-operator") }}
           {{- with $jobSettings.resources }}
           resources:{{ toYaml . | nindent 12 }}

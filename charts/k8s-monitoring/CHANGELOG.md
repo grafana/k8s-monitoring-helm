@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.8.7
+
+*   Fix pre-delete hook failing when the finalizer is not present (@petewall)
+
 ## 3.8.6
 
 *   Update Alloy Operator, Beyla, Node Exporter, Windows Exporter, OpenCost, kube-state-metrics, and Prometheus Operator CRDs. (@petewall)
