@@ -5,11 +5,9 @@
 *   Remove extra `/var/configs` volume mount from OpenCost (@petewall)
 *   Add node labels to host metrics feature (@petewall)
 *   Update Alloy Operator, Beyla, Node Exporter, and Windows Exporter (@petewall)
-<<<<<<< petewall/fix-cluster-events-journal
 *   Fix serviceGraphMetrics routing metrics to the wrong OTLP destination when multiple destinations are defined (@petewall)
-=======
 *   Fix pre-delete hook failing when the finalizer is not present (@petewall)
->>>>>>> main
+*   Remove /var/configs cvolume from OpenCost which could cause problems (@petewall)
 
 ## 4.0.0
 
