@@ -97,8 +97,8 @@ This defines the options for defining a destination for metrics that use the Pro
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| metricEnrichment.namespaceLabels | list | `[]` | Finds kubernetes namespace labels and adds them as labels to matching metrics. Applies to metrics that contain the following labels: `namespace`. Note that this can greatly increase the resource utilization of Alloy. |
-| metricEnrichment.podLabels | list | `[]` | Finds kubernetes pod labels and adds them as labels to matching pod metrics. Applies to metrics that contain the following labels: `namespace`, `pod`. Note that this can greatly increase the resource utilization of Alloy. |
+| metricEnrichment.namespaceLabels | list | `[]` | Finds kubernetes namespace labels and adds them as labels to matching metrics. Applies to metrics that contain the following labels: `namespace`. Note that this can greatly increase the resource utilization of Alloy. Each entry can be a string (auto-sanitized for Prometheus) or an object with `name` (the Kubernetes label) and optional `as` (the desired Prometheus label name). Example: `["team", {name: "field.cattle.io/projectId", as: "project_id"}]` |
+| metricEnrichment.podLabels | list | `[]` | Finds kubernetes pod labels and adds them as labels to matching pod metrics. Applies to metrics that contain the following labels: `namespace`, `pod`. Note that this can greatly increase the resource utilization of Alloy. Each entry can be a string (auto-sanitized for Prometheus) or an object with `name` (the Kubernetes label) and optional `as` (the desired Prometheus label name). Example: `["version", {name: "app.kubernetes.io/name", as: "app_name"}]` |
 
 ### OpenTelemetry Conversion
 
