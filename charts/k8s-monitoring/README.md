@@ -65,18 +65,113 @@ collectors:
 #### Prometheus Operator Object CRDs removed
 
 Prometheus Operator Object CRDs (ServiceMonitor, PodMonitor, Probe) are no longer bundled with this chart. If you use
-the `prometheusOperatorObjects` feature, you must install the CRDs separately before deploying the chart.
+the `prometheusOperatorObjects` feature, you must install the CRDs separately before deploying the chart:
+
+```shell
+helm upgrade --install --repo https://prometheus-community.github.io/helm-charts prometheus-operator-crds
+```
 
 #### Pod logs features rebuilt
 
 The pod logs features have been rebuilt. The `labelsToKeep` option has been removed, and the features have been split
 into `podLogsViaLoki` and `podLogsViaOpenTelemetry` to better match destination types.
 
+The default for `onlyGatherNewLogLines` has changed from `false` to `true`. This means Alloy will only gather new log
+lines instead of reading from the beginning of log files. This was done because frequent restarts of the Alloy pods
+would cause massive spikes of historical log gathering if not paired with
+[collector storage](docs/examples/collector-storage) for maintaining log file positions. This also can cause some logs
+to be missed, if they were running before Alloy was ready. To restore the previous behavior, set
+`onlyGatherNewLogLines: false` in your pod logs feature configuration:
+
+```yaml
+podLogsViaLoki:
+  onlyGatherNewLogLines: false
+```
+
 #### Telemetry services extracted
 
 Supplemental telemetry services (kube-state-metrics, Node Exporter, OpenCost, Kepler, Windows Exporter) have been
 extracted from feature charts into their own `telemetryServices` subchart. These are now configured under the
-`telemetryServices` section.
+`telemetryServices` section. This splits the values for configuring the way those services are deployed from the Alloy
+configuration that will utilize them.
+
+Before (v3):
+
+```yaml
+clusterMetrics:
+  enabled: true
+  kube-state-metrics:
+    # Deployment configuration *and* collector configuration
+  node-exporter:
+    # Deployment configuration *and* collector configuration
+  windows-exporter:
+    # Deployment configuration *and* collector configuration
+  kepler:
+    # Deployment configuration *and* collector configuration
+  opencost:
+    # Deployment configuration *and* collector configuration
+```
+
+After (v4):
+
+```yaml
+clusterMetrics:
+  enabled: true
+  kube-state-metrics:
+    # Collector configuration only
+
+hostMetrics:
+  linuxHosts:
+    enabled: true
+    # Collector configuration only
+  windowsHosts:
+    enabled: true
+    # Collector configuration only
+  energyMetrics:
+    enabled: true
+    # Collector configuration only
+costMetrics:
+  enabled: true
+  # Collector configuration only
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+    # Deployment configuration only
+  node-exporter:
+    deploy: true
+    # Deployment configuration only
+  windows-exporter:
+    deploy: true
+    # Deployment configuration only
+  kepler:
+    deploy: true
+    # Deployment configuration only
+  opencost:
+    deploy: true
+    # Deployment configuration only
+```
+
+#### Cluster Metrics feature split
+
+The Cluster Metrics feature has been split into three features:
+
+*   `clusterMetrics` only gathering metrics about the Kubernetes cluster, using sources including Kubelet, cAdvisor,
+    kube-state-metrics, and the control plane.
+*   `hostMetrics` gathers metrics about the Kubernetes nodes, using sources including Node Exporter for Linux hosts,
+    Windows Exporter for Windows hosts, and Kepler for energy metrics.
+*   `costMetrics` gathers metrics about the cost of running the Kubernetes cluster, using OpenCost.
+
+#### Pod Logs feature split
+
+The Pod Logs feature has been split into three features:
+
+*   `podLogsViaLoki` gathers Pod logs via the file system, using the Loki format. This was previously the `podLogs`
+    feature, using `gatherMethod: volumes`.
+*   `podLogsViaOpenTelemetry` gathers Pod logs via the file system, using the OpenTelemetry format. This was previously
+    the `podLogs` feature, using `gatherMethod: filelog`.
+*   `podLogsViaKubernetesAPI` gathers Pod logs in the Loki format by streaming them from the Kubernetes API server. This
+    was previously the `podLogs` feature, using `gatherMethod: kubernetesAPI`.
 
 ### Version 3.4
 
