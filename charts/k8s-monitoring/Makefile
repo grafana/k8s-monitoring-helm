@@ -31,8 +31,20 @@ INTEGRATION_VALUES_FILES = $(shell find charts/feature-integrations/integrations
 docs/collectors/%.md: collectors/%-values.yaml $$(wildcard docs/collectors/.doc_templates/%.gotmpl)
 	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --file /chart/$< --template /chart/docs/collectors/.doc_templates/$(shell basename -s -values.yaml $<).gotmpl > $@
 
-docs/collectors/presets/%.md: collectors/presets/%.yaml $$(wildcard docs/collectors/presets/.doc_templates/%.gotmpl)
-	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --file /chart/$< --template /chart/docs/collectors/presets/.doc_templates/$(shell basename -s .yaml $<).gotmpl > $@
+docs/collectors/presets/%.md: collectors/presets/%.yaml
+	@echo '<!--' > $@
+	@echo '(NOTE: Do not edit README.md directly. It is a generated file!)' >> $@
+	@echo '(      To make changes, please modify values.yaml or description.txt and run `make examples`)' >> $@
+	@echo '-->' >> $@
+	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --file /chart/$< --template /chart/docs/collectors/presets/.doc_templates/$(shell basename -s .yaml $<).gotmpl >> $@
+
+	@echo '' >> $@
+	@echo '<!-- textlint-disable terminology -->' >> $@
+	@echo '```yaml' >> $@
+	@cat $< >> $@
+	@echo '```' >> $@
+	@echo '<!-- textlint-enable terminology -->' >> $@
+
 
 docs/destinations/%.md: destinations/%-values.yaml $$(wildcard docs/destinations/.doc_templates/%.gotmpl)
 	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --file /chart/$< --template /chart/docs/destinations/.doc_templates/$(shell basename -s -values.yaml $<).gotmpl > $@
