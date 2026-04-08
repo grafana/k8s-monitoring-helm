@@ -1,4 +1,5 @@
 ---
+# yamllint disable rule:line-length
 name: Integration Test
 # yamllint disable-line rule:truthy
 on:
@@ -43,9 +44,14 @@ jobs:
               exit 0
           fi
 
-          tests=$(find . -name test-plan.yaml -not \( -path "./tests/platform/*" \) -exec dirname {} \; | sed -e "s/^\.\///g")
+          tests=$(find . -name test-plan.yaml -not \( -path "./tests/platform/*" \) -exec dirname {} \; | sed -e "s/^\.\///g" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')
+          manualOnlyTests=$(find . -name .manual-only -type f -not \( -path "./tests/platform/*" \) -exec dirname {} \; | sed "s|^\./||" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')
+
+          # remove manual only tests
+          tests=$(jq --null-input --compact-output --argjson tests "${tests}" --argjson manualOnlyTests "${manualOnlyTests}" '$tests | map(select(. as $test | $manualOnlyTests | index($test) | not))')
+
           echo "Tests: ${tests}"
-          echo "tests=$(echo "${tests}" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
+          echo "tests=${tests}" >> "${GITHUB_OUTPUT}"
 
   run-tests:
     name: Integration Test
@@ -72,19 +78,19 @@ jobs:
 
       - name: Set up Helm
         id: setup-helm
-        uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4  # v4.3.1
+        uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2  # v5.0.0
         continue-on-error: true
 
       - name: Set up Homebrew
         if: ${{ steps.setup-helm.outcome == 'failure' }}
-        uses: Homebrew/actions/setup-homebrew@3735452a47ff25baa52a581a6156cfe4efa420c8
+        uses: Homebrew/actions/setup-homebrew@fb0fe15d936a80ac0ba4c6cee691bc3da3f00f4e
 
       - name: Install Helm
         if: ${{ steps.setup-helm.outcome == 'failure' }}
         run: brew install helm
 
       - name: Install Flux CLI
-        uses: fluxcd/flux2/action@8454b02a32e48d775b9f563cb51fdcb1787b5b93  # v2.7.5
+        uses: fluxcd/flux2/action@871be9b40d53627786d3a3835a3ddba1e3234bd2  # v2.8.3
 
       - name: Check for cluster config
         id: test-config
@@ -113,7 +119,7 @@ jobs:
 
       - name: Install terraform
         if: ${{ steps.test-config.outputs.subject-type == 'terraform' }}
-        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd  # v3.1.2
+        uses: hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85  # v4.0.0
 
       - name: Run test
         run: |

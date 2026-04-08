@@ -3,7 +3,7 @@ cluster:
   name: eks-fargate-test
 
 destinations:
-  - name: grafana-cloud-metrics
+  grafana-cloud-metrics:
     type: prometheus
     url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push
     auth:
@@ -14,7 +14,7 @@ destinations:
       create: false
       name: grafana-cloud-credentials
       namespace: monitoring
-  - name: grafana-cloud-logs
+  grafana-cloud-logs:
     type: loki
     url: https://logs-prod-006.grafana.net/loki/api/v1/push
     auth:
@@ -28,37 +28,57 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
+
+hostMetrics:
+  enabled: true
+  collector: alloy-metrics
+  linuxHosts:
+    enabled: true
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
-podLogs:
+podLogsViaLoki:
   enabled: true
+  collector: alloy-logs
 
 podLogsViaKubernetesApi:
   enabled: true
+  collector: alloy-logs
   nodeSelectors:
     eks.amazonaws.com/compute-type: fargate
 
 integrations:
+  collector: alloy-metrics
   alloy:
     instances:
       - name: alloy
         labelSelectors:
           app.kubernetes.io/name: [alloy-metrics, alloy-singleton, alloy-logs]
 
-alloy-metrics:
-  enabled: true
-alloy-singleton:
-  enabled: true
-alloy-logs:
-  enabled: true
-  alloy:
-    clustering:
-      name: alloy-logs
-      enabled: true
-  controller:
-    nodeSelector:
-      kubernetes.io/os: linux
-      kubernetes.io/arch: amd64
-      alpha.eksctl.io/nodegroup-name: ng-linux  # Ensure we're deploying to the non-fargate nodegroup
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+
+  alloy-singleton:
+    presets: [singleton]
+
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+    alloy:
+      clustering:
+        name: alloy-logs
+        enabled: true
+    controller:
+      nodeSelector:
+        kubernetes.io/os: linux
+        kubernetes.io/arch: amd64
+        alpha.eksctl.io/nodegroup-name: ng-linux  # Ensure we're deploying to the non-fargate nodegroup
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true

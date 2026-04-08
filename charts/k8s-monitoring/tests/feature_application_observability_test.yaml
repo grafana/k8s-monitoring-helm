@@ -7,7 +7,10 @@ tests:
   - it: enables the right ports on Alloy when the receivers are enabled
     set:
       cluster: {name: test-cluster}
-      destinations: [{name: otlp, type: otlp, url: "http://otlp.receiver.svc:4317"}]
+      destinations:
+        otlp:
+          type: otlp
+          url: "http://otlp.receiver.svc:4317"
       applicationObservability:
         enabled: true
         collector: alloy-receiver
@@ -17,8 +20,7 @@ tests:
               enabled: true
             http:
               enabled: true
-      alloy-receiver:
-        enabled: true
+      collectors: {alloy-receiver: {}}
     template: alloy.yaml
     asserts:
       - equal:
@@ -36,7 +38,10 @@ tests:
   - it: merges with existing ports on Alloy when the receivers are enabled
     set:
       cluster: {name: test-cluster}
-      destinations: [{name: otlp, type: otlp, url: "http://otlp.receiver.svc:4317"}]
+      destinations:
+        otlp:
+          type: otlp
+          url: "http://otlp.receiver.svc:4317"
       applicationObservability:
         enabled: true
         collector: alloy-receiver
@@ -46,22 +51,22 @@ tests:
               enabled: true
             http:
               enabled: true
-      alloy-receiver:
-        enabled: true
-        alloy:
-          extraPorts:
-            - name: my-port
-              port: 9999
-              protocol: TCP
-              targetPort: 9999
-            - name: grpc
-              port: 4317
-              protocol: TCP
-              targetPort: 4317
-            - name: http
-              port: 4318
-              protocol: TCP
-              targetPort: 4318
+      collectors:
+        alloy-receiver:
+          alloy:
+            extraPorts:
+              - name: my-port
+                port: 9999
+                protocol: TCP
+                targetPort: 9999
+              - name: grpc
+                port: 4317
+                protocol: TCP
+                targetPort: 4317
+              - name: http
+                port: 4318
+                protocol: TCP
+                targetPort: 4318
     template: alloy.yaml
     asserts:
       - equal:
@@ -83,7 +88,10 @@ tests:
   - it: uses UDP for the jaeger binary and compact ports
     set:
       cluster: {name: test-cluster}
-      destinations: [{name: otlp, type: otlp, url: "http://otlp.receiver.svc:4317"}]
+      destinations:
+        otlp:
+          type: otlp
+          url: "http://otlp.receiver.svc:4317"
       applicationObservability:
         enabled: true
         collector: alloy-receiver
@@ -93,8 +101,7 @@ tests:
               enabled: true
             thriftCompact:
               enabled: true
-      alloy-receiver:
-        enabled: true
+      collectors: {alloy-receiver: {}}
     template: alloy.yaml
     asserts:
       - equal:

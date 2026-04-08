@@ -1,12 +1,12 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test MySQL w/ DB O11y - Metrics
+suite: Feature - Integration - MySQL - Database Observability Metrics
 templates:
-  - configmap.yaml
+  - test/configmap.yaml
   - mysql-secret.yaml
 tests:
   - it: should create the MySQL config
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       mysql:
         instances:
           - name: my-database
@@ -20,7 +20,7 @@ tests:
               enabled: true
             logs: {enabled: false}
     asserts:
-      - template: configmap.yaml
+      - template: test/configmap.yaml
         matchSnapshot:
           path: data["metrics.alloy"]
 
@@ -42,7 +42,7 @@ tests:
 
   - it: works with multiple MySQL Instances
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       mysql:
         instances:
           - name: test-db
@@ -69,7 +69,7 @@ tests:
               enabled: true
             logs: {enabled: false}
     asserts:
-      - template: configmap.yaml
+      - template: test/configmap.yaml
         matchSnapshot:
           path: data["metrics.alloy"]
 
@@ -92,9 +92,66 @@ tests:
           path: stringData.password
           value: db-password
 
+  - it: defaults text_limit to 0 for perf_schema.eventsstatements when db o11y is enabled
+    set:
+      testing: {enabled: true}
+      mysql:
+        instances:
+          - name: my-database
+            exporter:
+              dataSource:
+                host: my-db.mysql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+              collectors:
+                perfSchemaEventsStatements:
+                  enabled: true
+            databaseObservability:
+              enabled: true
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
+  - it: renders new db o11y options (azure, setup_actors, statements_limit, exclude_schemas)
+    set:
+      testing: {enabled: true}
+      mysql:
+        instances:
+          - name: azure-db
+            exporter:
+              dataSource:
+                host: azure-db.mysql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            databaseObservability:
+              enabled: true
+              excludeSchemas: ["employees", "departments"]
+              cloudProvider:
+                azure:
+                  subscriptionId: "sub-123"
+                  resourceGroup: "rg-prod"
+                  serverName: "my-azure-server"
+              collectors:
+                queryDetails:
+                  enabled: true
+                  statementsLimit: 500
+                setupActors:
+                  enabled: true
+                  autoUpdateSetupActors: true
+                  collectInterval: 30m
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
   - it: requires metrics
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       mysql:
         instances:
           - name: test-database
@@ -103,7 +160,7 @@ tests:
             databaseObservability:
               enabled: true
     asserts:
-      - template: configmap.yaml
+      - template: test/configmap.yaml
         failedTemplate:
           errorMessage: |-
             Enabling Database Observability for MySQL requires exporter metrics.

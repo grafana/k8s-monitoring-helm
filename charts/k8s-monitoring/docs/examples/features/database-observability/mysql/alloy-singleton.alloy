@@ -18,6 +18,9 @@ declare "mysql_integration" {
       "test-database-mysql.mysql.svc",
       3306,
     )
+    perf_schema.eventsstatements {
+      text_limit = 0
+    }
     enable_collectors = ["heartbeat","mysql.user","perf_schema.eventsstatements"]
   }
 
@@ -30,6 +33,11 @@ declare "mysql_integration" {
       3306,
     )
     allow_update_performance_schema_settings = false
+    explain_plans {
+      collect_interval = "1m"
+      initial_lookback = "24h"
+      per_collect_ratio = "1"
+    }
     query_details {
       collect_interval = "1m"
     }
@@ -48,7 +56,11 @@ declare "mysql_integration" {
     setup_consumers {
       collect_interval = "1m"
     }
-    enable_collectors = ["query_details","query_samples","schema_details","setup_consumers"]
+    setup_actors {
+      auto_update_setup_actors = false
+      collect_interval = "1h"
+    }
+    enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
 
     forward_to = argument.logs_destinations.value
   }
@@ -91,7 +103,7 @@ mysql_integration "integration" {
 prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   set_collectors = ["textfile"]
   textfile {
-    directory = "/etc/alloy"
+    directory = "/etc/release-info"
   }
 }
 
@@ -131,6 +143,39 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
 }
 
 
+
+
+// Destination: loki (loki)
+otelcol.exporter.loki "loki" {
+  forward_to = [loki.write.loki.receiver]
+}
+
+loki.write "loki" {
+  endpoint {
+    url = "http://loki.loki.svc:3100/loki/api/v1/push"
+    retry_on_http_429 = true
+    tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+      password = remote.kubernetes.secret.loki.data["password"]
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+  external_labels = {
+    "cluster" = "db-o11y-mysql-test",
+    "k8s_cluster_name" = "db-o11y-mysql-test",
+  }
+}
+
+remote.kubernetes.secret "loki" {
+  name      = "loki-k8smon-k8s-monitoring"
+  namespace = "default"
+}
 
 
 // Destination: prometheus (prometheus)
@@ -181,36 +226,5 @@ prometheus.remote_write "prometheus" {
     min_keepalive_time = "5m"
     max_keepalive_time = "8h"
   }
-}
-// Destination: loki (loki)
-otelcol.exporter.loki "loki" {
-  forward_to = [loki.write.loki.receiver]
-}
-
-loki.write "loki" {
-  endpoint {
-    url = "http://loki.loki.svc:3100/loki/api/v1/push"
-    retry_on_http_429 = true
-    tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
-    basic_auth {
-      username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
-      password = remote.kubernetes.secret.loki.data["password"]
-    }
-    tls_config {
-      insecure_skip_verify = false
-    }
-    min_backoff_period = "500ms"
-    max_backoff_period = "5m"
-    max_backoff_retries = "10"
-  }
-  external_labels = {
-    "cluster" = "db-o11y-mysql-test",
-    "k8s_cluster_name" = "db-o11y-mysql-test",
-  }
-}
-
-remote.kubernetes.secret "loki" {
-  name      = "loki-k8smon-k8s-monitoring"
-  namespace = "default"
 }
 

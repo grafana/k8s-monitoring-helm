@@ -1,9 +1,53 @@
 # Changelog
 
-## Unreleased
+## 4.0.1
+
+*   Remove extra `/var/configs` volume mount from OpenCost (@petewall)
+*   Add node labels to host metrics feature (@petewall)
+*   Update Alloy Operator, Beyla, Node Exporter, and Windows Exporter (@petewall)
+*   Fix serviceGraphMetrics routing metrics to the wrong OTLP destination when multiple destinations are defined (@petewall)
+*   Fix pre-delete hook failing when the finalizer is not present (@petewall)
+*   Remove /var/configs cvolume from OpenCost which could cause problems (@petewall)
+
+## 4.0.0
+
+*   Add Loki thanos metrics to the default allowList (@kinolaev)
+*   Rebuild log features to remove `labelsToKeep` and split Loki and OpenTelemetry log gathering (@petewall)
+*   Introducce `collectors` as map, and remove named Alloy instances (@petewall)
+*   Convert destinations into a map (@petewall)
+*   Remove Prometheus Operator Object CRDs (@petewall)
+*   Extract supplemental telemetry services from config features into their own subchart (@petewall)
+
+## 3.8.5
+
+*   Update Beyla, Node Exporter, OpenCost, and Prometheus Operator CRDs. (@petewall)
+*   Fix Application Observability failing to start when only traces are enabled and metrics are disabled. (@petewall)
+
+## 3.8.4
+
+*   Update Alloy Operator to 1.5.2 (@petewall)
+*   Update options for secretFilters in Pod logs features to match changes in Alloy (@petewall)
+*   Fix `tls_config` block name to `tls` in `otelcol.auth.oauth2` for OTLP destinations (@petewall)
+
+## 3.8.3
+
+*   Disable the OpenCost MCP server (@petewall)
+*   Update Alloy Operator to 1.5.1 (@petewall)
+*   PostgreSQL: stat_statements exclude_databases/exclude_users/limit options (@cristiangreco)
+*   Add more settings for profiling features (@petewall)
+
+## 3.8.2
 
 *   Find Pod logs for static pods using the config.mirror annotation (@sebastian-de)
 *   Add label selectors plus a completed Job filter to the Istio integration sidecar scraper and wire namespace/label selectors for Istiod discovery (@petewall)
+*   Fix cAdvisor `includeNamespaces` filter dropping non-namespaced metrics like `machine_*` (@petewall)
+*   Update Beyla auto-instrumentation config to use `instrument`/`exclude_instrument`, replacing the deprecated `services`/`exclude_services` (@petewall)
+*   Update Beyla to 1.13.0 (@petewall)
+*   MySQL: Add perf_schema.eventsstatements collector options (@cristiangreco)
+*   Fix: preserve user extraEnv in service graph collector (@rafix)
+*   Updated Node Exporter, OpenCost, and Alloy Operator (@petewall)
+*   Add TLS configuration support for OAuth2 token endpoints across all destinations (@petewall)
+*   Update database_observability setup for Alloy 1.13.x features (@cristiangreco)
 
 ## 3.8.1
 

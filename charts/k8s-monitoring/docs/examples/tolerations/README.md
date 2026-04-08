@@ -17,45 +17,34 @@ cluster:
   name: tolerations-example-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
 
 clusterMetrics:
   enabled: true
-  kube-state-metrics:
-    tolerations:
-      - key: protected-node
-        effect: NoSchedule
-        operator: Exists
-  node-exporter:
-    tolerations:
-      - key: protected-node
-        effect: NoSchedule
-        operator: Exists
-  windows-exporter:
-    tolerations:
-      - key: protected-node
-        effect: NoSchedule
-        operator: Exists
-  opencost:
-    tolerations:
-      - key: protected-node
-        effect: NoSchedule
-        operator: Exists
+  collector: alloy-metrics
 
-  kepler:
+costMetrics:
+  enabled: true
+  collector: alloy-metrics
+
+hostMetrics:
+  enabled: true
+  collector: alloy-metrics
+  energyMetrics:
     enabled: true
-    tolerations:
-      - key: protected-node
-        effect: NoSchedule
-        operator: Exists
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
 
 autoInstrumentation:
   enabled: true
+  collector: alloy-metrics
   spanMetricsOnly: true
   beyla:
     tolerations:
@@ -63,24 +52,26 @@ autoInstrumentation:
         effect: NoSchedule
         operator: Exists
 
-podLogs:
+podLogsViaLoki:
   enabled: true
+  collector: alloy-logs
 
-alloy-metrics:
-  enabled: true
-  controller:
-    tolerations:
-      - key: protected-node
-        effect: NoSchedule
-        operator: Exists
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    controller:
+      tolerations:
+        - key: protected-node
+          effect: NoSchedule
+          operator: Exists
 
-alloy-logs:
-  enabled: true
-  controller:
-    tolerations:
-      - key: protected-node
-        effect: NoSchedule
-        operator: Exists
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+    controller:
+      tolerations:
+        - key: protected-node
+          effect: NoSchedule
+          operator: Exists
 
 alloy-operator:
   tolerations:
@@ -93,5 +84,45 @@ alloy-operator:
       - key: protected-node
         effect: NoSchedule
         operator: Exists
+
+
+telemetryServices:
+  kepler:
+    deploy: true
+    tolerations:
+      - key: protected-node
+        effect: NoSchedule
+        operator: Exists
+  kube-state-metrics:
+    deploy: true
+    tolerations:
+      - key: protected-node
+        effect: NoSchedule
+        operator: Exists
+  node-exporter:
+    deploy: true
+    tolerations:
+      - key: protected-node
+        effect: NoSchedule
+        operator: Exists
+  windows-exporter:
+    deploy: true
+    tolerations:
+      - key: protected-node
+        effect: NoSchedule
+        operator: Exists
+  opencost:
+    deploy: true
+    metricsSource: prometheus
+    tolerations:
+      - key: protected-node
+        effect: NoSchedule
+        operator: Exists
+    opencost:
+      exporter:
+        defaultClusterId: tolerations-example-cluster
+      prometheus:
+        external:
+          url: http://prometheus.prometheus.svc:9090/api/v1/query
 ```
 <!-- textlint-enable terminology -->

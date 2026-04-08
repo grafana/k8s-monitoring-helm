@@ -3,23 +3,17 @@ cluster:
   name: cluster-metrics-example-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
 clusterMetrics:
   enabled: true
-  kepler:
-    enabled: true
-  opencost:
-    enabled: true
-    metricsSource: prometheus
-    opencost:
-      exporter:
-        defaultClusterId: cluster-metrics-example-cluster
-      prometheus:
-        external:
-          url: http://prometheus.prometheus.svc:9090/api/v1/query
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true

@@ -3,10 +3,10 @@ cluster:
   name: auto-instrumentation-test
 
 destinations:
-  - name: localPrometheus
+  localPrometheus:
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
-  - name: localLoki
+  localLoki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -14,7 +14,7 @@ destinations:
       type: basic
       username: loki
       password: lokipassword
-  - name: localTempo
+  localTempo:
     type: otlp
     url: tempo.tempo.svc:4317
     tls:
@@ -26,25 +26,25 @@ destinations:
 
 autoInstrumentation:
   enabled: true
+  collector: alloy-metrics
+  beyla:
+    config:
+      data:
+        discovery:
+          instrument:
+            - k8s_namespace: default
+            - k8s_namespace: prometheus
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       grpc:
         enabled: true
 
-alloy-metrics:
-  enabled: true
-  liveDebugging:
-    enabled: true
-
-
-alloy-receiver:
-  enabled: true
-  alloy:
-    extraPorts:
-      - name: otlp-grpc
-        port: 4317
-        targetPort: 4317
-        protocol: TCP
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-receiver:
+    presets: [deployment]

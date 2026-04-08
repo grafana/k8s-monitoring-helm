@@ -1,11 +1,5 @@
 {{- define "features.profiling.enabled" }}{{ .Values.profiling.enabled }}{{- end }}
 
-{{- define "features.profiling.collectors" }}
-{{- if .Values.profiling.enabled -}}
-- {{ .Values.profiling.collector }}
-{{- end }}
-{{- end }}
-
 {{- define "features.profiling.include" }}
 {{- if .Values.profiling.enabled -}}
 {{- $destinations := include "features.profiling.destinations" . | fromYamlArray }}
@@ -13,7 +7,7 @@
 {{- include "feature.profiling.module" (dict "Values" $.Values.profiling "Files" $.Subcharts.profiling.Files) }}
 profiling "feature" {
   profiles_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "profiles" "ecosystem" "pyroscope") | indent 4 | trim }}
+    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "profiles" "ecosystem" "pyroscope") | indent 4 | trim }}
   ]
 }
 {{- end -}}
@@ -39,13 +33,15 @@ profiling "feature" {
 
 {{- define "features.profiling.collector.values" }}{{- end -}}
 
+{{- define "features.profiling.chooseCollector" -}}{{- end -}}
+
 {{- define "features.profiling.validate" }}
 {{- if .Values.profiling.enabled -}}
+{{- $featureKey := "profiling" }}
 {{- $featureName := "Profiling" }}
 {{- $destinations := include "features.profiling.destinations" . | fromYamlArray }}
-{{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "profiles" "ecosystem" "pyroscope" "feature" $featureName) }}
-{{- range $collector := include "features.profiling.collectors" . | fromYamlArray }}
-  {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
-{{- end -}}
+{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "profiles" "ecosystem" "pyroscope" "featureName" $featureName) }}
+{{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
+{{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}
 {{- end -}}
 {{- end -}}

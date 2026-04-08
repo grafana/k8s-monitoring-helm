@@ -1,0 +1,80 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: include-by-namespace
+
+subject:
+  releaseName: k8smon
+  path: ../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: dependencies/workload.yaml
+    namespace: alpha
+  - file: dependencies/workload.yaml
+    namespace: bravo
+  - file: dependencies/workload.yaml
+    namespace: delta
+  - preset: prometheus
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+            - name: Loki
+              type: loki
+              url: http://loki-gateway.loki.svc:8080
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: include-by-namespace-test
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+          queries:
+            # Namespaced cAdvisor metrics from an included namespace are present
+            - query: container_cpu_usage_seconds_total{cluster="$CLUSTER", namespace="alpha", job="integrations/kubernetes/cadvisor"}
+              type: promql
+            - query: container_cpu_usage_seconds_total{cluster="$CLUSTER", namespace="bravo", job="integrations/kubernetes/cadvisor"}
+              type: promql
+            - query: container_cpu_usage_seconds_total{cluster="$CLUSTER", namespace="delta", job="integrations/kubernetes/cadvisor"}
+              type: promql
+
+            # Non-namespaced cAdvisor metrics are NOT dropped by the namespace filter
+            - query: machine_memory_bytes{cluster="$CLUSTER", job="integrations/kubernetes/cadvisor"}
+              type: promql
+
+            # cAdvisor metrics from other namespaces are NOT present
+            - query: count(container_cpu_usage_seconds_total{cluster="$CLUSTER", namespace="default",}) or vector(0)
+              type: promql
+              expect:
+                value: 0
+
+            # Pod logs from allowed namespaces are present
+            - query: count_over_time({cluster="$CLUSTER", namespace="alpha", job!="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
+            - query: count_over_time({cluster="$CLUSTER", namespace="bravo", job!="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
+            - query: count_over_time({cluster="$CLUSTER", namespace="delta", job!="integrations/kubernetes/eventhandler"}[1h])
+              type: logql

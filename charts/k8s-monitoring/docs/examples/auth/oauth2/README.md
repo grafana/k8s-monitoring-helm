@@ -15,7 +15,7 @@ cluster:
   name: oauth2-auth-example
 
 destinations:
-  - name: otel-endpoint
+  otel-endpoint:
     type: otlp
     url: "grpc.my.otel.endpoint:443"
     auth:
@@ -33,27 +33,50 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
+
+hostMetrics:
+  enabled: true
+  collector: alloy-metrics
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
-podLogs:
+podLogsViaLoki:
   enabled: true
+  collector: alloy-logs
 
 nodeLogs:
   enabled: true
+  collector: alloy-logs
 
 prometheusOperatorObjects:
   enabled: true
+  collector: alloy-metrics
 
 annotationAutodiscovery:
   enabled: true
+  collector: alloy-metrics
 
-alloy-logs:
-  enabled: true
-alloy-metrics:
-  enabled: true
-alloy-singleton:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+  alloy-singleton:
+    presets: [singleton]
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

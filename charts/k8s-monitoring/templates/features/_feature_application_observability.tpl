@@ -1,11 +1,5 @@
 {{- define "features.applicationObservability.enabled" }}{{ .Values.applicationObservability.enabled }}{{- end }}
 
-{{- define "features.applicationObservability.collectors" }}
-{{- if .Values.applicationObservability.enabled -}}
-- {{ .Values.applicationObservability.collector }}
-{{- end }}
-{{- end }}
-
 {{- define "features.applicationObservability.include" }}
 {{- if .Values.applicationObservability.enabled -}}
 {{- $destinations := include "features.applicationObservability.destinations" . | fromYamlArray }}
@@ -14,13 +8,13 @@
 {{- include "feature.applicationObservability.module" (dict "Values" $.Values.applicationObservability "Files" $.Subcharts.applicationObservability.Files) }}
 application_observability "feature" {
   metrics_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "metrics" "ecosystem" "otlp") | indent 4 | trim }}
+    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "metrics" "ecosystem" "otlp") | indent 4 | trim }}
   ]
   logs_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "logs" "ecosystem" "otlp") | indent 4 | trim }}
+    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "logs" "ecosystem" "otlp") | indent 4 | trim }}
   ]
   traces_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "traces" "ecosystem" "otlp") | indent 4 | trim }}
+    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "traces" "ecosystem" "otlp") | indent 4 | trim }}
   ]
 }
 {{- end -}}
@@ -31,7 +25,7 @@ application_observability "feature" {
 {{- $metricsDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
 {{- $logDestinations     := include "destinations.get" (dict "destinations" $.Values.destinations "type" "logs"    "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
 {{- $traceDestinations   := include "destinations.get" (dict "destinations" $.Values.destinations "type" "traces"  "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
-{{- concat $metricsDestinations $logDestinations $traceDestinations | toYaml }}
+{{- (concat $metricsDestinations $logDestinations $traceDestinations) | uniq | sortAlpha | toYaml }}
 {{- end -}}
 {{- end -}}
 
@@ -49,104 +43,116 @@ application_observability "feature" {
 
 {{- define "features.applicationObservability.collector.values" }}
 {{- if .Values.applicationObservability.enabled -}}
-{{- $values := dict }}
-{{- range $collector := include "features.applicationObservability.collectors" . | fromYamlArray }}
-  {{- $extraPorts := deepCopy (dig "alloy" "extraPorts" list (index $.Values $collector)) }}
+  {{- $values := dict }}
+  {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" "applicationObservability") }}
+  {{- $collectorValues := (include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml) }}
+  {{- $extraPorts := deepCopy (dig "alloy" "extraPorts" list $collectorValues) }}
   {{- if $.Values.applicationObservability.receivers.otlp.grpc.enabled }}
-    {{- if eq (include "collectors.has_extra_port" (deepCopy $ | merge (dict "name" $collector "portNumber" $.Values.applicationObservability.receivers.otlp.grpc.port))) "false" }}
+    {{- if eq (include "collectors.hasExtraPort" (deepCopy $ | merge (dict "collectorName" $collectorName "portNumber" $.Values.applicationObservability.receivers.otlp.grpc.port))) "false" }}
       {{- $extraPorts = append $extraPorts (dict "name" "otlp-grpc" "port" $.Values.applicationObservability.receivers.otlp.grpc.port "targetPort" $.Values.applicationObservability.receivers.otlp.grpc.port "protocol" "TCP") }}
     {{- end -}}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.otlp.http.enabled }}
-    {{- if eq (include "collectors.has_extra_port" (deepCopy $ | merge (dict "name" $collector "portNumber" $.Values.applicationObservability.receivers.otlp.http.port))) "false" }}
+    {{- if eq (include "collectors.hasExtraPort" (deepCopy $ | merge (dict "collectorName" $collectorName "portNumber" $.Values.applicationObservability.receivers.otlp.http.port))) "false" }}
       {{- $extraPorts = append $extraPorts (dict "name" "otlp-http" "port" $.Values.applicationObservability.receivers.otlp.http.port "targetPort" $.Values.applicationObservability.receivers.otlp.http.port "protocol" "TCP") }}
     {{- end -}}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.zipkin.enabled }}
-    {{- if eq (include "collectors.has_extra_port" (deepCopy $ | merge (dict "name" $collector "portNumber" $.Values.applicationObservability.receivers.zipkin.port))) "false" }}
+    {{- if eq (include "collectors.hasExtraPort" (deepCopy $ | merge (dict "collectorName" $collectorName "portNumber" $.Values.applicationObservability.receivers.zipkin.port))) "false" }}
       {{- $extraPorts = append $extraPorts (dict "name" "zipkin" "port" $.Values.applicationObservability.receivers.zipkin.port "targetPort" $.Values.applicationObservability.receivers.zipkin.port "protocol" "TCP") }}
     {{- end -}}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.grpc.enabled }}
-    {{- if eq (include "collectors.has_extra_port" (deepCopy $ | merge (dict "name" $collector "portNumber" $.Values.applicationObservability.receivers.jaeger.grpc.port))) "false" }}
+    {{- if eq (include "collectors.hasExtraPort" (deepCopy $ | merge (dict "collectorName" $collectorName "portNumber" $.Values.applicationObservability.receivers.jaeger.grpc.port))) "false" }}
       {{- $extraPorts = append $extraPorts (dict "name" "jaeger-grpc" "port" $.Values.applicationObservability.receivers.jaeger.grpc.port "targetPort" $.Values.applicationObservability.receivers.jaeger.grpc.port "protocol" "TCP") }}
     {{- end -}}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftBinary.enabled }}
-    {{- if eq (include "collectors.has_extra_port" (deepCopy $ | merge (dict "name" $collector "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port))) "false" }}
+    {{- if eq (include "collectors.hasExtraPort" (deepCopy $ | merge (dict "collectorName" $collectorName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port))) "false" }}
       {{- $extraPorts = append $extraPorts (dict "name" "jaeger-binary" "port" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port "targetPort" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port "protocol" "UDP") }}
     {{- end -}}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftCompact.enabled }}
-    {{- if eq (include "collectors.has_extra_port" (deepCopy $ | merge (dict "name" $collector "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port))) "false" }}
+    {{- if eq (include "collectors.hasExtraPort" (deepCopy $ | merge (dict "collectorName" $collectorName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port))) "false" }}
       {{- $extraPorts = append $extraPorts (dict "name" "jaeger-compact" "port" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port "targetPort" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port "protocol" "UDP") }}
     {{- end -}}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftHttp.enabled }}
-    {{- if eq (include "collectors.has_extra_port" (deepCopy $ | merge (dict "name" $collector "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port))) "false" }}
+    {{- if eq (include "collectors.hasExtraPort" (deepCopy $ | merge (dict "collectorName" $collectorName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port))) "false" }}
       {{- $extraPorts = append $extraPorts (dict "name" "jaeger-http" "port" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port "targetPort" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port "protocol" "TCP") }}
     {{- end -}}
   {{- end -}}
 
-  {{- $values = $values | merge (dict $collector (dict "alloy" (dict "extraPorts" $extraPorts))) }}
-{{- end -}}
-{{- $values | toYaml }}
+  {{- $values = $values | merge (dict "collectors" (dict $collectorName (dict "alloy" (dict "extraPorts" $extraPorts)))) }}
+  {{- $values | toYaml }}
 {{- end -}}
 {{- end -}}
 
 {{- define "features.applicationObservability.validate" }}
 {{- if .Values.applicationObservability.enabled -}}
-{{- $featureName := "Application Observability" }}
-{{- if .Values.applicationObservability.metrics.enabled -}}
-{{- $metricDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
-{{- include "destinations.validate_destination_list" (dict "destinations" $metricDestinations "type" "metrics" "ecosystem" "otlp" "feature" $featureName) }}
-{{- end -}}
+  {{- $featureKey := "applicationObservability" }}
+  {{- $featureName := "Application Observability" }}
 
-{{- if .Values.applicationObservability.logs.enabled -}}
-{{- $logDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "logs" "ecosystem" "loki" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
-{{- include "destinations.validate_destination_list" (dict "destinations" $logDestinations "type" "logs" "ecosystem" "loki" "feature" $featureName) }}
-{{- end -}}
+  {{/* Destination validations */}}
+  {{- if .Values.applicationObservability.metrics.enabled -}}
+    {{- $metricDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
+    {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $metricDestinations "type" "metrics" "ecosystem" "otlp" "featureName" $featureName) }}
+  {{- end -}}
 
-{{- if .Values.applicationObservability.traces.enabled -}}
-{{- $traceDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "traces" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
-{{- include "destinations.validate_destination_list" (dict "destinations" $traceDestinations "type" "traces" "ecosystem" "otlp" "feature" $featureName) }}
-{{- end -}}
+  {{- if .Values.applicationObservability.logs.enabled -}}
+    {{- $logDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "logs" "ecosystem" "loki" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
+    {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $logDestinations "type" "logs" "ecosystem" "loki" "featureName" $featureName) }}
+  {{- end -}}
 
-{{- range $collector := include "features.applicationObservability.collectors" . | fromYamlArray }}
-  {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
+  {{- if .Values.applicationObservability.traces.enabled -}}
+    {{- $traceDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "traces" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
+    {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $traceDestinations "type" "traces" "ecosystem" "otlp" "featureName" $featureName) }}
+  {{- end -}}
+
+  {{/* Collector validations */}}
+  {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
+  {{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}
   {{- if $.Values.applicationObservability.receivers.otlp.grpc.enabled }}
-    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.otlp.grpc.port "portName" "otlp-grpc" "portProtocol" "TCP") }}
+    {{- include "collectors.requireExtraPort" (dict "Values" $.Values "collectorName" $collectorName "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.otlp.grpc.port "portName" "otlp-grpc" "portProtocol" "TCP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.otlp.http.enabled }}
-    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.otlp.http.port "portName" "otlp-http" "portProtocol" "TCP") }}
+    {{- include "collectors.requireExtraPort" (dict "Values" $.Values "collectorName" $collectorName "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.otlp.http.port "portName" "otlp-http" "portProtocol" "TCP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.zipkin.enabled }}
-    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.zipkin.port "portName" "zipkin" "portProtocol" "TCP") }}
+    {{- include "collectors.requireExtraPort" (dict "Values" $.Values "collectorName" $collectorName "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.zipkin.port "portName" "zipkin" "portProtocol" "TCP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.grpc.enabled }}
-    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.grpc.port "portName" "jaeger-grpc" "portProtocol" "TCP") }}
+    {{- include "collectors.requireExtraPort" (dict "Values" $.Values "collectorName" $collectorName "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.grpc.port "portName" "jaeger-grpc" "portProtocol" "TCP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftBinary.enabled }}
-    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port "portName" "jaeger-binary" "portProtocol" "UDP") }}
+    {{- include "collectors.requireExtraPort" (dict "Values" $.Values "collectorName" $collectorName "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port "portName" "jaeger-binary" "portProtocol" "UDP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftCompact.enabled }}
-    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port "portName" "jaeger-compact" "portProtocol" "UDP") }}
+    {{- include "collectors.requireExtraPort" (dict "Values" $.Values "collectorName" $collectorName "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port "portName" "jaeger-compact" "portProtocol" "UDP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftHttp.enabled }}
-    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port "portName" "jaeger-http" "portProtocol" "TCP") }}
+    {{- include "collectors.requireExtraPort" (dict "Values" $.Values "collectorName" $collectorName "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port "portName" "jaeger-http" "portProtocol" "TCP") }}
   {{- end -}}
   {{- include "feature.applicationObservability.validate" (dict "Values" $.Values.applicationObservability) }}
-{{- end -}}
-{{- end -}}
+  {{- end -}}
 {{- end -}}
 
 {{- define "features.applicationObservability.receiver.grpc" }}
-  {{- if and .Values.applicationObservability.enabled .Values.applicationObservability.receivers.otlp.grpc.enabled }}
-http://{{ include "collector.alloy.fullname" (deepCopy $ | merge (dict "collectorName" .Values.applicationObservability.collector)) }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.grpc.port }}
-  {{- end }}
+{{- $featureKey := "applicationObservability" }}
+{{- if and .Values.applicationObservability.enabled .Values.applicationObservability.receivers.otlp.grpc.enabled }}
+  {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
+  {{- $values := dict "Values" $.Values "Chart" $.Chart "Release" $.Release "collectorName" $collectorName }}
+http://{{ include "collector.alloy.fullname" $values }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.grpc.port }}
 {{- end }}
+{{- end }}
+
 {{- define "features.applicationObservability.receiver.http" }}
-  {{- if and .Values.applicationObservability.enabled .Values.applicationObservability.receivers.otlp.http.enabled }}
-http://{{ include "collector.alloy.fullname" (deepCopy $ | merge (dict "collectorName" .Values.applicationObservability.collector)) }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.http.port }}
-  {{- end }}
+{{- $featureKey := "applicationObservability" }}
+{{- if and .Values.applicationObservability.enabled .Values.applicationObservability.receivers.otlp.http.enabled }}
+  {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
+  {{- $values := dict "Values" $.Values "Chart" $.Chart "Release" $.Release "collectorName" $collectorName }}
+http://{{ include "collector.alloy.fullname" $values }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.http.port }}
 {{- end }}
+{{- end }}
+
+{{- define "features.applicationObservability.chooseCollector" -}}{{- end -}}

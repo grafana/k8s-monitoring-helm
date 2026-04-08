@@ -3,10 +3,10 @@ cluster:
   name: db-o11y-mysql-test
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -42,13 +42,16 @@ integrations:
           labelSelectors:
             app.kubernetes.io/instance: test-database
 
-podLogs:
+podLogsViaLoki:
   enabled: true
+  collector: alloy-logs
+  onlyGatherNewLogLines: false
 
-alloy-singleton:
-  enabled: true
-  alloy:
-    stabilityLevel: experimental
+collectors:
+  alloy-singleton:
+    presets: [singleton]
+    alloy:
+      stabilityLevel: experimental
 
-alloy-logs:
-  enabled: true
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]

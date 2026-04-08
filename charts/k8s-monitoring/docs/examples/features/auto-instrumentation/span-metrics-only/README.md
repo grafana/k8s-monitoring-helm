@@ -46,13 +46,13 @@ cluster:
   name: span-metrics-only-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.monitoring.svc:9090/api/v1/write
-  - name: loki
+  loki:
     type: loki
     url: http://loki.logging.svc:3100/loki/api/v1/push
-  - name: tempo
+  tempo:
     type: otlp
     url: http://tempo.tracing.svc:4317
     tls:
@@ -78,16 +78,8 @@ autoInstrumentation:
   beyla:
     deliverTracesToApplicationObservability: false  # Only collect span metrics, do not export traces
 
-alloy-metrics:
-  enabled: true
-
-alloy-receiver:
-  enabled: true
+collectors:
   alloy:
-    extraPorts:
-      - name: otlp-grpc
-        port: 4317
-        targetPort: 4317
-        protocol: TCP
+    presets: [clustered, statefulset]
 ```
 <!-- textlint-enable terminology -->

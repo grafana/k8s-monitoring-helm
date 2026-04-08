@@ -79,19 +79,6 @@ loki.process "pod_logs" {
 {{- if .Values.extraLogProcessingStages }}
 {{ tpl .Values.extraLogProcessingStages $ | indent 2 }}
 {{- end }}
-
-{{- if .Values.labelsToKeep }}
-  {{- $alwaysKeepLabels := list "__tenant_id__" }}
-  {{- $lokiLabels := $alwaysKeepLabels }}
-  {{- range $label := .Values.labelsToKeep }}
-    {{- $lokiLabels = append $lokiLabels (include "escape_label" $label) }}
-  {{- end }}
-
-  // Only keep the labels that are defined in the `keepLabels` list.
-  stage.label_keep {
-    values = {{ $lokiLabels | toJson }}
-  }
-{{- end }}
 {{ if .Values.secretFilter.enabled }}
 {{- if .Values.secretFilter.inclusionSelector }}
   forward_to = [loki.process.secret_filter_prefilter.receiver]
@@ -143,9 +130,6 @@ loki.secretfilter "pod_logs" {
 {{- else if .Values.secretFilter.gitleaksConfigPath }}
   gitleaks_config = {{ .Values.secretFilter.gitleaksConfigPath | quote }}
 {{- end }}
-  enable_entropy = {{ .Values.secretFilter.enableEntropy }}
-  include_generic = {{ .Values.secretFilter.includeGeneric }}
-  partial_mask = {{ .Values.secretFilter.partialMask }}
 {{- if .Values.secretFilter.allowlist }}
   allowlist = [
   {{- range $value := .Values.secretFilter.allowlist }}
@@ -155,6 +139,8 @@ loki.secretfilter "pod_logs" {
 {{- end }}
 {{- if .Values.secretFilter.redactWith }}
   redact_with = {{ .Values.secretFilter.redactWith | quote }}
+{{- else }}
+  redact_percent = {{ .Values.secretFilter.redactPercent | int }}
 {{- end }}
 {{- end }}
   forward_to = argument.logs_destinations.value

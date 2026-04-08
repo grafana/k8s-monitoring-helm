@@ -1,11 +1,5 @@
 {{- define "features.podLogsObjects.enabled" }}{{ .Values.podLogsObjects.enabled }}{{- end }}
 
-{{- define "features.podLogsObjects.collectors" }}
-{{- if .Values.podLogsObjects.enabled -}}
-- {{ .Values.podLogsObjects.collector }}
-{{- end }}
-{{- end }}
-
 {{- define "features.podLogsObjects.include" }}
 {{- if .Values.podLogsObjects.enabled -}}
 {{- $destinations := include "features.podLogsObjects.destinations" . | fromYamlArray }}
@@ -14,7 +8,7 @@
 {{- include "feature.podLogsObjects.module" (dict "Values" .Values.podLogsObjects "Files" $.Subcharts.podLogsObjects.Files) }}
 pod_logs_objects "feature" {
   logs_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
+    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
   ]
 }
 {{- end -}}
@@ -42,28 +36,27 @@ pod_logs_objects "feature" {
   {{- if .Values.podLogsObjects.enabled }}
     {{- if .Values.podLogsObjects.nodeFilter }}
       {{- $values := dict }}
-      {{- range $collectorName := include "features.podLogsObjects.collectors" . | fromYamlArray }}
-        {{- $extraEnv := deepCopy (dig "alloy" "extraEnv" list (index $.Values $collectorName)) }}
-        {{- if eq (include "collectors.has_extra_env" (deepCopy $ | merge (dict "name" $collectorName "envVar" "NODE_NAME"))) "false" }}
-          {{- $extraEnv = append $extraEnv (dict "name" "NODE_NAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "spec.nodeName"))) }}
-        {{- end }}
-        {{- $values = $values | merge (dict $collectorName (dict "alloy" (dict "extraEnv" $extraEnv))) }}
-      {{- end }}
+      {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" "podLogsObjects") }}
+      {{- $extraEnv := deepCopy (dig "alloy" "extraEnv" list (get $.Values.collectors $collectorName)) }}
+      {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "NODE_NAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "spec.nodeName")))) | fromYamlArray }}
+      {{- $values = $values | merge (dict $collectorName (dict "alloy" (dict "extraEnv" $extraEnv))) }}
       {{- $values | toYaml }}
     {{- end }}
   {{- end }}
 {{- end -}}
 
+{{- define "features.podLogsObjects.chooseCollector" -}}{{- end -}}
+
 {{- define "features.podLogsObjects.validate" }}
 {{- if .Values.podLogsObjects.enabled -}}
+{{- $featureKey := "podLogsObjects" }}
 {{- $featureName := "Alloy PodLogs Objects" }}
 {{- $destinations := include "features.podLogsObjects.destinations" . | fromYamlArray }}
-{{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "feature" $featureName) }}
+{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "featureName" $featureName) }}
 
-{{- range $collectorName := include "features.podLogsObjects.collectors" . | fromYamlArray }}
-  {{- $collectorValues := include "collector.alloy.values" (deepCopy $ | merge (dict "collectorName" $collectorName)) | fromYaml }}
-  {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collectorName "feature" $featureName) }}
-  {{- include "feature.podLogsObjects.collector.validate" (dict "Values" $.Values.podLogsObjects "Collector" $collectorValues "CollectorName" $collectorName) }}
-{{- end -}}
+{{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
+{{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}
+{{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
+{{- include "feature.podLogsObjects.collector.validate" (dict "Values" $.Values.podLogsObjects "Collector" $collectorValues "CollectorName" $collectorName) }}
 {{- end -}}
 {{- end -}}

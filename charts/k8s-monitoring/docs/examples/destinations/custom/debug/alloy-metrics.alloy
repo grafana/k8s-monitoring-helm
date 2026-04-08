@@ -317,15 +317,15 @@ declare "alloy_integration" {
 }
 alloy_integration "integration" {
   metrics_destinations = [
-    prometheus.remote_write.prometheus.receiver,
     otelcol.receiver.prometheus.debug.receiver,
+    prometheus.remote_write.prometheus.receiver,
   ]
 }
 // Self Reporting
 prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   set_collectors = ["textfile"]
   textfile {
-    directory = "/etc/alloy"
+    directory = "/etc/release-info"
   }
 }
 
@@ -366,6 +366,33 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
 
 
 
+
+// Destination: debug (custom)
+otelcol.receiver.prometheus "debug" {
+  output {
+    metrics = [otelcol.processor.filter.debug.input]
+  }
+}
+otelcol.receiver.loki "debug" {
+  output {
+    logs = [otelcol.processor.filter.debug.input]
+  }
+}
+
+otelcol.processor.filter "debug" {
+  metrics {
+    metric = ["name != \"alloy_build_info\""]
+  }
+
+  output {
+    metrics = [otelcol.exporter.debug.debug.input]
+    logs    = [otelcol.exporter.debug.debug.input]
+    traces  = [otelcol.exporter.debug.debug.input]
+  }
+}
+otelcol.exporter.debug "debug" {
+  verbosity = "detailed"
+}
 
 // Destination: prometheus (prometheus)
 otelcol.exporter.prometheus "prometheus" {
@@ -415,31 +442,5 @@ prometheus.remote_write "prometheus" {
     min_keepalive_time = "5m"
     max_keepalive_time = "8h"
   }
-}
-// Destination: debug (custom)
-otelcol.receiver.prometheus "debug" {
-  output {
-    metrics = [otelcol.processor.filter.debug.input]
-  }
-}
-otelcol.receiver.loki "debug" {
-  output {
-    logs = [otelcol.processor.filter.debug.input]
-  }
-}
-
-otelcol.processor.filter "debug" {
-  metrics {
-    metric = ["name != \"alloy_build_info\""]
-  }
-
-  output {
-    metrics = [otelcol.exporter.debug.debug.input]
-    logs    = [otelcol.exporter.debug.debug.input]
-    traces  = [otelcol.exporter.debug.debug.input]
-  }
-}
-otelcol.exporter.debug "debug" {
-  verbosity = "detailed"
 }
 

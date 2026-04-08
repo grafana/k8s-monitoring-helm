@@ -3,24 +3,58 @@
 {{ and .Values.selfReporting.enabled (not (empty $metricsDestinations)) }}
 {{- end -}}
 
-{{- define "features.selfReporting.collectors" -}}
+{{- define "features.selfReporting.chooseCollector" }}
 {{- if eq (include "features.selfReporting.enabled" .) "true" }}
-  {{- $collectorsByIncreasingPreference := list "alloy-receiver" "alloy-metrics" "alloy-singleton" }}
   {{- $chosenCollector := "" }}
-  {{- range $collector := $collectorsByIncreasingPreference }}
-    {{- if (index $.Values $collector).enabled }}{{- $chosenCollector = $collector }}{{- end -}}
-  {{- end -}}
-- {{ $chosenCollector }}
-  {{- end -}}
+  {{- range $collectorName, $collectorValues := .Values.collectors }}
+    {{- if and (not $chosenCollector) (has "singleton" $collectorValues.presets) }}
+      {{- $chosenCollector = $collectorName }}
+    {{- end }}
+  {{- end }}
+  {{- if not $chosenCollector }}
+    {{- range $featureKey := include "features.list" $ | fromYamlArray }}
+      {{- if and (ne $featureKey "selfReporting") (not $chosenCollector) }}
+        {{- $destinationNames := ((include (printf "features.%s.destinations" $featureKey) $) | fromYamlArray) }}
+        {{- range $destinationName := $destinationNames }}
+          {{- if and (eq (include "destination.supportsMetrics" (deepCopy $ | merge (dict "destinationName" $destinationName)) | trim) "true") (not $chosenCollector) }}
+            {{- $chosenCollector = include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- if not $chosenCollector }}
+    {{- $chosenCollector = index (keys .Values.collectors) 0 }}
+  {{- end }}
+{{- $chosenCollector -}}
+{{- end }}
 {{- end }}
 
 {{- define "features.selfReporting.destinations" }}
 {{- if eq (include "features.selfReporting.enabled" .) "true" }}
-{{- include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "prometheus" "filter" $.Values.selfReporting.destinations) -}}
+  {{- include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "prometheus" "filter" $.Values.selfReporting.destinations) -}}
 {{- end }}
 {{- end }}
 
-{{- define "features.selfReporting.collector.values" }}{{ end }}
+{{- define "features.selfReporting.collector.values" }}
+{{- if eq (include "features.selfReporting.enabled" .) "true" }}
+  {{- $collectorName := include "features.selfReporting.chooseCollector" . | trim }}
+  {{- $collectorValues := (include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml) }}
+  {{- $configMapName := printf "%s-release-info" (include "helper.fullname" .) }}
+  {{- $extraMounts := deepCopy (dig "alloy" "mounts" "extra" list $collectorValues) }}
+  {{- $extraMounts = append $extraMounts (dict "name" "release-info" "mountPath" "/etc/release-info" "readOnly" true) }}
+  {{- $extraVolumes := deepCopy (dig "controller" "volumes" "extra" list $collectorValues) }}
+  {{- $extraVolumes = append $extraVolumes (dict "name" "release-info" "configMap" (dict "name" $configMapName)) }}
+collectors:
+  {{ $collectorName }}:
+    alloy:
+      mounts:
+        extra: {{ $extraMounts | toYaml | nindent 10 }}
+    controller:
+      volumes:
+        extra: {{ $extraVolumes | toYaml | nindent 10 }}
+{{- end }}
+{{- end }}
 {{- define "features.selfReporting.validate" }}{{ end }}
 {{- define "features.selfReporting.include" }}
 {{- if eq (include "features.selfReporting.enabled" .) "true" }}
@@ -30,7 +64,7 @@
 prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   set_collectors = ["textfile"]
   textfile {
-    directory = "/etc/alloy"
+    directory = "/etc/release-info"
   }
 }
 
@@ -65,7 +99,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
     action = "keep"
   }
   forward_to = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
+    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
   ]
 }
 {{- end }}
@@ -84,6 +118,19 @@ grafana_kubernetes_monitoring_build_info{version="{{ .Chart.Version }}", namespa
 grafana_kubernetes_monitoring_feature_info{{ include "label_list" (merge $featureSummary (dict "feature" $feature)) }} 1
     {{- end }}
   {{- end }}
+# HELP grafana_kubernetes_monitoring_collector_info A metric to report the collectors of the Kubernetes Monitoring Helm chart
+# TYPE grafana_kubernetes_monitoring_collector_info gauge
+{{- range $collectorName, $collectorValues := .Values.collectors }}
+  {{- $resolvedValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
+  {{- $kind := dig "controller" "type" "deployment" $resolvedValues }}
+  {{- $presets := join "," ($collectorValues.presets | default list) }}
+  {{- $labels := dict "name" $collectorName "type" "alloy" "kind" $kind "presets" $presets }}
+  {{- if ne $kind "daemonset" }}
+    {{- $replicas := dig "controller" "replicas" 1 $resolvedValues }}
+    {{- $_ := set $labels "replicas" (printf "%d" (int $replicas)) }}
+  {{- end }}
+grafana_kubernetes_monitoring_collector_info{{ include "label_list" $labels }} 1
+{{- end }}
 # EOF
 {{- end }}
 {{- end }}

@@ -18,7 +18,7 @@ cluster:
   name: otlp-gateway-test
 
 destinations:
-  - name: otlp-gateway
+  otlp-gateway:
     type: otlp
     url: https://otlp-gateway-my-region.grafana.net/otlp
     protocol: http
@@ -50,24 +50,43 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
-podLogs:
+hostMetrics:
   enabled: true
+  collector: alloy-metrics
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
 
-alloy-metrics:
+podLogsViaLoki:
   enabled: true
-  extraConfig: |
-    otelcol.storage.file "otlp_gateway_queue_storage" {
-      create_directory = true
-      directory = "/var/lib/otlp_gateway_queue_storage"
-    }
+  collector: alloy-logs
 
-alloy-logs:
-  enabled: true
-  extraConfig: |
-    otelcol.storage.file "otlp_gateway_queue_storage" {
-      create_directory = true
-      directory = "/var/lib/otlp_gateway_queue_storage"
-    }
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    extraConfig: |
+      otelcol.storage.file "otlp_gateway_queue_storage" {
+        create_directory = true
+        directory = "/var/lib/otlp_gateway_queue_storage"
+      }
+
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+    extraConfig: |
+      otelcol.storage.file "otlp_gateway_queue_storage" {
+        create_directory = true
+        directory = "/var/lib/otlp_gateway_queue_storage"
+      }
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

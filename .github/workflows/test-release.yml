@@ -1,0 +1,68 @@
+---
+name: Test Release
+# yamllint disable-line rule:truthy
+on:
+  release:
+    types: [published]
+
+permissions: {}
+
+jobs:
+  test-release:
+    runs-on: ubuntu-latest
+    if: startsWith(github.event.release.tag_name, 'k8s-monitoring-')
+    permissions:
+      contents: read
+
+    steps:
+      - name: Parse release tag
+        id: parse
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          # Extract chart name and version from the tag (e.g., k8s-monitoring-4.0.0)
+          version="${TAG##k8s-monitoring-}"
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          echo "chart=k8s-monitoring" >> "${GITHUB_OUTPUT}"
+
+      - name: Set up Helm
+        id: setup-helm
+        uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2  # v5.0.0
+        continue-on-error: true
+
+      - name: Set up Homebrew
+        if: ${{ steps.setup-helm.outcome == 'failure' }}
+        uses: Homebrew/actions/setup-homebrew@fb0fe15d936a80ac0ba4c6cee691bc3da3f00f4e
+
+      - name: Install Helm
+        if: ${{ steps.setup-helm.outcome == 'failure' }}
+        run: brew install helm
+
+      - name: Verify Helm repository has been updated
+        env:
+          CHART: ${{ steps.parse.outputs.chart }}
+          VERSION: ${{ steps.parse.outputs.version }}
+        run: |
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm repo update
+
+          echo "Checking for ${CHART} version ${VERSION} in the Helm repository..."
+          if helm search repo "grafana/${CHART}" --version "${VERSION}" --fail-on-no-result; then
+            echo "Chart ${CHART} version ${VERSION} found in the Helm repository."
+          else
+            echo "::error::Chart ${CHART} version ${VERSION} not found in the Helm repository."
+            exit 1
+          fi
+
+      - name: Verify OCI artifact exists
+        env:
+          CHART: ${{ steps.parse.outputs.chart }}
+          VERSION: ${{ steps.parse.outputs.version }}
+        run: |
+          echo "Checking for ${CHART} version ${VERSION} in the OCI registry..."
+          if helm pull "oci://ghcr.io/grafana/helm-charts/${CHART}" --version "${VERSION}"; then
+            echo "Chart ${CHART} version ${VERSION} found in the OCI registry."
+          else
+            echo "::error::Chart ${CHART} version ${VERSION} not found in the OCI registry."
+            exit 1
+          fi

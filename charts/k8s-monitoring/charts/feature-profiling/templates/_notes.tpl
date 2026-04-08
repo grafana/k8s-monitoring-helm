@@ -8,5 +8,4 @@ Gather profiles
 
 {{- define "feature.profiling.summary" -}}
 version: {{ .Chart.Version }}
-method: {{ .Values.gatherMethod }}
 {{- end }}

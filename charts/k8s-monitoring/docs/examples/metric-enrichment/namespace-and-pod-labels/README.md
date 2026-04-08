@@ -28,7 +28,7 @@ cluster:
   name: metric-enrichment-example
 
 destinations:
-  - name: metric-store
+  metric-store:
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
     metricEnrichment:
@@ -42,9 +42,25 @@ destinations:
 clusterMetrics:
   enabled: true
 
-alloy-metrics:
+hostMetrics:
   enabled: true
-  alloy:
-    stabilityLevel: experimental
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    alloy:
+      stabilityLevel: experimental
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

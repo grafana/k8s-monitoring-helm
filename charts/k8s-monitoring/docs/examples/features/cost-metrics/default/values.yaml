@@ -1,0 +1,31 @@
+---
+cluster:
+  name: cost-metrics-example-cluster
+
+destinations:
+  prometheus:
+    type: prometheus
+    url: http://prometheus.prometheus.svc:9090/api/v1/write
+
+clusterMetrics:
+  enabled: true
+
+costMetrics:
+  enabled: true
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  opencost:
+    deploy: true
+    metricsSource: prometheus
+    opencost:
+      exporter:
+        defaultClusterId: cost-metrics-example-cluster
+      prometheus:
+        external:
+          url: http://prometheus.prometheus.svc:9090/api/v1/query

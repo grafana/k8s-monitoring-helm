@@ -31,16 +31,13 @@ declare "cluster_events" {
         "reason" = "",
       }
     }
-    // set these values as labels, they may or may not be used as index labels in Loki as they can be dropped
-    // prior to being written to Loki, but this makes them available
+    // set the extracted values as labels
     stage.labels {
       values = {
-        "component" = "",
         "kind" = "",
         "level" = "",
-        "name" = "",
-        "node" = "",
-        "reason" = "",
+        "service_name" = "job",
+        "reason" = "reason",
       }
     }
 
@@ -68,18 +65,15 @@ declare "cluster_events" {
     stage.structured_metadata {
       values = {
         "name" = "name",
+        "node" = "node",
       }
     }
 
-    // Only keep the labels that are defined in the `keepLabels` list.
-    stage.label_keep {
-      values = ["job","level","namespace","node","source","reason"]
+    // Drop pipeline-only labels that are not needed in the final output.
+    stage.label_drop {
+      values = ["kind"]
     }
-    stage.labels {
-      values = {
-        "service_name" = "job",
-      }
-    }
+
     forward_to = argument.logs_destinations.value
   }
 }
@@ -92,7 +86,7 @@ cluster_events "feature" {
 prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   set_collectors = ["textfile"]
   textfile {
-    directory = "/etc/alloy"
+    directory = "/etc/release-info"
   }
 }
 
@@ -134,6 +128,39 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
 
 
 
+// Destination: loki (loki)
+otelcol.exporter.loki "loki" {
+  forward_to = [loki.write.loki.receiver]
+}
+
+loki.write "loki" {
+  endpoint {
+    url = "http://loki.loki.svc:3100/loki/api/v1/push"
+    retry_on_http_429 = true
+    tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+      password = remote.kubernetes.secret.loki.data["password"]
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+  external_labels = {
+    "cluster" = "include-by-namespace-test",
+    "k8s_cluster_name" = "include-by-namespace-test",
+  }
+}
+
+remote.kubernetes.secret "loki" {
+  name      = "loki-k8smon-k8s-monitoring"
+  namespace = "default"
+}
+
+
 // Destination: prometheus (prometheus)
 otelcol.exporter.prometheus "prometheus" {
   add_metric_suffixes = true
@@ -143,7 +170,7 @@ otelcol.exporter.prometheus "prometheus" {
 
 prometheus.remote_write "prometheus" {
   endpoint {
-    url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+    url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
     headers = {
     }
     tls_config {
@@ -166,13 +193,13 @@ prometheus.remote_write "prometheus" {
     write_relabel_config {
       source_labels = ["cluster"]
       regex = ""
-      replacement = "include-by-namespace-cluster"
+      replacement = "include-by-namespace-test"
       target_label = "cluster"
     }
     write_relabel_config {
       source_labels = ["k8s_cluster_name"]
       regex = ""
-      replacement = "include-by-namespace-cluster"
+      replacement = "include-by-namespace-test"
       target_label = "k8s_cluster_name"
     }
   }
@@ -181,27 +208,6 @@ prometheus.remote_write "prometheus" {
     truncate_frequency = "2h"
     min_keepalive_time = "5m"
     max_keepalive_time = "8h"
-  }
-}
-// Destination: loki (loki)
-otelcol.exporter.loki "loki" {
-  forward_to = [loki.write.loki.receiver]
-}
-
-loki.write "loki" {
-  endpoint {
-    url = "http://loki.loki.svc:3100/api/push"
-    retry_on_http_429 = true
-    tls_config {
-      insecure_skip_verify = false
-    }
-    min_backoff_period = "500ms"
-    max_backoff_period = "5m"
-    max_backoff_retries = "10"
-  }
-  external_labels = {
-    "cluster" = "include-by-namespace-cluster",
-    "k8s_cluster_name" = "include-by-namespace-cluster",
   }
 }
 

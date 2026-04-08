@@ -1,12 +1,12 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test PostgreSQL w/ DB O11y - Metrics
+suite: Feature - Integration - PostgreSQL - Database Observability Metrics
 templates:
-  - configmap.yaml
+  - test/configmap.yaml
   - postgresql-secret.yaml
 tests:
   - it: should create the PostgreSQL config
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       postgresql:
         instances:
           - name: my-database
@@ -20,7 +20,7 @@ tests:
               enabled: true
             logs: {enabled: false}
     asserts:
-      - template: configmap.yaml
+      - template: test/configmap.yaml
         matchSnapshot:
           path: data["metrics.alloy"]
 
@@ -42,7 +42,7 @@ tests:
 
   - it: works with multiple PostgreSQL Instances
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       postgresql:
         instances:
           - name: test-db
@@ -69,7 +69,7 @@ tests:
               enabled: true
             logs: {enabled: false}
     asserts:
-      - template: configmap.yaml
+      - template: test/configmap.yaml
         matchSnapshot:
           path: data["metrics.alloy"]
 
@@ -92,9 +92,62 @@ tests:
           path: stringData.password
           value: db-password
 
+  - it: renders new db o11y options (azure, exclude_databases, exclude_current_user)
+    set:
+      testing: {enabled: true}
+      postgresql:
+        instances:
+          - name: azure-db
+            exporter:
+              dataSource:
+                host: azure-db.postgresql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            databaseObservability:
+              enabled: true
+              excludeDatabases: ["employees", "departments"]
+              cloudProvider:
+                azure:
+                  subscriptionId: "sub-123"
+                  resourceGroup: "rg-prod"
+                  serverName: "my-azure-server"
+              collectors:
+                querySamples:
+                  enabled: true
+                  collectInterval: 1m
+                  disableQueryRedaction: false
+                  excludeCurrentUser: false
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
+  - it: renders new db o11y options (exclude_users)
+    set:
+      testing: {enabled: true}
+      postgresql:
+        instances:
+          - name: new-opts-db
+            exporter:
+              dataSource:
+                host: new-opts-db.postgresql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            databaseObservability:
+              enabled: true
+              excludeUsers: ["monitoring_user"]
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
   - it: requires metrics
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       postgresql:
         instances:
           - name: test-database
@@ -103,7 +156,7 @@ tests:
             databaseObservability:
               enabled: true
     asserts:
-      - template: configmap.yaml
+      - template: test/configmap.yaml
         failedTemplate:
           errorMessage: |-
             Enabling Database Observability for PostgreSQL requires exporter metrics.

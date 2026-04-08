@@ -6,12 +6,24 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.4.2
+    helm.sh/chart: alloy-operator-0.5.3
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.6.0"
+    app.kubernetes.io/version: "1.7.0"
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
+---
+# Source: k8s-monitoring/templates/destination_secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "loki-k8smon-k8s-monitoring"
+  namespace: "default"
+type: Opaque
+data:
+  tenantId: "MQ=="
+  username: "bG9raQ=="
+  password: "bG9raXBhc3N3b3Jk"
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -53,16 +65,13 @@ data:
             "reason" = "",
           }
         }
-        // set these values as labels, they may or may not be used as index labels in Loki as they can be dropped
-        // prior to being written to Loki, but this makes them available
+        // set the extracted values as labels
         stage.labels {
           values = {
-            "component" = "",
             "kind" = "",
             "level" = "",
-            "name" = "",
-            "node" = "",
-            "reason" = "",
+            "service_name" = "job",
+            "reason" = "reason",
           }
         }
     
@@ -90,18 +99,15 @@ data:
         stage.structured_metadata {
           values = {
             "name" = "name",
+            "node" = "node",
           }
         }
     
-        // Only keep the labels that are defined in the `keepLabels` list.
-        stage.label_keep {
-          values = ["job","level","namespace","node","source","reason"]
+        // Drop pipeline-only labels that are not needed in the final output.
+        stage.label_drop {
+          values = ["kind"]
         }
-        stage.labels {
-          values = {
-            "service_name" = "job",
-          }
-        }
+    
         forward_to = argument.logs_destinations.value
       }
     }
@@ -114,6 +120,18 @@ data:
     
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     // Destination: loki (loki)
     otelcol.exporter.loki "loki" {
       forward_to = [loki.write.loki.receiver]
@@ -121,8 +139,13 @@ data:
     
     loki.write "loki" {
       endpoint {
-        url = "http://loki.loki.svc:3100/api/push"
+        url = "http://loki.loki.svc:3100/loki/api/v1/push"
         retry_on_http_429 = true
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+          password = remote.kubernetes.secret.loki.data["password"]
+        }
         tls_config {
           insecure_skip_verify = false
         }
@@ -135,6 +158,11 @@ data:
         "k8s_cluster_name" = "cluster-events-cluster",
       }
     }
+    
+    remote.kubernetes.secret "loki" {
+      name      = "loki-k8smon-k8s-monitoring"
+      namespace = "default"
+    }
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -142,10 +170,10 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy-operator-alloy-manager
   labels:
-    helm.sh/chart: alloy-operator-0.4.2
+    helm.sh/chart: alloy-operator-0.5.3
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.6.0"
+    app.kubernetes.io/version: "1.7.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -200,10 +228,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-operator-alloy-manager
   labels:
-    helm.sh/chart: alloy-operator-0.4.2
+    helm.sh/chart: alloy-operator-0.5.3
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.6.0"
+    app.kubernetes.io/version: "1.7.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -220,10 +248,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-operator
   labels:
-    helm.sh/chart: alloy-operator-0.4.2
+    helm.sh/chart: alloy-operator-0.5.3
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.6.0"
+    app.kubernetes.io/version: "1.7.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -241,10 +269,10 @@ metadata:
   name: k8smon-alloy-operator-leader-election-role
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.4.2
+    helm.sh/chart: alloy-operator-0.5.3
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.6.0"
+    app.kubernetes.io/version: "1.7.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -286,10 +314,10 @@ metadata:
   name: k8smon-alloy-operator-leader-election-rolebinding
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.4.2
+    helm.sh/chart: alloy-operator-0.5.3
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.6.0"
+    app.kubernetes.io/version: "1.7.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -307,10 +335,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.4.2
+    helm.sh/chart: alloy-operator-0.5.3
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.6.0"
+    app.kubernetes.io/version: "1.7.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
@@ -334,10 +362,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.4.2
+    helm.sh/chart: alloy-operator-0.5.3
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.6.0"
+    app.kubernetes.io/version: "1.7.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -348,10 +376,10 @@ spec:
   template:
     metadata:
       labels:
-        helm.sh/chart: alloy-operator-0.4.2
+        helm.sh/chart: alloy-operator-0.5.3
         app.kubernetes.io/name: alloy-operator
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "1.6.0"
+        app.kubernetes.io/version: "1.7.0"
         app.kubernetes.io/managed-by: Helm
     spec:
       serviceAccountName: k8smon-alloy-operator
@@ -359,7 +387,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: alloy-operator
-          image: "ghcr.io/grafana/alloy-operator:1.6.0"
+          image: "ghcr.io/grafana/alloy-operator:1.7.0"
           imagePullPolicy: IfNotPresent
           args:
             - --health-probe-bind-address=:8081
@@ -408,32 +436,8 @@ metadata:
     helm.sdk.operatorframework.io/uninstall-wait: "true"
 spec:
   alloy:
-    clustering:
-      enabled: false
-      name: ""
-      portName: http
     configMap:
-      content: ""
       create: false
-      key: null
-      name: null
-    enableHttpServerPort: true
-    enableReporting: true
-    envFrom: []
-    extraArgs: []
-    extraEnv: []
-    extraPorts: []
-    hostAliases: []
-    initialDelaySeconds: 10
-    lifecycle: {}
-    listenAddr: 0.0.0.0
-    listenPort: 12345
-    listenScheme: HTTP
-    livenessProbe: {}
-    mounts:
-      dockercontainers: false
-      extra: []
-      varlog: false
     resources: {}
     securityContext:
       allowPrivilegeEscalation: false
@@ -457,270 +461,16 @@ spec:
         - ALL
       seccompProfile:
         type: RuntimeDefault
-    stabilityLevel: generally-available
-    storagePath: /tmp/alloy
-    timeoutSeconds: 1
-    uiPathPrefix: /
-  configReloader:
-    customArgs: []
-    enabled: true
-    image:
-      digest: ""
-      registry: quay.io
-      repository: prometheus-operator/prometheus-config-reloader
-      tag: v0.81.0
-    resources:
-      requests:
-        cpu: 10m
-        memory: 50Mi
-    securityContext: {}
   controller:
-    affinity: {}
-    autoscaling:
-      enabled: false
-      horizontal:
-        enabled: false
-        maxReplicas: 5
-        minReplicas: 1
-        scaleDown:
-          policies: []
-          selectPolicy: Max
-          stabilizationWindowSeconds: 300
-        scaleUp:
-          policies: []
-          selectPolicy: Max
-          stabilizationWindowSeconds: 0
-        targetCPUUtilizationPercentage: 0
-        targetMemoryUtilizationPercentage: 80
-      maxReplicas: 5
-      minReplicas: 1
-      scaleDown:
-        policies: []
-        selectPolicy: Max
-        stabilizationWindowSeconds: 300
-      scaleUp:
-        policies: []
-        selectPolicy: Max
-        stabilizationWindowSeconds: 0
-      targetCPUUtilizationPercentage: 0
-      targetMemoryUtilizationPercentage: 80
-      vertical:
-        enabled: false
-        recommenders: []
-        resourcePolicy:
-          containerPolicies:
-          - containerName: alloy
-            controlledResources:
-            - cpu
-            - memory
-            controlledValues: RequestsAndLimits
-            maxAllowed: {}
-            minAllowed: {}
-        updatePolicy: null
-    dnsPolicy: ClusterFirst
-    enableStatefulSetAutoDeletePVC: false
-    extraAnnotations: {}
-    extraContainers: []
-    extraLabels: {}
-    hostNetwork: false
-    hostPID: false
-    initContainers: []
-    minReadySeconds: 10
     nodeSelector:
       kubernetes.io/os: linux
-    parallelRollout: true
     podAnnotations:
       k8s.grafana.com/logs.job: integrations/alloy
-    podDisruptionBudget:
-      enabled: false
-      maxUnavailable: null
-      minAvailable: null
-    podLabels: {}
-    priorityClassName: ""
     replicas: 1
-    terminationGracePeriodSeconds: null
-    tolerations: []
-    topologySpreadConstraints: []
     type: deployment
-    updateStrategy: {}
-    volumeClaimTemplates: []
-    volumes:
-      extra: []
   crds:
     create: false
-  extraObjects: []
-  global:
-    image:
-      pullSecrets: []
-      registry: ""
-    podSecurityContext: {}
-  image:
-    digest: null
-    pullPolicy: IfNotPresent
-    pullSecrets: []
-    registry: docker.io
-    repository: grafana/alloy
-    tag: null
-  ingress:
-    annotations: {}
-    enabled: false
-    extraPaths: []
-    faroPort: 12347
-    hosts:
-    - chart-example.local
-    labels: {}
-    path: /
-    pathType: Prefix
-    tls: []
   nameOverride: alloy-singleton
-  networkPolicy:
-    egress:
-    - {}
-    enabled: false
-    flavor: kubernetes
-    ingress:
-    - {}
-    policyTypes:
-    - Ingress
-    - Egress
-  rbac:
-    clusterRules:
-    - apiGroups:
-      - ""
-      resources:
-      - nodes
-      verbs:
-      - get
-      - list
-      - watch
-    - apiGroups:
-      - ""
-      resources:
-      - nodes/pods
-      verbs:
-      - get
-      - list
-      - watch
-    - apiGroups:
-      - ""
-      resources:
-      - nodes/metrics
-      verbs:
-      - get
-      - list
-      - watch
-    - nonResourceURLs:
-      - /metrics
-      verbs:
-      - get
-    create: true
-    namespaces: []
-    rules:
-    - apiGroups:
-      - ""
-      - discovery.k8s.io
-      - networking.k8s.io
-      resources:
-      - endpoints
-      - endpointslices
-      - ingresses
-      - pods
-      - services
-      verbs:
-      - get
-      - list
-      - watch
-    - apiGroups:
-      - ""
-      resources:
-      - pods
-      - pods/log
-      - namespaces
-      verbs:
-      - get
-      - list
-      - watch
-    - apiGroups:
-      - monitoring.grafana.com
-      resources:
-      - podlogs
-      verbs:
-      - get
-      - list
-      - watch
-    - apiGroups:
-      - monitoring.coreos.com
-      resources:
-      - prometheusrules
-      verbs:
-      - get
-      - list
-      - watch
-    - apiGroups:
-      - monitoring.coreos.com
-      resources:
-      - alertmanagerconfigs
-      verbs:
-      - get
-      - list
-      - watch
-    - apiGroups:
-      - monitoring.coreos.com
-      resources:
-      - podmonitors
-      - servicemonitors
-      - probes
-      - scrapeconfigs
-      verbs:
-      - get
-      - list
-      - watch
-    - apiGroups:
-      - ""
-      resources:
-      - events
-      verbs:
-      - get
-      - list
-      - watch
-    - apiGroups:
-      - ""
-      resources:
-      - configmaps
-      - secrets
-      verbs:
-      - get
-      - list
-      - watch
-    - apiGroups:
-      - apps
-      - extensions
-      resources:
-      - replicasets
-      verbs:
-      - get
-      - list
-      - watch
-  service:
-    annotations: {}
-    clusterIP: ""
-    enabled: true
-    internalTrafficPolicy: Cluster
-    nodePort: 31128
-    type: ClusterIP
-  serviceAccount:
-    additionalLabels: {}
-    annotations: {}
-    automountServiceAccountToken: true
-    create: true
-    name: null
-  serviceMonitor:
-    additionalLabels: {}
-    enabled: false
-    interval: ""
-    metricRelabelings: []
-    relabelings: []
-    tlsConfig: {}
 ---
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
 apiVersion: v1
@@ -821,7 +571,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.8.1
+    helm.sh/chart: k8s-monitoring-4.0.1
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -874,7 +624,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.8.1
+    helm.sh/chart: k8s-monitoring-4.0.1
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
@@ -908,8 +658,8 @@ spec:
 
               kubectl patch \
                 --namespace=default \
-                --type json \
-                --patch='[{"op": "remove", "path": "/metadata/finalizers"}]' \
+                --type merge \
+                --patch='{"metadata":{"finalizers":null}}' \
                 deployment/k8smon-alloy-operator
           securityContext:
             allowPrivilegeEscalation: false

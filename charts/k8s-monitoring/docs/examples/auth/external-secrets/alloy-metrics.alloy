@@ -45,48 +45,6 @@ prometheus_operator_objects "feature" {
     prometheus.remote_write.metrics_service.receiver,
   ]
 }
-// Self Reporting
-prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
-  set_collectors = ["textfile"]
-  textfile {
-    directory = "/etc/alloy"
-  }
-}
-
-discovery.relabel "kubernetes_monitoring_telemetry" {
-  targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
-  rule {
-    target_label = "instance"
-    action = "replace"
-    replacement = "k8smon"
-  }
-  rule {
-    target_label = "job"
-    action = "replace"
-    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-  }
-}
-
-prometheus.scrape "kubernetes_monitoring_telemetry" {
-  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-  targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
-  scrape_interval = "60s"
-  clustering {
-    enabled = true
-  }
-  forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-}
-
-prometheus.relabel "kubernetes_monitoring_telemetry" {
-  rule {
-    source_labels = ["__name__"]
-    regex = "grafana_kubernetes_monitoring_.*"
-    action = "keep"
-  }
-  forward_to = [
-    prometheus.remote_write.metrics_service.receiver,
-  ]
-}
 
 
 remote.kubernetes.secret "alloy_metrics_remote_cfg" {
@@ -114,7 +72,7 @@ remotecfg {
     "platform" = "kubernetes",
     "release" = "k8smon",
     "source" = "k8s-monitoring",
-    "sourceVersion" = "3.8.1",
+    "sourceVersion" = "4.0.1",
     "workloadName" = "alloy-metrics",
     "workloadType" = "statefulset",
   }

@@ -3,12 +3,14 @@ cluster:
   name: annotation-autodiscovery-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
 annotationAutodiscovery:
   enabled: true
+  collector: alloy-metrics
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]

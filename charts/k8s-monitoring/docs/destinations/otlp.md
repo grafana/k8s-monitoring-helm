@@ -33,6 +33,24 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | auth.oauth2.scopes | list | `[]` | List of scopes to authenticate with. |
 | auth.oauth2.tokenURL | string | `""` | URL to fetch the token from. |
 
+### Authentication - OAuth2 TLS
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| auth.oauth2.tls.ca | string | `""` | The CA certificate for the OAuth2 token endpoint (as a string). |
+| auth.oauth2.tls.caFile | string | `""` | The CA certificate for the OAuth2 token endpoint (as a path to a file). |
+| auth.oauth2.tls.caFrom | string | `""` | Raw config for accessing the OAuth2 token endpoint CA certificate. |
+| auth.oauth2.tls.caKey | string | `"oauth2-tls-ca"` | The key in the secret where the CA certificate for OAuth2 is stored |
+| auth.oauth2.tls.cert | string | `""` | The client certificate for the OAuth2 token endpoint (as a string). |
+| auth.oauth2.tls.certFile | string | `""` | The client certificate for the OAuth2 token endpoint (as a path to a file). |
+| auth.oauth2.tls.certFrom | string | `""` | Raw config for accessing the OAuth2 token endpoint client certificate. |
+| auth.oauth2.tls.certKey | string | `"oauth2-tls-cert"` | The key in the secret where the client certificate for OAuth2 is stored |
+| auth.oauth2.tls.insecureSkipVerify | bool | `false` | Disables validation of the OAuth2 token endpoint certificate. |
+| auth.oauth2.tls.key | string | `""` | The client key for the OAuth2 token endpoint (as a string). |
+| auth.oauth2.tls.keyFile | string | `""` | The client key for the OAuth2 token endpoint (as a path to a file). |
+| auth.oauth2.tls.keyFrom | string | `""` | Raw config for accessing the OAuth2 token endpoint client key. |
+| auth.oauth2.tls.keyKey | string | `"oauth2-tls-key"` | The key in the secret where the client key for OAuth2 is stored |
+
 ### Authentication - Basic
 
 | Key | Type | Default | Description |

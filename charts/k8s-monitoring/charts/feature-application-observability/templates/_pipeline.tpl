@@ -72,7 +72,7 @@
   targets:
     metrics: [{name: default, component: processor.transform}]
     logs: [{name: default, component: processor.transform}]
-{{- if (index .Values.processors "grafanaCloudMetrics").enabled | default .Values.connectors.grafanaCloudMetrics.enabled }}
+{{- if and .Values.metrics.enabled ((index .Values.processors "grafanaCloudMetrics").enabled | default .Values.connectors.grafanaCloudMetrics.enabled) }}
     traces: [{name: default, component: processor.transform}, {name: default, component: connector.host_info}]
 
 - name: default

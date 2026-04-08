@@ -16,7 +16,7 @@ to deliver certain logs to a Loki instance for persistent storage.
 cluster:
   name: loki-stdout-destination-test
 
-destinationsMap:
+destinations:
   loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
@@ -36,10 +36,11 @@ destinationsMap:
       }
 
 # Will automatically go to both loki and lokiStdout destinations
-podLogs:
+podLogsViaLoki:
   enabled: true
 
-alloy-logs:
-  enabled: true
+collectors:
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 ```
 <!-- textlint-enable terminology -->

@@ -15,14 +15,15 @@ cluster:
   name: mimir-integration-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/api/push
 
 integrations:
+  collector: alloy-metrics
   mimir:
     instances:
       - name: mimir
@@ -31,13 +32,14 @@ integrations:
         logs:
           enabled: true
 
-podLogs:
+podLogsViaLoki:
   enabled: true
+  collector: alloy-logs
 
-alloy-metrics:
-  enabled: true
-
-alloy-logs:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 ```
 <!-- textlint-enable terminology -->

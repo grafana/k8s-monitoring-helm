@@ -3,14 +3,14 @@ cluster:
   name: split-destinations-cluster
 
 destinations:
-  - name: allMetrics
+  allMetrics:
     type: prometheus
     url: http://all-metrics-prometheus-server.all-dbs.svc:9090/api/v1/write
     auth:
       type: basic
       username: promuser
       password: prometheuspassword
-  - name: productionMetrics
+  productionMetrics:
     type: prometheus
     url: http://prod-metrics-prometheus-server.prod-dbs.svc:9090/api/v1/write
     auth:
@@ -24,7 +24,7 @@ destinations:
         action = "keep"
       }
 
-  - name: allLogs
+  allLogs:
     type: loki
     url: http://all-logs-loki.all-dbs.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -32,7 +32,7 @@ destinations:
       type: basic
       username: loki
       password: lokipassword
-  - name: productionLogs
+  productionLogs:
     type: loki
     url: http://prod-logs-loki.prod-dbs.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -46,7 +46,7 @@ destinations:
         action   = "drop"
       }
 
-  - name: allTraces
+  allTraces:
     type: otlp
     url: all-traces-tempo.all-dbs.svc:4317
     tls:
@@ -56,7 +56,7 @@ destinations:
     logs: {enabled: false}
     traces: {enabled: true}
 
-  - name: productionTraces
+  productionTraces:
     type: otlp
     url: prod-traces-tempo.prod-dbs.svc:4317
     tls:
@@ -74,32 +74,54 @@ destinations:
 
 autoInstrumentation:
   enabled: true
+  collector: alloy-metrics
+  beyla:
+    config:
+      data:
+        discovery:
+          instrument:
+            - k8s_namespace: prod-dbs
+            - k8s_namespace: all-dbs
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       grpc:
         enabled: true
 
-
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
-podLogs:
+hostMetrics:
   enabled: true
+  collector: alloy-metrics
+  linuxHosts:
+    enabled: true
 
-alloy-metrics:
+podLogsViaLoki:
   enabled: true
+  collector: alloy-logs
 
-alloy-logs:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
-alloy-receiver:
-  enabled: true
-  alloy:
-    extraPorts:
-      - name: otlp-grpc
-        port: 4317
-        targetPort: 4317
-        protocol: TCP
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+
+  alloy-receiver:
+    alloy:
+      extraPorts:
+        - name: otlp-grpc
+          port: 4317
+          targetPort: 4317
+          protocol: TCP
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true

@@ -155,6 +155,39 @@ application_observability "feature" {
 
 
 
+// Destination: loki (loki)
+otelcol.exporter.loki "loki" {
+  forward_to = [loki.write.loki.receiver]
+}
+
+loki.write "loki" {
+  endpoint {
+    url = "http://loki.loki.svc:3100/loki/api/v1/push"
+    retry_on_http_429 = true
+    tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+      password = remote.kubernetes.secret.loki.data["password"]
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+  external_labels = {
+    "cluster" = "include-by-namespace-test",
+    "k8s_cluster_name" = "include-by-namespace-test",
+  }
+}
+
+remote.kubernetes.secret "loki" {
+  name      = "loki-k8smon-k8s-monitoring"
+  namespace = "default"
+}
+
+
 // Destination: prometheus (prometheus)
 otelcol.exporter.prometheus "prometheus" {
   add_metric_suffixes = true
@@ -164,7 +197,7 @@ otelcol.exporter.prometheus "prometheus" {
 
 prometheus.remote_write "prometheus" {
   endpoint {
-    url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+    url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
     headers = {
     }
     tls_config {
@@ -187,13 +220,13 @@ prometheus.remote_write "prometheus" {
     write_relabel_config {
       source_labels = ["cluster"]
       regex = ""
-      replacement = "include-by-namespace-cluster"
+      replacement = "include-by-namespace-test"
       target_label = "cluster"
     }
     write_relabel_config {
       source_labels = ["k8s_cluster_name"]
       regex = ""
-      replacement = "include-by-namespace-cluster"
+      replacement = "include-by-namespace-test"
       target_label = "k8s_cluster_name"
     }
   }
@@ -204,29 +237,8 @@ prometheus.remote_write "prometheus" {
     max_keepalive_time = "8h"
   }
 }
-// Destination: loki (loki)
-otelcol.exporter.loki "loki" {
-  forward_to = [loki.write.loki.receiver]
-}
 
-loki.write "loki" {
-  endpoint {
-    url = "http://loki.loki.svc:3100/api/push"
-    retry_on_http_429 = true
-    tls_config {
-      insecure_skip_verify = false
-    }
-    min_backoff_period = "500ms"
-    max_backoff_period = "5m"
-    max_backoff_retries = "10"
-  }
-  external_labels = {
-    "cluster" = "include-by-namespace-cluster",
-    "k8s_cluster_name" = "include-by-namespace-cluster",
-  }
-}
 // Destination: tempo (otlp)
-
 otelcol.processor.attributes "tempo" {
   output {
     traces = [otelcol.processor.transform.tempo.input]
@@ -239,8 +251,8 @@ otelcol.processor.transform "tempo" {
   trace_statements {
     context = "resource"
     statements = [
-      `set(attributes["cluster"], "include-by-namespace-cluster")`,
-      `set(attributes["k8s.cluster.name"], "include-by-namespace-cluster")`,
+      `set(attributes["cluster"], "include-by-namespace-test")`,
+      `set(attributes["k8s.cluster.name"], "include-by-namespace-test")`,
       `delete_key(attributes, "process.pid")`,
       `delete_key(attributes, "process.parent_pid")`,
       `delete_key(attributes, "process.executable.path")`,

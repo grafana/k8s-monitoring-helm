@@ -1,0 +1,70 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Feature - Pod Logs via OpenTelemetry - Default Values
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should render the default configuration
+    set:
+      testing: {enabled: true}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: can utilize the otel annotations flag
+    set:
+      testing: {enabled: true}
+      otelAnnotations: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should allow setting log attributes
+    set:
+      testing: {enabled: true}
+      logAttributes:
+        caller: caller
+        component: component
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should allow setting resource attributes
+    set:
+      testing: {enabled: true}
+      resourceAttributes:
+        region: central
+      resourceAttributesFrom:
+        color: sys.env("COLOR")
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should allow using label selectors
+    set:
+      testing: {enabled: true}
+      labelSelectors:
+        app: myapp
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should allow using label selectors with multiple values
+    set:
+      testing: {enabled: true}
+      labelSelectors:
+        color: [blue, green]
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

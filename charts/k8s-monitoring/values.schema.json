@@ -220,12 +220,25 @@
                 }
             }
         },
-        "destinations": {
-            "$ref": "#/definitions/destination-list"
+        "collectors": {
+            "type": "object"
         },
-        "destinationsMap": {
+        "costMetrics": {
             "type": "object",
-            "$ef": "#/definitions/destination-map"
+            "properties": {
+                "collector": {
+                    "type": "string"
+                },
+                "destinations": {
+                    "type": "array"
+                },
+                "enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "destinations": {
+            "$ref": "#/definitions/destination-map"
         },
         "extraObjects": {
             "type": "array"
@@ -266,6 +279,20 @@
                 }
             }
         },
+        "hostMetrics": {
+            "type": "object",
+            "properties": {
+                "collector": {
+                    "type": "string"
+                },
+                "destinations": {
+                    "type": "array"
+                },
+                "enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
         "integrations": {
             "type": "object",
             "properties": {
@@ -299,24 +326,6 @@
                 }
             }
         },
-        "podLogs": {
-            "type": "object",
-            "properties": {
-                "collector": {
-                    "type": "string"
-                },
-                "destinations": {
-                    "type": "array",
-                    "uniqueItems": true,
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "enabled": {
-                    "type": "boolean"
-                }
-            }
-        },
         "podLogsObjects": {
             "type": "object",
             "properties": {
@@ -332,6 +341,34 @@
             }
         },
         "podLogsViaKubernetesApi": {
+            "type": "object",
+            "properties": {
+                "collector": {
+                    "type": "string"
+                },
+                "destinations": {
+                    "type": "array"
+                },
+                "enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "podLogsViaLoki": {
+            "type": "object",
+            "properties": {
+                "collector": {
+                    "type": "string"
+                },
+                "destinations": {
+                    "type": "array"
+                },
+                "enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "podLogsViaOpenTelemetry": {
             "type": "object",
             "properties": {
                 "collector": {
@@ -410,6 +447,61 @@
                 },
                 "scrapeInterval": {
                     "type": "string"
+                }
+            }
+        },
+        "telemetryServices": {
+            "type": "object",
+            "properties": {
+                "kepler": {
+                    "type": "object",
+                    "properties": {
+                        "deploy": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "kube-state-metrics": {
+                    "type": "object",
+                    "properties": {
+                        "deploy": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "node-exporter": {
+                    "type": "object",
+                    "properties": {
+                        "deploy": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "opencost": {
+                    "type": "object",
+                    "properties": {
+                        "deploy": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "windows-exporter": {
+                    "type": "object",
+                    "properties": {
+                        "deploy": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "podLogs": {
+            "properties": {
+                "destinations": {
+                    "uniqueItems": true,
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -514,9 +606,6 @@
                         }
                     }
                 },
-                "enabled": {
-                    "type": "boolean"
-                },
                 "extraConfig": {
                     "type": "string"
                 },
@@ -548,6 +637,9 @@
                             "type": "string"
                         }
                     }
+                },
+                "presets": {
+                    "type": "array"
                 },
                 "remoteConfig": {
                     "type": "object",
@@ -799,6 +891,50 @@
                                 },
                                 "scopes": {
                                     "type": "array"
+                                },
+                                "tls": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ca": {
+                                            "type": "string"
+                                        },
+                                        "caFile": {
+                                            "type": "string"
+                                        },
+                                        "caFrom": {
+                                            "type": "string"
+                                        },
+                                        "caKey": {
+                                            "type": "string"
+                                        },
+                                        "cert": {
+                                            "type": "string"
+                                        },
+                                        "certFile": {
+                                            "type": "string"
+                                        },
+                                        "certFrom": {
+                                            "type": "string"
+                                        },
+                                        "certKey": {
+                                            "type": "string"
+                                        },
+                                        "insecureSkipVerify": {
+                                            "type": "boolean"
+                                        },
+                                        "key": {
+                                            "type": "string"
+                                        },
+                                        "keyFile": {
+                                            "type": "string"
+                                        },
+                                        "keyFrom": {
+                                            "type": "string"
+                                        },
+                                        "keyKey": {
+                                            "type": "string"
+                                        }
+                                    }
                                 },
                                 "tokenURL": {
                                     "type": "string"
@@ -1056,6 +1192,50 @@
                                 },
                                 "scopes": {
                                     "type": "array"
+                                },
+                                "tls": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ca": {
+                                            "type": "string"
+                                        },
+                                        "caFile": {
+                                            "type": "string"
+                                        },
+                                        "caFrom": {
+                                            "type": "string"
+                                        },
+                                        "caKey": {
+                                            "type": "string"
+                                        },
+                                        "cert": {
+                                            "type": "string"
+                                        },
+                                        "certFile": {
+                                            "type": "string"
+                                        },
+                                        "certFrom": {
+                                            "type": "string"
+                                        },
+                                        "certKey": {
+                                            "type": "string"
+                                        },
+                                        "insecureSkipVerify": {
+                                            "type": "boolean"
+                                        },
+                                        "key": {
+                                            "type": "string"
+                                        },
+                                        "keyFile": {
+                                            "type": "string"
+                                        },
+                                        "keyFrom": {
+                                            "type": "string"
+                                        },
+                                        "keyKey": {
+                                            "type": "string"
+                                        }
+                                    }
                                 },
                                 "tokenURL": {
                                     "type": "string"
@@ -1778,6 +1958,50 @@
                                 "scopes": {
                                     "type": "array"
                                 },
+                                "tls": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ca": {
+                                            "type": "string"
+                                        },
+                                        "caFile": {
+                                            "type": "string"
+                                        },
+                                        "caFrom": {
+                                            "type": "string"
+                                        },
+                                        "caKey": {
+                                            "type": "string"
+                                        },
+                                        "cert": {
+                                            "type": "string"
+                                        },
+                                        "certFile": {
+                                            "type": "string"
+                                        },
+                                        "certFrom": {
+                                            "type": "string"
+                                        },
+                                        "certKey": {
+                                            "type": "string"
+                                        },
+                                        "insecureSkipVerify": {
+                                            "type": "boolean"
+                                        },
+                                        "key": {
+                                            "type": "string"
+                                        },
+                                        "keyFile": {
+                                            "type": "string"
+                                        },
+                                        "keyFrom": {
+                                            "type": "string"
+                                        },
+                                        "keyKey": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
                                 "tokenURL": {
                                     "type": "string"
                                 }
@@ -2144,6 +2368,50 @@
                                 },
                                 "scopes": {
                                     "type": "array"
+                                },
+                                "tls": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ca": {
+                                            "type": "string"
+                                        },
+                                        "caFile": {
+                                            "type": "string"
+                                        },
+                                        "caFrom": {
+                                            "type": "string"
+                                        },
+                                        "caKey": {
+                                            "type": "string"
+                                        },
+                                        "cert": {
+                                            "type": "string"
+                                        },
+                                        "certFile": {
+                                            "type": "string"
+                                        },
+                                        "certFrom": {
+                                            "type": "string"
+                                        },
+                                        "certKey": {
+                                            "type": "string"
+                                        },
+                                        "insecureSkipVerify": {
+                                            "type": "boolean"
+                                        },
+                                        "key": {
+                                            "type": "string"
+                                        },
+                                        "keyFile": {
+                                            "type": "string"
+                                        },
+                                        "keyFrom": {
+                                            "type": "string"
+                                        },
+                                        "keyKey": {
+                                            "type": "string"
+                                        }
+                                    }
                                 },
                                 "tokenURL": {
                                     "type": "string"

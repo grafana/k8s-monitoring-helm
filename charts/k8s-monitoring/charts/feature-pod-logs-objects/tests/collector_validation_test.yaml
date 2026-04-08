@@ -1,12 +1,12 @@
----
-suite: Test - PodLogs Objects - Collector Validation
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Feature - PodLogs Objects - Collector Validation
 templates:
-  - test/collector.yaml
+  - test/configmap.yaml
 tests:
   - it: should fail when DaemonSet is not in clustering mode
     set:
-      testing: true
-      test:
+      testing:
+        enabled: true
         Collector:
           alloy:
             clustering:
@@ -25,8 +25,8 @@ tests:
 
   - it: should fail when multiple replicas exist without clustering
     set:
-      testing: true
-      test:
+      testing:
+        enabled: true
         Collector:
           alloy:
             clustering:
@@ -46,10 +46,10 @@ tests:
 
   - it: should fail when secretFilter is enabled without experimental stability level
     set:
-      testing: true
       secretFilter:
         enabled: true
-      test:
+      testing:
+        enabled: true
         Collector:
           alloy:
             clustering:
@@ -68,9 +68,9 @@ tests:
 
   - it: should fail when nodeFilter is enabled on non-DaemonSet deployments
     set:
-      testing: true
       nodeFilter: true
-      test:
+      testing:
+        enabled: true
         Collector:
           alloy:
             clustering:

@@ -41,6 +41,11 @@ should be able to filter by label and annotation:
             regex = ".*/java$"
           }
           rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_java_enabled"]
+            regex         = "true"
+            action        = "keep"
+          }
+          rule {
             source_labels = ["__meta_kubernetes_namespace"]
             target_label = "namespace"
           }
@@ -124,6 +129,7 @@ should be able to filter by label and annotation:
             cpu = true
             sample_rate = 100
             lock = "10ms"
+            event = "itimer"
           }
           forward_to = argument.profiles_destinations.value
         }
@@ -170,6 +176,11 @@ should be able to target all pods, without requiring the annotation:
             regex = ".*/java$"
           }
           rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_java_enabled"]
+            regex         = "false"
+            action        = "drop"
+          }
+          rule {
             source_labels = ["__meta_kubernetes_namespace"]
             target_label = "namespace"
           }
@@ -248,6 +259,7 @@ should be able to target all pods, without requiring the annotation:
             cpu = true
             sample_rate = 100
             lock = "10ms"
+            event = "itimer"
           }
           forward_to = argument.profiles_destinations.value
         }
@@ -294,6 +306,11 @@ should build the Java profiling configuration:
             regex = ".*/java$"
           }
           rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_java_enabled"]
+            regex         = "true"
+            action        = "keep"
+          }
+          rule {
             source_labels = ["__meta_kubernetes_namespace"]
             target_label = "namespace"
           }
@@ -372,6 +389,7 @@ should build the Java profiling configuration:
             cpu = true
             sample_rate = 100
             lock = "10ms"
+            event = "itimer"
           }
           forward_to = argument.profiles_destinations.value
         }

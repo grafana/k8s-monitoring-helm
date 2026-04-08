@@ -5,10 +5,78 @@
 
 # k8s-monitoring
 
-![Version: 3.8.1](https://img.shields.io/badge/Version-3.8.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 3.8.1](https://img.shields.io/badge/AppVersion-3.8.1-informational?style=flat-square)
+![Version: 4.0.1](https://img.shields.io/badge/Version-4.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.0.1](https://img.shields.io/badge/AppVersion-4.0.1-informational?style=flat-square)
 Capture all telemetry data from your Kubernetes cluster.
 
 ## Breaking change announcements
+
+### Version 4.0
+
+v4.0 introduces several significant changes to the chart configuration values. Refer to the migration
+[documentation](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/helm-chart-config/helm-chart/migrate-helm-chart/)
+for strategies to migrate from v3. You can also use the
+[migration utility](https://github.com/grafana/k8s-monitoring-helm-migrator) to automatically convert your v3 values
+file to v4 format.
+
+#### Destinations converted to map
+
+Destinations are now defined as a map instead of a list. Each destination is given a name as its key.
+
+Before (v3):
+
+```yaml
+destinations:
+  - type: prometheus
+    url: https://prometheus.example.com/api/prom/push
+```
+
+After (v4):
+
+```yaml
+destinations:
+  myPrometheus:
+    type: prometheus
+    url: https://prometheus.example.com/api/prom/push
+```
+
+#### Collectors converted to map
+
+Named Alloy instances (e.g. `alloy-metrics`, `alloy-logs`) have been replaced by a `collectors` map. You can now
+define collectors with any name.
+
+Before (v3):
+
+```yaml
+alloy-metrics:
+  enabled: true
+alloy-singleton:
+  enabled: true
+```
+
+After (v4):
+
+```yaml
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-singleton: {}
+```
+
+#### Prometheus Operator Object CRDs removed
+
+Prometheus Operator Object CRDs (ServiceMonitor, PodMonitor, Probe) are no longer bundled with this chart. If you use
+the `prometheusOperatorObjects` feature, you must install the CRDs separately before deploying the chart.
+
+#### Pod logs features rebuilt
+
+The pod logs features have been rebuilt. The `labelsToKeep` option has been removed, and the features have been split
+into `podLogsViaLoki` and `podLogsViaOpenTelemetry` to better match destination types.
+
+#### Telemetry services extracted
+
+Supplemental telemetry services (kube-state-metrics, Node Exporter, OpenCost, Kepler, Windows Exporter) have been
+extracted from feature charts into their own `telemetryServices` subchart. These are now configured under the
+`telemetryServices` section.
 
 ### Version 3.4
 
@@ -57,11 +125,18 @@ v2 introduces some significant changes to the chart configuration values. Refer 
 
 ## Usage
 
-### Setup Grafana chart repository
+### Install from the Helm repository
 
 ```shell
 helm repo add grafana https://grafana.github.io/helm-charts
 helm repo update
+helm install k8s-monitoring grafana/k8s-monitoring --values values.yaml
+```
+
+### Install from the OCI registry
+
+```shell
+helm install k8s-monitoring oci://ghcr.io/grafana/helm-charts/k8s-monitoring --values values.yaml
 ```
 
 ### Build your values
@@ -72,7 +147,10 @@ There are some required values that will need to be used with this chart. The ba
 cluster: # Cluster configuration, including the cluster name
   name: my-cluster
 
-destinations: [...] # List of destinations where telemetry data will be sent
+destinations: # Map of destinations where telemetry data will be sent
+  myPrometheus:
+    type: prometheus
+    url: https://prometheus.example.com/api/prom/push
 
 # Features to enable, which determines what data to collect
 clusterMetrics:
@@ -80,13 +158,12 @@ clusterMetrics:
 clusterEvents:
   enabled: true
 # etc...
-...
 
 # Telemetry collector definitions
-alloy-metrics:
-  enabled: true
-alloy-singleton:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-singleton: {}
 ```
 
 Here is more detail about the different sections:
@@ -105,7 +182,7 @@ cluster:
 ([Documentation](./docs/destinations/README.md))
 
 This section defines the destinations for your telemetry data. You can configure multiple destinations for logs,
-metrics, and traces. Here are the supported destination types:
+metrics, traces, and profiles. Here are the supported destination types:
 
 | Type         | Protocol         | Telemetry Data        | Docs                                      |
 |--------------|------------------|-----------------------|-------------------------------------------|
@@ -118,30 +195,6 @@ Here is an example of a destinations section:
 
 ```yaml
 destinations:
-  - name: hostedMetrics
-    type: prometheus
-    url: https://prometheus.example.com/api/prom/push
-    auth:
-      type: basic
-      username: "my-username"
-      password: "my-password"
-  - name: localPrometheus
-    type: prometheus
-    url: http://prometheus.monitoring.svc.cluster.local:9090
-  - name: hostedLogs
-    type: loki
-    url: https://loki.example.com/loki/api/v1/push
-    auth:
-      type: basic
-      username: "my-username"
-      password: "my-password"
-      tenantIdFrom: env("LOKI_TENANT_ID")
-```
-
-Alternatively, you may also define a map of destinations. The key for each destination in the map will be used as the name.
-
-```yaml
-destinationsMap:
   hostedMetrics:
     type: prometheus
     url: https://prometheus.example.com/api/prom/push
@@ -167,24 +220,19 @@ destinationsMap:
 ([Documentation](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/helm-chart-config/helm-chart/collector-reference/))
 
 Collectors are workloads that are dedicated to gathering metrics, logs, traces, and profiles from the cluster and
-from workloads on the cluster. There are multiple collector instances to optimize around the collection requirements.
+from workloads on the cluster. Collectors are defined as a map under the `collectors` key, where each key is the name
+of the collector.
 
-The list of collectors are:
-
-*   **alloy-metrics** is a StatefulSet that scrapes metrics from sources like cAdvisor, Kubelet, and kube-state-metrics.
-*   **alloy-logs** is the logs collector. It is deployed as a DaemonSet and gathers Pod and Node logs.
-*   **alloy-receiver** is a DaemonSet to collect telemetry data sent via HTTP, gRPC, Zipkin, etc...
-*   **alloy-singleton** is a 1-replica Deployment to collect cluster events.
-*   **alloy-profiles** is a DaemonSet used to instrument and collect profiling data.
-
-To enable a collector, add a new section to your values file. Example:
+To define collectors, add entries to the `collectors` map in your values file. Example:
 
 ```YAML
-alloy-{collector_name}:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-singleton: {}
 ```
 
-**Specific features require specific collector configuration**. For example, the applicationObservability feature requires the alloy-receiver, with specific ports open for select protocols. Check [individual feature documentation](./docs/Features.md) to find out about collector requirements.
+**Specific features require specific collector configuration**. For example, the applicationObservability feature requires a collector with receiver ports open for select protocols. Check [individual feature documentation](./docs/Features.md) to find out about collector requirements.
 
 #### Features
 
@@ -201,7 +249,7 @@ clusterMetrics:
 clusterEvents:
   enabled: true
 
-podLogs:
+podLogsViaLoki:
   enabled: true
 ```
 
@@ -247,37 +295,30 @@ details:
 |  | autoInstrumentation(feature-auto-instrumentation) | 1.0.0 |
 |  | clusterEvents(feature-cluster-events) | 1.0.0 |
 |  | clusterMetrics(feature-cluster-metrics) | 1.0.0 |
+|  | costMetrics(feature-cost-metrics) | 1.0.0 |
+|  | hostMetrics(feature-host-metrics) | 1.0.0 |
 |  | integrations(feature-integrations) | 1.0.0 |
 |  | nodeLogs(feature-node-logs) | 1.0.0 |
-|  | podLogs(feature-pod-logs) | 1.0.0 |
 |  | podLogsObjects(feature-pod-logs-objects) | 1.0.0 |
 |  | podLogsViaKubernetesApi(feature-pod-logs-via-kubernetes-api) | 1.0.0 |
+|  | podLogsViaLoki(feature-pod-logs-via-loki) | 1.0.0 |
+|  | podLogsViaOpenTelemetry(feature-pod-logs-via-opentelemetry) | 1.0.0 |
 |  | profilesReceiver(feature-profiles-receiver) | 1.0.0 |
 |  | profiling(feature-profiling) | 1.0.0 |
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
-| https://grafana.github.io/helm-charts | alloy-operator | 0.4.2 |
+|  | telemetryServices(telemetry-services) | 1.0.0 |
+| https://grafana.github.io/helm-charts | alloy-operator | 0.5.3 |
 <!-- markdownlint-enable no-bare-urls -->
 
+<!--alex disable host-hostess-->
 ## Values
-
-### Collectors - Alloy Logs
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| alloy-logs.enabled | bool | `false` | Deploy the Alloy instance for collecting log data. |
-
-### Collectors - Alloy Metrics
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| alloy-metrics.enabled | bool | `false` | Deploy the Alloy instance for collecting metrics. |
 
 ### Alloy Operator
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | alloy-operator.deploy | bool | `true` | Deploy the Alloy Operator. |
-| alloy-operator.waitForAlloyRemoval.enabled | bool | `true` | Utilize a Helm Hook to wait for all Alloy instances to be removed before uninstalling the Alloy Operator. This ensures that all Alloy instances are properly cleaned up before the operator is removed. |
+| alloy-operator.waitForAlloyRemoval.enabled | bool | `true` | Run Helm hooks to wait for all Alloy instances to be removed before uninstalling the Alloy Operator. This ensures that all Alloy instances are properly cleaned up before the operator is removed. |
 | alloy-operator.waitForAlloyRemoval.image | object | `{"digest":"","pullPolicy":"IfNotPresent","pullSecrets":[],"registry":"ghcr.io","repository":"grafana/helm-chart-toolbox-kubectl","tag":"0.1.2"}` | The image to use for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
 | alloy-operator.waitForAlloyRemoval.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node selector to use for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
 | alloy-operator.waitForAlloyRemoval.podAnnotations | object | `{}` | Annotations to apply to the Pod for the Helm Hook to wait for all Alloy instances to be removed before uninstalling the Alloy Operator |
@@ -285,28 +326,6 @@ details:
 | alloy-operator.waitForAlloyRemoval.resources | object | `{}` | Set the resource field for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
 | alloy-operator.waitForAlloyRemoval.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":4242,"seccompProfile":{"type":"RuntimeDefault"}}` | Default security context to apply to the container. This can also be set to `null` to remove the security context entirely. Also, `runAsUser` can be set to `null` to remove it. |
 | alloy-operator.waitForAlloyRemoval.tolerations | list | `[]` | Tolerations to apply to the Helm Hook that ensures that Alloy instances are removed during uninstall. |
-
-### Collectors - Alloy Profiles
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| alloy-profiles.enabled | bool | `false` | Deploy the Alloy instance for gathering profiles. |
-
-### Collectors - Alloy Receiver
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| alloy-receiver.alloy.extraPorts | list | `[]` | The ports to expose for the Alloy receiver. |
-| alloy-receiver.enabled | bool | `false` | Deploy the Alloy instance for opening receivers to collect application data. |
-| alloy-receiver.extraService.enabled | bool | `false` | Create an extra service for the Alloy receiver. This service will mirror the alloy-receiver service, but its name can be customized to match existing application settings. |
-| alloy-receiver.extraService.fullname | string | `""` | If set, the full name of the extra service to create. This will result in the format `<fullname>`. |
-| alloy-receiver.extraService.name | string | `"alloy"` | The name of the extra service to create. This will result in the format `<release-name>-<name>`. |
-
-### Collectors - Alloy Singleton
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| alloy-singleton.enabled | bool | `false` | Deploy the Alloy instance for data sources required to be deployed on a single replica. |
 
 ### Features - Annotation Autodiscovery
 
@@ -355,18 +374,19 @@ details:
 | clusterMetrics.destinations | list | `[]` | The destinations where cluster metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | clusterMetrics.enabled | bool | `false` | Enable gathering Kubernetes Cluster metrics. |
 
-### Collectors - Common
+### Features - Cost Metrics
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| collectorCommon.alloy | object | `{}` | Settings to apply to all Alloy instances created by this Helm chart. This includes Alloy instances created by enabling Tail Sampling or Service Graph Metrics. |
+| costMetrics | object | Disabled | Cost Metrics captures cost metrics from the Kubernetes cluster and its workloads. Requires a destination that supports metrics. To see the valid options, please see the [Cost Metrics feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cost-metrics). |
+| costMetrics.destinations | list | `[]` | The destinations where cluster metrics will be sent. If empty, all metrics-capable destinations will be used. |
+| costMetrics.enabled | bool | `false` | Enable gathering Kubernetes Cost metrics. |
 
 ### Destinations
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| destinations | list | `[]` | The list of destinations where telemetry data will be sent. See the [destinations documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md) for more information. |
-| destinationsMap | object | `{}` | A map of destinations where telemetry data will be sent. Keys will be used as the destination name. See the [destinations documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md) for more information. |
+| destinations | object | `{}` | The destinations where telemetry data will be sent. See the [destinations documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md) for more information. |
 
 ### Extra Objects
 
@@ -387,6 +407,14 @@ details:
 | global.scrapeProtocols | list | `["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]` | The protocols to negotiate during a Prometheus metrics scrape, in order of preference. |
 | global.scrapeTimeout | string | `"10s"` | The timeout for scraping metrics. |
 
+### Features - Host Metrics
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| hostMetrics | object | Disabled | Host metrics enables observability and monitoring for your Kubernetes Nodes. Requires a destination that supports metrics. To see the valid options, please see the [Host Metrics feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-host-metrics). |
+| hostMetrics.destinations | list | `[]` | The destinations where cluster metrics will be sent. If empty, all metrics-capable destinations will be used. |
+| hostMetrics.enabled | bool | `false` | Enable gathering Kubernetes Host metrics. |
+
 ### Features - Service Integrations
 
 | Key | Type | Default | Description |
@@ -401,14 +429,6 @@ details:
 | nodeLogs | object | Disabled | Node logs. Requires a destination that supports logs. To see the valid options, please see the [Node Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-node-logs). |
 | nodeLogs.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
 | nodeLogs.enabled | bool | `false` | Enable gathering Kubernetes Cluster Node logs. |
-
-### Features - Pod Logs
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| podLogs | object | Disabled | Pod logs. Requires a destination that supports logs. To see the valid options, please see the [Pod Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs). |
-| podLogs.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
-| podLogs.enabled | bool | `false` | Enable gathering Kubernetes Pod logs. |
 
 ### Features - PodLogs Objects
 
@@ -425,6 +445,22 @@ details:
 | podLogsViaKubernetesApi | object | Disabled | Pod logs via Kubernetes API. Requires a destination that supports logs. To see the valid options, please see the [Pod Logs via Kubernetes API feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs-via-kubernetes-api). |
 | podLogsViaKubernetesApi.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
 | podLogsViaKubernetesApi.enabled | bool | `false` | Enable gathering Kubernetes Pod logs. |
+
+### Features - Pod Logs via Loki
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| podLogsViaLoki | object | Disabled | Pod logs in Loki format. Requires a destination that supports logs. To see the valid options, please see the [Pod Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs). |
+| podLogsViaLoki.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
+| podLogsViaLoki.enabled | bool | `false` | Enable gathering Kubernetes Pod logs. |
+
+### Features - Pod Logs via OpenTelemetry
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| podLogsViaOpenTelemetry | object | Disabled | Pod logs in OpenTelemetry format. Requires a destination that supports logs. To see the valid options, please see the [Pod Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs). |
+| podLogsViaOpenTelemetry.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
+| podLogsViaOpenTelemetry.enabled | bool | `false` | Enable gathering Kubernetes Pod logs. |
 
 ### Features - Profiles Receiver
 
@@ -457,3 +493,21 @@ details:
 | selfReporting.destinations | list | `[]` | The destinations where self-report metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | selfReporting.enabled | bool | `true` | Enable Self-reporting. |
 | selfReporting.scrapeInterval | string | 60s | How frequently to generate self-report metrics. This does utilize the global scrapeInterval setting. |
+
+### Telemetry Services
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| telemetryServices.kepler.deploy | bool | `false` | Deploy [Kepler](https://sustainable-computing.io/) to gather energy usage metrics from the Kubernetes Cluster nodes. |
+| telemetryServices.kube-state-metrics.deploy | bool | `false` | Deploy kube-state-metrics to expose Kubernetes object metadata as Prometheus metrics. |
+| telemetryServices.node-exporter.deploy | bool | `false` | Deploy Node Exporter to gather Linux node hardware and OS metrics. |
+| telemetryServices.opencost.deploy | bool | `false` | Deploy OpenCost to calculate and expose Kubernetes cost allocation metrics. |
+| telemetryServices.windows-exporter.deploy | bool | `false` | Deploy Windows Exporter to gather Windows node hardware and OS metrics. |
+
+### Other Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| collectorCommon.alloy | object | `{}` |  |
+| collectors | object | `{}` |  |
+<!--alex enable host-hostess-->

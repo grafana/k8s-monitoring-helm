@@ -1,12 +1,12 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test PostgreSQL Integration - Metrics
+suite: Feature - Integration - PostgreSQL - Metrics
 templates:
-  - configmap.yaml
+  - test/configmap.yaml
   - postgresql-secret.yaml
 tests:
   - it: should create the PostgreSQL config
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       postgresql:
         instances:
           - name: my-database
@@ -18,7 +18,7 @@ tests:
                   password: db-password
             logs: {enabled: false}
     asserts:
-      - template: configmap.yaml
+      - template: test/configmap.yaml
         matchSnapshot:
           path: data["metrics.alloy"]
 
@@ -40,7 +40,7 @@ tests:
 
   - it: works with multiple PostgreSQL Instances
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       postgresql:
         instances:
           - name: test-db
@@ -61,7 +61,7 @@ tests:
                   password: db-password
             logs: {enabled: false}
     asserts:
-      - template: configmap.yaml
+      - template: test/configmap.yaml
         matchSnapshot:
           path: data["metrics.alloy"]
 
@@ -86,7 +86,7 @@ tests:
 
   - it: works when referencing the PostgreSQL Secret
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       postgresql:
         instances:
           - name: test-database
@@ -102,7 +102,7 @@ tests:
               namespace: postgresql
             logs: {enabled: false}
     asserts:
-      - template: configmap.yaml
+      - template: test/configmap.yaml
         matchSnapshot:
           path: data["metrics.alloy"]
 
@@ -112,7 +112,7 @@ tests:
 
   - it: allows you to set the network protocol
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       postgresql:
         instances:
           - name: test-database
@@ -125,13 +125,39 @@ tests:
                   password: db-password
             logs: {enabled: false}
     asserts:
-      - template: configmap.yaml
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
+  - it: renders stat_statements with exclude and limit options
+    set:
+      testing: {enabled: true}
+      postgresql:
+        instances:
+          - name: test-database
+            exporter:
+              dataSource:
+                host: test-database-postgresql.postgresql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+              collectors:
+                statStatements:
+                  enabled: true
+                  includeQuery: true
+                  queryLength: 200
+                  limit: 50
+                  excludeDatabases: ["template0"]
+                  excludeUsers: ["replication_user"]
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
         matchSnapshot:
           path: data["metrics.alloy"]
 
   - it: allows you to set the tls
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       postgresql:
         instances:
           - name: test-database
@@ -145,6 +171,6 @@ tests:
                   password: db-password
             logs: {enabled: false}
     asserts:
-      - template: configmap.yaml
+      - template: test/configmap.yaml
         matchSnapshot:
           path: data["metrics.alloy"]

@@ -16,7 +16,7 @@ cluster:
   name: dcgm-exporter-integration-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
@@ -27,7 +27,8 @@ integrations:
         labelSelectors:
           app: nvidia-dcgm-exporter
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
 ```
 <!-- textlint-enable terminology -->

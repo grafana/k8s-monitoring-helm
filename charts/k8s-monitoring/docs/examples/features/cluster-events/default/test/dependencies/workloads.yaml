@@ -1,0 +1,68 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: event-sources
+---
+# A pod that will fail to pull its image, generating Warning events with reason "Failed" and "ErrImagePull"
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bad-image
+  namespace: event-sources
+  labels:
+    app: bad-image
+spec:
+  containers:
+    - name: bad
+      image: does-not-exist:latest
+      imagePullPolicy: Always
+---
+# A normal deployment that will generate Normal events (Scheduled, Pulling, Pulled, Created, Started)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: healthy-app
+  namespace: event-sources
+  labels:
+    app: healthy-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: healthy-app
+  template:
+    metadata:
+      labels:
+        app: healthy-app
+    spec:
+      containers:
+        - name: busybox
+          image: busybox
+          args:
+            - /bin/sh
+            - -c
+            - "while true; do echo 'running'; sleep 60; done"
+---
+# A CronJob that runs frequently, generating repeated Scheduled/Created events
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: frequent-job
+  namespace: event-sources
+spec:
+  schedule: "* * * * *"
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: job
+              image: busybox
+              args:
+                - /bin/sh
+                - -c
+                - "echo job-complete"
+          restartPolicy: Never

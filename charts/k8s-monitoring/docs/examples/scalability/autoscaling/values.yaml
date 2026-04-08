@@ -3,24 +3,42 @@ cluster:
   name: autoscaling-example-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
-alloy-metrics:
+hostMetrics:
   enabled: true
-  alloy:
-    resources:
-      requests:
-        cpu: "1m"
-        memory: "500Mi"
-  controller:
-    autoscaling:
-      enabled: true
-      minReplicas: 2
-      maxReplicas: 10
-      targetCPUUtilizationPercentage: 0
-      targetMemoryUtilizationPercentage: 80
+  collector: alloy-metrics
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    alloy:
+      resources:
+        requests:
+          cpu: "1m"
+          memory: "500Mi"
+    controller:
+      autoscaling:
+        enabled: true
+        minReplicas: 2
+        maxReplicas: 10
+        targetCPUUtilizationPercentage: 0
+        targetMemoryUtilizationPercentage: 80
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true

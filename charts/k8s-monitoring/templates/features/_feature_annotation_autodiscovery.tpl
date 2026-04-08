@@ -1,11 +1,5 @@
 {{- define "features.annotationAutodiscovery.enabled" }}{{ .Values.annotationAutodiscovery.enabled }}{{- end }}
 
-{{- define "features.annotationAutodiscovery.collectors" }}
-{{- if .Values.annotationAutodiscovery.enabled -}}
-- {{ .Values.annotationAutodiscovery.collector }}
-{{- end }}
-{{- end }}
-
 {{- define "features.annotationAutodiscovery.include" }}
 {{- if .Values.annotationAutodiscovery.enabled -}}
 {{- $destinations := include "features.annotationAutodiscovery.destinations" . | fromYamlArray }}
@@ -13,7 +7,7 @@
 {{- include "feature.annotationAutodiscovery.module" .Subcharts.annotationAutodiscovery }}
 annotation_autodiscovery "feature" {
   metrics_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
+    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
   ]
 }
 {{- end -}}
@@ -41,12 +35,17 @@ annotation_autodiscovery "feature" {
 
 {{- define "features.annotationAutodiscovery.validate" }}
 {{- if .Values.annotationAutodiscovery.enabled -}}
+  {{- $featureKey := "annotationAutodiscovery" }}
   {{- $featureName := "Annotation Autodiscovery" }}
+
   {{- $destinations := include "features.annotationAutodiscovery.destinations" . | fromYamlArray }}
-  {{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "feature" $featureName) }}
-  {{- range $collector := include "features.annotationAutodiscovery.collectors" . | fromYamlArray }}
-    {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
-  {{- end -}}
+  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "featureName" $featureName) }}
+
+  {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
+  {{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}
+
   {{- include "feature.annotationAutodiscovery.validate" (dict "Values" $.Values.annotationAutodiscovery) }}
 {{- end -}}
 {{- end -}}
+
+{{- define "features.annotationAutodiscovery.chooseCollector" -}}{{- end -}}

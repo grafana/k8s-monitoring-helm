@@ -113,11 +113,20 @@ prometheus.exporter.postgres {{ include "helper.alloy_name" .name | quote }} {
   }
   {{- end }}
   {{- if .exporter.collectors.statStatements.enabled }}
-    {{- if or .exporter.collectors.statStatements.includeQuery .exporter.collectors.statStatements.queryLength }}
+    {{- if or .exporter.collectors.statStatements.includeQuery .exporter.collectors.statStatements.queryLength .exporter.collectors.statStatements.limit .exporter.collectors.statStatements.excludeDatabases .exporter.collectors.statStatements.excludeUsers }}
   stat_statements {
     include_query = {{ .exporter.collectors.statStatements.includeQuery }}
     {{- if .exporter.collectors.statStatements.queryLength }}
     query_length = {{ .exporter.collectors.statStatements.queryLength }}
+    {{- end }}
+    {{- if .exporter.collectors.statStatements.limit }}
+    limit = {{ .exporter.collectors.statStatements.limit }}
+    {{- end }}
+    {{- if .exporter.collectors.statStatements.excludeDatabases }}
+    exclude_databases = {{ .exporter.collectors.statStatements.excludeDatabases | toJson }}
+    {{- end }}
+    {{- if .exporter.collectors.statStatements.excludeUsers }}
+    exclude_users = {{ .exporter.collectors.statStatements.excludeUsers | toJson }}
     {{- end }}
   }
     {{- end }}
@@ -136,15 +145,32 @@ database_observability.postgres {{ include "helper.alloy_name" .name | quote }} 
   data_source_name = {{ include "integrations.postgresql.datasource" . | indent 2 | trim }}
 
   {{- with .databaseObservability.cloudProvider }}
-  {{- with .aws }}
-  {{- if .arn }}
+  {{- $hasAws := and .aws .aws.arn }}
+  {{- $hasAzure := and .azure .azure.subscriptionId .azure.resourceGroup }}
+  {{- if or $hasAws $hasAzure }}
   cloud_provider {
+    {{- if $hasAws }}
     aws {
-      arn = {{ .arn | quote }}
+      arn = {{ .aws.arn | quote }}
     }
+    {{- end }}
+    {{- if $hasAzure }}
+    azure {
+      subscription_id = {{ .azure.subscriptionId | quote }}
+      resource_group = {{ .azure.resourceGroup | quote }}
+      {{- if .azure.serverName }}
+      server_name = {{ .azure.serverName | quote }}
+      {{- end }}
+    }
+    {{- end }}
   }
   {{- end }}
   {{- end }}
+  {{- if .databaseObservability.excludeDatabases }}
+  exclude_databases = {{ .databaseObservability.excludeDatabases | toJson }}
+  {{- end }}
+  {{- if .databaseObservability.excludeUsers }}
+  exclude_users = {{ .databaseObservability.excludeUsers | toJson }}
   {{- end }}
 
   {{- $enabledCollectors := list }}
@@ -174,6 +200,7 @@ database_observability.postgres {{ include "helper.alloy_name" .name | quote }} 
   query_samples {
     collect_interval = {{ .collectInterval | quote }}
     disable_query_redaction = {{ .disableQueryRedaction }}
+    exclude_current_user = {{ .excludeCurrentUser }}
   }
     {{- end }}
   {{- end }}

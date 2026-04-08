@@ -6,56 +6,68 @@ global:
   platform: openshift
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
-  - name: loki
+  loki:
     type: loki
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
   kube-state-metrics:
-    deploy: false
     namespace: openshift-monitoring
+    labelMatchers:
+      app.kubernetes.io/name: kube-state-metrics
     bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
     service:
       scheme: https
-      portName: https-main
-  node-exporter:
-    deploy: false
-    namespace: openshift-monitoring
-    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-    service:
-      scheme: https
-      portName: https
 
-  kepler:
+hostMetrics:
+  enabled: true
+  collector: alloy-metrics
+  linuxHosts:
     enabled: true
+    namespace: openshift-monitoring
+    labelMatchers:
+      app.kubernetes.io/name: prometheus-node-exporter
+    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    scheme: https
+  energyMetrics:
+    enabled: true
+
+telemetryServices:
+  kepler:
+    deploy: true
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
-podLogs:
+podLogsViaLoki:
   enabled: true
+  collector: alloy-logs
 
 integrations:
+  collector: alloy-metrics
   alloy:
     instances:
       - name: alloy
         labelSelectors:
           app.kubernetes.io/name: [alloy-metrics, alloy-singleton, alloy-logs]
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
-alloy-singleton:
-  enabled: true
+  alloy-singleton:
+    presets: [singleton]
 
-alloy-logs:
-  enabled: true
-  global:
-    podSecurityContext:
-      seLinuxOptions:
-        type: container_logreader_t
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+    global:
+      podSecurityContext:
+        seLinuxOptions:
+          type: container_logreader_t

@@ -1,0 +1,65 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Profiling - Validation
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should validate that at least one profiling type is enabled
+    set:
+      testing: {enabled: true}
+      ebpf:
+        enabled: false
+      java:
+        enabled: false
+      pprof:
+        enabled: false
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            At least one profiling type must be enabled for this feature to work.
+            Please enable one or more:
+            profiling:
+              ebpf:
+                enabled: true
+              java:
+                enabled: true
+              pprof:
+                enabled: true
+
+  - it: should pass validation when only ebpf is enabled
+    set:
+      testing: {enabled: true}
+      ebpf:
+        enabled: true
+      java:
+        enabled: false
+      pprof:
+        enabled: false
+    asserts:
+      - isKind:
+          of: ConfigMap
+
+  - it: should pass validation when only java is enabled
+    set:
+      testing: {enabled: true}
+      ebpf:
+        enabled: false
+      java:
+        enabled: true
+      pprof:
+        enabled: false
+    asserts:
+      - isKind:
+          of: ConfigMap
+
+  - it: should pass validation when only pprof is enabled
+    set:
+      testing: {enabled: true}
+      ebpf:
+        enabled: false
+      java:
+        enabled: false
+      pprof:
+        enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap

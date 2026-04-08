@@ -211,6 +211,16 @@ exporter:
       # @default -- 120
       # @section -- Exporter Collectors
       queryLength:
+      # -- Maximum number of statements to fetch.
+      # @default -- 100
+      # @section -- Exporter Collectors
+      limit:
+      # -- List of databases to exclude from stat_statements collection.
+      # @section -- Exporter Collectors
+      excludeDatabases: []
+      # -- List of users to exclude from stat_statements collection.
+      # @section -- Exporter Collectors
+      excludeUsers: []
     statUserTables:
       # -- Enable the stat_user_tables collector.
       # @section -- Exporter Collectors
@@ -242,6 +252,14 @@ databaseObservability:
   # @section -- Database Observability
   enabled: false
 
+  # -- A list of databases to exclude from monitoring.
+  # @section -- Database Observability
+  excludeDatabases: []
+
+  # -- A list of users to exclude from monitoring.
+  # @section -- Database Observability
+  excludeUsers: []
+
   # Cloud provider configuration for the database.
   # @section -- Database Observability
   cloudProvider:
@@ -250,6 +268,17 @@ databaseObservability:
       # -- ARN of the AWS RDS instance.
       # @section -- Database Observability - Cloud Provider
       arn: ""
+    # Azure configuration.
+    azure:
+      # -- The Subscription ID for your Azure account.
+      # @section -- Database Observability - Cloud Provider
+      subscriptionId: ""
+      # -- The Resource Group that holds the database resource.
+      # @section -- Database Observability - Cloud Provider
+      resourceGroup: ""
+      # -- The database server name.
+      # @section -- Database Observability - Cloud Provider
+      serverName: ""
 
   collectors:
     # Collect explain plans information.
@@ -287,6 +316,9 @@ databaseObservability:
       # -- Collect unredacted SQL query text including parameters.
       # @section -- Database Observability - Collectors
       disableQueryRedaction: false
+      # -- Do not collect query samples for the current database user.
+      # @section -- Database Observability - Collectors
+      excludeCurrentUser: true
 
     # Collect schemas and tables from information_schema.
     schemaDetails:

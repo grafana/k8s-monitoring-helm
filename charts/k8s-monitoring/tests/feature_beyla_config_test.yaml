@@ -18,9 +18,9 @@ tests:
                 cluster_name: beyla-config-cluster
                 enable: true
             discovery:
-              exclude_services:
+              exclude_instrument:
               - exe_path: .*alloy.*|.*otelcol.*|.*beyla.*
-              services:
+              instrument:
               - k8s_namespace: .
             filter:
               network:
@@ -44,7 +44,6 @@ tests:
 
   - it: does not set otel_traces_export endpoint automatically when flag is disabled
     set:
-      deployAsConfigMap: true
       cluster: {name: beyla-config-cluster}
       autoInstrumentation:
         enabled: true
@@ -56,14 +55,14 @@ tests:
           otlp:
             grpc:
               enabled: true
-      alloy-receiver:
-        enabled: true
-        alloy:
-          extraPorts:
-            - name: otlp-grpc
-              port: 4317
-              targetPort: 4317
-              protocol: TCP
+      collectors:
+        alloy-receiver:
+          alloy:
+            extraPorts:
+              - name: otlp-grpc
+                port: 4317
+                targetPort: 4317
+                protocol: TCP
     asserts:
       - isKind:
           of: ConfigMap
@@ -75,9 +74,9 @@ tests:
                 cluster_name: beyla-config-cluster
                 enable: true
             discovery:
-              exclude_services:
+              exclude_instrument:
               - exe_path: .*alloy.*|.*otelcol.*|.*beyla.*
-              services:
+              instrument:
               - k8s_namespace: .
             filter:
               network:
@@ -101,7 +100,6 @@ tests:
 
   - it: sets otel_traces_export endpoint when deliverTracesToApplicationObservability is enabled (default)
     set:
-      deployAsConfigMap: true
       cluster: {name: beyla-config-cluster}
       autoInstrumentation:
         enabled: true
@@ -111,14 +109,14 @@ tests:
           otlp:
             grpc:
               enabled: true
-      alloy-receiver:
-        enabled: true
-        alloy:
-          extraPorts:
-            - name: otlp-grpc
-              port: 4317
-              targetPort: 4317
-              protocol: TCP
+      collectors:
+        alloy-receiver:
+          alloy:
+            extraPorts:
+              - name: otlp-grpc
+                port: 4317
+                targetPort: 4317
+                protocol: TCP
     asserts:
       - isKind:
           of: ConfigMap
@@ -130,9 +128,9 @@ tests:
                 cluster_name: beyla-config-cluster
                 enable: true
             discovery:
-              exclude_services:
+              exclude_instrument:
               - exe_path: .*alloy.*|.*otelcol.*|.*beyla.*
-              services:
+              instrument:
               - k8s_namespace: .
             filter:
               network:

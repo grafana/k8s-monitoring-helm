@@ -3,14 +3,14 @@ cluster:
   name: istio-service-mesh-test
 
 destinations:
-  - name: localPrometheus
+  localPrometheus:
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
     auth:
       type: basic
       username: promuser
       password: prometheuspassword
-  - name: localLoki
+  localLoki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -18,7 +18,7 @@ destinations:
       type: basic
       username: loki
       password: lokipassword
-  - name: localTempo
+  localTempo:
     type: otlp
     url: tempo.tempo.svc:4317
     tls:
@@ -30,14 +30,26 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
+
+hostMetrics:
+  enabled: true
+  collector: alloy-metrics
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
-podLogs:
+podLogsViaLoki:
   enabled: true
+  collector: alloy-logs
 
 integrations:
+  collector: alloy-metrics
   istio:
     instances:
       - name: istio
@@ -48,6 +60,7 @@ integrations:
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       grpc:
@@ -60,24 +73,29 @@ applicationObservability:
   logs:
     enabled: false
 
-alloy-metrics:
-  enabled: true
-  alloy:
-    clustering:
-      portName: tcp
-  controller:
-    replicas: 2  # To test that clustering is working
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    alloy:
+      clustering:
+        portName: tcp
+    controller:
+      replicas: 2  # To test that clustering is working
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+  alloy-singleton:
+    presets: [singleton]
+  alloy-receiver:
+    controller:
+      # Using TPROXY preserves both the source and destination IP addresses and ports, which allows
+      # the k8sattributes processor to look up the pod by IP and enrich the rest of the attributes
+      podAnnotations:
+        sidecar.istio.io/interceptionMode: TPROXY
 
-alloy-singleton:
-  enabled: true
-
-alloy-logs:
-  enabled: true
-
-alloy-receiver:
-  enabled: true
-  controller:
-    # Using TPROXY preserves both the source and destination IP addresses and ports, which allows
-    # the k8sattributes processor to look up the pod by IP and enrich the rest of the attributes
-    podAnnotations:
-      sidecar.istio.io/interceptionMode: TPROXY
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true

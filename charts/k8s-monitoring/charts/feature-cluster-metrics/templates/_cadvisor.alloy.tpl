@@ -159,7 +159,7 @@ prometheus.relabel "cadvisor" {
 {{- if .Values.cadvisor.metricsTuning.includeNamespaces }}
   rule {
     source_labels = ["namespace"]
-    regex = {{ .Values.cadvisor.metricsTuning.includeNamespaces | join "|" | quote }}
+    regex = {{ append .Values.cadvisor.metricsTuning.includeNamespaces "" | join "|" | quote }}
     action = "keep"
   }
 {{- end }}

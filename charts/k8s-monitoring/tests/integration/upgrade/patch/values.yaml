@@ -3,7 +3,7 @@ cluster:
   name: patch-upgrade-test
 
 destinations:
-  - name: localPrometheus
+  localPrometheus:
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
     auth:
@@ -12,7 +12,7 @@ destinations:
       password: prometheuspassword
     extraLabelsFrom:
       chart_version: remote.kubernetes.configmap.version.data["version"]
-  - name: localLoki
+  localLoki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -25,48 +25,54 @@ destinations:
 
 clusterMetrics:
   enabled: true
-  kepler:
+  collector: alloy-metrics
+
+costMetrics:
+  enabled: true
+  collector: alloy-metrics
+
+hostMetrics:
+  enabled: true
+  collector: alloy-metrics
+  energyMetrics:
     enabled: true
-  opencost:
+  linuxHosts:
     enabled: true
-    metricsSource: localPrometheus
-    opencost:
-      exporter:
-        defaultClusterId: patch-upgrade-test
-      prometheus:
-        existingSecretName: localprometheus-k8smon-k8s-monitoring
-        external:
-          url: http://prometheus-server.prometheus.svc:9090
+  windowsHosts:
+    enabled: true
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
-podLogs:
+podLogsViaLoki:
   enabled: true
+  collector: alloy-logs
 
-alloy-metrics:
-  enabled: true
-  extraConfig: |-
-    remote.kubernetes.configmap "version" {
-      name = "k8smon-version"
-      namespace = "toolbox"
-    }
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    extraConfig: |-
+      remote.kubernetes.configmap "version" {
+        name = "k8smon-version"
+        namespace = "toolbox"
+      }
 
-alloy-singleton:
-  enabled: true
-  extraConfig: |-
-    remote.kubernetes.configmap "version" {
-      name = "k8smon-version"
-      namespace = "toolbox"
-    }
+  alloy-singleton:
+    presets: [singleton]
+    extraConfig: |-
+      remote.kubernetes.configmap "version" {
+        name = "k8smon-version"
+        namespace = "toolbox"
+      }
 
-alloy-logs:
-  enabled: true
-  extraConfig: |-
-    remote.kubernetes.configmap "version" {
-      name = "k8smon-version"
-      namespace = "toolbox"
-    }
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+    extraConfig: |-
+      remote.kubernetes.configmap "version" {
+        name = "k8smon-version"
+        namespace = "toolbox"
+      }
 
 extraObjects:
   - apiVersion: v1
@@ -76,3 +82,23 @@ extraObjects:
       namespace: toolbox
     data:
       version: "{{ .Chart.Version }}"
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  kepler:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
+  opencost:
+    deploy: true
+    metricsSource: localPrometheus
+    opencost:
+      exporter:
+        defaultClusterId: patch-upgrade-test
+      prometheus:
+        existingSecretName: localprometheus-k8smon-k8s-monitoring
+        external:
+          url: http://prometheus-server.prometheus.svc:9090

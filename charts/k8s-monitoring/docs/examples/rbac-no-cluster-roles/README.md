@@ -35,10 +35,10 @@ cluster:
   name: no-cluster-roles
 
 destinations:
-  - name: metric-store
+  metric-store:
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: 1
@@ -49,6 +49,7 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
   # These features require listing Nodes, which require ClusterRoles, so must be disabled.
   kubelet:
     enabled: false
@@ -59,17 +60,22 @@ clusterMetrics:
   cadvisor:
     enabled: false
 
-  kube-state-metrics:
-    namespaces: default
-    rbac:
-      useClusterRole: false
+hostMetrics:
+  enabled: true
+  collector: alloy-metrics
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
   namespaces: [default]
 
-podLogs:
+podLogsViaLoki:
   enabled: true
+  collector: alloy-logs
   namespaces: [default]
 
 collectorCommon:
@@ -77,18 +83,28 @@ collectorCommon:
     rbac:
       namespaces: [default]
 
-alloy-metrics:
-  enabled: true
-
-alloy-singleton:
-  enabled: true
-
-alloy-logs:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-singleton:
+    presets: [singleton]
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 
 alloy-operator:
   ownNamespaceOnly: true
   rbac:
     createClusterRoles: false
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+    namespaces: default
+    rbac:
+      useClusterRole: false
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

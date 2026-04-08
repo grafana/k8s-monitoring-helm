@@ -23,7 +23,7 @@ cluster:
   name: auto-instrumentation-with-rules-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
@@ -40,7 +40,8 @@ autoInstrumentation:
             - k8s_pod_labels:
                 instrument: beyla
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy:
+    presets: [clustered, statefulset]
 ```
 <!-- textlint-enable terminology -->

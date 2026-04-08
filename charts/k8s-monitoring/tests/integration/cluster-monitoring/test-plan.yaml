@@ -52,11 +52,11 @@ tests:
             # Self reporting metrics
             - query: grafana_kubernetes_monitoring_build_info{cluster="$CLUSTER"}
               type: promql
-            - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="clusterMetrics"}
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="hostMetrics"}
               type: promql
             - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="clusterEvents"}
               type: promql
-            - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="podLogs", method="volumes"}
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="podLogsViaLoki"}
               type: promql
 
             # Cluster metrics
@@ -73,6 +73,8 @@ tests:
             - query: kube_node_labels{cluster="$CLUSTER"}
               type: promql
             - query: node_exporter_build_info{cluster="$CLUSTER", job="integrations/node_exporter"}
+              type: promql
+            - query: node_exporter_build_info{cluster="$CLUSTER", job="integrations/node_exporter", os!=""}
               type: promql
             - query: kepler_container_joules_total{cluster="$CLUSTER", job="integrations/kepler"}
               type: promql

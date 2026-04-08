@@ -2674,6 +2674,9 @@ beyla:
     skipConfigMapCheck: true
     # @ignored -- This allows this chart to create the Beyla ConfigMap with required modifications
     create: false
+    # @ignored -- Optional checksum override for external ConfigMap usage.
+    # This uses tpl so parent charts can pass templated checksums.
+    checksum: '{{ include "kubernetes_monitoring.beyla.config" . | sha256sum }}'
     # -- The Configuration for Beyla
     # @section -- Deployment: Beyla
     data:

@@ -102,6 +102,22 @@ prometheus.exporter.mysql {{ include "helper.alloy_name" .name | quote }} {
     {{- end }}
     {{- if .exporter.collectors.perfSchemaEventsStatements.enabled }}
       {{- $enabledCollectors = append $enabledCollectors "perf_schema.eventsstatements" }}
+      {{- $opts := .exporter.collectors.perfSchemaEventsStatements }}
+      {{- if or $opts.limit $opts.textLimit $opts.timeLimit .databaseObservability.enabled }}
+  perf_schema.eventsstatements {
+        {{- if $opts.limit }}
+    limit = {{ $opts.limit | int }}
+        {{- end }}
+        {{- if not (kindIs "invalid" $opts.textLimit) }}
+    text_limit = {{ $opts.textLimit | int }}
+        {{- else if .databaseObservability.enabled }}
+    text_limit = 0
+        {{- end }}
+        {{- if $opts.timeLimit }}
+    time_limit = {{ $opts.timeLimit | int }}
+        {{- end }}
+  }
+      {{- end }}
     {{- end }}
   {{- end }}
   enable_collectors = {{ $enabledCollectors | toJson }}
@@ -113,16 +129,30 @@ database_observability.mysql {{ include "helper.alloy_name" .name | quote }} {
   targets = prometheus.exporter.mysql.{{ include "helper.alloy_name" .name }}.targets
   {{- include "integrations.mysql.datasource" . | indent 2 }}
   allow_update_performance_schema_settings = {{ .databaseObservability.allowUpdatePerformanceSchemaSettings }}
+  {{- if .databaseObservability.excludeSchemas }}
+  exclude_schemas = {{ .databaseObservability.excludeSchemas | toJson }}
+  {{- end }}
 
   {{- with .databaseObservability.cloudProvider }}
-  {{- with .aws }}
-  {{- if .arn }}
+  {{- $hasAws := and .aws .aws.arn }}
+  {{- $hasAzure := and .azure .azure.subscriptionId .azure.resourceGroup }}
+  {{- if or $hasAws $hasAzure }}
   cloud_provider {
+    {{- if $hasAws }}
     aws {
-      arn = {{ .arn | quote }}
+      arn = {{ .aws.arn | quote }}
     }
+    {{- end }}
+    {{- if $hasAzure }}
+    azure {
+      subscription_id = {{ .azure.subscriptionId | quote }}
+      resource_group = {{ .azure.resourceGroup | quote }}
+      {{- if .azure.serverName }}
+      server_name = {{ .azure.serverName | quote }}
+      {{- end }}
+    }
+    {{- end }}
   }
-  {{- end }}
   {{- end }}
   {{- end }}
 
@@ -132,9 +162,6 @@ database_observability.mysql {{ include "helper.alloy_name" .name | quote }} {
     {{- with .databaseObservability.collectors.explainPlans }}
   explain_plans {
     collect_interval = {{ .collectInterval | quote }}
-    {{- if .excludeSchemas }}
-    exclude_schemas = {{ .excludeSchemas | toJson }}
-    {{- end }}
     initial_lookback = {{ .initialLookback | quote }}
     per_collect_ratio = {{ .perCollectRatio | quote }}
   }
@@ -154,6 +181,9 @@ database_observability.mysql {{ include "helper.alloy_name" .name | quote }} {
     {{- with .databaseObservability.collectors.queryDetails }}
   query_details {
     collect_interval = {{ .collectInterval | quote }}
+    {{- if .statementsLimit }}
+    statements_limit = {{ .statementsLimit | int }}
+    {{- end }}
   }
     {{- end }}
   {{- end }}
@@ -183,6 +213,15 @@ database_observability.mysql {{ include "helper.alloy_name" .name | quote }} {
     {{- $enabledCollectors = append $enabledCollectors "setup_consumers" }}
     {{- with .databaseObservability.collectors.setupConsumers }}
   setup_consumers {
+    collect_interval = {{ .collectInterval | quote }}
+  }
+    {{- end }}
+  {{- end }}
+  {{- if .databaseObservability.collectors.setupActors.enabled }}
+    {{- $enabledCollectors = append $enabledCollectors "setup_actors" }}
+    {{- with .databaseObservability.collectors.setupActors }}
+  setup_actors {
+    auto_update_setup_actors = {{ .autoUpdateSetupActors }}
     collect_interval = {{ .collectInterval | quote }}
   }
     {{- end }}

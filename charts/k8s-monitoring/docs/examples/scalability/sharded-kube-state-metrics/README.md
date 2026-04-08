@@ -54,18 +54,35 @@ cluster:
   name: sharded-kube-state-metrics
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
+
+hostMetrics:
+  enabled: true
+  collector: alloy-metrics
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+
+telemetryServices:
   kube-state-metrics:
+    deploy: true
     autosharding:
       enabled: true
     replicas: 5
-
-alloy-metrics:
-  enabled: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

@@ -3,11 +3,11 @@ cluster:
   name: log-metrics-test
 
 destinations:
-  - name: localPrometheus
+  localPrometheus:
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
 
-  - name: localLoki
+  localLoki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -16,8 +16,9 @@ destinations:
       username: loki
       password: lokipassword
 
-podLogs:
+podLogsViaLoki:
   enabled: true
+  collector: alloy-logs
 
   extraLogProcessingStages: |-
     stage.metrics {
@@ -33,6 +34,7 @@ podLogs:
     }
 
 integrations:
+  collector: alloy-metrics
   alloy:
     instances:
       - name: alloy
@@ -42,8 +44,9 @@ integrations:
           tuning:
             includeMetrics: [my_custom_tracking_.*]
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
-alloy-logs:
-  enabled: true
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]

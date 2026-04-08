@@ -3,15 +3,15 @@ cluster:
   name: images-by-digest-example-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
 
-  - name: tempo
+  tempo:
     type: otlp
     url: http://tempo.tempo.svc:3200/api/v1/metrics
     metrics: {enabled: false}
@@ -32,40 +32,32 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
-  kube-state-metrics:
-    image:
-      sha: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+costMetrics:
+  enabled: true
+  collector: alloy-metrics
 
-  node-exporter:
-    image:
-      digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
-
-  windows-exporter:
-    image:
-      digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
-
-  opencost:
-    imagePullSecrets:
-      - name: my-registry-creds
-    opencost:
-      exporter:
-        image:
-          # Not technically a digest, but a tag with a digest.
-          tag: "1.115.0@sha256:fb6468a1ef45dbd4a9e521122c8d306f882bb33d1657d28d21aeaef79412e9e1"
-
-  kepler:
-    image:
-      digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+hostMetrics:
+  enabled: true
+  collector: alloy-metrics
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
+  energyMetrics:
+    enabled: true
 
 autoInstrumentation:
   enabled: true
+  collector: alloy-metrics
   beyla:
     image:
       digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       http:
@@ -86,8 +78,38 @@ collectorCommon:
       image:
         digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-receiver:
+    presets: [deployment]
 
-alloy-receiver:
-  enabled: true
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+    image:
+      sha: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+  node-exporter:
+    deploy: true
+    image:
+      digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+  windows-exporter:
+    deploy: true
+    image:
+      digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+  kepler:
+    deploy: true
+  opencost:
+    deploy: true
+    metricsSource: prometheus
+    imagePullSecrets:
+      - name: my-registry-creds
+    opencost:
+      exporter:
+        defaultClusterId: images-by-digest-example-cluster
+        image:
+          # Not technically a digest, but a tag with a digest.
+          tag: "1.115.0@sha256:fb6468a1ef45dbd4a9e521122c8d306f882bb33d1657d28d21aeaef79412e9e1"
+      prometheus:
+        external:
+          url: http://prometheus.prometheus.svc:9090/api/v1/query

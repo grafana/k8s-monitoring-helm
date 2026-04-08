@@ -16,7 +16,7 @@ cluster:
   name: embedded-secrets-example-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
     auth:
@@ -28,7 +28,7 @@ destinations:
     secret:
       embed: true
 
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     auth:
@@ -37,7 +37,7 @@ destinations:
     secret:
       embed: true
 
-  - name: tempo
+  tempo:
     type: otlp
     url: http://tempo.tempo.svc:4317
     auth:
@@ -52,6 +52,7 @@ destinations:
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       grpc:
@@ -59,23 +60,18 @@ applicationObservability:
 
 prometheusOperatorObjects:
   enabled: true
+  collector: alloy-metrics
 
-podLogs:
+podLogsViaLoki:
   enabled: true
+  collector: alloy-logs
 
-alloy-metrics:
-  enabled: true
-
-alloy-logs:
-  enabled: true
-
-alloy-receiver:
-  enabled: true
-  alloy:
-    extraPorts:
-      - name: otlp-grpc
-        port: 4317
-        targetPort: 4317
-        protocol: TCP
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+  alloy-receiver:
+    presets: [deployment]
 ```
 <!-- textlint-enable terminology -->

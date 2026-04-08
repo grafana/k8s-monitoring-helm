@@ -1,12 +1,12 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
-suite: Test - Pod Logs via Kubernetes API - Collector Validation
+suite: Feature - Pod Logs via Kubernetes API - Collector Validation
 templates:
-  - test/collector.yaml
+  - test/configmap.yaml
 tests:
   - it: should fail if on a daemonset, but not clustered
     set:
-      testing: true
-      test:
+      testing:
+        enabled: true
         Collector:
           alloy:
             clustering:
@@ -22,14 +22,17 @@ tests:
             Pod Logs feature requires Alloy DaemonSet to be in clustering mode when using the "kubernetesApi" gather method.
             Please set:
             alloy-test:
+              presets: [clustered]
+            OR
+            alloy-test:
               alloy:
                 clustering:
                   enabled: true
 
   - it: should fail if on more than one replica, but not clustered
     set:
-      testing: true
-      test:
+      testing:
+        enabled: true
         Collector:
           alloy:
             clustering:
@@ -46,6 +49,9 @@ tests:
             Pod Logs feature requires Alloy with multiple replicas to be in clustering mode when using the "kubernetesApi" gather method.
             Please set:
             alloy-test:
+              presets: [clustered]
+            OR
+            alloy-test:
               alloy:
                 clustering:
                   enabled: true
@@ -54,8 +60,8 @@ tests:
     set:
       secretFilter:
         enabled: true
-      testing: true
-      test:
+      testing:
+        enabled: true
         Collector:
           alloy:
             stabilityLevel: stable

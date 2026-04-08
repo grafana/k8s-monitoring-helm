@@ -5,7 +5,7 @@
 
 # Feature: Cluster Metrics
 
-This chart deploys the Cluster Metrics feature of the Kubernetes Observability Helm chart, which uses allow
+This chart deploys the Cluster Metrics feature of the Kubernetes Monitoring Helm Chart, which uses allow
 lists to limit the metrics needed. An allow list is a set of metric names that will be kept, while any metrics
 not on the list will be dropped. With [metrics tuning](#metrics-tuning--allow-lists), you can further customize which metrics are collected.
 
@@ -28,7 +28,7 @@ This chart includes the ability to collect metrics from the following:
 
 ### Metrics sources
 
-The Cluster Metrics feature of the Kubernetes Observability Helm chart includes the following metric systems and
+The Cluster Metrics feature of the Kubernetes Monitoring Helm Chart includes the following metric systems and
 their default allow lists:
 
 | Metric source                                                                | Gathers information about                                                                    | Allow list                                                                                                                                                                                     |
@@ -104,15 +104,6 @@ Be sure perform actual integration testing in a live environment in the main [k8
 * <https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cluster-metrics>
 <!-- markdownlint-enable list-marker-space -->
 
-## Requirements
-
-| Repository | Name | Version |
-|------------|------|---------|
-| https://opencost.github.io/opencost-helm-chart | opencost | 2.5.9 |
-| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 6.4.2 |
-| https://prometheus-community.github.io/helm-charts | node-exporter(prometheus-node-exporter) | 4.51.1 |
-| https://prometheus-community.github.io/helm-charts | windows-exporter(prometheus-windows-exporter) | 0.12.3 |
-| https://sustainable-computing-io.github.io/kepler-helm-chart | kepler | 0.6.1 |
 <!-- markdownlint-enable no-bare-urls -->
 
 <!-- markdownlint-disable no-space-in-emphasis -->
@@ -179,37 +170,19 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | global.scrapeProtocols | list | `["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]` | The protocols to negotiate during a Prometheus metrics scrape, in order of preference. |
 | global.scrapeTimeout | string | `"10s"` | The timeout for scraping metrics. |
 
-### Kepler
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| kepler.enabled | bool | `false` | Deploy and scrape Kepler metrics. |
-| kepler.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Kepler. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
-| kepler.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Kepler. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no __meta* labels are present. |
-| kepler.jobLabel | string | `"integrations/kepler"` | The value for the job label. |
-| kepler.labelMatchers | object | `{"app.kubernetes.io/name":"kepler"}` | Label matchers used to select the Kepler pods |
-| kepler.maxCacheSize | string | `100000` | Sets the max_cache_size for the prometheus.relabel component for Kepler. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
-| kepler.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
-| kepler.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
-| kepler.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Kepler to the minimal set required for Kubernetes Monitoring. |
-| kepler.scrapeInterval | string | `60s` | How frequently to scrape metrics from Kepler. Overrides global.scrapeInterval. |
-| kepler.scrapeTimeout | string | `10s` | The timeout for scraping Kepler metrics. |
-
 ### kube-state-metrics
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | kube-state-metrics.bearerTokenFile | string | `""` | The bearer token file to use when scraping metrics from kube-state-metrics. |
 | kube-state-metrics.checkForPotentialServiceMonitorConflicts | bool | `true` | During install, warn about potential pre-existing ServiceMonitors that may exist and cause metric duplication. |
-| kube-state-metrics.deploy | bool | `true` | Deploy kube-state-metrics. Set to false if your cluster already has kube-state-metrics deployed. |
 | kube-state-metrics.discoveryType | string | `"endpoints"` | How to discover the kube-state-metrics service. Either `endpoints`, `pod`, or `service`. Use `service` if you know there is a single kube-state-metrics replica, or are using HA. Use `endpoints` or `pod` if you have multiple replicas with auto-sharding. |
 | kube-state-metrics.enabled | bool | `true` | Scrape metrics from kube-state-metrics. |
 | kube-state-metrics.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for kube-state-metrics. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | kube-state-metrics.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for kube-state-metrics metrics. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
 | kube-state-metrics.jobLabel | string | `"integrations/kubernetes/kube-state-metrics"` | The value for the job label. |
-| kube-state-metrics.labelMatchers | object | `{"app.kubernetes.io/name":"kube-state-metrics"}` | Labels used to select the kube-state-metrics service. |
+| kube-state-metrics.labelMatchers | object | `{}` | Labels used to select the kube-state-metrics service. |
 | kube-state-metrics.maxCacheSize | string | `100000` | Sets the max_cache_size for the kube-state-metrics prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
-| kube-state-metrics.metricLabelsAllowlist | list | `["nodes=[agentpool,alpha.eksctl.io/cluster-name,alpha.eksctl.io/nodegroup-name,beta.kubernetes.io/instance-type,cloud.google.com/gke-nodepool,cluster-name,ec2.amazonaws.com/Name,ec2.amazonaws.com/aws-autoscaling-groupName,ec2.amazonaws.com/aws-autoscaling-group-name,ec2.amazonaws.com/name,eks.amazonaws.com/nodegroup,k8s.io/cloud-provider-aws,karpenter.sh/nodepool,kubernetes.azure.com/cluster,kubernetes.io/arch,kubernetes.io/hostname,kubernetes.io/os,node.kubernetes.io/instance-type,topology.kubernetes.io/region,topology.kubernetes.io/zone]"]` | `kube_<resource>_labels` metrics to generate. The default is to include a useful set for Node labels. |
 | kube-state-metrics.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | kube-state-metrics.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | kube-state-metrics.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Kube State Metrics to a useful, minimal set. |
@@ -218,7 +191,6 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kube-state-metrics.namespacesDenylist | list | `[]` | List (or comma-separated string) of namespaces to be excluded from collecting resources. If namespaces and namespaces denylist are both set, only namespaces that are excluded in namespaces denylist will be used. Requires kube-state-metrics to be deployed by this chart. |
 | kube-state-metrics.scrapeInterval | string | `60s` | How frequently to scrape kube-state-metrics metrics. |
 | kube-state-metrics.scrapeTimeout | string | `10s` | The timeout for scraping kube-state-metrics metrics. |
-| kube-state-metrics.service.portName | string | `"http"` | The port name used by kube-state-metrics. |
 | kube-state-metrics.service.scheme | string | `"http"` | The scrape scheme used by kube-state-metrics. |
 
 ### Kube Controller Manager
@@ -329,85 +301,4 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kubeletResource.nodeAddressFormat | string | `"direct"` | How to access the Kubelet to get resource metrics, either "direct" (use node IP) or "proxy" (uses API Server) |
 | kubeletResource.scrapeInterval | string | `60s` | How frequently to scrape Kubelet resource metrics. |
 | kubeletResource.scrapeTimeout | string | `10s` | The timeout for scraping Kubelet resource metrics. |
-
-### Node Exporter
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| node-exporter.bearerTokenFile | string | `""` | The bearer token file to use when scraping metrics from Node Exporter. |
-| node-exporter.checkForPotentialServiceMonitorConflicts | bool | `true` | During install, warn about potential pre-existing ServiceMonitors that may exist and cause metric duplication. |
-| node-exporter.deploy | bool | `true` | Deploy Node Exporter. Set to false if your cluster already has Node Exporter deployed. |
-| node-exporter.enabled | bool | `true` | Scrape metrics from Node Exporter. |
-| node-exporter.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Node Exporter. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
-| node-exporter.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Node Exporter metrics. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
-| node-exporter.jobLabel | string | `"integrations/node_exporter"` | The value for the job label. |
-| node-exporter.labelMatchers | object | `{"app.kubernetes.io/name":"node-exporter"}` | Labels used to select the Node Exporter pods. |
-| node-exporter.maxCacheSize | string | `100000` | Sets the max_cache_size for the Node Exporter prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
-| node-exporter.metricsTuning.dropMetricsForFilesystem | list | `["ramfs","tmpfs"]` | Drop metrics for the given filesystem types |
-| node-exporter.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
-| node-exporter.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
-| node-exporter.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring. |
-| node-exporter.metricsTuning.useIntegrationAllowList | bool | `false` | Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring as well as the Node Exporter integration. |
-| node-exporter.namespace | string | `""` | Namespace to locate Node Exporter pods. If `deploy` is set to `true`, this will automatically be set to the namespace where this Helm chart is deployed. |
-| node-exporter.scrapeInterval | string | `60s` | How frequently to scrape Node Exporter metrics. |
-| node-exporter.scrapeTimeout | string | `10s` | The timeout for scraping Node Exporter metrics. |
-| node-exporter.service.portName | string | `"metrics"` | The port name used by Node Exporter. |
-| node-exporter.service.scheme | string | `"http"` | The scrape scheme used by Node Exporter. |
-
-### Node Labels
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| nodeLabels.availabilityZone | bool | `false` | Whether or not to add the availability\_zone label |
-| nodeLabels.instanceType | bool | `false` | Whether or not to add the instance\_type label |
-| nodeLabels.nodeArchitecture | bool | `false` | Whether or not to add the node architecture label |
-| nodeLabels.nodeOS | bool | `false` | Whether or not to add the os label |
-| nodeLabels.nodePool | bool | `false` | Whether or not to attach the nodepool label |
-| nodeLabels.nodeRole | bool | `false` | Whether or not to add the node\_role label |
-| nodeLabels.region | bool | `false` | Whether or not to add the region label |
-
-### OpenCost
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| opencost.enabled | bool | `false` | Deploy and scrape OpenCost. |
-| opencost.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for OpenCost. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
-| opencost.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for OpenCost. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no __meta* labels are present. |
-| opencost.jobLabel | string | `"integrations/opencost"` | The value for the job label. |
-| opencost.labelMatchers | object | `{"app.kubernetes.io/name":"opencost"}` | Label matchers used to select the OpenCost service |
-| opencost.maxCacheSize | string | `100000` | Sets the max_cache_size for the prometheus.relabel component for OpenCost. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
-| opencost.metricsSource | string | `""` | The name of the metric destination where OpenCost will query for required metrics. Setting this will enable guided setup for required OpenCost parameters. To skip guided setup, set this to "custom". |
-| opencost.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
-| opencost.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
-| opencost.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from OpenCost to the minimal set required for Kubernetes Monitoring. |
-| opencost.opencost.prometheus.existingSecretName | string | `""` | The name of the secret containing the username and password for the metrics service. This must be in the same namespace as the OpenCost deployment. |
-| opencost.opencost.prometheus.external.url | string | `""` | The URL for Prometheus queries. It should match externalServices.prometheus.host + "/api/prom" |
-| opencost.opencost.prometheus.password_key | string | `"password"` | The key for the password property in the secret. |
-| opencost.opencost.prometheus.username_key | string | `"username"` | The key for the username property in the secret. |
-| opencost.scrapeInterval | string | `60s` | How frequently to scrape metrics from Kepler. Overrides global.scrapeInterval. |
-| opencost.scrapeTimeout | string | `10s` | The timeout for scraping OpenCost metrics. |
-
-### Windows Exporter - Deployment settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| windows-exporter.deploy | bool | `true` | Deploy Windows Exporter. Set to false if your cluster already has Windows Exporter deployed. |
-
-### Windows Exporter
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| windows-exporter.enabled | bool | `true` | Scrape node metrics |
-| windows-exporter.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Windows Exporter. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
-| windows-exporter.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Windows Exporter metrics. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
-| windows-exporter.jobLabel | string | `"integrations/windows-exporter"` | The value for the job label. |
-| windows-exporter.labelMatchers | object | `{"app.kubernetes.io/name":"windows-exporter"}` | Labels used to select the Windows Exporter pods. |
-| windows-exporter.maxCacheSize | string | `100000` | Sets the max_cache_size for the Windows Exporter prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
-| windows-exporter.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
-| windows-exporter.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
-| windows-exporter.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Windows Exporter to the minimal set required for Kubernetes Monitoring. |
-| windows-exporter.namespace | string | `""` | Namespace to locate Windows Exporter pods. If `deploy` is set to `true`, this will automatically be set to the namespace where this Helm chart is deployed. |
-| windows-exporter.scrapeInterval | string | `60s` | How frequently to scrape metrics from Windows Exporter. |
-| windows-exporter.scrapeTimeout | string | `10s` | The timeout for scraping Windows Exporter metrics. |
-| windows-exporter.service.portName | string | `"metrics"` | The port name used by Windows Exporter. |
 <!-- markdownlint-enable no-space-in-emphasis -->

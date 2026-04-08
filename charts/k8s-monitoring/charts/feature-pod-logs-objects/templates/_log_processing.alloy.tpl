@@ -144,9 +144,6 @@ loki.secretfilter "pod_logs_objects" {
 {{- else if .Values.secretFilter.gitleaksConfigPath }}
   gitleaks_config = {{ .Values.secretFilter.gitleaksConfigPath | quote }}
 {{- end }}
-  enable_entropy = {{ .Values.secretFilter.enableEntropy }}
-  include_generic = {{ .Values.secretFilter.includeGeneric }}
-  partial_mask = {{ .Values.secretFilter.partialMask }}
 {{- if .Values.secretFilter.allowlist }}
   allowlist = [
   {{- range $value := .Values.secretFilter.allowlist }}
@@ -156,6 +153,8 @@ loki.secretfilter "pod_logs_objects" {
 {{- end }}
 {{- if .Values.secretFilter.redactWith }}
   redact_with = {{ .Values.secretFilter.redactWith | quote }}
+{{- else }}
+  redact_percent = {{ .Values.secretFilter.redactPercent | int }}
 {{- end }}
 {{- end }}
   forward_to = argument.logs_destinations.value

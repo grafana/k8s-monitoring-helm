@@ -81,6 +81,9 @@ integrations:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | databaseObservability.cloudProvider.aws.arn | string | `""` | ARN of the AWS RDS instance. |
+| databaseObservability.cloudProvider.azure.resourceGroup | string | `""` | The Resource Group that holds the database resource. |
+| databaseObservability.cloudProvider.azure.serverName | string | `""` | The database server name. |
+| databaseObservability.cloudProvider.azure.subscriptionId | string | `""` | The Subscription ID for your Azure account. |
 
 ### Database Observability - Collectors
 
@@ -95,6 +98,7 @@ integrations:
 | databaseObservability.collectors.querySamples.collectInterval | string | `"1m"` | How frequently to collect query samples from the database. |
 | databaseObservability.collectors.querySamples.disableQueryRedaction | bool | `false` | Collect unredacted SQL query text including parameters. |
 | databaseObservability.collectors.querySamples.enabled | bool | `true` | Enable collection of query samples. |
+| databaseObservability.collectors.querySamples.excludeCurrentUser | bool | `true` | Do not collect query samples for the current database user. |
 | databaseObservability.collectors.schemaDetails.cacheEnabled | bool | `true` | Whether to enable caching of table definitions. |
 | databaseObservability.collectors.schemaDetails.cacheSize | int | `256` | Table definitions cache size. |
 | databaseObservability.collectors.schemaDetails.cacheTTL | string | `"10m"` | Table definitions cache TTL. |
@@ -106,6 +110,8 @@ integrations:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | databaseObservability.enabled | bool | `false` | Whether to gather table, schema, and query information from the database. Requires exporter to be enabled. |
+| databaseObservability.excludeDatabases | list | `[]` | A list of databases to exclude from monitoring. |
+| databaseObservability.excludeUsers | list | `[]` | A list of users to exclude from monitoring. |
 
 ### Exporter Settings
 
@@ -114,7 +120,7 @@ integrations:
 | exporter.autoDiscovery.databaseAllowList | list | `[]` | List of databases to filter out, meaning all other databases will be scraped. |
 | exporter.autoDiscovery.databaseDenyList | list | `[]` | Whether to automatically discover other databases. |
 | exporter.autoDiscovery.enabled | bool | `false` | Whether to automatically discover other databases. |
-| exporter.collectors | object | `{"buffercacheSummary":{"enabled":false},"database":{"enabled":true},"databaseWraparound":{"enabled":false},"locks":{"enabled":true},"longRunningTransactions":{"enabled":false},"postmaster":{"enabled":false},"processIdle":{"enabled":false},"replication":{"enabled":true},"replicationSlot":{"enabled":true},"statActivityAutovacuum":{"enabled":false},"statBGWriter":{"enabled":true},"statCheckpointer":{"enabled":false},"statDatabase":{"enabled":true},"statProgressVacuum":{"enabled":true},"statStatements":{"enabled":false,"includeQuery":false,"queryLength":null},"statUserTables":{"enabled":true},"statWALReceiver":{"enabled":false},"statioUserIndexes":{"enabled":false},"statioUserTables":{"enabled":true},"wal":{"enabled":true},"xlogLocation":{"enabled":false}}` | The list of collectors to enable for the PostgreSQL Exporter ([Documentation](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.postgres/#supported-collectors)). This used to be a list of collector names. This format is still supported, but the new format will allow for customization. collectors: ["heartbeat", "PostgreSQL.user"] |
+| exporter.collectors | object | `{"buffercacheSummary":{"enabled":false},"database":{"enabled":true},"databaseWraparound":{"enabled":false},"locks":{"enabled":true},"longRunningTransactions":{"enabled":false},"postmaster":{"enabled":false},"processIdle":{"enabled":false},"replication":{"enabled":true},"replicationSlot":{"enabled":true},"statActivityAutovacuum":{"enabled":false},"statBGWriter":{"enabled":true},"statCheckpointer":{"enabled":false},"statDatabase":{"enabled":true},"statProgressVacuum":{"enabled":true},"statStatements":{"enabled":false,"excludeDatabases":[],"excludeUsers":[],"includeQuery":false,"limit":null,"queryLength":null},"statUserTables":{"enabled":true},"statWALReceiver":{"enabled":false},"statioUserIndexes":{"enabled":false},"statioUserTables":{"enabled":true},"wal":{"enabled":true},"xlogLocation":{"enabled":false}}` | The list of collectors to enable for the PostgreSQL Exporter ([Documentation](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.postgres/#supported-collectors)). This used to be a list of collector names. This format is still supported, but the new format will allow for customization. collectors: ["heartbeat", "PostgreSQL.user"] |
 | exporter.customQueriesConfigPath | string | `""` | Path to YAML file containing custom queries to expose as metrics. |
 | exporter.dataSource.auth.password | string | `""` | The password to use for the PostgreSQL connection. |
 | exporter.dataSource.auth.passwordFrom | string | `""` | Raw config for accessing the password. |
@@ -151,7 +157,10 @@ integrations:
 | exporter.collectors.statDatabase.enabled | bool | `true` | Enable the stat_database collector. |
 | exporter.collectors.statProgressVacuum.enabled | bool | `true` | Enable the stat_progress_vacuum collector. |
 | exporter.collectors.statStatements.enabled | bool | `false` | Enable the stat_statements collector. |
+| exporter.collectors.statStatements.excludeDatabases | list | `[]` | List of databases to exclude from stat_statements collection. |
+| exporter.collectors.statStatements.excludeUsers | list | `[]` | List of users to exclude from stat_statements collection. |
 | exporter.collectors.statStatements.includeQuery | bool | `false` | Enable the selection of query ID and SQL statement. |
+| exporter.collectors.statStatements.limit | string | 100 | Maximum number of statements to fetch. |
 | exporter.collectors.statStatements.queryLength | string | 120 | Maximum length of the statement query text. |
 | exporter.collectors.statUserTables.enabled | bool | `true` | Enable the stat_user_tables collector. |
 | exporter.collectors.statWALReceiver.enabled | bool | `false` | Enable the stat_wal_receiver collector. |

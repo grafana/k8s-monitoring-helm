@@ -17,55 +17,74 @@ cluster:
   name: collector-storage-example-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
-podLogs:
+hostMetrics:
   enabled: true
+  collector: alloy-metrics
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
 
-alloy-metrics:
+podLogsViaLoki:
   enabled: true
-  alloy:
-    storagePath: /var/lib/alloy
-    mounts:
-      extra:
-        - name: alloy-wal
-          mountPath: /var/lib/alloy
+  collector: alloy-logs
 
-  controller:
-    enableStatefulSetAutoDeletePVC: true
-    volumeClaimTemplates:
-      - metadata:
-          name: alloy-wal
-        spec:
-          accessModes: ["ReadWriteOnce"]
-          storageClassName: "standard"
-          resources:
-            requests:
-              storage: 5Gi
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    alloy:
+      storagePath: /var/lib/alloy
+      mounts:
+        extra:
+          - name: alloy-wal
+            mountPath: /var/lib/alloy
 
-alloy-logs:
-  enabled: true
-  alloy:
-    storagePath: /var/lib/alloy
-    mounts:
-      extra:
-        - name: alloy-log-positions
-          mountPath: /var/lib/alloy
-  controller:
-    volumes:
-      extra:
-        - name: alloy-log-positions
-          hostPath:
-            path: /var/alloy-log-storage
-            type: DirectoryOrCreate
+    controller:
+      enableStatefulSetAutoDeletePVC: true
+      volumeClaimTemplates:
+        - metadata:
+            name: alloy-wal
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            storageClassName: "standard"
+            resources:
+              requests:
+                storage: 5Gi
+
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+    alloy:
+      storagePath: /var/lib/alloy
+      mounts:
+        extra:
+          - name: alloy-log-positions
+            mountPath: /var/lib/alloy
+    controller:
+      volumes:
+        extra:
+          - name: alloy-log-positions
+            hostPath:
+              path: /var/alloy-log-storage
+              type: DirectoryOrCreate
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

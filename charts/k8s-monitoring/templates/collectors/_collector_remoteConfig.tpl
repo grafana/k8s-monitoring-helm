@@ -1,42 +1,32 @@
 {{- /* Builds the alloy config for remoteConfig. Input: $ */ -}}
 {{- define "collectors.remoteConfig.collector.values" -}}
 {{- $values := dict }}
-{{- range $collectorName := (include "collectors.list" . | fromYamlArray) }}
-  {{- $collectorValues := include "collector.alloy.values" (dict "collectorName" $collectorName "Values" $.Values "Files" $.Files) | fromYaml }}
-  {{- $collectorType := $collectorValues.controller.type }}
+{{- range $collectorName := keys .Values.collectors | sortAlpha }}
+  {{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
   {{- if (dig "remoteConfig" "enabled" false $collectorValues) }}
+    {{- $collectorType := $collectorValues.controller.type }}
     {{- $extraEnv := deepCopy (dig "alloy" "extraEnv" list $collectorValues) }}
-    {{- if eq (include "collectors.has_extra_env" (deepCopy $ | merge (dict "name" $collectorName "envVar" "GCLOUD_FM_COLLECTOR_ID"))) "false" }}
-      {{- if eq (include "collectors.has_extra_env" (deepCopy $ | merge (dict "name" $collectorName "envVar" "CLUSTER_NAME"))) "false" }}
-        {{- $extraEnv = append $extraEnv (dict "name" "CLUSTER_NAME" "value" $.Values.cluster.name) }}
-      {{- end }}
-      {{- if eq (include "collectors.has_extra_env" (deepCopy $ | merge (dict "name" $collectorName "envVar" "NAMESPACE"))) "false" }}
-        {{- $extraEnv = append $extraEnv (dict "name" "NAMESPACE" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.namespace"))) }}
-      {{- end }}
+    {{- if eq (include "collectors.hasExtraEnv" (deepCopy $ | merge (dict "collectorName" $collectorName "envVarName" "GCLOUD_FM_COLLECTOR_ID"))) "false" }}
+      {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "CLUSTER_NAME" "value" $.Values.cluster.name)) | fromYamlArray }}
+      {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "NAMESPACE" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.namespace")))) | fromYamlArray }}
       {{- if eq $collectorType "daemonset" }}
-        {{- if eq (include "collectors.has_extra_env" (deepCopy $ | merge (dict "name" $collectorName "envVar" "NODE_NAME"))) "false" }}
-          {{- $extraEnv = append $extraEnv (dict "name" "NODE_NAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "spec.nodeName"))) }}
-        {{- end }}
-        {{- if eq (include "collectors.has_extra_env" (deepCopy $ | merge (dict "name" $collectorName "envVar" "GCLOUD_FM_COLLECTOR_ID"))) "false" }}
-          {{- $extraEnv = append $extraEnv (dict "name" "GCLOUD_FM_COLLECTOR_ID" "value" (printf "%s-$(CLUSTER_NAME)-$(NAMESPACE)-%s-$(NODE_NAME)" $.Release.Name $collectorName)) }}
-        {{- end }}
+        {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "NODE_NAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "spec.nodeName")))) | fromYamlArray }}
+        {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "GCLOUD_FM_COLLECTOR_ID" "value" (printf "%s-$(CLUSTER_NAME)-$(NAMESPACE)-%s-$(NODE_NAME)" $.Release.Name $collectorName))) | fromYamlArray }}
       {{- else }}
-        {{- if eq (include "collectors.has_extra_env" (deepCopy $ | merge (dict "name" $collectorName "envVar" "POD_NAME"))) "false" }}
-          {{- $extraEnv = append $extraEnv (dict "name" "POD_NAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.name"))) }}
-        {{- end }}
-        {{- $extraEnv = append $extraEnv (dict "name" "GCLOUD_FM_COLLECTOR_ID" "value" (printf "%s-$(CLUSTER_NAME)-$(NAMESPACE)-$(POD_NAME)" $.Release.Name)) }}
+        {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "POD_NAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.name")))) | fromYamlArray }}
+        {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "GCLOUD_FM_COLLECTOR_ID" "value" (printf "%s-$(CLUSTER_NAME)-$(NAMESPACE)-$(POD_NAME)" $.Release.Name))) | fromYamlArray }}
       {{- end }}
     {{- end }}
 
-    {{- if eq (include "collectors.has_extra_env" (deepCopy $ | merge (dict "name" $collectorName "envVar" "GCLOUD_RW_API_KEY"))) "false" }}
-      {{- $remoteConfigValues := merge ((index $.Values $collectorName).remoteConfig) (dict "type" "remoteConfig" "name" (printf "%s-remote-cfg" $collectorName)) }}
+    {{- if eq (include "collectors.hasExtraEnv" (deepCopy $ | merge (dict "collectorName" $collectorName "envVarName" "GCLOUD_RW_API_KEY"))) "false" }}
+      {{- $remoteConfigValues := merge (dict "type" "remoteConfig") (get $collectorValues "remoteConfig") }}
       {{- if eq (include "secrets.usesKubernetesSecret" $remoteConfigValues ) "true" }}
-        {{- $secretName := include "secrets.kubernetesSecretName" (deepCopy $ | merge (dict "object" $remoteConfigValues)) }}
+        {{- $secretName := include "secrets.kubernetesSecretName" (dict "Values" $.Values "Chart" $.Chart "Release" $.Release "object" $remoteConfigValues "name" (printf "%s-remote-cfg" $collectorName)) }}
         {{- $secretKey := include "secrets.getSecretKey" (dict "object" $remoteConfigValues "key" "auth.password") }}
         {{- $extraEnv = append $extraEnv (dict "name" "GCLOUD_RW_API_KEY" "valueFrom" (dict "secretKeyRef" (dict "name" $secretName "key" $secretKey))) }}
       {{- end }}
     {{- end }}
-    {{- $values = $values | merge (dict $collectorName (dict "alloy" (dict "extraEnv" $extraEnv))) }}
+    {{- $values = $values | merge (dict "collectors" (dict $collectorName (dict "alloy" (dict "extraEnv" $extraEnv)))) }}
   {{- end }}
 {{- end }}
 {{- $values | toYaml }}

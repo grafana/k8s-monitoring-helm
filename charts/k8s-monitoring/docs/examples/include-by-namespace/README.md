@@ -13,32 +13,39 @@ namespaces.
 ```yaml
 ---
 cluster:
-  name: include-by-namespace-cluster
+  name: include-by-namespace-test
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
-    url: http://prometheus.prometheus.svc:9090/api/v1/write
-  - name: loki
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+  loki:
     type: loki
-    url: http://loki.loki.svc:3100/api/push
-  - name: tempo
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+  tempo:
     type: otlp
     protocol: http
     url: http://tempo.tempo.svc:443/otlp
     metrics: {enabled: false}
     logs: {enabled: false}
     traces: {enabled: true}
-  - name: pyroscope
+  pyroscope:
     type: pyroscope
     url: http://pyroscope.pyroscope.svc:4040
 
 annotationAutodiscovery:
   enabled: true
+  collector: alloy-metrics
   namespaces: [alpha, bravo, delta]
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       grpc:
@@ -54,6 +61,7 @@ applicationObservability:
 
 autoInstrumentation:
   enabled: true
+  collector: alloy-metrics
   beyla:
     config:
       data:
@@ -65,31 +73,45 @@ autoInstrumentation:
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
   namespaces: [alpha, bravo, delta]
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
   cadvisor:
     metricsTuning:
       includeNamespaces: [alpha, bravo, delta]
-  kube-state-metrics:
-    namespaces: [alpha, bravo, delta]
 
-podLogs:
+hostMetrics:
   enabled: true
+  collector: alloy-metrics
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
+
+podLogsViaLoki:
+  enabled: true
+  collector: alloy-logs
   namespaces: [alpha, bravo, delta]
 
 profiling:
   enabled: true
+  collector: alloy-profiles
   ebpf:
+    enabled: true
     namespaces: [alpha, bravo, delta]
   java:
+    enabled: true
     namespaces: [alpha, bravo, delta]
   pprof:
+    enabled: true
     namespaces: [alpha, bravo, delta]
 
 prometheusOperatorObjects:
   enabled: true
+  collector: alloy-metrics
   probes:
     namespaces: [alpha, bravo, delta]
   podMonitors:
@@ -97,25 +119,25 @@ prometheusOperatorObjects:
   serviceMonitors:
     namespaces: [alpha, bravo, delta]
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+  alloy-singleton:
+    presets: [singleton]
+  alloy-receiver:
+    presets: [deployment]
+  alloy-profiles:
+    presets: [privileged, daemonset]
 
-alloy-singleton:
-  enabled: true
-
-alloy-logs:
-  enabled: true
-
-alloy-receiver:
-  enabled: true
-  alloy:
-    extraPorts:
-      - name: otlp-grpc
-        port: 4317
-        targetPort: 4317
-        protocol: TCP
-
-alloy-profiles:
-  enabled: true
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+    namespaces: [alpha, bravo, delta]
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

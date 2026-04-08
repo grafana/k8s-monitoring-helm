@@ -3,12 +3,20 @@ cluster:
   name: profiling-cluster
 
 destinations:
-  - name: pyroscope
+  pyroscope:
     type: pyroscope
     url: http://pyroscope.pyroscope.svc:4040
 
 profiling:
   enabled: true
+  collector: alloy-profiles
+  ebpf:
+    enabled: true
+  java:
+    enabled: true
+  pprof:
+    enabled: true
 
-alloy-profiles:
-  enabled: true
+collectors:
+  alloy-profiles:
+    presets: [privileged, daemonset]

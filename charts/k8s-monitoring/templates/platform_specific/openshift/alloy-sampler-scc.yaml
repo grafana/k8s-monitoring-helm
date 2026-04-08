@@ -1,11 +1,10 @@
 {{- if eq $.Values.global.platform "openshift" }}
-{{- range $destination := .Values.destinations }}
+{{- range $destinationName, $destination := .Values.destinations }}
 {{- if eq $destination.type "otlp" }}
   {{- $isSamplingEnabled := include "destinations.otlp.isTailSamplingEnabled" $destination }}
   {{- if eq $isSamplingEnabled "true" }}
-{{- $values := (deepCopy $ | merge (dict "collectorName" "sampler" "collectorValues" $destination.processors.tailSampling.collector)) }}
-{{- $alloyValues := include "collector.alloy.values" $values | fromYaml }}
-{{- $alloyFullName := include "helper.k8s_name" (printf "%s-%s-sampler" $.Release.Name $destination.name) }}
+{{- $alloyValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" "sampler" "collectorValues" $destination.processors.tailSampling.collector) | fromYaml }}
+{{- $alloyFullName := include "helper.k8s_name" (printf "%s-%s-sampler" $.Release.Name $destinationName) }}
 ---
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints

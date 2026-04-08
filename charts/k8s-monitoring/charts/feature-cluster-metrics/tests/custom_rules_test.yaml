@@ -1,11 +1,15 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test - Cluster Metrics - Custom Rules
+suite: Feature - Cluster Metrics - Custom Rules
 templates:
-  - configmap.yaml
+  - test/configmap.yaml
 tests:
   - it: should render the default configuration
     set:
-      deployAsConfigMap: true
+      testing:
+        enabled: true
+        telemetryServices:
+          kube-state-metrics:
+            deploy: true
       kubelet:
         extraDiscoveryRules: |-
           rule {
@@ -23,12 +27,6 @@ tests:
             source_labels = ["namespace"]
             regex = "private"
             action = "drop"
-          }
-      node-exporter:
-        extraDiscoveryRules: |-
-          rule {
-            target_label = "color"
-            replacement = "red"
           }
     asserts:
       - isKind:

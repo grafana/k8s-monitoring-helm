@@ -3,7 +3,7 @@ cluster:
   name: otlp-gateway-test
 
 destinations:
-  - name: otlp-gateway
+  otlp-gateway:
     type: otlp
     url: https://otlp-gateway-prod-us-east-0.grafana.net/otlp
     protocol: http
@@ -19,6 +19,7 @@ destinations:
     traces: {enabled: true}
 
 integrations:
+  collector: alloy-metrics
   alloy:
     instances:
       - name: alloy
@@ -27,38 +28,21 @@ integrations:
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
-podLogs:
+podLogsViaLoki:
   enabled: true
-  labelsToKeep:
-    - app.kubernetes.io/name
-    - container
-    - instance
-    - job
-    - level
-    - namespace
-    - service.name
-    - service.namespace
-    - deployment.environment
-    - deployment.environment.name
-    - k8s.namespace.name
-    - k8s.deployment.name
-    - k8s.statefulset.name
-    - k8s.daemonset.name
-    - k8s.cronjob.name
-    - k8s.job.name
-    - k8s.node.name
-    - k8s.pod.name
-    - pod
+  collector: alloy-logs
   structuredMetadata:
     k8s.pod.name: null
     pod: null
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
-alloy-singleton:
-  enabled: true
+  alloy-singleton:
+    presets: [singleton]
 
-alloy-logs:
-  enabled: true
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]

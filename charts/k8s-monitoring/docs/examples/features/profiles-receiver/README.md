@@ -16,12 +16,13 @@ cluster:
   name: profiles-receiver-cluster
 
 destinations:
-  - name: pyroscope
+  pyroscope:
     type: pyroscope
     url: http://pyroscope.pyroscope.svc:4040
 
 profilesReceiver:
   enabled: true
+  collector: alloy-receiver
   profilesProcessingRules: |
     // This creates a consistent hash value (0 or 1) for each unique combination of labels
     // Using multiple source labels provides better sampling distribution across your profiles
@@ -41,7 +42,8 @@ profilesReceiver:
       regex        = "^1$"
     }
 
-alloy-receiver:
-  enabled: true
+collectors:
+  alloy-receiver:
+    presets: [deployment]
 ```
 <!-- textlint-enable terminology -->

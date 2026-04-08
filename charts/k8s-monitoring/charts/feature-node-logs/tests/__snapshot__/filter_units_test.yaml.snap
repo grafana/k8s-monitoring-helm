@@ -13,32 +13,6 @@ should create a ConfigMap that only includes certain units:
             regex = "kubelet.service|docker.service|containerd.service|node-problem-detector.service"
           }
 
-          // copy all journal labels and make the available to the pipeline stages as labels, there is a label
-          // keep defined to filter out unwanted labels, these pipeline labels can be set as structured metadata
-          // as well, the following labels are available:
-          // - boot_id
-          // - cap_effective
-          // - cmdline
-          // - comm
-          // - exe
-          // - gid
-          // - hostname
-          // - machine_id
-          // - pid
-          // - stream_id
-          // - systemd_cgroup
-          // - systemd_invocation_id
-          // - systemd_slice
-          // - systemd_unit
-          // - transport
-          // - uid
-          //
-          // More Info: https://www.freedesktop.org/software/systemd/man/systemd.journal-fields.html
-          rule {
-            action = "labelmap"
-            regex = "__journal__(.+)"
-          }
-
           rule {
             action = "replace"
             source_labels = ["__journal__systemd_unit"]
@@ -76,7 +50,7 @@ should create a ConfigMap that only includes certain units:
               // add a static source label to the logs so they can be differentiated / restricted if necessary
               "source" = "journal",
               // default level to unknown
-              level = "unknown",
+              level = "UNKNOWN",
             }
           }
 
@@ -102,6 +76,12 @@ should create a ConfigMap that only includes certain units:
             stage.replace {
               source = "level"
               expression = "(W)"
+              replace = "WARN"
+            }
+            // standardize on WARN
+            stage.replace {
+              source = "level"
+              expression = "(warning)"
               replace = "WARN"
             }
 
@@ -144,9 +124,10 @@ should create a ConfigMap that only includes certain units:
             }
           }
 
-          // Only keep the labels that are defined in the `keepLabels` list.
-          stage.label_keep {
-            values = ["__tenant_id__","instance","job","level","name","unit","service_name","source"]
+          // Standardize on upper-case
+          stage.template {
+            source   = "level"
+            template = "{{ ToUpper .Value }}"
           }
 
           forward_to = argument.logs_destinations.value

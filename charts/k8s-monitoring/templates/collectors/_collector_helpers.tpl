@@ -1,75 +1,78 @@
-{{- define "collectors.list" -}}
-- alloy-metrics
-- alloy-singleton
-- alloy-logs
-- alloy-receiver
-- alloy-profiles
-{{- end }}
-
-{{- define "collectors.list.enabled" -}}
-{{- range $collector := (include "collectors.list" . | fromYamlArray) }}
-  {{- if (index $.Values $collector).enabled }}
-- {{ $collector }}
-  {{- end }}
-{{- end }}
-{{- end }}
-
-{{/* Inputs: Values (all values), name (collector name), feature (feature name) */}}
-{{- define "collectors.require_collector" -}}
-{{- if not (index .Values .name).enabled }}
-  {{- $msg := list "" }}
-  {{- $msg = append $msg (printf "The %s feature requires the use of the %s collector." .feature .name ) }}
-  {{- $msg = append $msg "" }}
-  {{- $msg = append $msg "Please enable it by setting:" }}
-  {{- $msg = append $msg (printf "%s:" .name) }}
-  {{- $msg = append $msg "  enabled: true" }}
-  {{- fail (join "\n" $msg) }}
-{{- end }}
-{{- end }}
-
-{{/* Inputs: Values (all values), name (collector name), portNumber */}}
-{{- define "collectors.has_extra_port" -}}
+{{/* Inputs: Values (all values), collectorName (collector name), portNumber */}}
+{{- define "collectors.hasExtraPort" -}}
 {{- $found := "false" -}}
-{{- range (index .Values .name).alloy.extraPorts -}}
-  {{- if eq (int .targetPort) (int $.portNumber) }}
+{{- range $portEntry := (dig .collectorName "alloy" "extraPorts" (list) .Values.collectors) -}}
+  {{- if eq (int $portEntry.targetPort) (int $.portNumber) }}
     {{- $found = "true" -}}
   {{- end }}
 {{- end }}
 {{- $found -}}
 {{- end }}
 
-{{/* Inputs: Values (all values), name (collector name), envVar (environrment var name) */}}
-{{- define "collectors.has_extra_env" -}}
+{{/* Inputs: Values (all values), collectorName (collector name), envVarName (environrment var name) */}}
+{{- define "collectors.hasExtraEnv" -}}
 {{- $found := "false" -}}
-{{- range (dig "alloy" "extraEnv" list (index .Values .name)) -}}
-  {{- if eq .name $.envVar }}
+{{- range $envVarEntry := dig "alloy" "extraEnv" list (get .Values.collectors .collectorName) -}}
+  {{- if eq $envVarEntry.name $.envVarName }}
     {{- $found = "true" -}}
   {{- end }}
 {{- end }}
 {{- $found -}}
 {{- end }}
 
-{{/* Inputs: Values (all values), name (collector name), feature (feature name), portNumber, portName, portProtocol */}}
-{{- define "collectors.require_extra_port" -}}
-{{- if eq (include "collectors.has_extra_port" .) "false" }}
+{{/* Inputs: envList (existing environment var list), name (environrment var name), value (), overwrite */}}
+{{- define "collectors.set_extra_env" -}}
+{{- $found := false -}}
+{{- $newList := list -}}
+{{- range .envList -}}
+  {{- if eq .name $.name -}}
+    {{- $found = true -}}
+    {{- if $.overwrite -}}
+      {{- if $.value -}}
+        {{- $newList = append $newList (dict "name" $.name "value" $.value) -}}
+      {{- else if $.valueFrom -}}
+        {{- $newList = append $newList (dict "name" $.name "valueFrom" $.valueFrom) -}}
+      {{- end -}}
+    {{- else -}}
+      {{- $newList = append $newList . -}}
+    {{- end -}}
+  {{- else -}}
+    {{- $newList = append $newList . -}}
+  {{- end -}}
+{{- end -}}
+{{- if not $found -}}
+  {{- if $.value -}}
+    {{- $newList = append $newList (dict "name" $.name "value" $.value) -}}
+  {{- else if $.valueFrom -}}
+    {{- $newList = append $newList (dict "name" $.name "valueFrom" $.valueFrom) -}}
+  {{- end -}}
+{{- end -}}
+{{- $newList | toYaml -}}
+{{- end }}
+
+{{/* Inputs: Values (all values), collectorName (collector name), featureName (feature name), portNumber, portName, portProtocol */}}
+{{- define "collectors.requireExtraPort" -}}
+{{- if eq (include "collectors.hasExtraPort" .) "false" }}
   {{- $msg := list "" }}
-  {{- $msg = append $msg (printf "The %s feature requires that port %d to be open on the %s collector." .feature (.portNumber | int) .name ) }}
+  {{- $msg = append $msg (printf "The %s feature requires that port %d to be open on the %s collector." .featureName (.portNumber | int) .collectorName ) }}
   {{- $msg = append $msg "" }}
   {{- $msg = append $msg "Please enable it by setting:" }}
-  {{- $msg = append $msg (printf "%s:" .name) }}
-  {{- $msg = append $msg "  alloy:" }}
-  {{- $msg = append $msg "    extraPorts:" }}
-  {{- $msg = append $msg (printf "      - name: %s" .portName) }}
-  {{- $msg = append $msg (printf "        port: %d" (.portNumber | int)) }}
-  {{- $msg = append $msg (printf "        targetPort: %d" (.portNumber | int)) }}
-  {{- $msg = append $msg (printf "        protocol: %s" .portProtocol) }}
+  {{- $msg = append $msg "collectors:" }}
+  {{- $msg = append $msg (printf "  %s:" .collectorName) }}
+  {{- $msg = append $msg "    alloy:" }}
+  {{- $msg = append $msg "      extraPorts:" }}
+  {{- $msg = append $msg (printf "        - name: %s" .portName) }}
+  {{- $msg = append $msg (printf "          port: %d" (.portNumber | int)) }}
+  {{- $msg = append $msg (printf "          targetPort: %d" (.portNumber | int)) }}
+  {{- $msg = append $msg (printf "          protocol: %s" .portProtocol) }}
   {{- fail (join "\n" $msg) }}
 {{- end }}
 {{- end }}
 
-{{- define "collector.alloy.fullname" -}}
-  {{- $collectorValues := .collectorValues | default (index .Values .collectorName) }}
-  {{- if $collectorValues.fullnameOverride }}
+{{/* Inputs: Values (all values), collectorName (collector name), collectorValues (collector values, if not inside `.Values.collectors` map) */}}
+{{- define "collector.alloy.fullname" }}
+  {{- $collectorValues := .collectorValues | default (get .Values.collectors .collectorName) }}
+  {{- if hasKey $collectorValues "fullnameOverride" }}
     {{- $collectorValues.fullnameOverride | trunc 63 | trimSuffix "-" }}
   {{- else }}
     {{- $name := default .collectorName .Values.nameOverride }}
@@ -81,18 +84,18 @@
   {{- end }}
 {{- end }}
 
-{{- define "collector.alloy.labels" -}}
+{{- define "collector.alloy.labels" }}
 helm.sh/chart: {{ include "helper.chart" . }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/part-of: alloy
 {{- end }}
 
-{{- define "collector.alloy.selectorLabels" -}}
+{{- define "collector.alloy.selectorLabels" }}
 app.kubernetes.io/name: {{ .collectorName }}
 app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{- end }}
 
-{{- define "collector.alloy.values.global"}}
+{{- define "collector.alloy.values.global" }}
 {{- $globalValues := dict }}
 {{- if dig "image" "registry" "" .Values.global }}
   {{- $globalValues = mergeOverwrite $globalValues (dict "global" (dict "image" (dict "registry" .Values.global.image.registry))) }}
@@ -107,9 +110,7 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{- end }}
 
 {{- /* Gets the Alloy values. Input: $, .collectorName (string, collector name), .collectorValues (object) */ -}}
-{{- define "collector.alloy.values" -}}
-{{- /* Values from upstream Alloy */}}
-{{- $upstreamValues := "collectors/upstream/alloy-values.yaml" | .Files.Get | fromYaml }}
+{{- define "collector.alloy.values" }}
 {{- /* The default settings set for all Alloy instances by this chart */}}
 {{- $defaultValues := "collectors/alloy-values.yaml" | .Files.Get | fromYaml }}
 {{- /* Values for the specific named Alloy instance */}}
@@ -124,9 +125,40 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{- /* Settings in values.yaml for the named instance */}}
 {{- $userValues := $.collectorValues }}
 {{- if not $.collectorValues }}
-  {{- $userValues = (index $.Values .collectorName) }}
+  {{- $userValues = (index $.Values.collectors .collectorName) }}
 {{- end }}
-{{ mergeOverwrite $upstreamValues $defaultValues $namedDefaultValues $globalValues $userCommonValues $userValues | toYaml }}
+{{- $presetValues := dict }}
+{{- if hasKey $userValues "presets" }}
+  {{- range $preset := $userValues.presets }}
+    {{- $files := $.Files.Glob (printf "collectors/presets/%s.yaml" $preset) }}
+    {{- if eq (len $files) 0 }}
+      {{ $allPresets := include "collectors.getAllPresets" $ | fromYamlArray }}
+      {{- $msg := list "" }}
+      {{- $msg = append $msg (printf "The collector \"%s\" is using an unknown preset: %s" $.collectorName $preset) }}
+      {{- $msg = append $msg (printf "Please use one of the known presets: %s" (include "english_list_or" $allPresets)) }}
+      {{- fail (join "\n" $msg) }}
+    {{- end }}
+    {{- range $fileName, $_ := $files }}
+      {{- $presetValues = merge $presetValues ($.Files.Get $fileName | fromYaml) }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- $clusterNameValues := dict }}
+{{- $clusteringEnabled := or (dig "alloy" "clustering" "enabled" false $namedDefaultValues) (dig "alloy" "clustering" "enabled" false $userValues) (dig "alloy" "clustering" "enabled" false $presetValues) }}
+{{- if $clusteringEnabled }}
+  {{- $clusterNameSet := or (dig "alloy" "clustering" "name" "" $namedDefaultValues) (dig "alloy" "clustering" "name" "" $userValues) }}
+  {{- if not $clusterNameSet }}
+    {{- $clusterNameValues = dict "alloy" (dict "clustering" (dict "name" .collectorName))}}
+  {{- end }}
+{{- end }}
+{{ mergeOverwrite $defaultValues $namedDefaultValues $presetValues $globalValues $userCommonValues $clusterNameValues $userValues | toYaml }}
+{{- end }}
+
+{{- /* Gets the Alloy values including default upstream values. Input: $, .collectorName (string, collector name), .collectorValues (object) */ -}}
+{{- define "collector.alloy.valuesWithUpstream" }}
+  {{- /* Values from upstream Alloy */}}
+  {{- $upstreamValues := "collectors/upstream/alloy-values.yaml" | .Files.Get | fromYaml }}
+  {{- mergeOverwrite $upstreamValues (include "collector.alloy.values" . | fromYaml) | toYaml }}
 {{- end }}
 
 {{- define "collector.alloy.valuesToSpec" }}
@@ -143,13 +175,34 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{/* Lists the fields that are not a part of Alloy itself, and should be removed before creating an Alloy instance. */}}
 {{/* Inputs: (none) */}}
 {{- define "collector.alloy.extraFields" }}
+- annotations
 - enabled
 - extraConfig
 - extraService
+- labels
 - includeDestinations
 - liveDebugging
 - logging
+- presets
 - remoteConfig
-- annotations
-- labels
+{{- end }}
+
+{{/* Inputs: . (root object), featureKey (string) */}}
+{{ define "collectors.getCollectorForFeature" }}
+{{- $collectorName := dig "collector" "" (get .Values .featureKey) }}
+{{- if not $collectorName }}
+  {{- $collectorName = include (printf "features.%s.chooseCollector" $.featureKey) $ | trim }}
+{{- end }}
+{{- if not $collectorName }}
+  {{- if eq (keys .Values.collectors | len) 1 }}
+    {{- $collectorName = (index (keys .Values.collectors) 0) }}
+  {{- end }}
+{{- end }}
+{{- $collectorName }}
+{{- end }}
+
+{{ define "collectors.getAllPresets" }}
+  {{- range $presetFile, $_ := $.Files.Glob "collectors/presets/*.yaml" }}
+- {{ base $presetFile | trimSuffix (ext $presetFile) | trim }}
+  {{- end }}
 {{- end }}

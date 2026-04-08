@@ -15,7 +15,7 @@ cluster:
   name: pod-logs-objects-cluster
 
 destinations:
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -28,12 +28,10 @@ podLogsObjects:
   enabled: true
   nodeFilter: true
 
-alloy-logs:
-  enabled: true
-  liveDebugging:
-    enabled: true
-  alloy:
-    clustering:
+collectors:
+  alloy-logs:
+    presets: [clustered]
+    liveDebugging:
       enabled: true
 ```
 <!-- textlint-enable terminology -->

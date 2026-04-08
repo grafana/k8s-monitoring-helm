@@ -1,0 +1,75 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: node-logs
+
+subject:
+  releaseName: k8smon
+  path: ../../../../../..
+  valuesFile: ../values.yaml
+  values:
+    # minikube stores journal at /run/log/journal instead of /var/log/journal
+    nodeLogs:
+      journal:
+        path: /run/log/journal
+    alloy-logs:
+      alloy:
+        mounts:
+          extra:
+            - name: runlog
+              mountPath: /run/log
+      controller:
+        volumes:
+          extra:
+            - name: runlog
+              hostPath:
+                path: /run/log
+                type: Directory
+
+cluster:
+  type: minikube
+  driver: qemu
+  args:
+    - --memory=8192
+    - --cpus=4
+
+dependencies:
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Loki
+              type: loki
+              url: http://loki.loki.svc:3100
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                httpHeaderValue1: "1"
+              isDefault: true
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: node-logs-cluster
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+
+          queries:
+            # Kubelet logs exist
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/journal", unit="kubelet.service", source="journal"}[1h])
+              type: logql
+
+            # Containerd logs exist
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/journal", unit="containerd.service", source="journal"}[1h])
+              type: logql
+
+            # Level detection is working (at least some logs have a detected level)
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/journal", level!="unknown"}[1h])
+              type: logql

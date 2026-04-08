@@ -21,17 +21,23 @@
 |----------|-------------------------------|-----|
 | petewall | <pete.wall@grafana.com>       |     |
 | rlankfo  | <robert.lankford@grafana.com> |     |
-| skl      | <stephen.lang@grafana.com>    |     |
 
 ## Usage
 
 [Helm](https://helm.sh/) must be installed to use the chart. Please refer to
 Helm's [documentation](https://helm.sh/docs/) to get started.
 
-After Helm is set up properly, add the repository as follows:
+### Install from the Helm repository
 
 ```console
 helm repo add grafana https://grafana.github.io/helm-charts
+helm install k8s-monitoring grafana/k8s-monitoring --values values.yaml
+```
+
+### Install from the OCI registry
+
+```console
+helm install k8s-monitoring oci://ghcr.io/grafana/helm-charts/k8s-monitoring --values values.yaml
 ```
 
 Refer to the [Chart Documentation](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/helm-chart-config/helm-chart/)
@@ -43,7 +49,9 @@ We hold office hours on the 4th Friday of the month. Meeting times and recording
 
 | Date       | Topic                                         | Link                                          |
 |------------|-----------------------------------------------|-----------------------------------------------|
-| 2026-02-23 | TBD                                           | [Zoom](https://grafana.zoom.us/j/96633896206) |
+| 2026-04-24 | TBD                                           | [Zoom](https://grafana.zoom.us/j/96633896206) |
+| 2026-03-27 | 4.0 Release                                   | [Recording](https://youtu.be/lgYNFkzREsA)     |
+| 2026-02-27 | 3.8 Release and 4.0 preview                   | [Recording](https://youtu.be/OquS3vMaGNE)     |
 | 2026-01-23 | 3.7 Release                                   | [Recording](https://youtu.be/VyqreBQuVtM)     |
 | 2025-12-12 | 3.6 Release                                   | [Recording](https://youtu.be/T-EaHzJ1Qbs)     |
 | 2025-10-24 | 3.6 Release preview                           | [Recording](https://youtu.be/z3BNfJLWBj4)     |

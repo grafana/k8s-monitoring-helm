@@ -7,7 +7,7 @@ tests:
   - it: uses destination secret
     set:
       destinations:
-        - name: prometheus
+        prometheus:
           type: prometheus
           url: http://prometheus-server.prometheus.svc:9090/api/v1/write
           auth:
@@ -18,7 +18,7 @@ tests:
             create: false
             name: my-prom-secret
             namespace: default
-        - name: tempo
+        tempo:
           type: otlp
           url: tempo.tempo.svc:4317
           tls:
@@ -47,6 +47,29 @@ tests:
                 - k8s.namespace.name
               metricsFlushInterval: 60s
               storeExpirationLoop: 5s
+
+    asserts:
+      - matchSnapshot:
+          path: spec.alloy.configMap.content
+
+  - it: routes metrics to the correct destination with multiple OTLP destinations
+    set:
+      destinations:
+        datadoggateway:
+          type: otlp
+          url: https://datadog.example.com/otlp
+          metrics: {enabled: true}
+          logs: {enabled: true}
+          traces: {enabled: true}
+        otlpGateway:
+          type: otlp
+          url: https://otlp.example.com/otlp
+          metrics: {enabled: true}
+          logs: {enabled: true}
+          traces: {enabled: true}
+          processors:
+            serviceGraphMetrics:
+              enabled: true
 
     asserts:
       - matchSnapshot:
