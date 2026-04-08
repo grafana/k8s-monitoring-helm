@@ -156,11 +156,13 @@ telemetryServices:
 
 The Cluster Metrics feature has been split into three features:
 
+<!--alex disable hostesses-hosts-->
 *   `clusterMetrics` only gathering metrics about the Kubernetes cluster, using sources including Kubelet, cAdvisor,
     kube-state-metrics, and the control plane.
 *   `hostMetrics` gathers metrics about the Kubernetes nodes, using sources including Node Exporter for Linux hosts,
     Windows Exporter for Windows hosts, and Kepler for energy metrics.
 *   `costMetrics` gathers metrics about the cost of running the Kubernetes cluster, using OpenCost.
+<!--alex enable hostesses-hosts-->
 
 #### Pod Logs feature split
 
