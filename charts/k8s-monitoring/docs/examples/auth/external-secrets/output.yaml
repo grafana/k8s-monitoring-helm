@@ -326,7 +326,7 @@ data:
     }
     
     remotecfg {
-      id = sys.env("GCLOUD_FM_COLLECTOR_ID")
+      id = string.format("k8smon-%s-%s-%s", "external-secrets-example-cluster", "default", constants.hostname)
       url = convert.nonsensitive(remote.kubernetes.secret.alloy_metrics_remote_cfg.data["fleet-management-host"])
       basic_auth {
         username = convert.nonsensitive(remote.kubernetes.secret.alloy_metrics_remote_cfg.data["fleet-management-user"])
@@ -1144,18 +1144,6 @@ spec:
     configMap:
       create: false
     extraEnv:
-    - name: CLUSTER_NAME
-      value: external-secrets-example-cluster
-    - name: NAMESPACE
-      valueFrom:
-        fieldRef:
-          fieldPath: metadata.namespace
-    - name: POD_NAME
-      valueFrom:
-        fieldRef:
-          fieldPath: metadata.name
-    - name: GCLOUD_FM_COLLECTOR_ID
-      value: k8smon-$(CLUSTER_NAME)-$(NAMESPACE)-$(POD_NAME)
     - name: GCLOUD_RW_API_KEY
       valueFrom:
         secretKeyRef:

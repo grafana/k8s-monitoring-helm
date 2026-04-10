@@ -4,20 +4,7 @@
 {{- range $collectorName := keys .Values.collectors | sortAlpha }}
   {{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
   {{- if (dig "remoteConfig" "enabled" false $collectorValues) }}
-    {{- $collectorType := $collectorValues.controller.type }}
     {{- $extraEnv := deepCopy (dig "alloy" "extraEnv" list $collectorValues) }}
-    {{- if eq (include "collectors.hasExtraEnv" (deepCopy $ | merge (dict "collectorName" $collectorName "envVarName" "GCLOUD_FM_COLLECTOR_ID"))) "false" }}
-      {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "CLUSTER_NAME" "value" $.Values.cluster.name)) | fromYamlArray }}
-      {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "NAMESPACE" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.namespace")))) | fromYamlArray }}
-      {{- if eq $collectorType "daemonset" }}
-        {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "NODE_NAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "spec.nodeName")))) | fromYamlArray }}
-        {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "GCLOUD_FM_COLLECTOR_ID" "value" (printf "%s-$(CLUSTER_NAME)-$(NAMESPACE)-%s-$(NODE_NAME)" $.Release.Name $collectorName))) | fromYamlArray }}
-      {{- else }}
-        {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "POD_NAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.name")))) | fromYamlArray }}
-        {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "GCLOUD_FM_COLLECTOR_ID" "value" (printf "%s-$(CLUSTER_NAME)-$(NAMESPACE)-$(POD_NAME)" $.Release.Name))) | fromYamlArray }}
-      {{- end }}
-    {{- end }}
-
     {{- if eq (include "collectors.hasExtraEnv" (deepCopy $ | merge (dict "collectorName" $collectorName "envVarName" "GCLOUD_RW_API_KEY"))) "false" }}
       {{- $remoteConfigValues := merge (dict "type" "remoteConfig") (get $collectorValues "remoteConfig") }}
       {{- if eq (include "secrets.usesKubernetesSecret" $remoteConfigValues ) "true" }}
@@ -35,13 +22,18 @@
 {{- /* Builds the alloy config for remoteConfig. Input: $, .collectorName (string, collector name) */ -}}
 {{- define "collectors.remoteConfig.alloy" -}}
 {{- $collectorValues := include "collector.alloy.values" . | fromYaml }}
+{{- $collectorType := $collectorValues.controller.type }}
 {{- with merge $collectorValues.remoteConfig (dict "type" "remoteConfig" "name" (printf "%s-remote-cfg" .collectorName)) }}
   {{- if .enabled }}
     {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
       {{- include "secret.alloy" (deepCopy $ | merge (dict "object" .)) | nindent 0 }}
     {{- end }}
 remotecfg {
-  id = sys.env("GCLOUD_FM_COLLECTOR_ID")
+    {{- if eq $collectorType "daemonset" }}
+  id = string.format("{{ $.Release.Name }}-%s-%s-%s", {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }}, {{ $.Release.Namespace | quote }}, sys.env("K8S_NODE_NAME"))
+    {{- else }}
+  id = string.format("{{ $.Release.Name }}-%s-%s-%s", {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }}, {{ $.Release.Namespace | quote }}, constants.hostname)
+    {{- end }}
 {{- if .urlFrom }}
   url = {{ .urlFrom }}
 {{- else }}
@@ -94,12 +86,12 @@ remotecfg {
 {{- $attributes = merge $attributes (dict "source" $.Chart.Name) }}
 {{- $attributes = merge $attributes (dict "sourceVersion" $.Chart.Version) }}
 {{- $attributes = merge $attributes (dict "release" $.Release.Name) }}
-{{- $attributes = merge $attributes (dict "cluster" $.Values.cluster.name) }}
 {{- $attributes = merge $attributes (dict "namespace" $.Release.Namespace) }}
 {{- $attributes = merge $attributes (dict "workloadName" $.collectorName) }}
 {{- $attributes = merge $attributes (dict "workloadType" $collectorValues.controller.type) }}
 {{- $attributes = mergeOverwrite $attributes .extraAttributes }}
   attributes = {
+    "cluster" = {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }},
 {{- range $key, $value := $attributes }}
   {{- if $value }}
     {{ $key | quote }} = {{ $value | quote }},
