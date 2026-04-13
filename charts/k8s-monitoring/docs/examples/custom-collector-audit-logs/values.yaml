@@ -1,0 +1,37 @@
+---
+cluster:
+  name: custom-collector-audit-logs-cluster
+
+destinations:
+  loki:
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+
+selfReporting:
+  enabled: false
+
+collectors:
+  alloy-audit-logs:
+    presets: [filesystem-log-reader, daemonset]
+    includeDestinations: [loki]
+    controller:
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
+    extraConfig: |
+      local.file_match "audit_logs" {
+        path_targets = [{
+          __path__  = "/var/log/kubernetes/audit/*.log",
+          job       = "integrations/kubernetes-audit",
+          component = "audit",
+        }]
+      }
+
+      loki.source.file "audit_logs" {
+        targets    = local.file_match.audit_logs.targets
+        forward_to = [loki.write.loki.receiver]
+      }

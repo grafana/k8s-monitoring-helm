@@ -21,10 +21,10 @@ should create hook when operator is deployed and readiness is enabled:
 
                 kubectl patch \
                   --namespace=NAMESPACE \
-                  --type json \
-                  --patch='[{"op": "remove", "path": "/metadata/finalizers"}]' \
+                  --type merge \
+                  --patch='{"metadata":{"finalizers":null}}' \
                   deployment/RELEASE-NAME-alloy-operator
-            image: ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.1
+            image: ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.2
             imagePullPolicy: IfNotPresent
             name: remove-finalizers
             securityContext:
