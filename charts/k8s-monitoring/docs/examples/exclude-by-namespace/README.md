@@ -75,7 +75,7 @@ autoInstrumentation:
       data:
         discovery:
           services:
-            - k8s_namespace: .
+            - k8s_namespace: "*"
           exclude_services:
             - k8s_namespace: kube-system
             - k8s_namespace: kube-public
