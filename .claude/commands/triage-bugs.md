@@ -15,7 +15,7 @@ If $ARGUMENTS is empty or not a number, default to 10.
 Use Bash to list the most recent open issues:
 
 ```shell
-/opt/homebrew/bin/gh issue list --repo grafana/k8s-monitoring-helm --limit <N> --state open --json number,title,url,labels,body
+gh issue list --repo grafana/k8s-monitoring-helm --limit <N> --state open --json number,title,url,labels,body
 
 ```
 
