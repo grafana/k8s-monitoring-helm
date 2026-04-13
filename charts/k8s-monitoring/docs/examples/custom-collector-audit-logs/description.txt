@@ -10,3 +10,7 @@ audit logs. It demonstrates how to:
 
 The `alloy-audit-logs` collector uses a `local.file_match` component to discover audit log files on the Node and a
 `loki.source.file` component to tail them and forward to a Loki destination.
+
+Prerequisite: the Kubernetes API server must be configured to write audit logs to the mounted directory on the node
+(for example, with `--audit-policy-file` and `--audit-log-path`). The `__path__` glob in the collector
+configuration must also match that same location; otherwise the collector will not discover any audit log files.
