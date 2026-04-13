@@ -27,7 +27,7 @@ data:
     }
     
     remotecfg {
-      id = string.format("k8smon-%s-%s-%s", "remote-config-test", "default", sys.env("K8S_NODE_NAME"))
+      id = string.format("k8smon-%s-%s-%s-%s", "remote-config-test", "default", "alloy-logs", sys.env("K8S_NODE_NAME"))
       url = "https://fleet-management-prod-008.grafana.net"
       basic_auth {
         username = convert.nonsensitive(remote.kubernetes.secret.alloy_logs_remote_cfg.data["GRAFANA_CLOUD_FLEET_MGMT_USER"])
@@ -366,6 +366,14 @@ spec:
     configMap:
       create: false
     extraEnv:
+    - name: NAMESPACE
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.namespace
+    - name: POD_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.name
     - name: GCLOUD_RW_API_KEY
       valueFrom:
         secretKeyRef:
@@ -426,6 +434,14 @@ spec:
     configMap:
       create: false
     extraEnv:
+    - name: NAMESPACE
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.namespace
+    - name: POD_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.name
     - name: GCLOUD_RW_API_KEY
       valueFrom:
         secretKeyRef:
