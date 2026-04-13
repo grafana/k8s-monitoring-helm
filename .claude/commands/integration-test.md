@@ -10,7 +10,7 @@ Run the integration test at `$ARGUMENTS` within the `charts/k8s-monitoring` dire
 
 ## Prerequisites
 
-The test runner is at `/Users/petewall/src/grafana/helm-chart-toolbox/tools/helm-test/helm-test`. Required command-line tools: `kind`, `helm`, `yq`, `kubectl`, `flux`.
+Ensure `helm-test` is installed and available on your `$PATH`. Required command-line tools: `kind`, `helm`, `yq`, `kubectl`, `flux`.
 
 ## Steps
 
@@ -33,7 +33,7 @@ This handles generated configs (e.g. Kind cluster configs with absolute paths, g
 From the `charts/k8s-monitoring` directory, run:
 
 ```bash
-cd charts/k8s-monitoring && DELETE_CLUSTER=false /Users/petewall/src/grafana/helm-chart-toolbox/tools/helm-test/helm-test <test-directory>
+cd charts/k8s-monitoring && DELETE_CLUSTER=false helm-test <test-directory>
 ```
 
 Use `DELETE_CLUSTER=false` by default so the user can inspect the cluster afterward. Use a 10-minute timeout since cluster creation and deployments take time.
