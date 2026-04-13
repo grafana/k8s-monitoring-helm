@@ -10,11 +10,11 @@ Kubernetes Monitoring Helm chart.
 The chart supports referencing pre-existing Kubernetes Secrets via the `secret.create: false` configuration. You can use
 any Vault integration method to create those Kubernetes Secrets:
 
-- [Vault Secrets Operator](https://developer.hashicorp.com/vault/docs/platform/k8s/vso) (recommended) — syncs Vault
+-   [Vault Secrets Operator](https://developer.hashicorp.com/vault/docs/platform/k8s/vso) (recommended) — syncs Vault
   secrets directly into Kubernetes Secrets
-- [Vault CSI Provider](https://developer.hashicorp.com/vault/docs/platform/k8s/csi) — uses the Secrets Store CSI
+-   [Vault CSI Provider](https://developer.hashicorp.com/vault/docs/platform/k8s/csi) — uses the Secrets Store CSI
   Driver to mount secrets as volumes and optionally sync them to Kubernetes Secrets
-- [Vault Agent Injector](https://developer.hashicorp.com/vault/docs/platform/k8s/injector) — injects secrets into pod
+-   [Vault Agent Injector](https://developer.hashicorp.com/vault/docs/platform/k8s/injector) — injects secrets into pod
   filesystems via sidecar
 
 ## Vault Setup
@@ -168,11 +168,11 @@ clusterMetrics:
   kubelet:
     metricsTuning:
       includeMetrics: [kubernetes_build_info]
-  kubeletResource:    {enabled: false}
-  cadvisor:           {enabled: false}
+  kubeletResource: {enabled: false}
+  cadvisor: {enabled: false}
   kube-state-metrics: {enabled: false, deploy: false}
-  node-exporter:      {enabled: false, deploy: false}
-  windows-exporter:   {enabled: false, deploy: false}
+  node-exporter: {enabled: false, deploy: false}
+  windows-exporter: {enabled: false, deploy: false}
 
 podLogsViaLoki:
   enabled: true
