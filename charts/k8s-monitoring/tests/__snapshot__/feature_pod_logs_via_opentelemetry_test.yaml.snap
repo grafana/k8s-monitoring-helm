@@ -9,7 +9,7 @@ renders the config to gather Kubernetes Pod logs:
 
         otelcol.receiver.filelog "pod_logs" {
           include = ["/var/log/pods/*/*/*.log"]
-          start_at = "beginning"
+          start_at = "end"
           include_file_name = false
           include_file_path = true
 
@@ -94,7 +94,7 @@ renders the config to gather Kubernetes Pod logs:
           }
 
           output {
-            logs = [otelcol.exporter.loki.pod_logs.input]
+            logs = argument.logs_destinations.value
           }
         }
       }
@@ -113,7 +113,7 @@ renders the config to gather Kubernetes Pod logs:
       prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
         set_collectors = ["textfile"]
         textfile {
-          directory = "/etc/alloy"
+          directory = "/etc/release-info"
         }
       }
 
