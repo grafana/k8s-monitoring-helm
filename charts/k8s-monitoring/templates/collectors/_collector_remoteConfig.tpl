@@ -5,6 +5,12 @@
   {{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
   {{- if (dig "remoteConfig" "enabled" false $collectorValues) }}
     {{- $extraEnv := deepCopy (dig "alloy" "extraEnv" list $collectorValues) }}
+    {{- if eq (include "collectors.hasExtraEnv" (deepCopy $ | merge (dict "collectorName" $collectorName "envVarName" "NAMESPACE"))) "false" }}
+      {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "NAMESPACE" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.namespace")))) | fromYamlArray }}
+    {{- end }}
+    {{- if eq (include "collectors.hasExtraEnv" (deepCopy $ | merge (dict "collectorName" $collectorName "envVarName" "POD_NAME"))) "false" }}
+      {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "POD_NAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.name")))) | fromYamlArray }}
+    {{- end }}
     {{- if eq (include "collectors.hasExtraEnv" (deepCopy $ | merge (dict "collectorName" $collectorName "envVarName" "GCLOUD_RW_API_KEY"))) "false" }}
       {{- $remoteConfigValues := merge (dict "type" "remoteConfig") (get $collectorValues "remoteConfig") }}
       {{- if eq (include "secrets.usesKubernetesSecret" $remoteConfigValues ) "true" }}
@@ -30,7 +36,7 @@
     {{- end }}
 remotecfg {
     {{- if eq $collectorType "daemonset" }}
-  id = string.format("{{ $.Release.Name }}-%s-%s-%s", {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }}, {{ $.Release.Namespace | quote }}, sys.env("K8S_NODE_NAME"))
+  id = string.format("{{ $.Release.Name }}-%s-%s-%s-%s", {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }}, {{ $.Release.Namespace | quote }}, {{ $.collectorName | quote }}, sys.env("K8S_NODE_NAME"))
     {{- else }}
   id = string.format("{{ $.Release.Name }}-%s-%s-%s", {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }}, {{ $.Release.Namespace | quote }}, constants.hostname)
     {{- end }}
