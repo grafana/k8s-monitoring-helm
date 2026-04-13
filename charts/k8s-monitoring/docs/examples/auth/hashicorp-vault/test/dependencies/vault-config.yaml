@@ -1,0 +1,82 @@
+---
+# This Job configures Vault with secrets and Kubernetes authentication.
+# It runs after Vault is deployed and writes the monitoring credentials
+# that will be synced to Kubernetes Secrets.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault-config
+  namespace: vault
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: vault-config-auth-delegator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+  - kind: ServiceAccount
+    name: vault-config
+    namespace: vault
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vault-config
+  namespace: vault
+spec:
+  backoffLimit: 10
+  template:
+    spec:
+      serviceAccountName: vault-config
+      restartPolicy: OnFailure
+      containers:
+        - name: vault-config
+          image: hashicorp/vault:1.17.2
+          env:
+            - name: VAULT_ADDR
+              value: http://vault.vault.svc:8200
+            - name: VAULT_TOKEN
+              value: root
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              # Wait for Vault to be ready
+              until vault status; do
+                echo "Waiting for Vault..."
+                sleep 2
+              done
+
+              # Enable KV v2 secrets engine
+              vault secrets enable -path=secret -version=2 kv || true
+
+              # Write monitoring credentials
+              vault kv put secret/monitoring \
+                username="promuser" \
+                password="prompassword" \
+                loki-username="lokiuser" \
+                loki-password="lokipassword"
+
+              # Enable Kubernetes auth
+              vault auth enable kubernetes || true
+              vault write auth/kubernetes/config \
+                kubernetes_host="https://kubernetes.default.svc:443"
+
+              # Create a policy for reading monitoring secrets
+              vault policy write monitoring-policy - <<EOF
+              path "secret/data/monitoring" {
+                capabilities = ["read"]
+              }
+              EOF
+
+              # Create a role for the vault-secrets-operator
+              vault write auth/kubernetes/role/monitoring \
+                bound_service_account_names=vault-secrets-operator-default \
+                bound_service_account_namespaces=vault \
+                policies=monitoring-policy \
+                ttl=1h
+
+              echo "Vault configuration complete!"

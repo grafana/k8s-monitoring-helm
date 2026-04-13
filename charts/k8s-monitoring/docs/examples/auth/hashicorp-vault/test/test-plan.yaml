@@ -1,0 +1,61 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: hashicorp-vault
+
+subject:
+  releaseName: k8smon
+  path: ../../../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: dependencies/passwords.yaml
+  - file: dependencies/nginx-auth-gateway.yaml
+  - file: dependencies/vault.yaml
+  - file: dependencies/vault-config.yaml
+  - file: dependencies/vault-secrets-operator.yaml
+  - file: dependencies/vault-static-secret.yaml
+  - preset: prometheus
+    overrides:
+      server:
+        extraFlags:
+          - web.enable-remote-write-receiver
+  - preset: loki
+    overrides:
+      gateway: null
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+
+            - name: Loki
+              type: loki
+              url: http://loki.loki.svc:3100
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                httpHeaderValue1: "1"
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: hashicorp-vault-example-cluster
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+          queries:
+            - query: kubernetes_build_info{cluster="$CLUSTER"}
+              type: promql
+            - query: count_over_time({cluster="$CLUSTER", job!="integrations/kubernetes/eventhandler"}[1h])
+              type: logql

@@ -1,0 +1,52 @@
+---
+cluster:
+  name: hashicorp-vault-example-cluster
+
+destinations:
+  metrics-service:
+    type: prometheus
+    url: http://nginx-auth-gateway.default.svc/metrics/basic/api/v1/write
+    auth:
+      type: basic
+      usernameKey: username
+      passwordKey: password
+    secret:
+      create: false
+      name: monitoring-credentials
+      namespace: default
+
+  logs-service:
+    type: loki
+    url: http://nginx-auth-gateway.default.svc/logs/basic/loki/api/v1/push
+    tenantId: 1
+    auth:
+      type: basic
+      usernameKey: loki-username
+      passwordKey: loki-password
+    secret:
+      create: false
+      name: monitoring-credentials
+      namespace: default
+
+clusterMetrics:
+  enabled: true
+  collector: alloy-metrics
+  kubelet:
+    metricsTuning:
+      includeMetrics: [kubernetes_build_info]
+  kubeletResource:    {enabled: false}
+  cadvisor:           {enabled: false}
+  kube-state-metrics: {enabled: false, deploy: false}
+  node-exporter:      {enabled: false, deploy: false}
+  windows-exporter:   {enabled: false, deploy: false}
+
+podLogsViaLoki:
+  enabled: true
+  collector: alloy-logs
+  namespaces: ["default"]
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
