@@ -2,7 +2,6 @@ local.file_match "audit_logs" {
   path_targets = [{
     __path__  = "/var/log/kubernetes/audit/*.log",
     job       = "integrations/kubernetes-audit",
-    cluster   = env("CLUSTER_NAME"),
     component = "audit",
   }]
 }
@@ -20,6 +19,11 @@ loki.write "loki" {
   endpoint {
     url = "http://loki.loki.svc:3100/loki/api/v1/push"
     retry_on_http_429 = true
+    tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+      password = remote.kubernetes.secret.loki.data["password"]
+    }
     tls_config {
       insecure_skip_verify = false
     }
@@ -31,5 +35,10 @@ loki.write "loki" {
     "cluster" = "custom-collector-audit-logs-cluster",
     "k8s_cluster_name" = "custom-collector-audit-logs-cluster",
   }
+}
+
+remote.kubernetes.secret "loki" {
+  name      = "loki-k8smon-k8s-monitoring"
+  namespace = "default"
 }
 

@@ -13,6 +13,18 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
+# Source: k8s-monitoring/templates/destination_secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "loki-k8smon-k8s-monitoring"
+  namespace: "default"
+type: Opaque
+data:
+  tenantId: "MQ=="
+  username: "bG9raQ=="
+  password: "bG9raXBhc3N3b3Jk"
+---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -25,7 +37,6 @@ data:
       path_targets = [{
         __path__  = "/var/log/kubernetes/audit/*.log",
         job       = "integrations/kubernetes-audit",
-        cluster   = env("CLUSTER_NAME"),
         component = "audit",
       }]
     }
@@ -43,6 +54,11 @@ data:
       endpoint {
         url = "http://loki.loki.svc:3100/loki/api/v1/push"
         retry_on_http_429 = true
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+          password = remote.kubernetes.secret.loki.data["password"]
+        }
         tls_config {
           insecure_skip_verify = false
         }
@@ -54,6 +70,11 @@ data:
         "cluster" = "custom-collector-audit-logs-cluster",
         "k8s_cluster_name" = "custom-collector-audit-logs-cluster",
       }
+    }
+    
+    remote.kubernetes.secret "loki" {
+      name      = "loki-k8smon-k8s-monitoring"
+      namespace = "default"
     }
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
@@ -330,14 +351,9 @@ spec:
   alloy:
     configMap:
       create: false
-    extraEnv:
-    - name: CLUSTER_NAME
-      value: custom-collector-audit-logs-cluster
     mounts:
-      extra:
-      - mountPath: /var/log/kubernetes/audit
-        name: audit-logs
-        readOnly: true
+      dockercontainers: true
+      varlog: true
     resources: {}
     securityContext:
       allowPrivilegeEscalation: false
@@ -369,15 +385,8 @@ spec:
       k8s.grafana.com/logs.job: integrations/alloy
     tolerations:
     - effect: NoSchedule
-      key: node-role.kubernetes.io/control-plane
       operator: Exists
     type: daemonset
-    volumes:
-      extra:
-      - hostPath:
-          path: /var/log/kubernetes/audit
-          type: DirectoryOrCreate
-        name: audit-logs
   crds:
     create: false
   nameOverride: alloy-audit-logs

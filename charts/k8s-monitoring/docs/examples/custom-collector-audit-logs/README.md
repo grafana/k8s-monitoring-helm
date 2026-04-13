@@ -15,6 +15,10 @@ audit logs. It demonstrates how to:
 The `alloy-audit-logs` collector uses a `local.file_match` component to discover audit log files on the Node and a
 `loki.source.file` component to tail them and forward to a Loki destination.
 
+Prerequisite: the Kubernetes API server must be configured to write audit logs to the mounted directory on the node
+(for example, with `--audit-policy-file` and `--audit-log-path`). The `__path__` glob in the collector
+configuration must also match that same location; otherwise the collector will not discover any audit log files.
+
 ## Values
 
 <!-- textlint-disable terminology -->
@@ -27,42 +31,27 @@ destinations:
   loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
 
 selfReporting:
   enabled: false
 
 collectors:
   alloy-audit-logs:
-    presets: [daemonset]
+    presets: [filesystem-log-reader, daemonset]
     includeDestinations: [loki]
-    alloy:
-      extraEnv:
-        - name: CLUSTER_NAME
-          value: custom-collector-audit-logs-cluster
-      mounts:
-        extra:
-          - name: audit-logs
-            mountPath: /var/log/kubernetes/audit
-            readOnly: true
     controller:
       nodeSelector:
         node-role.kubernetes.io/control-plane: ""
-      tolerations:
-        - key: node-role.kubernetes.io/control-plane
-          effect: NoSchedule
-          operator: Exists
-      volumes:
-        extra:
-          - name: audit-logs
-            hostPath:
-              path: /var/log/kubernetes/audit
-              type: DirectoryOrCreate
     extraConfig: |
       local.file_match "audit_logs" {
         path_targets = [{
           __path__  = "/var/log/kubernetes/audit/*.log",
           job       = "integrations/kubernetes-audit",
-          cluster   = env("CLUSTER_NAME"),
           component = "audit",
         }]
       }
