@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.1
+
+*   Add the ability to set the cluster name using arbitrary sources with `cluster.nameFrom` (@petewall)
+
 ## 4.0.4
 
 *   Fix Loki, Mimir, and Grafana integrations spamming `failed to decode logfmt` errors for non-logfmt components like the Loki/Mimir gateway (nginx) and canary, by gating the logfmt parser on lines that look like logfmt (#1726) (@petewall)

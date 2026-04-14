@@ -75,7 +75,7 @@ otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | q
     context = "resource"
     statements = [
 {{- range $label := .clusterLabels }}
-      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }})`,
 {{- end }}
 {{- range $resourceAttribute := $resourceAttributesToRemove }}
       `delete_key(attributes, {{ $resourceAttribute | quote }})`,
@@ -107,7 +107,7 @@ otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | q
     context = "datapoint"
     statements = [
 {{- range $label := .clusterLabels }}
-      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }})`,
 {{- end }}
 {{- range $datapointAttribute, $resourceAttribute := .processors.transform.metrics.datapointToResource }}
   {{- if $resourceAttribute }}
@@ -131,7 +131,7 @@ otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | q
     context = "resource"
     statements = [
 {{- range $label := .clusterLabels }}
-      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }})`,
 {{- end }}
 {{- range $resourceAttribute := $resourceAttributesToRemove }}
       `delete_key(attributes, {{ $resourceAttribute | quote }})`,
@@ -185,7 +185,7 @@ otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | q
     context = "resource"
     statements = [
 {{- range $label := .clusterLabels }}
-      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }})`,
 {{- end }}
 {{- range $resourceAttribute := $resourceAttributesToRemove }}
       `delete_key(attributes, {{ $resourceAttribute | quote }})`,
