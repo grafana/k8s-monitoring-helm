@@ -253,7 +253,7 @@ prometheus.remote_write {{ include "helper.alloy_name" $.destinationName | quote
     write_relabel_config {
       source_labels = [{{ include "escape_label" $label | quote }}]
       regex = ""
-      replacement = {{ $.Values.cluster.name | quote }}
+      replacement = {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }}
       target_label = {{ include "escape_label" $label | quote }}
     }
 {{- end }}
