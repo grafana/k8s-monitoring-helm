@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.1
+
+*   Add the ability to set the cluster name using arbitrary sources with `cluster.nameFrom` (@petewall)
+
 ## Unreleased
 
 *   PostgreSQL: Add `statementsLimit` option to the Database Observability `queryDetails` collector (@petewall)
