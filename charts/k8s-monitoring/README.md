@@ -547,7 +547,7 @@ details:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| podLogsViaLoki | object | Disabled | Pod logs in Loki format. Requires a destination that supports logs. To see the valid options, please see the [Pod Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs). |
+| podLogsViaLoki | object | Disabled | Pod logs in Loki format. Requires a destination that supports logs. To see the valid options, please see the [Pod Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs-via-loki). |
 | podLogsViaLoki.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
 | podLogsViaLoki.enabled | bool | `false` | Enable gathering Kubernetes Pod logs. |
 
@@ -555,7 +555,7 @@ details:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| podLogsViaOpenTelemetry | object | Disabled | Pod logs in OpenTelemetry format. Requires a destination that supports logs. To see the valid options, please see the [Pod Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs). |
+| podLogsViaOpenTelemetry | object | Disabled | Pod logs in OpenTelemetry format. Requires a destination that supports logs. To see the valid options, please see the [Pod Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs-via-opentelemetry). |
 | podLogsViaOpenTelemetry.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
 | podLogsViaOpenTelemetry.enabled | bool | `false` | Enable gathering Kubernetes Pod logs. |
 
