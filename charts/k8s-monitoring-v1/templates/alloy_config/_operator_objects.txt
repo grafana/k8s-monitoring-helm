@@ -121,6 +121,7 @@ prometheus.relabel "probes" {
 {{- $metricDenyList := .Values.metrics.serviceMonitors.metricsTuning.excludeMetrics }}
 // Prometheus Operator ServiceMonitor objects
 prometheus.operator.servicemonitors "service_monitors" {
+  kubernetes_role = "endpointslice"
 {{- if .Values.metrics.serviceMonitors.namespaces }}
   namespaces = {{ .Values.metrics.serviceMonitors.namespaces | toJson }}
 {{- end }}

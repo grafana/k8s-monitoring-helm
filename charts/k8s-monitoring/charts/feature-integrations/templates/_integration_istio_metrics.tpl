@@ -149,6 +149,9 @@ prometheus.relabel {{ printf "%s_sidecar" (include "helper.alloy_name" .name) | 
     {{- $metricAllowList := include "integrations.istio.istiod.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
     {{- $metricDenyList := .istiodMetrics.tuning.excludeMetrics }}
     {{- $istiodLabelSelectors := list }}
+    {{- if .istiodMetrics.serviceName }}
+      {{- $istiodLabelSelectors = append $istiodLabelSelectors (printf "kubernetes.io/service-name=%s" .istiodMetrics.serviceName) }}
+    {{- end }}
     {{- range $k, $v := .istiodMetrics.labelSelectors }}
       {{- if kindIs "slice" $v }}
         {{- $istiodLabelSelectors = append $istiodLabelSelectors (printf "%s in (%s)" $k (join "," $v)) }}
@@ -157,12 +160,9 @@ prometheus.relabel {{ printf "%s_sidecar" (include "helper.alloy_name" .name) | 
       {{- end }}
     {{- end }}
 discovery.kubernetes {{ printf "%s_istiod" (include "helper.alloy_name" .name) | quote }} {
-  role = "endpoints"
+  role = "endpointslice"
   selectors {
-    role = "service"
-{{- if .istiodMetrics.serviceName }}
-    field = "metadata.name={{ .istiodMetrics.serviceName }}"
-{{- end }}
+    role = "endpointslice"
 {{- if $istiodLabelSelectors }}
     label = {{ $istiodLabelSelectors | join "," | quote }}
 {{- end }}
@@ -178,7 +178,7 @@ discovery.relabel {{ printf "%s_istiod" (include "helper.alloy_name" .name) | qu
   targets = discovery.kubernetes.{{ printf "%s_istiod" (include "helper.alloy_name" .name) }}.targets
 
   rule {
-    source_labels = ["__meta_kubernetes_endpoint_port_name"]
+    source_labels = ["__meta_kubernetes_endpointslice_port_name"]
     regex         = "http-monitoring"
     action        = "keep"
   }
