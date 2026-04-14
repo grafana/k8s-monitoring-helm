@@ -470,6 +470,7 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | cluster.name | string | `""` | The name for this cluster. |
+| cluster.nameFrom | string | `""` | A raw Alloy expression for the cluster name. Use this to dynamically set the cluster name, e.g. `sys.env("CLUSTER_NAME")`. If set, this takes precedence over `cluster.name`. |
 
 ### Features - Cluster Events
 
