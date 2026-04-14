@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.1
+
+*   Add the ability to set the cluster name using arbitrary sources with `cluster.nameFrom` (@petewall)
+
 ## 4.0.1
 
 *   Remove extra `/var/configs` volume mount from OpenCost (@petewall)
