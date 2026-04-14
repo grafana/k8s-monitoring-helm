@@ -8,9 +8,9 @@ allowed-tools: WebFetch, Read, Grep, Glob, Bash, Agent, Write, Edit
 
 Triage open GitHub issues from the grafana/k8s-monitoring-helm repository.
 
-- If $ARGUMENTS is `all`, fetch every open issue.
-- If $ARGUMENTS is a number, fetch that many most recent open issues.
-- If $ARGUMENTS is empty or not a number or `all`, default to 10.
+-   If $ARGUMENTS is `all`, fetch every open issue.
+-   If $ARGUMENTS is a number, fetch that many most recent open issues.
+-   If $ARGUMENTS is empty or not a number or `all`, default to 10.
 
 ## Step 1: Fetch the issues
 
