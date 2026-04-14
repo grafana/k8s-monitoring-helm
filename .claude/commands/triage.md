@@ -1,12 +1,14 @@
 ---
 description: Triage a GitHub issue — classify it, identify affected versions, and plan a fix
-argument-hint: <github-issue-url>
-allowed-tools: WebFetch, Read, Grep, Glob, Bash, Agent, EnterPlanMode
+argument-hint: <github-issue-url> [--save]
+allowed-tools: WebFetch, Read, Grep, Glob, Bash, Agent, Write, Edit, EnterPlanMode
 ---
 
 # Triage
 
 Triage the GitHub issue at $ARGUMENTS.
+
+If `--save` is present in $ARGUMENTS, write the triage output to `daily-triage/issues/<number>.md` instead of presenting it in the conversation. Do not enter plan mode when `--save` is set.
 
 Follow these steps in order:
 
@@ -21,13 +23,16 @@ Use WebFetch to read the GitHub issue page. Extract:
 
 ## Step 2: Classify the issue
 
-Determine whether this is:
+Determine which **one** of these categories best fits:
 
--   **A legitimate bug** — something is broken in the chart code or templates
--   **A documentation issue** — the chart works as designed but the docs are unclear, missing, or misleading
--   **A configuration error** — the user misconfigured something and needs guidance
--   **A feature request** — the user wants new functionality that doesn't exist yet
--   **Not an issue** — the reported behavior is expected and correct
+| Category | Description |
+|---|---|
+| **Chart Bug** | A legitimate bug — something is broken in the chart code or templates |
+| **Documentation Issue** | The chart works as designed but the docs are unclear, missing, or misleading and need to change |
+| **User Docs Mismatch** | The user is not seeing or reading the right documentation for their version |
+| **User Misunderstanding** | The user misconfigured something or misunderstands how the chart works |
+| **Feature Request** | The user wants new functionality that doesn't exist yet |
+| **Other** | Doesn't fit the above categories (e.g. meta issues, release tracking, questions) |
 
 Explain your reasoning.
 
@@ -40,17 +45,37 @@ Based on the issue details:
 -   Check git history (`git log`) to see if the relevant code was recently changed, which helps identify when the issue was introduced.
 -   State whether the issue affects the latest version.
 
-## Step 4: Plan the fix (if warranted)
+## Step 4: Create an action plan
 
-If a code or documentation fix is warranted, enter plan mode and create a detailed plan:
+Based on the classification:
 
--   Identify the specific files that need to change
--   Describe what changes are needed in each file
--   Note any tests that should be added or updated
--   Flag any risks or breaking changes the fix might introduce
+-   **Chart Bug**: Identify the specific files and code that need to change. Describe what the fix looks like, including any tests that should be added or updated.
+-   **Documentation Issue**: Identify which doc files need to change and what should be added/clarified.
+-   **User Docs Mismatch**: Draft a response pointing the user to the correct documentation for their version.
+-   **User Misunderstanding**: Draft a helpful response explaining the correct configuration or behavior.
+-   **Feature Request**: Outline what implementing the feature would require (files, scope, risks).
+-   **Other**: Describe what action (if any) should be taken.
 
-If no fix is warranted (e.g., configuration error), instead draft a helpful response to the issue author explaining the resolution.
+To build the action plan, search for relevant files, read templates, check values.yaml, etc. The plan should be specific enough that someone could start implementing from it.
 
-## Output format
+## Step 5: Output
 
-Present your findings as a structured triage report with clear sections for each step above.
+**If `--save` was specified**, write a file to `daily-triage/issues/<number>.md`:
+
+```markdown
+# <Issue Title>
+
+-   **Issue:** <GitHub URL>
+-   **Category:** <one of the categories above>
+-   **Triaged:** <current date, e.g. 2026-04-13>
+
+## Description
+
+<Brief summary of the issue in 2-3 sentences>
+
+## Action Plan
+
+<Specific steps to resolve, with file paths and code references where applicable>
+```
+
+**If `--save` was not specified**, present findings as a structured triage report in the conversation with clear sections for each step above. Then, if the issue is a **Chart Bug**, enter plan mode and create a detailed implementation plan.
