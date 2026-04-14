@@ -4,7 +4,7 @@ remote.kubernetes.secret "alloy_metrics_remote_cfg" {
 }
 
 remotecfg {
-  id = sys.env("GCLOUD_FM_COLLECTOR_ID")
+  id = string.format("k8smon-%s-%s-%s", "remote-config-example-cluster", "default", constants.hostname)
   url = "https://remote-config.example.com/alloy"
   basic_auth {
     username = convert.nonsensitive(remote.kubernetes.secret.alloy_metrics_remote_cfg.data["username"])

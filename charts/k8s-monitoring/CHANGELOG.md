@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.1
+
+*   Add the ability to set the cluster name using arbitrary sources with `cluster.nameFrom` (@petewall)
+
 ## 4.0.5
 
 *   Add the ability to set per-signal paths for OTLP/http destinations (@petewall)
