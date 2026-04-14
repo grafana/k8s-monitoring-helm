@@ -155,7 +155,7 @@ loki.write {{ include "helper.alloy_name" $.destinationName | quote }} {
   }
   external_labels = {
 {{- range $label := .clusterLabels }}
-    {{ include "escape_label" $label | quote }} = {{ $.Values.cluster.name | quote }},
+    {{ include "escape_label" $label | quote }} = {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }},
 {{- end }}
 {{- if .extraLabels }}
   {{- range $k, $v := .extraLabels }}

@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.1
+
+*   Add the ability to set the cluster name using arbitrary sources with `cluster.nameFrom` (@petewall)
+
 ## 4.0.4
 
 *   Set Prometheus destination cluster labels via `external_labels` instead of `write_relabel_config` blocks, matching the Loki destination pattern (@petewall)
