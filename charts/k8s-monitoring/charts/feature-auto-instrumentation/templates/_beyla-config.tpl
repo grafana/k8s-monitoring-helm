@@ -22,10 +22,10 @@
   {{- $overrides = merge $overrides (dict "network" (dict "enable" true)) -}}
 {{- end }}
 {{- if and (eq (dig "preset" "" $beylaMap) "application") (not (hasKey $config "discovery")) }}
-  {{- $services := list (dict "k8s_namespace" ".") -}}
-  {{- $excludeServices := list (dict "exe_path" ".*alloy.*|.*otelcol.*|.*beyla.*") -}}
-  {{- $discovery := dict "instrument" $services "exclude_instrument" $excludeServices -}}
-  {{- $overrides = merge $overrides (dict "discovery" $discovery) -}}
+  {{- $services := list (dict "k8s_namespace" "*") }}
+  {{- $excludeServices := list (dict "exe_path" "{*alloy*,*otelcol*,*beyla*}") }}
+  {{- $discovery := dict "instrument" $services "exclude_instrument" $excludeServices }}
+  {{- $overrides = merge $overrides (dict "discovery" $discovery) }}
 {{- end }}
 {{- if and (dig "applicationObservability" "enabled" false $valuesMap) (dig "deliverTracesToApplicationObservability" false $beylaMap) }}
   {{- $endpoint := "" -}}
