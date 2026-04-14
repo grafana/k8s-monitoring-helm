@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Fix node log level parsing broken since v4.0 due to case mismatch in selectors (@petewall)
+
 ## 4.0.1
 
 *   Remove extra `/var/configs` volume mount from OpenCost (@petewall)
