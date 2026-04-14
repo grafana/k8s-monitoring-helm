@@ -1,0 +1,38 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Self Reporting
+templates:
+  - release-info.yaml
+tests:
+  - it: generates a valid self-reporting-metric.prom file
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {presets: [singleton]}}
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus:9090/api/v1/write
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["self-reporting-metric.prom"]
+
+  - it: generates prom file with enabled features
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {presets: [singleton]}}
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus:9090/api/v1/write
+        loki:
+          type: loki
+          url: http://loki:3100/loki/api/v1/push
+      clusterEvents:
+        enabled: true
+        collector: alloy-singleton
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["self-reporting-metric.prom"]
