@@ -3,6 +3,7 @@
 ## Unreleased
 
 *   Fix node log level parsing broken since v4.0 due to case mismatch in selectors (@petewall)
+*   Switch from deprecated Endpoints discovery to EndpointSlice for Kubernetes 1.33+ compatibility (@petewall)
 
 ## 4.0.1
 

@@ -549,11 +549,11 @@ data:
       }
     
       discovery.kubernetes "apiserver" {
-        role = "endpoints"
+        role = "endpointslice"
     
         selectors {
-          role = "endpoints"
-          field = "metadata.name=kubernetes"
+          role = "endpointslice"
+          label = "kubernetes.io/service-name=kubernetes"
         }
     
         namespaces {
@@ -565,7 +565,7 @@ data:
         targets = discovery.kubernetes.apiserver.targets
     
         rule {
-          source_labels = ["__meta_kubernetes_endpoint_port_name"]
+          source_labels = ["__meta_kubernetes_endpointslice_port_name"]
           regex = "https"
           action = "keep"
         }
@@ -650,13 +650,13 @@ data:
     
       // KubeDNS
       discovery.kubernetes "kube_dns" {
-        role = "endpoints"
+        role = "endpointslice"
         namespaces {
           names = ["kube-system"]
         }
         selectors {
-          role = "endpoints"
-          label = "k8s-app=kube-dns"
+          role = "endpointslice"
+          label = "kubernetes.io/service-name=kube-dns"
         }
       }
     
