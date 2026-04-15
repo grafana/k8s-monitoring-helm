@@ -41,8 +41,6 @@ destinations:
 clusterMetrics:
   enabled: true
   collector: alloy-metrics
-  kube-state-metrics:
-    podAnnotations: {kubernetes.azure.com/set-kube-service-host-fqdn: "true"}
 
 clusterEvents:
   enabled: true
@@ -77,6 +75,7 @@ collectors:
 telemetryServices:
   kube-state-metrics:
     deploy: true
+    podAnnotations: {kubernetes.azure.com/set-kube-service-host-fqdn: "true"}
   node-exporter:
     deploy: true
   windows-exporter:
