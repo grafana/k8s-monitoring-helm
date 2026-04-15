@@ -1,0 +1,42 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: storage-upgrade
+
+subject:
+  releaseName: k8smon
+  path: ../../../..
+  valuesFile: no-storage-values.yaml
+  sleepAfter: 75 # Long enough for a scrape interval
+
+  upgrade:
+    valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - preset: prometheus
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: storage-upgrade-test
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            PROMETHEUS_USER: promuser
+            PROMETHEUS_PASS: prometheuspassword
+          queries:
+            - query: kube_persistentvolumeclaim_info{cluster="$CLUSTER", persistentvolumeclaim="alloy-wal-k8smon-alloy-metrics-0"}
+              type: promql

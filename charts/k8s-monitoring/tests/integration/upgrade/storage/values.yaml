@@ -1,0 +1,46 @@
+---
+cluster:
+  name: storage-upgrade-test
+
+destinations:
+  localPrometheus:
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+    auth:
+      type: basic
+      username: promuser
+      password: prometheuspassword
+
+clusterMetrics:
+  enabled: true
+  collector: alloy-metrics
+  kube-state-metrics:
+    metricsTuning:
+      includeMetrics: [kube_persistentvolumeclaim_info]
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    annotations:
+      helm.sdk.operatorframework.io/upgrade-force: "true"
+    alloy:
+      storagePath: /var/lib/alloy
+      mounts:
+        extra:
+          - name: alloy-wal
+            mountPath: /var/lib/alloy
+    controller:
+      enableStatefulSetAutoDeletePVC: true
+      volumeClaimTemplates:
+        - metadata:
+            name: alloy-wal
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            storageClassName: "standard"
+            resources:
+              requests:
+                storage: 512Mi
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
