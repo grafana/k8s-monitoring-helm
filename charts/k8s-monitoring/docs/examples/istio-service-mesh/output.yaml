@@ -677,10 +677,10 @@ data:
       }
     
       discovery.kubernetes "istio_istiod" {
-        role = "endpoints"
+        role = "endpointslice"
         selectors {
-          role = "service"
-          field = "metadata.name=istiod"
+          role = "endpointslice"
+          label = "kubernetes.io/service-name=istiod"
         }
       }
     
@@ -688,7 +688,7 @@ data:
         targets = discovery.kubernetes.istio_istiod.targets
     
         rule {
-          source_labels = ["__meta_kubernetes_endpoint_port_name"]
+          source_labels = ["__meta_kubernetes_endpointslice_port_name"]
           regex         = "http-monitoring"
           action        = "keep"
         }

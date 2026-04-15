@@ -126,8 +126,8 @@ data:
       role = "service"
     }
     
-    discovery.kubernetes "endpoints" {
-      role = "endpoints"
+    discovery.kubernetes "endpointslice" {
+      role = "endpointslice"
     }
     
     discovery.kubernetes "pods" {
@@ -705,7 +705,7 @@ data:
     
     // Kube State Metrics
     discovery.relabel "kube_state_metrics" {
-      targets = discovery.kubernetes.endpoints.targets
+      targets = discovery.kubernetes.endpointslice.targets
       rule {
         source_labels = ["__meta_kubernetes_service_label_release"]
         regex = "k8smon"
@@ -717,7 +717,7 @@ data:
         action = "keep"
       }
       rule {
-        source_labels = ["__meta_kubernetes_endpoint_port_name"]
+        source_labels = ["__meta_kubernetes_endpointslice_port_name"]
         regex = "http"
         action = "keep"
       }
@@ -892,6 +892,7 @@ data:
     
     // Prometheus Operator ServiceMonitor objects
     prometheus.operator.servicemonitors "service_monitors" {
+      kubernetes_role = "endpointslice"
       clustering {
         enabled = true
       }
@@ -3106,8 +3107,8 @@ data:
       role = "service"
     }
     
-    discovery.kubernetes "endpoints" {
-      role = "endpoints"
+    discovery.kubernetes "endpointslice" {
+      role = "endpointslice"
     }
     
     discovery.kubernetes "pods" {
@@ -3685,7 +3686,7 @@ data:
     
     // Kube State Metrics
     discovery.relabel "kube_state_metrics" {
-      targets = discovery.kubernetes.endpoints.targets
+      targets = discovery.kubernetes.endpointslice.targets
       rule {
         source_labels = ["__meta_kubernetes_service_label_release"]
         regex = "k8smon"
@@ -3697,7 +3698,7 @@ data:
         action = "keep"
       }
       rule {
-        source_labels = ["__meta_kubernetes_endpoint_port_name"]
+        source_labels = ["__meta_kubernetes_endpointslice_port_name"]
         regex = "http"
         action = "keep"
       }
@@ -3872,6 +3873,7 @@ data:
     
     // Prometheus Operator ServiceMonitor objects
     prometheus.operator.servicemonitors "service_monitors" {
+      kubernetes_role = "endpointslice"
       clustering {
         enabled = true
       }

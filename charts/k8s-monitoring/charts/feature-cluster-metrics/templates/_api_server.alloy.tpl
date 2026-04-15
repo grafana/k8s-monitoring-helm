@@ -4,11 +4,11 @@
 {{- $metricDenyList := .Values.apiServer.metricsTuning.excludeMetrics }}
 
 discovery.kubernetes "apiserver" {
-  role = "endpoints"
+  role = "endpointslice"
 
   selectors {
-    role = "endpoints"
-    field = "metadata.name=kubernetes"
+    role = "endpointslice"
+    label = "kubernetes.io/service-name=kubernetes"
   }
 
   namespaces {
@@ -21,7 +21,7 @@ discovery.relabel "apiserver" {
   targets = discovery.kubernetes.apiserver.targets
 
   rule {
-    source_labels = ["__meta_kubernetes_endpoint_port_name"]
+    source_labels = ["__meta_kubernetes_endpointslice_port_name"]
     regex = "https"
     action = "keep"
   }

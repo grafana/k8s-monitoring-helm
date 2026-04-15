@@ -5,13 +5,13 @@
 
 // KubeDNS
 discovery.kubernetes "kube_dns" {
-  role = "endpoints"
+  role = "endpointslice"
   namespaces {
     names = ["kube-system"]
   }
   selectors {
-    role = "endpoints"
-    label = "k8s-app=kube-dns"
+    role = "endpointslice"
+    label = "kubernetes.io/service-name=kube-dns"
   }
 {{- include "feature.clusterMetrics.attachNodeMetadata" . | indent 2 }}
 }
