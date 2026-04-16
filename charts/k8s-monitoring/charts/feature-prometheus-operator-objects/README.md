@@ -54,6 +54,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | global.maxCacheSize | int | `100000` | Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) This should be at least 2x-5x your largest scrape target or samples appended rate. |
+| global.minScrapeInterval | string | `""` | Minimum scrape interval floor. When set, all scrape intervals are clamped to be at least this value. |
 | global.scrapeInterval | string | `"60s"` | How frequently to scrape metrics. |
 | global.scrapeTimeout | string | `"10s"` | The timeout for scraping metrics. |
 
