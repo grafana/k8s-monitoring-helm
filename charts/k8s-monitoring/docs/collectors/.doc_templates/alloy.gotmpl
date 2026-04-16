@@ -9,13 +9,13 @@ defined in its own section in the Kubernetes Monitoring Helm chart values file. 
 to enable and configure a collector:
 
 ```yaml
-alloy-<collector name>:
-  enabled: true  # Enable deploying this collector
-
-  alloy:  # Settings related to the Alloy instance
-    ...
-  controller:  # Settings related to the Alloy controller
-    ...
+collectors:
+  <collector name>:
+    presets: [...]  # Configuration presets
+    alloy:  # Settings related to the Alloy instance
+      ...
+    controller:  # Settings related to the Alloy controller
+      ...
 ```
 
 This creates a Kubernetes workload as either a DaemonSet, StatefulSet, or Deployment, with its own set of Pods running
