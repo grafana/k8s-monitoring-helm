@@ -113,11 +113,6 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{- define "collector.alloy.values" }}
 {{- /* The default settings set for all Alloy instances by this chart */}}
 {{- $defaultValues := "collectors/alloy-values.yaml" | .Files.Get | fromYaml }}
-{{- /* Values for the specific named Alloy instance */}}
-{{- $namedDefaultValues := dict }}
-{{- range $fileName, $_ := $.Files.Glob (printf "collectors/named-defaults/%s.yaml" .collectorName) }}
-  {{- $namedDefaultValues = ($.Files.Get $fileName | fromYaml) }}
-{{- end }}
 {{- /* Settings in values.yaml for all Alloy instances */}}
 {{- $userCommonValues := $.Values.collectorCommon.alloy }}
 {{- /* Copying the this chart's global values to the Alloy instances global values */}}
@@ -144,14 +139,14 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
   {{- end }}
 {{- end }}
 {{- $clusterNameValues := dict }}
-{{- $clusteringEnabled := or (dig "alloy" "clustering" "enabled" false $namedDefaultValues) (dig "alloy" "clustering" "enabled" false $userValues) (dig "alloy" "clustering" "enabled" false $presetValues) }}
+{{- $clusteringEnabled := or (dig "alloy" "clustering" "enabled" false $userValues) (dig "alloy" "clustering" "enabled" false $presetValues) }}
 {{- if $clusteringEnabled }}
-  {{- $clusterNameSet := or (dig "alloy" "clustering" "name" "" $namedDefaultValues) (dig "alloy" "clustering" "name" "" $userValues) }}
+  {{- $clusterNameSet := dig "alloy" "clustering" "name" "" $userValues }}
   {{- if not $clusterNameSet }}
     {{- $clusterNameValues = dict "alloy" (dict "clustering" (dict "name" .collectorName))}}
   {{- end }}
 {{- end }}
-{{ mergeOverwrite $defaultValues $namedDefaultValues $presetValues $globalValues $userCommonValues $clusterNameValues $userValues | toYaml }}
+{{ mergeOverwrite $defaultValues $presetValues $globalValues $userCommonValues $clusterNameValues $userValues | toYaml }}
 {{- end }}
 
 {{- /* Gets the Alloy values including default upstream values. Input: $, .collectorName (string, collector name), .collectorValues (object) */ -}}

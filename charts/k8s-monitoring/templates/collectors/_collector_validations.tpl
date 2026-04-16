@@ -39,6 +39,31 @@
 {{- end }}
 {{- end }}
 
+{{/* Inputs: Values (root Values), Files, collectorName (string), featureName (string) */}}
+{{- define "collectors.validate.clusteringEnabled" }}
+{{- if .collectorName }}
+  {{- $collectorValues := include "collector.alloy.valuesWithUpstream" (dict "Values" .Values "Files" .Files "collectorName" .collectorName) | fromYaml }}
+  {{- $controllerType := dig "controller" "type" "daemonset" $collectorValues }}
+  {{- $replicas := dig "controller" "replicas" 1 $collectorValues }}
+  {{- $hpaEnabled := or (dig "controller" "autoscaling" "enabled" false $collectorValues) (dig "controller" "autoscaling" "horizontal" "enabled" false $collectorValues) }}
+  {{- if or (eq $controllerType "daemonset") (gt (int $replicas) 1) $hpaEnabled }}
+    {{- if not (dig "alloy" "clustering" "enabled" false $collectorValues) }}
+      {{- $msg := list "" (printf "The %s feature requires clustering to be enabled on the %s collector." .featureName .collectorName) }}
+      {{- $msg = append $msg "Please set:" }}
+      {{- $msg = append $msg "collectors:" }}
+      {{- $msg = append $msg (printf "  %s:" .collectorName) }}
+      {{- $msg = append $msg "    presets: [clustered]" }}
+      {{- $msg = append $msg "OR"}}
+      {{- $msg = append $msg (printf "  %s:" .collectorName) }}
+      {{- $msg = append $msg "    alloy:"}}
+      {{- $msg = append $msg "      clustering:"}}
+      {{- $msg = append $msg "        enabled: true" }}
+      {{- fail (join "\n" $msg) }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- end }}
+
 {{- define "collectors.validate.atLeastOneEnabled" }}
   {{- if eq (keys .Values.collectors | len) 0 }}
     {{- $msg := list "" "At least one collector should be enabled" }}

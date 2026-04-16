@@ -6,9 +6,10 @@
   {{- if ne $stabilityLevel "experimental" }}
     {{- $msg := list "" "The Prometheus Operator Objects feature requires Alloy to use the experimental stability level when using ScrapeConfigs." }}
     {{- $msg = append $msg "Please set:"}}
-    {{- $msg = append $msg (printf "%s:" .CollectorName) }}
-    {{- $msg = append $msg "  alloy:"}}
-    {{- $msg = append $msg "    stabilityLevel: experimental"}}
+    {{- $msg = append $msg "collectors:" }}
+    {{- $msg = append $msg (printf "  %s:" .CollectorName) }}
+    {{- $msg = append $msg "    alloy:"}}
+    {{- $msg = append $msg "      stabilityLevel: experimental"}}
     {{- fail (join "\n" $msg) }}
   {{- end -}}
 {{- end -}}

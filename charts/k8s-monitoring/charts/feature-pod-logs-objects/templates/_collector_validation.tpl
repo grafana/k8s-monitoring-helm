@@ -5,15 +5,24 @@
   {{- if eq (dig "controller" "type" "daemonset" .Collector) "daemonset" }}
     {{- $msg := list "" "PodLogs Objects feature requires Alloy DaemonSet to be in clustering mode." }}
     {{- $msg = append $msg "Please set:"}}
-    {{- $msg = append $msg (printf "%s:" .CollectorName) }}
-    {{- $msg = append $msg "  alloy:"}}
-    {{- $msg = append $msg "    clustering:"}}
-    {{- $msg = append $msg "      enabled: true" }}
+    {{- $msg = append $msg "collectors:" }}
+    {{- $msg = append $msg (printf "  %s:" .CollectorName) }}
+    {{- $msg = append $msg "    presets: [clustered]" }}
+    {{- $msg = append $msg "OR"}}
+    {{- $msg = append $msg (printf "  %s:" .CollectorName) }}
+    {{- $msg = append $msg "    alloy:"}}
+    {{- $msg = append $msg "      clustering:"}}
+    {{- $msg = append $msg "        enabled: true" }}
     {{- fail (join "\n" $msg) }}
   {{- else if gt ((dig "controller" "replicas" 1 .Collector) | int) 1 }}
     {{- $msg := list "" "PodLogs Objects feature requires Alloy with multiple replicas to be in clustering mode." }}
     {{- $msg = append $msg "Please set:"}}
-    {{- $msg = append $msg (printf "%s:" .CollectorName) }}
+    {{- $msg = append $msg "collectors:" }}
+    {{- $msg = append $msg (printf "  %s:" .CollectorName) }}
+    {{- $msg = append $msg "    presets: [clustered]" }}
+    {{- $msg = append $msg "OR"}}
+    {{- $msg = append $msg "collectors:" }}
+    {{- $msg = append $msg (printf "  %s:" .CollectorName) }}
     {{- $msg = append $msg "  alloy:"}}
     {{- $msg = append $msg "    clustering:"}}
     {{- $msg = append $msg "      enabled: true" }}
@@ -25,9 +34,10 @@
   {{- if ne (dig "controller" "type" "daemonset" .Collector) "daemonset" }}
     {{- $msg := list "" "PodLogs Objects feature requires Alloy to be a DaemonSet when using nodeFilter." }}
     {{- $msg = append $msg "Please set:"}}
-    {{- $msg = append $msg (printf "%s:" .CollectorName) }}
-    {{- $msg = append $msg "  controller:"}}
-    {{- $msg = append $msg "    type: daemonset"}}
+    {{- $msg = append $msg "collectors:" }}
+    {{- $msg = append $msg (printf "  %s:" .CollectorName) }}
+    {{- $msg = append $msg "    controller:"}}
+    {{- $msg = append $msg "      type: daemonset"}}
     {{- fail (join "\n" $msg) }}
   {{- end -}}
 {{- end -}}
@@ -37,9 +47,10 @@
   {{- if ne $stabilityLevel "experimental" }}
     {{- $msg := list "" "PodLogs Objects feature requires Alloy to use the experimental stability level when using the secretFilter." }}
     {{- $msg = append $msg "Please set:"}}
-    {{- $msg = append $msg (printf "%s:" .CollectorName) }}
-    {{- $msg = append $msg "  alloy:"}}
-    {{- $msg = append $msg "    stabilityLevel: experimental"}}
+    {{- $msg = append $msg "collectors:" }}
+    {{- $msg = append $msg (printf "  %s:" .CollectorName) }}
+    {{- $msg = append $msg "    alloy:"}}
+    {{- $msg = append $msg "      stabilityLevel: experimental"}}
     {{- fail (join "\n" $msg) }}
   {{- end -}}
 {{- end -}}
