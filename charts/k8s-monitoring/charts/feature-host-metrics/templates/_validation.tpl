@@ -7,11 +7,11 @@
       {{- $msg = append $msg "telemetryServices:" }}
       {{- $msg = append $msg "  node-exporter:" }}
       {{- $msg = append $msg "    deploy: true" }}
-      {{- $msg = append $msg "Or, set the namespace and label selectors for an existing Node Exporter:" }}
+      {{- $msg = append $msg "Or, set the namespace and label matchers for an existing Node Exporter:" }}
       {{- $msg = append $msg "hostMetrics:" }}
       {{- $msg = append $msg "  linuxHosts:" }}
       {{- $msg = append $msg "    namespace: node-exporter-namespace" }}
-      {{- $msg = append $msg "    labelSelectors:" }}
+      {{- $msg = append $msg "    labelMatchers:" }}
       {{- $msg = append $msg "      app.kubernetes.io/name: prometheus-node-exporter" }}
       {{- fail (join "\n" $msg) }}
     {{- end }}
@@ -25,11 +25,11 @@
       {{- $msg = append $msg "telemetryServices:" }}
       {{- $msg = append $msg "  windows-exporter:" }}
       {{- $msg = append $msg "    deploy: true" }}
-      {{- $msg = append $msg "Or, set the namespace and label selectors for an existing Windows Exporter:" }}
+      {{- $msg = append $msg "Or, set the namespace and label matchers for an existing Windows Exporter:" }}
       {{- $msg = append $msg "hostMetrics:" }}
       {{- $msg = append $msg "  windowsHosts:" }}
       {{- $msg = append $msg "    namespace: windows-exporter-namespace" }}
-      {{- $msg = append $msg "    labelSelectors:" }}
+      {{- $msg = append $msg "    labelMatchers:" }}
       {{- $msg = append $msg "      app.kubernetes.io/name: prometheus-windows-exporter" }}
       {{- fail (join "\n" $msg) }}
     {{- end }}
@@ -43,11 +43,11 @@
       {{- $msg = append $msg "telemetryServices:" }}
       {{- $msg = append $msg "  kepler:" }}
       {{- $msg = append $msg "    deploy: true" }}
-      {{- $msg = append $msg "Or, set the namespace and label selectors for an existing Kepler:" }}
+      {{- $msg = append $msg "Or, set the namespace and label matchers for an existing Kepler:" }}
       {{- $msg = append $msg "hostMetrics:" }}
       {{- $msg = append $msg "  energyMetrics:" }}
       {{- $msg = append $msg "    namespace: kepler-namespace" }}
-      {{- $msg = append $msg "    labelSelectors:" }}
+      {{- $msg = append $msg "    labelMatchers:" }}
       {{- $msg = append $msg "      app.kubernetes.io/name: kepler" }}
       {{- fail (join "\n" $msg) }}
     {{- end }}

@@ -8,11 +8,11 @@
       {{- $msg = append $msg "telemetryServices:" }}
       {{- $msg = append $msg "  kube-state-metrics:" }}
       {{- $msg = append $msg "    deploy: true" }}
-      {{- $msg = append $msg "Or, set the namespace and label selectors for an existing kube-state-metrics:" }}
+      {{- $msg = append $msg "Or, set the namespace and label matchers for an existing kube-state-metrics:" }}
       {{- $msg = append $msg "clusterMetrics:" }}
       {{- $msg = append $msg "  kube-state-metrics:" }}
       {{- $msg = append $msg "    namespace: kube-state-metrics-namespace" }}
-      {{- $msg = append $msg "    labelSelectors:" }}
+      {{- $msg = append $msg "    labelMatchers:" }}
       {{- $msg = append $msg "      app.kubernetes.io/name: kube-state-metrics" }}
       {{- fail (join "\n" $msg) }}
     {{- end }}
