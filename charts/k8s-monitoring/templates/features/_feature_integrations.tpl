@@ -83,6 +83,8 @@
 {{/*{{- fail (printf "\n%s\n"  ($destinations | toYaml))}}*/}}
 {{- if $metricIntegrations }}
   {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "featureName" $featureName) }}
+  {{- $collectorName := $.Values.integrations.collector }}
+  {{- include "collectors.validate.clusteringEnabled" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName "featureName" $featureName) }}
 {{- end }}
 
 {{- $logOutputIntegrations := include "feature.integrations.configured.logOutput" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}

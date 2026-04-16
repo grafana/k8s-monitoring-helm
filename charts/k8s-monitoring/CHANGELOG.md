@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Add validators to require clustering on collectors that are assigned cluster-enabled features (@petewall)
 *   Add validators to warn when deployment-level settings are placed under feature configs instead of telemetryServices (@petewall)
 *   Fix node log level parsing broken since v4.0 due to case mismatch in selectors (@petewall)
 *   Switch from deprecated Endpoints discovery to EndpointSlice for Kubernetes 1.33+ compatibility (@petewall)

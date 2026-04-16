@@ -45,6 +45,8 @@ pod_logs_via_kubernetes_api "feature" {
 
 {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
 {{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}
+{{- include "collectors.validate.clusteringEnabled" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName "featureName" $featureName) }}
+
 {{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
 {{- include "feature.podLogsViaKubernetesApi.collector.validate" (dict "Values" $.Values.podLogsViaKubernetesApi "Collector" $collectorValues "CollectorName" $collectorName) }}
 {{- end -}}

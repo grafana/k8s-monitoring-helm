@@ -1,0 +1,152 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Validations - Collectors - Clustering
+templates:
+  - validations.yaml
+tests:
+  - it: requires clustering on a daemonset collector with metrics features
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        prom: {type: prometheus, url: "http://prom:9090"}
+      clusterMetrics: {enabled: true}
+      collectors:
+        alloy-metrics: {}
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Kubernetes Cluster metrics feature requires clustering to be enabled on the alloy-metrics collector.
+            Please set:
+            collectors:
+              alloy-metrics:
+                presets: [clustered]
+            OR
+              alloy-metrics:
+                alloy:
+                  clustering:
+                    enabled: true
+
+  - it: does not require clustering on a single-replica deployment collector
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        prom: {type: prometheus, url: "http://prom:9090"}
+      telemetryServices: {kube-state-metrics: {deploy: true}}
+      clusterMetrics: {enabled: true}
+      collectors:
+        alloy-metrics:
+          controller: {type: deployment, replicas: 1}
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: requires clustering on a multi-replica deployment collector
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        prom: {type: prometheus, url: "http://prom:9090"}
+      clusterMetrics: {enabled: true}
+      collectors:
+        alloy-metrics:
+          controller: {type: deployment, replicas: 3}
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Kubernetes Cluster metrics feature requires clustering to be enabled on the alloy-metrics collector.
+            Please set:
+            collectors:
+              alloy-metrics:
+                presets: [clustered]
+            OR
+              alloy-metrics:
+                alloy:
+                  clustering:
+                    enabled: true
+
+  - it: passes when clustering is enabled on a daemonset collector
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        prom: {type: prometheus, url: "http://prom:9090"}
+      telemetryServices: {kube-state-metrics: {deploy: true}}
+      clusterMetrics: {enabled: true}
+      collectors:
+        alloy-metrics:
+          alloy: {clustering: {enabled: true}}
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: passes when using the clustered preset
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        prom: {type: prometheus, url: "http://prom:9090"}
+      telemetryServices: {kube-state-metrics: {deploy: true}}
+      clusterMetrics: {enabled: true}
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: requires clustering when HPA is enabled
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        prom: {type: prometheus, url: "http://prom:9090"}
+      clusterMetrics: {enabled: true}
+      collectors:
+        alloy-metrics:
+          controller: {type: deployment, replicas: 1, autoscaling: {enabled: true}}
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Kubernetes Cluster metrics feature requires clustering to be enabled on the alloy-metrics collector.
+            Please set:
+            collectors:
+              alloy-metrics:
+                presets: [clustered]
+            OR
+              alloy-metrics:
+                alloy:
+                  clustering:
+                    enabled: true
+
+  - it: requires clustering when horizontal HPA is enabled
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        prom: {type: prometheus, url: "http://prom:9090"}
+      clusterMetrics: {enabled: true}
+      collectors:
+        alloy-metrics:
+          controller: {type: deployment, replicas: 1, autoscaling: {horizontal: {enabled: true}}}
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Kubernetes Cluster metrics feature requires clustering to be enabled on the alloy-metrics collector.
+            Please set:
+            collectors:
+              alloy-metrics:
+                presets: [clustered]
+            OR
+              alloy-metrics:
+                alloy:
+                  clustering:
+                    enabled: true
+
+  - it: does not require clustering on a singleton collector with integrations
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        prom: {type: prometheus, url: "http://prom:9090"}
+      integrations:
+        alloy:
+          instances:
+            - name: alloy
+              labelSelectors:
+                app.kubernetes.io/name: alloy
+        collector: alloy-singleton
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+    asserts:
+      - notFailedTemplate: {}

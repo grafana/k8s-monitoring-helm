@@ -180,7 +180,7 @@ applicationObservability:
 # Collectors
 collectors:
   alloy:
-    presets: [daemonset, filesystem-log-reader]
+    presets: [clustered, daemonset, filesystem-log-reader]
 
 telemetryServices:
   kube-state-metrics:
