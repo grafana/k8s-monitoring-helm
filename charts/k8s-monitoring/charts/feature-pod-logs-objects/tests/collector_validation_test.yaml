@@ -18,10 +18,14 @@ tests:
           errorMessage: |-
             PodLogs Objects feature requires Alloy DaemonSet to be in clustering mode.
             Please set:
-            alloy-test:
-              alloy:
-                clustering:
-                  enabled: true
+            collectors:
+              alloy-test:
+                presets: [clustered]
+            OR
+              alloy-test:
+                alloy:
+                  clustering:
+                    enabled: true
 
   - it: should fail when multiple replicas exist without clustering
     set:
@@ -39,7 +43,12 @@ tests:
           errorMessage: |-
             PodLogs Objects feature requires Alloy with multiple replicas to be in clustering mode.
             Please set:
-            alloy-test:
+            collectors:
+              alloy-test:
+                presets: [clustered]
+            OR
+            collectors:
+              alloy-test:
               alloy:
                 clustering:
                   enabled: true
@@ -62,9 +71,10 @@ tests:
           errorMessage: |-
             PodLogs Objects feature requires Alloy to use the experimental stability level when using the secretFilter.
             Please set:
-            alloy-test:
-              alloy:
-                stabilityLevel: experimental
+            collectors:
+              alloy-test:
+                alloy:
+                  stabilityLevel: experimental
 
   - it: should fail when nodeFilter is enabled on non-DaemonSet deployments
     set:
@@ -82,6 +92,7 @@ tests:
           errorMessage: |-
             PodLogs Objects feature requires Alloy to be a DaemonSet when using nodeFilter.
             Please set:
-            alloy-test:
-              controller:
-                type: daemonset
+            collectors:
+              alloy-test:
+                controller:
+                  type: daemonset
