@@ -77,7 +77,7 @@ discovery.relabel "windows_exporter" {
 prometheus.scrape "windows_exporter" {
   targets  = discovery.relabel.windows_exporter.output
   job_name   = {{ .Values.windowsHosts.jobLabel | quote }}
-  scrape_interval = {{ .Values.windowsHosts.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_interval = {{ include "enforce_min_scrape_interval" (dict "interval" (.Values.windowsHosts.scrapeInterval | default .Values.global.scrapeInterval) "min" .Values.global.minScrapeInterval) | quote }}
   scrape_timeout = {{ .Values.windowsHosts.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}

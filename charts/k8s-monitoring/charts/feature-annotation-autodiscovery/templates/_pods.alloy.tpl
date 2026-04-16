@@ -176,9 +176,15 @@ discovery.relabel "annotation_autodiscovery_pods" {
   rule {
     source_labels = ["__scrape_interval__"]
     regex = ""
-    replacement = {{ .Values.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+    replacement = {{ include "enforce_min_scrape_interval" (dict "interval" (.Values.scrapeInterval | default .Values.global.scrapeInterval) "min" .Values.global.minScrapeInterval) | quote }}
     target_label = "__scrape_interval__"
   }
+{{- if .Values.global.minScrapeInterval }}
+  rule {
+    replacement = {{ .Values.global.minScrapeInterval | quote }}
+    target_label = "__scrape_interval__"
+  }
+{{- end }}
   rule {
     source_labels = ["{{ include "pod_annotation" .Values.annotations.metricsScrapeTimeout }}"]
     regex = "(.+)"

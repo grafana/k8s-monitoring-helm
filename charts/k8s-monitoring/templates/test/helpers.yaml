@@ -18,4 +18,22 @@ data:
   overwriteExisting: {{ include "collectors.set_extra_env" (dict "envList" (list (dict "name" "PORT" "value" "8080")) "name" "PORT" "value" "9090" "overwrite" true) | fromYamlArray | toJson | quote }}
   noOverwriteExisting: {{ include "collectors.set_extra_env" (dict "envList" (list (dict "name" "PORT" "value" "8080")) "name" "PORT" "value" "9090" "overwrite" false) | fromYamlArray | toJson | quote }}
   insertIntoEmpty: {{ include "collectors.set_extra_env" (dict "envList" (list) "name" "PORT" "value" "8080" "overwrite" false) | fromYamlArray | toJson | quote }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-duration-helpers
+data:
+  seconds60s: {{ include "duration_to_seconds" "60s" | quote }}
+  seconds2m: {{ include "duration_to_seconds" "2m" | quote }}
+  seconds1h: {{ include "duration_to_seconds" "1h" | quote }}
+  seconds1m30s: {{ include "duration_to_seconds" "1m30s" | quote }}
+  seconds1h30m45s: {{ include "duration_to_seconds" "1h30m45s" | quote }}
+  seconds5s: {{ include "duration_to_seconds" "5s" | quote }}
+  enforceNoMin: {{ include "enforce_min_scrape_interval" (dict "interval" "30s" "min" "") | quote }}
+  enforceClampUp: {{ include "enforce_min_scrape_interval" (dict "interval" "30s" "min" "60s") | quote }}
+  enforceNoClamp: {{ include "enforce_min_scrape_interval" (dict "interval" "2m" "min" "60s") | quote }}
+  enforceEmptyInterval: {{ include "enforce_min_scrape_interval" (dict "interval" "" "min" "60s") | quote }}
+  enforceEqual: {{ include "enforce_min_scrape_interval" (dict "interval" "60s" "min" "60s") | quote }}
+  enforceMixedUnits: {{ include "enforce_min_scrape_interval" (dict "interval" "45s" "min" "1m") | quote }}
 {{- end }}

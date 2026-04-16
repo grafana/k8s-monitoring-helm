@@ -115,7 +115,7 @@ discovery.relabel {{ printf "%s_sidecar" (include "helper.alloy_name" .name) | q
 
 prometheus.scrape {{ printf "%s_sidecar" (include "helper.alloy_name" .name) | quote }} {
   targets = discovery.relabel.{{ printf "%s_sidecar" (include "helper.alloy_name" .name) }}.output
-  scrape_interval = {{ .sidecarMetrics.scrapeInterval | default $.Values.global.scrapeInterval | quote }}
+  scrape_interval = {{ include "enforce_min_scrape_interval" (dict "interval" (.sidecarMetrics.scrapeInterval | default $.Values.global.scrapeInterval) "min" $.Values.global.minScrapeInterval) | quote }}
   scrape_timeout = {{ .sidecarMetrics.scrapeTimeout | default $.Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ $.Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ $.Values.global.scrapeClassicHistograms }}
@@ -204,7 +204,7 @@ prometheus.scrape {{ printf "%s_istiod" (include "helper.alloy_name" .name) | qu
     enabled = true
   }
 
-  scrape_interval = {{ .istiodMetrics.scrapeInterval | default $.Values.global.scrapeInterval | quote }}
+  scrape_interval = {{ include "enforce_min_scrape_interval" (dict "interval" (.istiodMetrics.scrapeInterval | default $.Values.global.scrapeInterval) "min" $.Values.global.minScrapeInterval) | quote }}
   scrape_timeout = {{ .istiodMetrics.scrapeTimeout | default $.Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ $.Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ $.Values.global.scrapeClassicHistograms }}

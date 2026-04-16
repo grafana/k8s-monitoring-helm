@@ -30,7 +30,7 @@ prometheus.scrape "kube_scheduler" {
   targets           = discovery.relabel.kube_scheduler.output
   job_name          = {{ .Values.kubeScheduler.jobLabel | quote }}
   scheme            = "https"
-  scrape_interval   = {{ .Values.kubeScheduler.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_interval   = {{ include "enforce_min_scrape_interval" (dict "interval" (.Values.kubeScheduler.scrapeInterval | default .Values.global.scrapeInterval) "min" .Values.global.minScrapeInterval) | quote }}
   scrape_timeout = {{ .Values.kubeScheduler.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}

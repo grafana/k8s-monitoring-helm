@@ -30,7 +30,7 @@ prometheus.scrape "kube_controller_manager" {
   targets           = discovery.relabel.kube_controller_manager.output
   job_name          = {{ .Values.kubeControllerManager.jobLabel | quote }}
   scheme            = "https"
-  scrape_interval   = {{ .Values.kubeControllerManager.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_interval   = {{ include "enforce_min_scrape_interval" (dict "interval" (.Values.kubeControllerManager.scrapeInterval | default .Values.global.scrapeInterval) "min" .Values.global.minScrapeInterval) | quote }}
   scrape_timeout = {{ .Values.kubeControllerManager.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
