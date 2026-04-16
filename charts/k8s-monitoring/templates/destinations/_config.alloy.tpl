@@ -21,6 +21,7 @@
     {{- $destination := get $.Values.destinations $destinationName }}
     {{- $defaultValues := (printf "destinations/%s-values.yaml" $destination.type) | $.Files.Get | fromYaml }}
     {{- $destinationWithDefaults := mergeOverwrite $defaultValues $destination }}
+    {{- $_ := set $destinationWithDefaults "tplRoot" $ }}
 // Destination: {{ $destinationName }} ({{ $destination.type }})
 {{- include (printf "destinations.%s.alloy" $destination.type) (deepCopy $ | merge (dict "destination" $destinationWithDefaults "destinationName" $destinationName)) | indent 0 }}
 
