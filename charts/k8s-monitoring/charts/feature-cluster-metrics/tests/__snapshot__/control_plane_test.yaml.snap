@@ -218,11 +218,11 @@ should render the configuration with control plane components included:
         }
 
         discovery.kubernetes "apiserver" {
-          role = "endpoints"
+          role = "endpointslice"
 
           selectors {
-            role = "endpoints"
-            field = "metadata.name=kubernetes"
+            role = "endpointslice"
+            label = "kubernetes.io/service-name=kubernetes"
           }
 
           namespaces {
@@ -234,7 +234,7 @@ should render the configuration with control plane components included:
           targets = discovery.kubernetes.apiserver.targets
 
           rule {
-            source_labels = ["__meta_kubernetes_endpoint_port_name"]
+            source_labels = ["__meta_kubernetes_endpointslice_port_name"]
             regex = "https"
             action = "keep"
           }
@@ -319,13 +319,13 @@ should render the configuration with control plane components included:
 
         // KubeDNS
         discovery.kubernetes "kube_dns" {
-          role = "endpoints"
+          role = "endpointslice"
           namespaces {
             names = ["kube-system"]
           }
           selectors {
-            role = "endpoints"
-            label = "k8s-app=kube-dns"
+            role = "endpointslice"
+            label = "kubernetes.io/service-name=kube-dns"
           }
         }
 

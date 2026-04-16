@@ -928,10 +928,10 @@ data:
       }
     
       discovery.kubernetes "istio_istiod" {
-        role = "endpoints"
+        role = "endpointslice"
         selectors {
-          role = "service"
-          field = "metadata.name=istiod"
+          role = "endpointslice"
+          label = "kubernetes.io/service-name=istiod"
         }
       }
     
@@ -939,7 +939,7 @@ data:
         targets = discovery.kubernetes.istio_istiod.targets
     
         rule {
-          source_labels = ["__meta_kubernetes_endpoint_port_name"]
+          source_labels = ["__meta_kubernetes_endpointslice_port_name"]
           regex         = "http-monitoring"
           action        = "keep"
         }
@@ -1587,7 +1587,7 @@ metadata:
   namespace: default
 data:
   cluster: "istio-service-mesh-test"
-  self-reporting-metric.prom: |
+  self-reporting-metric.prom: |+
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
     grafana_kubernetes_monitoring_build_info{version="4.0.1", namespace="default"} 1

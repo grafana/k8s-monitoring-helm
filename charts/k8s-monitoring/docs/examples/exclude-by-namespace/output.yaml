@@ -2264,6 +2264,7 @@ data:
     
       // Prometheus Operator ServiceMonitor objects
       prometheus.operator.servicemonitors "service_monitors" {
+        kubernetes_role = "endpointslice"
         clustering {
           enabled = true
         }
@@ -2900,8 +2901,8 @@ data:
       - k8s_namespace: kube-system
       - k8s_namespace: kube-public
       - k8s_namespace: confidential
-      services:
-      - k8s_namespace: .
+      instrument:
+      - k8s_namespace: '*'
     filter:
       network:
         k8s_dst_owner_name:
@@ -2932,7 +2933,7 @@ metadata:
   namespace: default
 data:
   cluster: "exclude-by-namespace-cluster"
-  self-reporting-metric.prom: |
+  self-reporting-metric.prom: |+
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
     grafana_kubernetes_monitoring_build_info{version="4.0.1", namespace="default"} 1
@@ -3472,7 +3473,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: bf54b763d64fbc3837aad0e1021acf906afa954dbe02a19ceb03bbbe4ea91f31
+        checksum/config: ae1946cb57d0e0f7d0680eee40f12956e44b818e1d498e3ad702b1bc8725177c
         k8s.grafana.com/job: default/beyla
         k8s.grafana.com/logs.job: integrations/beyla
       labels:

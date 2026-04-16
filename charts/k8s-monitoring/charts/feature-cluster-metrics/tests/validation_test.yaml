@@ -22,3 +22,172 @@ tests:
                 namespace: kube-state-metrics-namespace
                 labelSelectors:
                   app.kubernetes.io/name: kube-state-metrics
+
+  - it: should fail when node-exporter is set under clusterMetrics
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          kube-state-metrics:
+            deploy: true
+      kube-state-metrics:
+        enabled: true
+      node-exporter:
+        deploy: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The key "node-exporter" found under clusterMetrics is no longer valid.
+            In v4.x, Node Exporter settings have moved to the hostMetrics feature and telemetryServices.
+            Please use:
+            hostMetrics:
+              linuxHosts:
+                enabled: true
+                ...  # scrape settings
+            telemetryServices:
+              node-exporter:
+                deploy: true
+                ...  # deployment settings
+
+  - it: should fail when windows-exporter is set under clusterMetrics
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          kube-state-metrics:
+            deploy: true
+      kube-state-metrics:
+        enabled: true
+      windows-exporter:
+        deploy: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The key "windows-exporter" found under clusterMetrics is no longer valid.
+            In v4.x, Windows Exporter settings have moved to the hostMetrics feature and telemetryServices.
+            Please use:
+            hostMetrics:
+              windowsHosts:
+                enabled: true
+                ...  # scrape settings
+            telemetryServices:
+              windows-exporter:
+                deploy: true
+                ...  # deployment settings
+
+  - it: should fail when opencost is set under clusterMetrics
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          kube-state-metrics:
+            deploy: true
+      kube-state-metrics:
+        enabled: true
+      opencost:
+        deploy: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The key "opencost" found under clusterMetrics is no longer valid.
+            In v4.x, OpenCost settings have moved to the costMetrics feature and telemetryServices.
+            Please use:
+            costMetrics:
+              enabled: true
+              ...  # scrape settings
+            telemetryServices:
+              opencost:
+                deploy: true
+                ...  # deployment settings
+
+  - it: should fail when kepler is set under clusterMetrics
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          kube-state-metrics:
+            deploy: true
+      kube-state-metrics:
+        enabled: true
+      kepler:
+        deploy: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The key "kepler" found under clusterMetrics is no longer valid.
+            In v4.x, Kepler settings have moved to the hostMetrics feature and telemetryServices.
+            Please use:
+            hostMetrics:
+              energyMetrics:
+                enabled: true
+                ...  # scrape settings
+            telemetryServices:
+              kepler:
+                deploy: true
+                ...  # deployment settings
+
+  - it: should fail when deployment-level rbac setting is under clusterMetrics
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          kube-state-metrics:
+            deploy: true
+      kube-state-metrics:
+        enabled: true
+        rbac:
+          extraRules:
+            - apiGroups: ["autoscaling.k8s.io"]
+              resources: ["verticalpodautoscalers"]
+              verbs: ["list", "watch"]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The key "rbac" found under clusterMetrics.kube-state-metrics is a deployment-level setting.
+            In v4.x, deployment settings for kube-state-metrics have moved to telemetryServices.
+            Please move this setting:
+            telemetryServices:
+              kube-state-metrics:
+                rbac: ...
+
+  - it: should fail when deployment-level autosharding setting is under clusterMetrics
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          kube-state-metrics:
+            deploy: true
+      kube-state-metrics:
+        enabled: true
+        autosharding:
+          enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The key "autosharding" found under clusterMetrics.kube-state-metrics is a deployment-level setting.
+            In v4.x, deployment settings for kube-state-metrics have moved to telemetryServices.
+            Please move this setting:
+            telemetryServices:
+              kube-state-metrics:
+                autosharding: ...
+
+  - it: should fail when deployment-level nodeSelector setting is under clusterMetrics
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          kube-state-metrics:
+            deploy: true
+      kube-state-metrics:
+        enabled: true
+        nodeSelector:
+          kubernetes.io/os: linux
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The key "nodeSelector" found under clusterMetrics.kube-state-metrics is a deployment-level setting.
+            In v4.x, deployment settings for kube-state-metrics have moved to telemetryServices.
+            Please move this setting:
+            telemetryServices:
+              kube-state-metrics:
+                nodeSelector: ...

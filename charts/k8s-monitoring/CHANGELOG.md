@@ -1,9 +1,16 @@
 # Changelog
 
+## Unreleased
+
+*   Add validators to warn when deployment-level settings are placed under feature configs instead of telemetryServices (@petewall)
+*   Fix node log level parsing broken since v4.0 due to case mismatch in selectors (@petewall)
+*   Switch from deprecated Endpoints discovery to EndpointSlice for Kubernetes 1.33+ compatibility (@petewall)
+*   Use glob syntax instead of regular expressions in Beyla discovery config (@petewall)
+
 ## 4.0.1
 
 *   Remove extra `/var/configs` volume mount from OpenCost (@petewall)
-*   Add node labels to host metrics feature (@petewall)
+*   Add node labels to  host metrics feature (@petewall)
 *   Update Alloy Operator, Beyla, Node Exporter, and Windows Exporter (@petewall)
 *   Fix serviceGraphMetrics routing metrics to the wrong OTLP destination when multiple destinations are defined (@petewall)
 *   Fix pre-delete hook failing when the finalizer is not present (@petewall)

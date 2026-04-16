@@ -157,7 +157,7 @@ data:
         // check to see if the log line matches the klog format (https://github.com/kubernetes/klog)
         stage.match {
           // unescaped regex: ([IWED][0-9]{4}\s+[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]+)
-          selector = "{level=\"unknown\"} |~ \"([IWED][0-9]{4}\\\\s+[0-9]{2}:[0-9]{2}:[0-9]{2}\\\\.[0-9]+)\""
+          selector = "{level=\"UNKNOWN\"} |~ \"([IWED][0-9]{4}\\\\s+[0-9]{2}:[0-9]{2}:[0-9]{2}\\\\.[0-9]+)\""
     
           // extract log level, klog uses a single letter code for the level followed by the month and day i.e. I0119
           stage.regex {
@@ -208,7 +208,7 @@ data:
     
         // if the level is still unknown, do one last attempt at detecting it based on common levels
         stage.match {
-          selector = "{level=\"unknown\"}"
+          selector = "{level=\"UNKNOWN\"}"
     
           // unescaped regex: (?i)(?:"(?:level|loglevel|levelname|lvl|levelText|SeverityText)":\s*"|\s*(?:level|loglevel|levelText|lvl)="?|\s+\[?)(?P<level>(DEBUG?|DBG|INFO?(RMATION)?|WA?RN(ING)?|ERR(OR)?|CRI?T(ICAL)?|FATAL|FTL|NOTICE|TRACE|TRC|PANIC|PNC|ALERT|EMERGENCY))("|\s+|-|\s*\])
           stage.regex {
@@ -1510,6 +1510,7 @@ data:
     
       // Prometheus Operator ServiceMonitor objects
       prometheus.operator.servicemonitors "service_monitors" {
+        kubernetes_role = "endpointslice"
         clustering {
           enabled = true
         }
@@ -2074,7 +2075,7 @@ metadata:
   namespace: default
 data:
   cluster: "oauth2-auth-example"
-  self-reporting-metric.prom: |
+  self-reporting-metric.prom: |+
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
     grafana_kubernetes_monitoring_build_info{version="4.0.1", namespace="default"} 1

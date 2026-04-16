@@ -65,7 +65,7 @@ should create a ConfigMap that sets custom journal labels:
           // check to see if the log line matches the klog format (https://github.com/kubernetes/klog)
           stage.match {
             // unescaped regex: ([IWED][0-9]{4}\s+[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]+)
-            selector = "{level=\"unknown\"} |~ \"([IWED][0-9]{4}\\\\s+[0-9]{2}:[0-9]{2}:[0-9]{2}\\\\.[0-9]+)\""
+            selector = "{level=\"UNKNOWN\"} |~ \"([IWED][0-9]{4}\\\\s+[0-9]{2}:[0-9]{2}:[0-9]{2}\\\\.[0-9]+)\""
 
             // extract log level, klog uses a single letter code for the level followed by the month and day i.e. I0119
             stage.regex {
@@ -116,7 +116,7 @@ should create a ConfigMap that sets custom journal labels:
 
           // if the level is still unknown, do one last attempt at detecting it based on common levels
           stage.match {
-            selector = "{level=\"unknown\"}"
+            selector = "{level=\"UNKNOWN\"}"
 
             // unescaped regex: (?i)(?:"(?:level|loglevel|levelname|lvl|levelText|SeverityText)":\s*"|\s*(?:level|loglevel|levelText|lvl)="?|\s+\[?)(?P<level>(DEBUG?|DBG|INFO?(RMATION)?|WA?RN(ING)?|ERR(OR)?|CRI?T(ICAL)?|FATAL|FTL|NOTICE|TRACE|TRC|PANIC|PNC|ALERT|EMERGENCY))("|\s+|-|\s*\])
             stage.regex {

@@ -4,6 +4,7 @@
 {{- $metricDenyList := .Values.serviceMonitors.metricsTuning.excludeMetrics }}
 // Prometheus Operator ServiceMonitor objects
 prometheus.operator.servicemonitors "service_monitors" {
+  kubernetes_role = "endpointslice"
 {{- if .Values.serviceMonitors.namespaces }}
   namespaces = {{ .Values.serviceMonitors.namespaces | toJson }}
 {{- end }}

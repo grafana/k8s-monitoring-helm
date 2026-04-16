@@ -74,3 +74,80 @@ tests:
                 namespace: kepler-namespace
                 labelSelectors:
                   app.kubernetes.io/name: kepler
+
+  - it: should fail when deployment-level setting is under hostMetrics.linuxHosts
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          node-exporter:
+            deploy: true
+      linuxHosts:
+        enabled: true
+        extraArgs:
+          - --collector.filesystem.fs-types-exclude=^tmpfs$
+      windowsHosts:
+        enabled: false
+      energyMetrics:
+        enabled: false
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The key "extraArgs" found under hostMetrics.linuxHosts is a deployment-level setting.
+            In v4.x, deployment settings for Node Exporter have moved to telemetryServices.
+            Please move this setting:
+            telemetryServices:
+              node-exporter:
+                extraArgs: ...
+
+  - it: should fail when deployment-level setting is under hostMetrics.windowsHosts
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          windows-exporter:
+            deploy: true
+      linuxHosts:
+        enabled: false
+      windowsHosts:
+        enabled: true
+        resources:
+          limits:
+            cpu: 100m
+      energyMetrics:
+        enabled: false
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The key "resources" found under hostMetrics.windowsHosts is a deployment-level setting.
+            In v4.x, deployment settings for Windows Exporter have moved to telemetryServices.
+            Please move this setting:
+            telemetryServices:
+              windows-exporter:
+                resources: ...
+
+  - it: should fail when deployment-level setting is under hostMetrics.energyMetrics
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          kepler:
+            deploy: true
+      linuxHosts:
+        enabled: false
+      windowsHosts:
+        enabled: false
+      energyMetrics:
+        enabled: true
+        tolerations:
+          - key: node-role.kubernetes.io/master
+            effect: NoSchedule
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The key "tolerations" found under hostMetrics.energyMetrics is a deployment-level setting.
+            In v4.x, deployment settings for Kepler have moved to telemetryServices.
+            Please move this setting:
+            telemetryServices:
+              kepler:
+                tolerations: ...

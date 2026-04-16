@@ -58,6 +58,7 @@ data:
     
       // Prometheus Operator ServiceMonitor objects
       prometheus.operator.servicemonitors "service_monitors" {
+        kubernetes_role = "endpointslice"
         namespaces = ["development","staging","production"]
         selector {
           match_expression {
@@ -191,7 +192,7 @@ metadata:
   namespace: default
 data:
   cluster: "prometheus-operator-objects-cluster"
-  self-reporting-metric.prom: |
+  self-reporting-metric.prom: |+
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
     grafana_kubernetes_monitoring_build_info{version="4.0.1", namespace="default"} 1
