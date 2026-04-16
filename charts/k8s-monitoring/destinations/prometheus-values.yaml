@@ -4,11 +4,13 @@
 name: ""
 
 # -- The URL for the Prometheus destination.
+# Supports Helm templating and is rendered as a quoted string in the generated Alloy config.
 # @section -- General
 url: ""
 
 # -- Raw config for accessing the URL. Lets you insert raw Alloy references so you can load the URL from any number of
-# places, such as loading values from config maps to HTTP calls. For example: `urlFrom: sys.env("PROMETHEUS_URL")`
+# places, such as loading values from config maps to HTTP calls. Use this when you need a raw Alloy expression instead
+# of a quoted string. For example: `urlFrom: sys.env("PROMETHEUS_URL")`
 # @section -- General
 urlFrom: ""
 
@@ -39,11 +41,11 @@ tenantIdKey: tenantId
 tenantIdFrom: ""
 
 # -- Extra headers to be set when sending data.
-# All values are treated as strings and automatically quoted.
+# All values are treated as strings, support Helm templating, and are automatically quoted.
 # @section -- General
 extraHeaders: {}
 # -- Extra headers to be set when sending data using a dynamic reference.
-# All values are treated as raw strings and not quoted.
+# All values are treated as raw Alloy expressions and not quoted.
 # @section -- General
 extraHeadersFrom: {}
 

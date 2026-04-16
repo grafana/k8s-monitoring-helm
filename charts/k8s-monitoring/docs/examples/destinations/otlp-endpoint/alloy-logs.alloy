@@ -372,8 +372,11 @@ otelcol.processor.batch "otlp_gateway" {
 }
 otelcol.exporter.otlphttp "otlp_gateway" {
   client {
-    endpoint = "https://otlp-gateway-my-region.grafana.net/otlp"
+    endpoint = "https://otlp-gateway-test.otlp-gateway-my-region.grafana.net/otlp"
     auth = otelcol.auth.basic.otlp_gateway.handler
+    headers = {
+      "x-cluster" = "otlp-gateway-test",
+    }
     tls {
       insecure = false
       insecure_skip_verify = false
@@ -409,4 +412,3 @@ remote.kubernetes.secret "otlp_gateway" {
   name      = "otlp-gateway-k8smon-k8s-monitoring"
   namespace = "default"
 }
-
