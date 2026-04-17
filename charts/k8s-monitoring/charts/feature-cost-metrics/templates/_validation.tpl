@@ -6,11 +6,11 @@
       {{- $msg = append $msg "telemetryServices:" }}
       {{- $msg = append $msg "  opencost:" }}
       {{- $msg = append $msg "    deploy: true" }}
-      {{- $msg = append $msg "Or, set the namespace and label selectors for an existing OpenCost:" }}
+      {{- $msg = append $msg "Or, set the namespace and label matchers for an existing OpenCost:" }}
       {{- $msg = append $msg "costMetrics:" }}
       {{- $msg = append $msg "  opencost:" }}
       {{- $msg = append $msg "    namespace: opencost-namespace" }}
-      {{- $msg = append $msg "    labelSelectors:" }}
+      {{- $msg = append $msg "    labelMatchers:" }}
       {{- $msg = append $msg "      app.kubernetes.io/name: opencost" }}
       {{- fail (join "\n" $msg) }}
     {{- end }}
