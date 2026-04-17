@@ -21,8 +21,6 @@ clusterMetrics:
 collectors:
   alloy-metrics:
     presets: [clustered, statefulset]
-    annotations:
-      helm.sdk.operatorframework.io/upgrade-force: "true"
     alloy:
       storagePath: /var/lib/alloy
       mounts:
@@ -44,3 +42,62 @@ collectors:
 telemetryServices:
   kube-state-metrics:
     deploy: true
+
+# Kubernetes does not allow adding volumeClaimTemplates to an existing
+# StatefulSet. The Alloy Operator manages each collector via an internal Helm
+# release, so a standard helm upgrade that adds storage fails. This pre-upgrade
+# hook deletes the Alloy CR (which triggers the operator to uninstall its
+# managed StatefulSet cleanly) before the upgrade recreates it with storage.
+extraObjects:
+  - apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: delete-alloy-cr
+      namespace: "{{ .Release.Namespace }}"
+      annotations:
+        helm.sh/hook: pre-upgrade
+        helm.sh/hook-weight: "-10"
+        helm.sh/hook-delete-policy: hook-succeeded
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: "{{ .Release.Name }}-delete-alloy-cr"
+      annotations:
+        helm.sh/hook: pre-upgrade
+        helm.sh/hook-weight: "-10"
+        helm.sh/hook-delete-policy: hook-succeeded
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: cluster-admin
+    subjects:
+      - kind: ServiceAccount
+        name: delete-alloy-cr
+        namespace: "{{ .Release.Namespace }}"
+  - apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: delete-alloy-cr
+      namespace: "{{ .Release.Namespace }}"
+      annotations:
+        helm.sh/hook: pre-upgrade
+        helm.sh/hook-weight: "0"
+        helm.sh/hook-delete-policy: hook-succeeded
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          serviceAccountName: delete-alloy-cr
+          restartPolicy: Never
+          containers:
+            - name: kubectl
+              image: bitnami/kubectl:latest
+              command:
+                - kubectl
+                - delete
+                - alloy
+                - "{{ .Release.Name }}-alloy-metrics"
+                - --namespace={{ .Release.Namespace }}
+                - --wait=true
+                - --timeout=120s
+                - --ignore-not-found=true
