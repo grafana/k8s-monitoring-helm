@@ -11,7 +11,7 @@
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| alloy | object | `{"securityContext":{"allowPrivilegeEscalation":true,"privileged":true,"runAsGroup":0,"runAsUser":0}}` | Configures Alloy to run with elevated privileges, allowing it to access system resources and perform operations that require root access. |
+| alloy | object | `{"securityContext":{"allowPrivilegeEscalation":true,"privileged":true,"runAsGroup":0,"runAsNonRoot":false,"runAsUser":0}}` | Configures Alloy to run with elevated privileges, allowing it to access system resources and perform operations that require root access. |
 
 ### Other Values
 
@@ -33,6 +33,7 @@ alloy:
     allowPrivilegeEscalation: true
     privileged: true
     runAsGroup: 0
+    runAsNonRoot: false
     runAsUser: 0
 
 controller:

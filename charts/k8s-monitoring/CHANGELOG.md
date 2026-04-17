@@ -3,6 +3,7 @@
 ## 4.1
 
 *   Add the ability to set the cluster name using arbitrary sources with `cluster.nameFrom` (@petewall)
+*   Run Alloy collectors as non-root (uid/gid 473) by default; the `privileged` preset still overrides to uid 0 when required (@petewall)
 
 ## Unreleased
 

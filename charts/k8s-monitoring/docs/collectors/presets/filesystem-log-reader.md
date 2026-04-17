@@ -12,6 +12,12 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | alloy | object | `{"mounts":{"dockercontainers":true,"varlog":true}}` | Configures Alloy to mount the /var/log from the Node's file system. |
+
+### Other Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| global.podSecurityContext.supplementalGroups[0] | int | `0` |  |
 <!-- textlint-enable terminology -->
 
 <!-- textlint-disable terminology -->
@@ -28,5 +34,12 @@ alloy:
 
     # Also mount `/var/lib/docker/containers` from the host into the container for log collection.
     dockercontainers: true
+
+# Pod logs on the host are typically owned by `root:root` with mode 0640 (directories 0750). When Alloy runs as a
+# non-root user (the default), it must be a member of the root group to read those files. This adds gid 0 as a
+# supplemental group for the Pod so Alloy can read pod logs without running as uid 0.
+global:
+  podSecurityContext:
+    supplementalGroups: [0]
 ```
 <!-- textlint-enable terminology -->
