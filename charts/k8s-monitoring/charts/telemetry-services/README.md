@@ -37,7 +37,7 @@ telemetryServices:
 |------------|------|---------|
 | https://opencost.github.io/opencost-helm-chart | opencost | 2.5.12 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 7.2.2 |
-| https://prometheus-community.github.io/helm-charts | node-exporter(prometheus-node-exporter) | 4.53.0 |
+| https://prometheus-community.github.io/helm-charts | node-exporter(prometheus-node-exporter) | 4.53.1 |
 | https://prometheus-community.github.io/helm-charts | windows-exporter(prometheus-windows-exporter) | 0.12.6 |
 | https://sustainable-computing-io.github.io/kepler-helm-chart | kepler | 0.6.1 |
 <!-- markdownlint-enable no-bare-urls -->
