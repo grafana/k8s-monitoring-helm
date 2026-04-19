@@ -1,0 +1,27 @@
+---
+cluster:
+  name: storage-upgrade-test
+
+destinations:
+  localPrometheus:
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+    auth:
+      type: basic
+      username: promuser
+      password: prometheuspassword
+
+clusterMetrics:
+  enabled: true
+  collector: alloy-metrics
+  kube-state-metrics:
+    metricsTuning:
+      includeMetrics: [kube_persistentvolumeclaim_info]
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
