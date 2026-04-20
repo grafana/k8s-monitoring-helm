@@ -190,11 +190,11 @@ alloy_instances = $(shell \
 )
 
 %/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
-	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
+	helm template $(EXAMPLE_RELEASE_NAME) . -f $< | sed 's|value: "AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U"|&  # trufflehog:ignore|' > $@
 
 %/.rendered/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
 	mkdir -p $(dir $@)
-	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
+	helm template $(EXAMPLE_RELEASE_NAME) . -f $< | sed 's|value: "AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U"|&  # trufflehog:ignore|' > $@
 
 %.alloy: $$(dir $$@)output.yaml
 	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-$(notdir $(basename $@))") | .data["config.alloy"]' $< > $@
