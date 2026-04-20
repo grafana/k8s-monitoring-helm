@@ -1,4 +1,4 @@
-FROM grafana/pyroscope:1.18.1@sha256:0ad897bb457228c7d1133ce7004f83052e635be9daf4a7cc90364317637e9754 AS pyroscope
+FROM grafana/pyroscope:1.21.0@sha256:751794786ee566c6b6200272546ba0200221c6c5660a03ca3b3b3d64d6b3d557 AS pyroscope
 FROM nixery.dev/shell/bc/curl/jq/file AS base-image-amd64
 FROM nixery.dev/arm64/shell/bc/curl/jq/file AS base-image-arm64
 
