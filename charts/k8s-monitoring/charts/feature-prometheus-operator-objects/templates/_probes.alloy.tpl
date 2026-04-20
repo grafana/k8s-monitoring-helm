@@ -29,7 +29,7 @@ prometheus.operator.probes "probes" {
     enabled = true
   }
   scrape {
-    default_scrape_interval = {{ .Values.probes.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+    default_scrape_interval = {{ include "enforce_min_scrape_interval" (dict "interval" (.Values.probes.scrapeInterval | default .Values.global.scrapeInterval) "min" .Values.global.minScrapeInterval) | quote }}
     default_scrape_timeout = {{ .Values.probes.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   }
 

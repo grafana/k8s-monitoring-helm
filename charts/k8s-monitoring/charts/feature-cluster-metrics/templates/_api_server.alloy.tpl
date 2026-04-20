@@ -49,7 +49,7 @@ prometheus.scrape "apiserver" {
   targets = discovery.relabel.apiserver.output
   job_name = {{ .Values.apiServer.jobLabel | quote }}
   scheme = "https"
-  scrape_interval = {{ .Values.apiServer.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_interval = {{ include "enforce_min_scrape_interval" (dict "interval" (.Values.apiServer.scrapeInterval | default .Values.global.scrapeInterval) "min" .Values.global.minScrapeInterval) | quote }}
   scrape_timeout = {{ .Values.apiServer.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}

@@ -43,7 +43,7 @@ prometheus.scrape "kubelet_probes" {
   targets  = discovery.relabel.kubelet_probes.output
   job_name = {{ .Values.kubeletProbes.jobLabel | quote }}
   scheme   = "https"
-  scrape_interval = {{ .Values.kubeletProbes.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_interval = {{ include "enforce_min_scrape_interval" (dict "interval" (.Values.kubeletProbes.scrapeInterval | default .Values.global.scrapeInterval) "min" .Values.global.minScrapeInterval) | quote }}
   scrape_timeout = {{ .Values.kubeletProbes.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}

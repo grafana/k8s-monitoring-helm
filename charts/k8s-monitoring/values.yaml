@@ -21,6 +21,24 @@ global:
   # @section -- Global Settings
   scrapeInterval: 60s
 
+  # -- When set, enforces a minimum scrape interval across all chart-managed scrape
+  # configurations. Any scrape interval (global, per-feature, or per-job) that is
+  # lower than this value will be clamped up to this value.
+  #
+  # For annotation-based autodiscovery targets (k8s.grafana.com/metrics.scrapeInterval),
+  # enabling this setting will override the annotation value entirely with this floor
+  # value, regardless of whether the annotation specifies a higher or lower interval.
+  # This is because duration comparison is not possible at runtime in Alloy relabeling
+  # rules. If you need per-target scrape intervals that differ from the floor, leave
+  # this setting unset and manage intervals through per-feature configuration.
+  #
+  # Applies to: all chart-templated scrape blocks, annotation-based autodiscovery,
+  # and Prometheus Operator object defaults.
+  # Does NOT apply to: extraConfig (raw Alloy config).
+  # @default -- "" (disabled)
+  # @section -- Global Settings
+  minScrapeInterval: ""
+
   # -- The timeout for scraping metrics.
   # @section -- Global Settings
   scrapeTimeout: 10s

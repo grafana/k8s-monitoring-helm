@@ -147,7 +147,7 @@ discovery.relabel "node_exporter" {
 prometheus.scrape "node_exporter" {
   targets = discovery.relabel.node_exporter.output
   job_name = {{ .Values.linuxHosts.jobLabel | quote }}
-  scrape_interval = {{ .Values.linuxHosts.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_interval = {{ include "enforce_min_scrape_interval" (dict "interval" (.Values.linuxHosts.scrapeInterval | default .Values.global.scrapeInterval) "min" .Values.global.minScrapeInterval) | quote }}
   scrape_timeout = {{ .Values.linuxHosts.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}

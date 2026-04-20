@@ -35,3 +35,29 @@ It will:
   translation of labels and attributes. For more information, consult:
     https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/docs/destinations#ecosystem-translation
 {{- end }}
+{{- if .Values.global.minScrapeInterval }}
+{{- $min := .Values.global.minScrapeInterval }}
+{{- $minSec := include "duration_to_seconds" $min | atoi }}
+{{- $warnings := list }}
+{{- $globalSec := include "duration_to_seconds" .Values.global.scrapeInterval | atoi }}
+{{- if lt ($globalSec | int) ($minSec | int) }}
+  {{- $warnings = append $warnings (printf "  - global.scrapeInterval: %s → %s" .Values.global.scrapeInterval $min) }}
+{{- end }}
+{{- if .Values.selfReporting.scrapeInterval }}
+  {{- $w := include "check_scrape_interval_floor" (dict "name" "selfReporting.scrapeInterval" "interval" .Values.selfReporting.scrapeInterval "min" $min "minSec" $minSec) }}
+  {{- if $w }}{{ $warnings = append $warnings $w }}{{ end }}
+{{- end }}
+{{- if $warnings }}
+
+WARNING: Minimum scrape interval floor is active ({{ $min }}).
+The following configured scrape intervals will be clamped:
+{{ join "\n" $warnings }}
+{{- end }}
+
+Note: When minScrapeInterval is active, annotation-based autodiscovery scrape intervals
+(k8s.grafana.com/metrics.scrapeInterval) will be overridden to {{ $min }} regardless
+of their configured value.
+
+Note: Scrape intervals defined in extraConfig or directly in Prometheus Operator CRs
+(ServiceMonitor/PodMonitor spec.scrapeInterval) are not affected by this floor.
+{{- end }}

@@ -106,7 +106,7 @@ prometheus.scrape "kube_dns" {
   targets = discovery.relabel.kube_dns.output
   job_name = {{ .Values.kubeDNS.jobLabel | quote }}
   scheme = "http"
-  scrape_interval = {{ .Values.kubeDNS.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_interval = {{ include "enforce_min_scrape_interval" (dict "interval" (.Values.kubeDNS.scrapeInterval | default .Values.global.scrapeInterval) "min" .Values.global.minScrapeInterval) | quote }}
   scrape_timeout = {{ .Values.kubeDNS.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}

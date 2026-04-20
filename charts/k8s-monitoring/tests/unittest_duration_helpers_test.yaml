@@ -1,0 +1,66 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:commas rule:braces
+suite: Unittest - Duration Helper Functions
+templates:
+  - test/helpers.yaml
+tests:
+  - it: duration_to_seconds parses seconds
+    set:
+      testing: true
+    asserts:
+      - {equal: {path: "data.seconds60s",  value: "60"  }, documentIndex: 2 }
+      - {equal: {path: "data.seconds5s",   value: "5"   }, documentIndex: 2 }
+
+  - it: duration_to_seconds parses minutes
+    set:
+      testing: true
+    asserts:
+      - {equal: {path: "data.seconds2m",   value: "120" }, documentIndex: 2 }
+
+  - it: duration_to_seconds parses hours
+    set:
+      testing: true
+    asserts:
+      - {equal: {path: "data.seconds1h",   value: "3600"}, documentIndex: 2 }
+
+  - it: duration_to_seconds parses mixed units
+    set:
+      testing: true
+    asserts:
+      - {equal: {path: "data.seconds1m30s",    value: "90"   }, documentIndex: 2 }
+      - {equal: {path: "data.seconds1h30m45s", value: "5445" }, documentIndex: 2 }
+
+  - it: enforce_min_scrape_interval passes through when min is empty
+    set:
+      testing: true
+    asserts:
+      - {equal: {path: "data.enforceNoMin", value: "30s" }, documentIndex: 2 }
+
+  - it: enforce_min_scrape_interval clamps up when interval is below floor
+    set:
+      testing: true
+    asserts:
+      - {equal: {path: "data.enforceClampUp", value: "60s" }, documentIndex: 2 }
+
+  - it: enforce_min_scrape_interval does not clamp when interval is above floor
+    set:
+      testing: true
+    asserts:
+      - {equal: {path: "data.enforceNoClamp", value: "2m" }, documentIndex: 2 }
+
+  - it: enforce_min_scrape_interval returns min when interval is empty
+    set:
+      testing: true
+    asserts:
+      - {equal: {path: "data.enforceEmptyInterval", value: "60s" }, documentIndex: 2 }
+
+  - it: enforce_min_scrape_interval returns interval when equal to floor
+    set:
+      testing: true
+    asserts:
+      - {equal: {path: "data.enforceEqual", value: "60s" }, documentIndex: 2 }
+
+  - it: enforce_min_scrape_interval clamps with mixed units
+    set:
+      testing: true
+    asserts:
+      - {equal: {path: "data.enforceMixedUnits", value: "1m" }, documentIndex: 2 }

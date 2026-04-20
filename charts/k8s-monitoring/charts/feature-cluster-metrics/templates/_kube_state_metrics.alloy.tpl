@@ -53,7 +53,7 @@ discovery.relabel "kube_state_metrics" {
 prometheus.scrape "kube_state_metrics" {
   targets = discovery.relabel.kube_state_metrics.output
   job_name = {{ (index .Values "kube-state-metrics").jobLabel | quote }}
-  scrape_interval = {{ (index .Values "kube-state-metrics").scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_interval = {{ include "enforce_min_scrape_interval" (dict "interval" ((index .Values "kube-state-metrics").scrapeInterval | default .Values.global.scrapeInterval) "min" .Values.global.minScrapeInterval) | quote }}
   scrape_timeout = {{ (index .Values "kube-state-metrics").scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
