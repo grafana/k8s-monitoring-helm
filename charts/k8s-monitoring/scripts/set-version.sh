@@ -31,5 +31,8 @@ echo "Changing ${CHART_NAME} version from ${CURRENT_VERSION} to ${VERSION}..."
 yq eval    ".version = \"${VERSION}\"" "${CHART_FILE}" > "${CHART_FILE}.new" && mv "${CHART_FILE}.new" "${CHART_FILE}"
 yq eval ".appVersion = \"${VERSION}\"" "${CHART_FILE}" > "${CHART_FILE}.new" && mv "${CHART_FILE}.new" "${CHART_FILE}"
 
+echo "Removing test snapshots that contain the old version..."
+grep -rl "${CURRENT_VERSION}" "${CHART_DIR}"/tests/__snapshot__ 2>/dev/null | xargs rm -f
+
 echo "Rebuilding generated content..."
 make -C "${CHART_DIR}" clean build test > /dev/null
