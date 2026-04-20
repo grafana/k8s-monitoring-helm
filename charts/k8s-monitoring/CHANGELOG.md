@@ -2,6 +2,7 @@
 
 ## 4.1
 
+*   Restrict the Alloy deployment privileges as minimally as possible (@petewall)
 *   Add the ability to set the cluster name using arbitrary sources with `cluster.nameFrom` (@petewall)
 
 ## Unreleased
