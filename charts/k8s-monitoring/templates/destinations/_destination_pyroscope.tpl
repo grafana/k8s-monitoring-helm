@@ -140,7 +140,7 @@ pyroscope.write {{ include "helper.alloy_name" $.destinationName | quote }} {
     {{ $key }} = {{ $value }},
   {{- end }}
   }
-}
+} // pyroscope.write "{{ include "helper.alloy_name" $.destinationName }}"
 {{- end }}
 {{- end }}
 

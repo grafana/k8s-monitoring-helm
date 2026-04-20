@@ -250,7 +250,7 @@ data:
     // Destination: loki (loki)
     otelcol.exporter.loki "loki" {
       forward_to = [loki.write.loki.receiver]
-    }
+    } // otelcol.exporter.loki "loki"
     
     loki.write "loki" {
       endpoint {
@@ -272,7 +272,7 @@ data:
         "cluster" = "debug-custom-destination",
         "k8s_cluster_name" = "debug-custom-destination",
       }
-    }
+    } // loki.write "loki"
     
     remote.kubernetes.secret "loki" {
       name      = "loki-k8smon-k8s-monitoring"
@@ -661,12 +661,12 @@ data:
       output {
         metrics = [otelcol.processor.filter.debug.input]
       }
-    }
+    } // otelcol.receiver.prometheus "debug"
     otelcol.receiver.loki "debug" {
       output {
         logs = [otelcol.processor.filter.debug.input]
       }
-    }
+    } // otelcol.receiver.loki "debug"
     
     otelcol.processor.filter "debug" {
       metrics {
@@ -688,7 +688,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.prometheus.receiver]
-    }
+    } // otelcol.exporter.prometheus "prometheus"
     
     prometheus.remote_write "prometheus" {
       endpoint {
@@ -731,7 +731,7 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "prometheus"
 ---
 # Source: k8s-monitoring/templates/release-info.yaml
 apiVersion: v1

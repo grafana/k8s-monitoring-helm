@@ -222,18 +222,18 @@ data:
       output {
         metrics = [otelcol.processor.attributes.otlp_gateway.input]
       }
-    }
+    } // otelcol.receiver.prometheus "otlp_gateway"
     otelcol.receiver.loki "otlp_gateway" {
       output {
         logs = [otelcol.processor.attributes.otlp_gateway.input]
       }
-    }
+    } // otelcol.receiver.loki "otlp_gateway"
     otelcol.processor.attributes "otlp_gateway" {
       output {
         metrics = [otelcol.processor.transform.otlp_gateway.input]
         logs = [otelcol.processor.transform.otlp_gateway.input]
       }
-    }
+    } // otelcol.processor.attributes "otlp_gateway"
     
     otelcol.processor.transform "otlp_gateway" {
       error_mode = "ignore"
@@ -338,7 +338,7 @@ data:
         metrics = [otelcol.processor.batch.otlp_gateway.input]
         logs = [otelcol.processor.batch.otlp_gateway.input]
       }
-    }
+    } // otelcol.processor.transform "otlp_gateway"
     
     otelcol.processor.batch "otlp_gateway" {
       timeout = "2s"
@@ -349,7 +349,7 @@ data:
         metrics = [otelcol.exporter.otlp.otlp_gateway.input]
         logs = [otelcol.exporter.otlp.otlp_gateway.input]
       }
-    }
+    } // otelcol.processor.batch "otlp_gateway"
     otelcol.exporter.otlp "otlp_gateway" {
       client {
         endpoint = "http://otlp-gateway.example.com"
@@ -369,14 +369,14 @@ data:
       sending_queue {
         enabled = true
       }
-    }
+    } // otelcol.exporter.otlp "otlp_gateway"
     
     // Destination: tail-sampler (otlp)
     otelcol.processor.attributes "tail_sampler" {
       output {
         traces = [otelcol.processor.transform.tail_sampler.input]
       }
-    }
+    } // otelcol.processor.attributes "tail_sampler"
     
     otelcol.processor.transform "tail_sampler" {
       error_mode = "ignore"
@@ -408,7 +408,7 @@ data:
       output {
         traces = [otelcol.processor.batch.tail_sampler.input]
       }
-    }
+    } // otelcol.processor.transform "tail_sampler"
     
     otelcol.processor.batch "tail_sampler" {
       timeout = "2s"
@@ -418,7 +418,7 @@ data:
       output {
         traces = [otelcol.exporter.otlp.tail_sampler.input]
       }
-    }
+    } // otelcol.processor.batch "tail_sampler"
     otelcol.exporter.otlp "tail_sampler" {
       client {
         endpoint = "tail-sampler-deployment.default.svc.cluster.local:4317"
@@ -438,7 +438,7 @@ data:
       sending_queue {
         enabled = true
       }
-    }
+    } // otelcol.exporter.otlp "tail_sampler"
 ---
 # Source: k8s-monitoring/templates/release-info.yaml
 apiVersion: v1

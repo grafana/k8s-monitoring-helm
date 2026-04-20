@@ -372,12 +372,12 @@ otelcol.receiver.prometheus "debug" {
   output {
     metrics = [otelcol.processor.filter.debug.input]
   }
-}
+} // otelcol.receiver.prometheus "debug"
 otelcol.receiver.loki "debug" {
   output {
     logs = [otelcol.processor.filter.debug.input]
   }
-}
+} // otelcol.receiver.loki "debug"
 
 otelcol.processor.filter "debug" {
   metrics {
@@ -399,7 +399,7 @@ otelcol.exporter.prometheus "prometheus" {
   add_metric_suffixes = true
   resource_to_telemetry_conversion = false
   forward_to = [prometheus.remote_write.prometheus.receiver]
-}
+} // otelcol.exporter.prometheus "prometheus"
 
 prometheus.remote_write "prometheus" {
   endpoint {
@@ -442,5 +442,5 @@ prometheus.remote_write "prometheus" {
     min_keepalive_time = "5m"
     max_keepalive_time = "8h"
   }
-}
+} // prometheus.remote_write "prometheus"
 

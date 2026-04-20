@@ -320,19 +320,19 @@ data:
       output {
         metrics = [otelcol.processor.attributes.otlp_gateway.input]
       }
-    }
+    } // otelcol.receiver.prometheus "otlp_gateway"
     otelcol.receiver.loki "otlp_gateway" {
       output {
         logs = [otelcol.processor.attributes.otlp_gateway.input]
       }
-    }
+    } // otelcol.receiver.loki "otlp_gateway"
     otelcol.processor.attributes "otlp_gateway" {
       output {
         metrics = [otelcol.processor.transform.otlp_gateway.input]
         logs = [otelcol.processor.transform.otlp_gateway.input]
         traces = [otelcol.processor.transform.otlp_gateway.input]
       }
-    }
+    } // otelcol.processor.attributes "otlp_gateway"
     
     otelcol.processor.transform "otlp_gateway" {
       error_mode = "ignore"
@@ -464,7 +464,7 @@ data:
         logs = [otelcol.processor.batch.otlp_gateway.input]
         traces = [otelcol.processor.batch.otlp_gateway.input]
       }
-    }
+    } // otelcol.processor.transform "otlp_gateway"
     
     otelcol.processor.batch "otlp_gateway" {
       timeout = "2s"
@@ -476,7 +476,7 @@ data:
         logs = [otelcol.exporter.otlphttp.otlp_gateway.input]
         traces = [otelcol.exporter.otlphttp.otlp_gateway.input]
       }
-    }
+    } // otelcol.processor.batch "otlp_gateway"
     otelcol.exporter.otlphttp "otlp_gateway" {
       client {
         endpoint = "https://otlp-gateway-my-region.grafana.net/otlp"
@@ -505,12 +505,12 @@ data:
           max_size = 1000
         }
       }
-    }
+    } // otelcol.exporter.otlphttp "otlp_gateway"
     
     otelcol.auth.basic "otlp_gateway" {
       username = convert.nonsensitive(remote.kubernetes.secret.otlp_gateway.data["username"])
       password = remote.kubernetes.secret.otlp_gateway.data["password"]
-    }
+    } // otelcol.auth.basic "otlp_gateway"
     
     remote.kubernetes.secret "otlp_gateway" {
       name      = "otlp-gateway-k8smon-k8s-monitoring"
@@ -1066,19 +1066,19 @@ data:
       output {
         metrics = [otelcol.processor.attributes.otlp_gateway.input]
       }
-    }
+    } // otelcol.receiver.prometheus "otlp_gateway"
     otelcol.receiver.loki "otlp_gateway" {
       output {
         logs = [otelcol.processor.attributes.otlp_gateway.input]
       }
-    }
+    } // otelcol.receiver.loki "otlp_gateway"
     otelcol.processor.attributes "otlp_gateway" {
       output {
         metrics = [otelcol.processor.transform.otlp_gateway.input]
         logs = [otelcol.processor.transform.otlp_gateway.input]
         traces = [otelcol.processor.transform.otlp_gateway.input]
       }
-    }
+    } // otelcol.processor.attributes "otlp_gateway"
     
     otelcol.processor.transform "otlp_gateway" {
       error_mode = "ignore"
@@ -1210,7 +1210,7 @@ data:
         logs = [otelcol.processor.batch.otlp_gateway.input]
         traces = [otelcol.processor.batch.otlp_gateway.input]
       }
-    }
+    } // otelcol.processor.transform "otlp_gateway"
     
     otelcol.processor.batch "otlp_gateway" {
       timeout = "2s"
@@ -1222,7 +1222,7 @@ data:
         logs = [otelcol.exporter.otlphttp.otlp_gateway.input]
         traces = [otelcol.exporter.otlphttp.otlp_gateway.input]
       }
-    }
+    } // otelcol.processor.batch "otlp_gateway"
     otelcol.exporter.otlphttp "otlp_gateway" {
       client {
         endpoint = "https://otlp-gateway-my-region.grafana.net/otlp"
@@ -1251,12 +1251,12 @@ data:
           max_size = 1000
         }
       }
-    }
+    } // otelcol.exporter.otlphttp "otlp_gateway"
     
     otelcol.auth.basic "otlp_gateway" {
       username = convert.nonsensitive(remote.kubernetes.secret.otlp_gateway.data["username"])
       password = remote.kubernetes.secret.otlp_gateway.data["password"]
-    }
+    } // otelcol.auth.basic "otlp_gateway"
     
     remote.kubernetes.secret "otlp_gateway" {
       name      = "otlp-gateway-k8smon-k8s-monitoring"

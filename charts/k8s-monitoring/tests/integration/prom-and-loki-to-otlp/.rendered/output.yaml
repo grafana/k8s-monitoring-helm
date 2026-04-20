@@ -288,12 +288,12 @@ data:
       output {
         logs = [otelcol.processor.attributes.loki.input]
       }
-    }
+    } // otelcol.receiver.loki "loki"
     otelcol.processor.attributes "loki" {
       output {
         logs = [otelcol.processor.transform.loki.input]
       }
-    }
+    } // otelcol.processor.attributes "loki"
     
     otelcol.processor.transform "loki" {
       error_mode = "ignore"
@@ -357,7 +357,7 @@ data:
       output {
         logs = [otelcol.processor.batch.loki.input]
       }
-    }
+    } // otelcol.processor.transform "loki"
     
     otelcol.processor.batch "loki" {
       timeout = "2s"
@@ -367,7 +367,7 @@ data:
       output {
         logs = [otelcol.exporter.otlphttp.loki.input]
       }
-    }
+    } // otelcol.processor.batch "loki"
     otelcol.exporter.otlphttp "loki" {
       client {
         endpoint = "http://loki.loki.svc:3100/otlp"
@@ -391,12 +391,12 @@ data:
       sending_queue {
         enabled = true
       }
-    }
+    } // otelcol.exporter.otlphttp "loki"
     
     otelcol.auth.basic "loki" {
       username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
       password = remote.kubernetes.secret.loki.data["password"]
-    }
+    } // otelcol.auth.basic "loki"
     
     remote.kubernetes.secret "loki" {
       name      = "loki-k8smon-k8s-monitoring"
@@ -847,12 +847,12 @@ data:
       output {
         metrics = [otelcol.processor.attributes.prometheus.input]
       }
-    }
+    } // otelcol.receiver.prometheus "prometheus"
     otelcol.processor.attributes "prometheus" {
       output {
         metrics = [otelcol.processor.transform.prometheus.input]
       }
-    }
+    } // otelcol.processor.attributes "prometheus"
     
     otelcol.processor.transform "prometheus" {
       error_mode = "ignore"
@@ -897,7 +897,7 @@ data:
       output {
         metrics = [otelcol.processor.batch.prometheus.input]
       }
-    }
+    } // otelcol.processor.transform "prometheus"
     
     otelcol.processor.batch "prometheus" {
       timeout = "2s"
@@ -907,7 +907,7 @@ data:
       output {
         metrics = [otelcol.exporter.otlphttp.prometheus.input]
       }
-    }
+    } // otelcol.processor.batch "prometheus"
     otelcol.exporter.otlphttp "prometheus" {
       client {
         endpoint = "http://prometheus-server.prometheus.svc:9090/api/v1/otlp"
@@ -928,12 +928,12 @@ data:
       sending_queue {
         enabled = true
       }
-    }
+    } // otelcol.exporter.otlphttp "prometheus"
     
     otelcol.auth.basic "prometheus" {
       username = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["username"])
       password = remote.kubernetes.secret.prometheus.data["password"]
-    }
+    } // otelcol.auth.basic "prometheus"
     
     remote.kubernetes.secret "prometheus" {
       name      = "prometheus-k8smon-k8s-monitoring"
@@ -1082,12 +1082,12 @@ data:
       output {
         logs = [otelcol.processor.attributes.loki.input]
       }
-    }
+    } // otelcol.receiver.loki "loki"
     otelcol.processor.attributes "loki" {
       output {
         logs = [otelcol.processor.transform.loki.input]
       }
-    }
+    } // otelcol.processor.attributes "loki"
     
     otelcol.processor.transform "loki" {
       error_mode = "ignore"
@@ -1151,7 +1151,7 @@ data:
       output {
         logs = [otelcol.processor.batch.loki.input]
       }
-    }
+    } // otelcol.processor.transform "loki"
     
     otelcol.processor.batch "loki" {
       timeout = "2s"
@@ -1161,7 +1161,7 @@ data:
       output {
         logs = [otelcol.exporter.otlphttp.loki.input]
       }
-    }
+    } // otelcol.processor.batch "loki"
     otelcol.exporter.otlphttp "loki" {
       client {
         endpoint = "http://loki.loki.svc:3100/otlp"
@@ -1185,12 +1185,12 @@ data:
       sending_queue {
         enabled = true
       }
-    }
+    } // otelcol.exporter.otlphttp "loki"
     
     otelcol.auth.basic "loki" {
       username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
       password = remote.kubernetes.secret.loki.data["password"]
-    }
+    } // otelcol.auth.basic "loki"
     
     remote.kubernetes.secret "loki" {
       name      = "loki-k8smon-k8s-monitoring"
@@ -1203,12 +1203,12 @@ data:
       output {
         metrics = [otelcol.processor.attributes.prometheus.input]
       }
-    }
+    } // otelcol.receiver.prometheus "prometheus"
     otelcol.processor.attributes "prometheus" {
       output {
         metrics = [otelcol.processor.transform.prometheus.input]
       }
-    }
+    } // otelcol.processor.attributes "prometheus"
     
     otelcol.processor.transform "prometheus" {
       error_mode = "ignore"
@@ -1253,7 +1253,7 @@ data:
       output {
         metrics = [otelcol.processor.batch.prometheus.input]
       }
-    }
+    } // otelcol.processor.transform "prometheus"
     
     otelcol.processor.batch "prometheus" {
       timeout = "2s"
@@ -1263,7 +1263,7 @@ data:
       output {
         metrics = [otelcol.exporter.otlphttp.prometheus.input]
       }
-    }
+    } // otelcol.processor.batch "prometheus"
     otelcol.exporter.otlphttp "prometheus" {
       client {
         endpoint = "http://prometheus-server.prometheus.svc:9090/api/v1/otlp"
@@ -1284,12 +1284,12 @@ data:
       sending_queue {
         enabled = true
       }
-    }
+    } // otelcol.exporter.otlphttp "prometheus"
     
     otelcol.auth.basic "prometheus" {
       username = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["username"])
       password = remote.kubernetes.secret.prometheus.data["password"]
-    }
+    } // otelcol.auth.basic "prometheus"
     
     remote.kubernetes.secret "prometheus" {
       name      = "prometheus-k8smon-k8s-monitoring"

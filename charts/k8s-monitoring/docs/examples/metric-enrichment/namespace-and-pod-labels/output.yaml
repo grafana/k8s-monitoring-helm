@@ -643,13 +643,13 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.metric_store.receiver]
-    }
+    } // otelcol.exporter.prometheus "metric_store"
     discovery.kubernetes "metric_store" {
       role = "pod"
       attach_metadata {
         namespace = true
       }
-    }
+    } // discovery.kubernetes "metric_store"
     discovery.relabel "metric_store" {
       targets = discovery.kubernetes.metric_store.targets
       rule {
@@ -673,7 +673,7 @@ data:
         source_labels = ["__meta_kubernetes_namespace_label_environment"]
         target_label = "environment"
       }
-    }
+    } // discovery.relabel "metric_store"
     
     prometheus.relabel "metric_store" {
       rule {
@@ -682,20 +682,20 @@ data:
         target_label = "__meta_kubernetes_namespace_pod"
       }
       forward_to = [prometheus.enrich.metric_store_ns.receiver]
-    }
+    } // prometheus.relabel "metric_store"
     prometheus.enrich "metric_store_ns" {
       targets = discovery.relabel.metric_store.output
       target_match_label = "__meta_kubernetes_namespace"
       metrics_match_label = "namespace"
       labels_to_copy = ["team_name","environment"]
       forward_to = [prometheus.enrich.metric_store_pod.receiver]
-    }
+    } // prometheus.enrich "metric_store_ns"
     prometheus.enrich "metric_store_pod" {
       targets = discovery.relabel.metric_store.output
       target_match_label = "__meta_kubernetes_namespace_pod"
       labels_to_copy = ["app_version","component"]
       forward_to = [prometheus.remote_write.metric_store.receiver]
-    }
+    } // prometheus.enrich "metric_store_pod"
     
     prometheus.remote_write "metric_store" {
       endpoint {
@@ -742,7 +742,7 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "metric_store"
 ---
 # Source: k8s-monitoring/templates/release-info.yaml
 apiVersion: v1

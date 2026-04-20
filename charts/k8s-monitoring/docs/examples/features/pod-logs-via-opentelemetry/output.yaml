@@ -159,12 +159,12 @@ data:
       output {
         logs = [otelcol.processor.attributes.log_storage.input]
       }
-    }
+    } // otelcol.receiver.loki "log_storage"
     otelcol.processor.attributes "log_storage" {
       output {
         logs = [otelcol.processor.transform.log_storage.input]
       }
-    }
+    } // otelcol.processor.attributes "log_storage"
     
     otelcol.processor.transform "log_storage" {
       error_mode = "ignore"
@@ -229,7 +229,7 @@ data:
       output {
         logs = [otelcol.processor.batch.log_storage.input]
       }
-    }
+    } // otelcol.processor.transform "log_storage"
     
     otelcol.processor.batch "log_storage" {
       timeout = "2s"
@@ -239,7 +239,7 @@ data:
       output {
         logs = [otelcol.exporter.otlphttp.log_storage.input]
       }
-    }
+    } // otelcol.processor.batch "log_storage"
     otelcol.exporter.otlphttp "log_storage" {
       client {
         endpoint = "http://loki.loki.svc:3100/otlp"
@@ -263,12 +263,12 @@ data:
       sending_queue {
         enabled = true
       }
-    }
+    } // otelcol.exporter.otlphttp "log_storage"
     
     otelcol.auth.basic "log_storage" {
       username = convert.nonsensitive(remote.kubernetes.secret.log_storage.data["username"])
       password = remote.kubernetes.secret.log_storage.data["password"]
-    }
+    } // otelcol.auth.basic "log_storage"
     
     remote.kubernetes.secret "log_storage" {
       name      = "log-storage-k8smon-k8s-monitoring"

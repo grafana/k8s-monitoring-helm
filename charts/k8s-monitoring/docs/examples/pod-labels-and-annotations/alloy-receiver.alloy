@@ -190,7 +190,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
 // Destination: loki (loki)
 otelcol.exporter.loki "loki" {
   forward_to = [loki.write.loki.receiver]
-}
+} // otelcol.exporter.loki "loki"
 
 loki.write "loki" {
   endpoint {
@@ -207,14 +207,14 @@ loki.write "loki" {
     "cluster" = "pod-labels-and-annotations",
     "k8s_cluster_name" = "pod-labels-and-annotations",
   }
-}
+} // loki.write "loki"
 
 // Destination: prometheus (prometheus)
 otelcol.exporter.prometheus "prometheus" {
   add_metric_suffixes = true
   resource_to_telemetry_conversion = false
   forward_to = [prometheus.remote_write.prometheus.receiver]
-}
+} // otelcol.exporter.prometheus "prometheus"
 
 prometheus.remote_write "prometheus" {
   endpoint {
@@ -257,14 +257,14 @@ prometheus.remote_write "prometheus" {
     min_keepalive_time = "5m"
     max_keepalive_time = "8h"
   }
-}
+} // prometheus.remote_write "prometheus"
 
 // Destination: tempo (otlp)
 otelcol.processor.attributes "tempo" {
   output {
     traces = [otelcol.processor.transform.tempo.input]
   }
-}
+} // otelcol.processor.attributes "tempo"
 
 otelcol.processor.transform "tempo" {
   error_mode = "ignore"
@@ -296,7 +296,7 @@ otelcol.processor.transform "tempo" {
   output {
     traces = [otelcol.processor.batch.tempo.input]
   }
-}
+} // otelcol.processor.transform "tempo"
 
 otelcol.processor.batch "tempo" {
   timeout = "2s"
@@ -306,7 +306,7 @@ otelcol.processor.batch "tempo" {
   output {
     traces = [otelcol.exporter.otlp.tempo.input]
   }
-}
+} // otelcol.processor.batch "tempo"
 otelcol.exporter.otlp "tempo" {
   client {
     endpoint = "http://tempo.tempo.svc"
@@ -326,5 +326,5 @@ otelcol.exporter.otlp "tempo" {
   sending_queue {
     enabled = true
   }
-}
+} // otelcol.exporter.otlp "tempo"
 

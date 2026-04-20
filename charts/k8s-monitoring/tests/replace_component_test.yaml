@@ -1,0 +1,51 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Replace Component
+templates:
+  - alloy-config.yaml
+tests:
+  - it: replaces the body of a matching Alloy component
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: prometheus
+          url: https://prometheus.example.com
+          metricEnrichment:
+            namespaceLabels: ["team"]
+      replaceComponent:
+        - type: prometheus.relabel
+          name: test
+          content: |-
+            rule {
+              source_labels = ["custom_label"]
+              target_label = "replaced"
+            }
+            forward_to = [prometheus.remote_write.test.receiver]
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'target_label = "replaced"'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: '__meta_kubernetes_namespace_pod'
+
+  - it: fails when the target component does not exist
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: prometheus
+          url: https://prometheus.example.com
+      replaceComponent:
+        - type: prometheus.relabel
+          name: nonexistent
+          content: "forward_to = []"
+    asserts:
+      - failedTemplate:
+          errorPattern: 'component prometheus\.relabel "nonexistent" not found'

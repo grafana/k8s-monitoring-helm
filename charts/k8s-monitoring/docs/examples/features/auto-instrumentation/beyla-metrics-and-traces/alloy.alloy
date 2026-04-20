@@ -259,19 +259,19 @@ otelcol.receiver.prometheus "otlp_gateway" {
   output {
     metrics = [otelcol.processor.attributes.otlp_gateway.input]
   }
-}
+} // otelcol.receiver.prometheus "otlp_gateway"
 otelcol.receiver.loki "otlp_gateway" {
   output {
     logs = [otelcol.processor.attributes.otlp_gateway.input]
   }
-}
+} // otelcol.receiver.loki "otlp_gateway"
 otelcol.processor.attributes "otlp_gateway" {
   output {
     metrics = [otelcol.processor.transform.otlp_gateway.input]
     logs = [otelcol.processor.transform.otlp_gateway.input]
     traces = [otelcol.processor.transform.otlp_gateway.input]
   }
-}
+} // otelcol.processor.attributes "otlp_gateway"
 
 otelcol.processor.transform "otlp_gateway" {
   error_mode = "ignore"
@@ -401,7 +401,7 @@ otelcol.processor.transform "otlp_gateway" {
     logs = [otelcol.processor.batch.otlp_gateway.input]
     traces = [otelcol.processor.batch.otlp_gateway.input]
   }
-}
+} // otelcol.processor.transform "otlp_gateway"
 
 otelcol.processor.batch "otlp_gateway" {
   timeout = "2s"
@@ -413,7 +413,7 @@ otelcol.processor.batch "otlp_gateway" {
     logs = [otelcol.exporter.otlp.otlp_gateway.input]
     traces = [otelcol.exporter.otlp.otlp_gateway.input]
   }
-}
+} // otelcol.processor.batch "otlp_gateway"
 otelcol.exporter.otlp "otlp_gateway" {
   client {
     endpoint = "http://otlp-gateway.example.com"
@@ -433,5 +433,5 @@ otelcol.exporter.otlp "otlp_gateway" {
   sending_queue {
     enabled = true
   }
-}
+} // otelcol.exporter.otlp "otlp_gateway"
 

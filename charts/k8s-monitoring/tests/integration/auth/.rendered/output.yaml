@@ -312,7 +312,7 @@ data:
     // Destination: loki-basicauth (loki)
     otelcol.exporter.loki "loki_basicauth" {
       forward_to = [loki.write.loki_basicauth.receiver]
-    }
+    } // otelcol.exporter.loki "loki_basicauth"
     
     loki.write "loki_basicauth" {
       endpoint {
@@ -335,7 +335,7 @@ data:
         "k8s_cluster_name" = "auth-integration-test",
         destination = "loki-basicauth",
       }
-    }
+    } // loki.write "loki_basicauth"
     
     remote.kubernetes.secret "loki_basicauth" {
       name      = "loki-basicauth-k8smon-k8s-monitoring"
@@ -346,7 +346,7 @@ data:
     // Destination: loki-basicauth-external-secret (loki)
     otelcol.exporter.loki "loki_basicauth_external_secret" {
       forward_to = [loki.write.loki_basicauth_external_secret.receiver]
-    }
+    } // otelcol.exporter.loki "loki_basicauth_external_secret"
     
     loki.write "loki_basicauth_external_secret" {
       endpoint {
@@ -372,7 +372,7 @@ data:
         "k8s_cluster_name" = "auth-integration-test",
         destination = "loki-basicauth-external-secret",
       }
-    }
+    } // loki.write "loki_basicauth_external_secret"
     
     remote.kubernetes.secret "loki_basicauth_external_secret" {
       name      = "credentials"
@@ -383,7 +383,7 @@ data:
     // Destination: loki-bearer-token (loki)
     otelcol.exporter.loki "loki_bearer_token" {
       forward_to = [loki.write.loki_bearer_token.receiver]
-    }
+    } // otelcol.exporter.loki "loki_bearer_token"
     
     loki.write "loki_bearer_token" {
       endpoint {
@@ -403,7 +403,7 @@ data:
         "k8s_cluster_name" = "auth-integration-test",
         destination = "loki-bearer-token",
       }
-    }
+    } // loki.write "loki_bearer_token"
     
     remote.kubernetes.secret "loki_bearer_token" {
       name      = "loki-bearer-token-k8smon-k8s-monitoring"
@@ -414,7 +414,7 @@ data:
     // Destination: loki-noauth (loki)
     otelcol.exporter.loki "loki_noauth" {
       forward_to = [loki.write.loki_noauth.receiver]
-    }
+    } // otelcol.exporter.loki "loki_noauth"
     
     loki.write "loki_noauth" {
       endpoint {
@@ -433,7 +433,7 @@ data:
         "k8s_cluster_name" = "auth-integration-test",
         destination = "loki-noauth",
       }
-    }
+    } // loki.write "loki_noauth"
     
     remote.kubernetes.secret "loki_noauth" {
       name      = "loki-noauth-k8smon-k8s-monitoring"
@@ -577,7 +577,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.prometheus_basicauth.receiver]
-    }
+    } // otelcol.exporter.prometheus "prometheus_basicauth"
     
     prometheus.remote_write "prometheus_basicauth" {
       endpoint {
@@ -627,7 +627,7 @@ data:
       external_labels = {
         destination = "prometheus-basicauth",
       }
-    }
+    } // prometheus.remote_write "prometheus_basicauth"
     
     remote.kubernetes.secret "prometheus_basicauth" {
       name      = "prometheus-basicauth-k8smon-k8s-monitoring"
@@ -640,7 +640,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.prometheus_basicauth_external_secret_1.receiver]
-    }
+    } // otelcol.exporter.prometheus "prometheus_basicauth_external_secret_1"
     
     prometheus.remote_write "prometheus_basicauth_external_secret_1" {
       endpoint {
@@ -694,7 +694,7 @@ data:
       external_labels = {
         destination = "prometheus-basicauth-external-secret-1",
       }
-    }
+    } // prometheus.remote_write "prometheus_basicauth_external_secret_1"
     
     remote.kubernetes.secret "prometheus_basicauth_external_secret_1" {
       name      = "credentials"
@@ -707,7 +707,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.prometheus_basicauth_external_secret_2.receiver]
-    }
+    } // otelcol.exporter.prometheus "prometheus_basicauth_external_secret_2"
     
     prometheus.remote_write "prometheus_basicauth_external_secret_2" {
       endpoint {
@@ -761,7 +761,7 @@ data:
       external_labels = {
         destination = "prometheus-basicauth-external-secret-2",
       }
-    }
+    } // prometheus.remote_write "prometheus_basicauth_external_secret_2"
     
     remote.kubernetes.secret "prometheus_basicauth_external_secret_2" {
       name      = "credentials"
@@ -774,7 +774,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.prometheus_bearer_token.receiver]
-    }
+    } // otelcol.exporter.prometheus "prometheus_bearer_token"
     
     prometheus.remote_write "prometheus_bearer_token" {
       endpoint {
@@ -821,7 +821,7 @@ data:
       external_labels = {
         destination = "prometheus-bearer-token",
       }
-    }
+    } // prometheus.remote_write "prometheus_bearer_token"
     
     remote.kubernetes.secret "prometheus_bearer_token" {
       name      = "prometheus-bearer-token-k8smon-k8s-monitoring"
@@ -834,7 +834,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.prometheus_noauth.receiver]
-    }
+    } // otelcol.exporter.prometheus "prometheus_noauth"
     
     prometheus.remote_write "prometheus_noauth" {
       endpoint {
@@ -880,14 +880,14 @@ data:
       external_labels = {
         destination = "prometheus-noauth",
       }
-    }
+    } // prometheus.remote_write "prometheus_noauth"
     
     // Destination: prometheus-otlp-basicauth (otlp)
     otelcol.receiver.prometheus "prometheus_otlp_basicauth" {
       output {
         metrics = [otelcol.processor.attributes.prometheus_otlp_basicauth.input]
       }
-    }
+    } // otelcol.receiver.prometheus "prometheus_otlp_basicauth"
     otelcol.processor.attributes "prometheus_otlp_basicauth" {
       action {
         key = "destination"
@@ -897,7 +897,7 @@ data:
       output {
         metrics = [otelcol.processor.transform.prometheus_otlp_basicauth.input]
       }
-    }
+    } // otelcol.processor.attributes "prometheus_otlp_basicauth"
     
     otelcol.processor.transform "prometheus_otlp_basicauth" {
       error_mode = "ignore"
@@ -944,7 +944,7 @@ data:
       output {
         metrics = [otelcol.processor.batch.prometheus_otlp_basicauth.input]
       }
-    }
+    } // otelcol.processor.transform "prometheus_otlp_basicauth"
     
     otelcol.processor.batch "prometheus_otlp_basicauth" {
       timeout = "2s"
@@ -954,7 +954,7 @@ data:
       output {
         metrics = [otelcol.exporter.otlphttp.prometheus_otlp_basicauth.input]
       }
-    }
+    } // otelcol.processor.batch "prometheus_otlp_basicauth"
     otelcol.exporter.otlphttp "prometheus_otlp_basicauth" {
       client {
         endpoint = "http://nginx-auth-gateway.default.svc/metrics/basic/api/v1/otlp"
@@ -975,12 +975,12 @@ data:
       sending_queue {
         enabled = true
       }
-    }
+    } // otelcol.exporter.otlphttp "prometheus_otlp_basicauth"
     
     otelcol.auth.basic "prometheus_otlp_basicauth" {
       username = convert.nonsensitive(remote.kubernetes.secret.prometheus_otlp_basicauth.data["username"])
       password = remote.kubernetes.secret.prometheus_otlp_basicauth.data["password"]
-    }
+    } // otelcol.auth.basic "prometheus_otlp_basicauth"
     
     remote.kubernetes.secret "prometheus_otlp_basicauth" {
       name      = "prometheus-otlp-basicauth-k8smon-k8s-monitoring"
@@ -993,7 +993,7 @@ data:
       output {
         metrics = [otelcol.processor.attributes.prometheus_otlp_bearer_token.input]
       }
-    }
+    } // otelcol.receiver.prometheus "prometheus_otlp_bearer_token"
     otelcol.processor.attributes "prometheus_otlp_bearer_token" {
       action {
         key = "destination"
@@ -1003,7 +1003,7 @@ data:
       output {
         metrics = [otelcol.processor.transform.prometheus_otlp_bearer_token.input]
       }
-    }
+    } // otelcol.processor.attributes "prometheus_otlp_bearer_token"
     
     otelcol.processor.transform "prometheus_otlp_bearer_token" {
       error_mode = "ignore"
@@ -1050,7 +1050,7 @@ data:
       output {
         metrics = [otelcol.processor.batch.prometheus_otlp_bearer_token.input]
       }
-    }
+    } // otelcol.processor.transform "prometheus_otlp_bearer_token"
     
     otelcol.processor.batch "prometheus_otlp_bearer_token" {
       timeout = "2s"
@@ -1060,7 +1060,7 @@ data:
       output {
         metrics = [otelcol.exporter.otlphttp.prometheus_otlp_bearer_token.input]
       }
-    }
+    } // otelcol.processor.batch "prometheus_otlp_bearer_token"
     otelcol.exporter.otlphttp "prometheus_otlp_bearer_token" {
       client {
         endpoint = "http://nginx-auth-gateway.default.svc/metrics/bearer/api/v1/otlp"
@@ -1081,11 +1081,11 @@ data:
       sending_queue {
         enabled = true
       }
-    }
+    } // otelcol.exporter.otlphttp "prometheus_otlp_bearer_token"
     
     otelcol.auth.bearer "prometheus_otlp_bearer_token" {
       token = remote.kubernetes.secret.prometheus_otlp_bearer_token.data["bearerToken"]
-    }
+    } // otelcol.auth.bearer "prometheus_otlp_bearer_token"
     
     remote.kubernetes.secret "prometheus_otlp_bearer_token" {
       name      = "prometheus-otlp-bearer-token-k8smon-k8s-monitoring"
@@ -1098,7 +1098,7 @@ data:
       output {
         metrics = [otelcol.processor.attributes.prometheus_otlp_noauth.input]
       }
-    }
+    } // otelcol.receiver.prometheus "prometheus_otlp_noauth"
     otelcol.processor.attributes "prometheus_otlp_noauth" {
       action {
         key = "destination"
@@ -1108,7 +1108,7 @@ data:
       output {
         metrics = [otelcol.processor.transform.prometheus_otlp_noauth.input]
       }
-    }
+    } // otelcol.processor.attributes "prometheus_otlp_noauth"
     
     otelcol.processor.transform "prometheus_otlp_noauth" {
       error_mode = "ignore"
@@ -1155,7 +1155,7 @@ data:
       output {
         metrics = [otelcol.processor.batch.prometheus_otlp_noauth.input]
       }
-    }
+    } // otelcol.processor.transform "prometheus_otlp_noauth"
     
     otelcol.processor.batch "prometheus_otlp_noauth" {
       timeout = "2s"
@@ -1165,7 +1165,7 @@ data:
       output {
         metrics = [otelcol.exporter.otlphttp.prometheus_otlp_noauth.input]
       }
-    }
+    } // otelcol.processor.batch "prometheus_otlp_noauth"
     otelcol.exporter.otlphttp "prometheus_otlp_noauth" {
       client {
         endpoint = "http://prometheus-server.prometheus.svc:9090/api/v1/otlp"
@@ -1185,7 +1185,7 @@ data:
       sending_queue {
         enabled = true
       }
-    }
+    } // otelcol.exporter.otlphttp "prometheus_otlp_noauth"
 ---
 # Source: k8s-monitoring/templates/release-info.yaml
 apiVersion: v1

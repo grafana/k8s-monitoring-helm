@@ -138,19 +138,19 @@ otelcol.receiver.prometheus "otlpgateway" {
   output {
     metrics = [otelcol.processor.attributes.otlpgateway.input]
   }
-}
+} // otelcol.receiver.prometheus "otlpgateway"
 otelcol.receiver.loki "otlpgateway" {
   output {
     logs = [otelcol.processor.attributes.otlpgateway.input]
   }
-}
+} // otelcol.receiver.loki "otlpgateway"
 otelcol.processor.attributes "otlpgateway" {
   output {
     metrics = [otelcol.processor.transform.otlpgateway.input]
     logs = [otelcol.processor.transform.otlpgateway.input]
     traces = [otelcol.processor.transform.otlpgateway.input]
   }
-}
+} // otelcol.processor.attributes "otlpgateway"
 
 otelcol.processor.transform "otlpgateway" {
   error_mode = "ignore"
@@ -280,7 +280,7 @@ otelcol.processor.transform "otlpgateway" {
     logs = [otelcol.processor.batch.otlpgateway.input]
     traces = [otelcol.processor.batch.otlpgateway.input]
   }
-}
+} // otelcol.processor.transform "otlpgateway"
 
 otelcol.processor.batch "otlpgateway" {
   timeout = "2s"
@@ -292,7 +292,7 @@ otelcol.processor.batch "otlpgateway" {
     logs = [otelcol.exporter.otlphttp.otlpgateway.input]
     traces = [otelcol.exporter.otlphttp.otlpgateway.input]
   }
-}
+} // otelcol.processor.batch "otlpgateway"
 otelcol.exporter.otlphttp "otlpgateway" {
   client {
     endpoint = "https://otlpgateway.example.com:4317"
@@ -313,14 +313,14 @@ otelcol.exporter.otlphttp "otlpgateway" {
   sending_queue {
     enabled = true
   }
-}
+} // otelcol.exporter.otlphttp "otlpgateway"
 
 // Destination: tempo (otlp)
 otelcol.processor.attributes "tempo" {
   output {
     traces = [otelcol.processor.transform.tempo.input]
   }
-}
+} // otelcol.processor.attributes "tempo"
 
 otelcol.processor.transform "tempo" {
   error_mode = "ignore"
@@ -352,7 +352,7 @@ otelcol.processor.transform "tempo" {
   output {
     traces = [otelcol.processor.batch.tempo.input]
   }
-}
+} // otelcol.processor.transform "tempo"
 
 otelcol.processor.batch "tempo" {
   timeout = "2s"
@@ -362,7 +362,7 @@ otelcol.processor.batch "tempo" {
   output {
     traces = [otelcol.exporter.otlp.tempo.input]
   }
-}
+} // otelcol.processor.batch "tempo"
 otelcol.exporter.otlp "tempo" {
   client {
     endpoint = "http://tempo.example.com:4317"
@@ -382,5 +382,5 @@ otelcol.exporter.otlp "tempo" {
   sending_queue {
     enabled = true
   }
-}
+} // otelcol.exporter.otlp "tempo"
 

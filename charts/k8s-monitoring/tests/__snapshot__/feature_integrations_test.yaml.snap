@@ -278,7 +278,7 @@ works when a logs-only integration is enabled:
       // Destination: loki (loki)
       otelcol.exporter.loki "loki" {
         forward_to = [loki.write.loki.receiver]
-      }
+      } // otelcol.exporter.loki "loki"
 
       loki.write "loki" {
         endpoint {
@@ -295,7 +295,7 @@ works when a logs-only integration is enabled:
           "cluster" = "ci-test-cluster",
           "k8s_cluster_name" = "ci-test-cluster",
         }
-      }
+      } // loki.write "loki"
 works with a metrics-only integration:
   1: |
     |
@@ -350,7 +350,7 @@ works with a metrics-only integration:
         add_metric_suffixes = true
         resource_to_telemetry_conversion = false
         forward_to = [prometheus.remote_write.prom.receiver]
-      }
+      } // otelcol.exporter.prometheus "prom"
 
       prometheus.remote_write "prom" {
         endpoint {
@@ -393,7 +393,7 @@ works with a metrics-only integration:
           min_keepalive_time = "5m"
           max_keepalive_time = "8h"
         }
-      }
+      } // prometheus.remote_write "prom"
 works with multiple logs-only integrations:
   1: |
     |
@@ -787,7 +787,7 @@ works with multiple logs-only integrations:
       // Destination: loki (loki)
       otelcol.exporter.loki "loki" {
         forward_to = [loki.write.loki.receiver]
-      }
+      } // otelcol.exporter.loki "loki"
 
       loki.write "loki" {
         endpoint {
@@ -804,7 +804,7 @@ works with multiple logs-only integrations:
           "cluster" = "ci-test-cluster",
           "k8s_cluster_name" = "ci-test-cluster",
         }
-      }
+      } // loki.write "loki"
 works with multiple metrics-only integrations:
   1: |
     |
@@ -859,7 +859,7 @@ works with multiple metrics-only integrations:
         add_metric_suffixes = true
         resource_to_telemetry_conversion = false
         forward_to = [prometheus.remote_write.prom.receiver]
-      }
+      } // otelcol.exporter.prometheus "prom"
 
       prometheus.remote_write "prom" {
         endpoint {
@@ -902,4 +902,4 @@ works with multiple metrics-only integrations:
           min_keepalive_time = "5m"
           max_keepalive_time = "8h"
         }
-      }
+      } // prometheus.remote_write "prom"

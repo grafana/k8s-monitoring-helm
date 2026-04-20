@@ -217,7 +217,7 @@ pod_logs_via_loki "feature" {
 // Destination: loki (loki)
 otelcol.exporter.loki "loki" {
   forward_to = [loki.write.loki.receiver]
-}
+} // otelcol.exporter.loki "loki"
 
 loki.write "loki" {
   endpoint {
@@ -239,7 +239,7 @@ loki.write "loki" {
     "cluster" = "loki-stdout-destination-test",
     "k8s_cluster_name" = "loki-stdout-destination-test",
   }
-}
+} // loki.write "loki"
 
 remote.kubernetes.secret "loki" {
   name      = "loki-k8smon-k8s-monitoring"
@@ -250,7 +250,7 @@ remote.kubernetes.secret "loki" {
 // Destination: lokiStdout (loki-stdout)
 otelcol.exporter.loki "lokistdout" {
   forward_to = [loki.relabel.lokistdout.receiver]
-}
+} // otelcol.exporter.loki "lokistdout"
 
 loki.relabel "lokistdout" {
   rule {
@@ -260,7 +260,7 @@ loki.relabel "lokistdout" {
   }
 
   forward_to = [loki.echo.lokistdout.receiver]
-}
+} // loki.relabel "lokistdout"
 
-loki.echo "lokistdout" {}
+loki.echo "lokistdout" {} // loki.echo "lokistdout"
 

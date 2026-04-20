@@ -350,7 +350,7 @@ data:
     // Destination: grafana-cloud-logs (loki)
     otelcol.exporter.loki "grafana_cloud_logs" {
       forward_to = [loki.write.grafana_cloud_logs.receiver]
-    }
+    } // otelcol.exporter.loki "grafana_cloud_logs"
     
     loki.write "grafana_cloud_logs" {
       endpoint {
@@ -375,7 +375,7 @@ data:
         "cluster" = "k8s-monitoring-gc-feature-test",
         "k8s_cluster_name" = "k8s-monitoring-gc-feature-test",
       }
-    }
+    } // loki.write "grafana_cloud_logs"
     
     remote.kubernetes.secret "grafana_cloud_logs" {
       name      = "grafana-cloud-credentials"
@@ -1373,7 +1373,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.grafana_cloud_metrics.receiver]
-    }
+    } // otelcol.exporter.prometheus "grafana_cloud_metrics"
     
     prometheus.remote_write "grafana_cloud_metrics" {
       endpoint {
@@ -1425,7 +1425,7 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "grafana_cloud_metrics"
     
     remote.kubernetes.secret "grafana_cloud_metrics" {
       name      = "grafana-cloud-credentials"
@@ -1589,19 +1589,19 @@ data:
       output {
         metrics = [otelcol.processor.attributes.grafana_cloud_otlp_endpoint.input]
       }
-    }
+    } // otelcol.receiver.prometheus "grafana_cloud_otlp_endpoint"
     otelcol.receiver.loki "grafana_cloud_otlp_endpoint" {
       output {
         logs = [otelcol.processor.attributes.grafana_cloud_otlp_endpoint.input]
       }
-    }
+    } // otelcol.receiver.loki "grafana_cloud_otlp_endpoint"
     otelcol.processor.attributes "grafana_cloud_otlp_endpoint" {
       output {
         metrics = [otelcol.processor.transform.grafana_cloud_otlp_endpoint.input]
         logs = [otelcol.processor.transform.grafana_cloud_otlp_endpoint.input]
         traces = [otelcol.processor.transform.grafana_cloud_otlp_endpoint.input]
       }
-    }
+    } // otelcol.processor.attributes "grafana_cloud_otlp_endpoint"
     
     otelcol.processor.transform "grafana_cloud_otlp_endpoint" {
       error_mode = "ignore"
@@ -1731,7 +1731,7 @@ data:
         logs = [otelcol.processor.batch.grafana_cloud_otlp_endpoint.input]
         traces = [otelcol.exporter.loadbalancing.grafana_cloud_otlp_endpoint_sampler.input]
       }
-    }
+    } // otelcol.processor.transform "grafana_cloud_otlp_endpoint"
     
     otelcol.exporter.loadbalancing "grafana_cloud_otlp_endpoint_sampler" {
       resolver {
@@ -1748,7 +1748,7 @@ data:
           }
         }
       }
-    }
+    } // otelcol.exporter.loadbalancing "grafana_cloud_otlp_endpoint_sampler"
     
     otelcol.processor.batch "grafana_cloud_otlp_endpoint" {
       timeout = "2s"
@@ -1760,7 +1760,7 @@ data:
         logs = [otelcol.exporter.otlphttp.grafana_cloud_otlp_endpoint.input]
         traces = [otelcol.exporter.otlphttp.grafana_cloud_otlp_endpoint.input]
       }
-    }
+    } // otelcol.processor.batch "grafana_cloud_otlp_endpoint"
     otelcol.exporter.otlphttp "grafana_cloud_otlp_endpoint" {
       client {
         endpoint = "https://otlp-gateway-prod-us-east-0.grafana.net./otlp"
@@ -1787,12 +1787,12 @@ data:
       sending_queue {
         enabled = true
       }
-    }
+    } // otelcol.exporter.otlphttp "grafana_cloud_otlp_endpoint"
     
     otelcol.auth.basic "grafana_cloud_otlp_endpoint" {
       username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_otlp_endpoint.data["otlpUser"])
       password = remote.kubernetes.secret.grafana_cloud_otlp_endpoint.data["grafanaCloudAccessPolicyToken"]
-    }
+    } // otelcol.auth.basic "grafana_cloud_otlp_endpoint"
     
     remote.kubernetes.secret "grafana_cloud_otlp_endpoint" {
       name      = "grafana-cloud-credentials"
@@ -1941,7 +1941,7 @@ data:
     // Destination: grafana-cloud-logs (loki)
     otelcol.exporter.loki "grafana_cloud_logs" {
       forward_to = [loki.write.grafana_cloud_logs.receiver]
-    }
+    } // otelcol.exporter.loki "grafana_cloud_logs"
     
     loki.write "grafana_cloud_logs" {
       endpoint {
@@ -1966,7 +1966,7 @@ data:
         "cluster" = "k8s-monitoring-gc-feature-test",
         "k8s_cluster_name" = "k8s-monitoring-gc-feature-test",
       }
-    }
+    } // loki.write "grafana_cloud_logs"
     
     remote.kubernetes.secret "grafana_cloud_logs" {
       name      = "grafana-cloud-credentials"
@@ -1979,7 +1979,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.grafana_cloud_metrics.receiver]
-    }
+    } // otelcol.exporter.prometheus "grafana_cloud_metrics"
     
     prometheus.remote_write "grafana_cloud_metrics" {
       endpoint {
@@ -2031,7 +2031,7 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "grafana_cloud_metrics"
     
     remote.kubernetes.secret "grafana_cloud_metrics" {
       name      = "grafana-cloud-credentials"
@@ -3665,7 +3665,7 @@ spec:
             logs = [otelcol.exporter.otlphttp.grafana_cloud_otlp_endpoint.input]
             traces = [otelcol.exporter.otlphttp.grafana_cloud_otlp_endpoint.input]
           }
-        }
+        } // otelcol.processor.batch "grafana_cloud_otlp_endpoint"
         otelcol.exporter.otlphttp "grafana_cloud_otlp_endpoint" {
           client {
             endpoint = "https://otlp-gateway-prod-us-east-0.grafana.net./otlp"
@@ -3692,12 +3692,12 @@ spec:
           sending_queue {
             enabled = true
           }
-        }
+        } // otelcol.exporter.otlphttp "grafana_cloud_otlp_endpoint"
   
         otelcol.auth.basic "grafana_cloud_otlp_endpoint" {
           username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_otlp_endpoint.data["otlpUser"])
           password = remote.kubernetes.secret.grafana_cloud_otlp_endpoint.data["grafanaCloudAccessPolicyToken"]
-        }
+        } // otelcol.auth.basic "grafana_cloud_otlp_endpoint"
   
         remote.kubernetes.secret "grafana_cloud_otlp_endpoint" {
           name      = "grafana-cloud-credentials"

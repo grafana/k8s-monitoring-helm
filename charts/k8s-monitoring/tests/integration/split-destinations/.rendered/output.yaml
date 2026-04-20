@@ -328,7 +328,7 @@ data:
     // Destination: allLogs (loki)
     otelcol.exporter.loki "alllogs" {
       forward_to = [loki.write.alllogs.receiver]
-    }
+    } // otelcol.exporter.loki "alllogs"
     
     loki.write "alllogs" {
       endpoint {
@@ -350,7 +350,7 @@ data:
         "cluster" = "split-destinations-cluster",
         "k8s_cluster_name" = "split-destinations-cluster",
       }
-    }
+    } // loki.write "alllogs"
     
     remote.kubernetes.secret "alllogs" {
       name      = "alllogs-k8smon-k8s-monitoring"
@@ -361,7 +361,7 @@ data:
     // Destination: productionLogs (loki)
     otelcol.exporter.loki "productionlogs" {
       forward_to = [loki.process.productionlogs.receiver]
-    }
+    } // otelcol.exporter.loki "productionlogs"
     
     loki.process "productionlogs" {
       stage.match {
@@ -369,7 +369,7 @@ data:
         action   = "drop"
       }
       forward_to = [loki.write.productionlogs.receiver]
-    }
+    } // loki.process "productionlogs"
     
     loki.write "productionlogs" {
       endpoint {
@@ -391,7 +391,7 @@ data:
         "cluster" = "split-destinations-cluster",
         "k8s_cluster_name" = "split-destinations-cluster",
       }
-    }
+    } // loki.write "productionlogs"
     
     remote.kubernetes.secret "productionlogs" {
       name      = "productionlogs-k8smon-k8s-monitoring"
@@ -904,7 +904,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.allmetrics.receiver]
-    }
+    } // otelcol.exporter.prometheus "allmetrics"
     
     prometheus.remote_write "allmetrics" {
       endpoint {
@@ -951,7 +951,7 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "allmetrics"
     
     remote.kubernetes.secret "allmetrics" {
       name      = "allmetrics-k8smon-k8s-monitoring"
@@ -964,7 +964,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.productionmetrics.receiver]
-    }
+    } // otelcol.exporter.prometheus "productionmetrics"
     
     prometheus.remote_write "productionmetrics" {
       endpoint {
@@ -1016,7 +1016,7 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "productionmetrics"
     
     remote.kubernetes.secret "productionmetrics" {
       name      = "productionmetrics-k8smon-k8s-monitoring"
@@ -1222,7 +1222,7 @@ data:
     // Destination: allLogs (loki)
     otelcol.exporter.loki "alllogs" {
       forward_to = [loki.write.alllogs.receiver]
-    }
+    } // otelcol.exporter.loki "alllogs"
     
     loki.write "alllogs" {
       endpoint {
@@ -1244,7 +1244,7 @@ data:
         "cluster" = "split-destinations-cluster",
         "k8s_cluster_name" = "split-destinations-cluster",
       }
-    }
+    } // loki.write "alllogs"
     
     remote.kubernetes.secret "alllogs" {
       name      = "alllogs-k8smon-k8s-monitoring"
@@ -1257,7 +1257,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.allmetrics.receiver]
-    }
+    } // otelcol.exporter.prometheus "allmetrics"
     
     prometheus.remote_write "allmetrics" {
       endpoint {
@@ -1304,7 +1304,7 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "allmetrics"
     
     remote.kubernetes.secret "allmetrics" {
       name      = "allmetrics-k8smon-k8s-monitoring"
@@ -1317,7 +1317,7 @@ data:
       output {
         traces = [otelcol.processor.transform.alltraces.input]
       }
-    }
+    } // otelcol.processor.attributes "alltraces"
     
     otelcol.processor.transform "alltraces" {
       error_mode = "ignore"
@@ -1349,7 +1349,7 @@ data:
       output {
         traces = [otelcol.processor.batch.alltraces.input]
       }
-    }
+    } // otelcol.processor.transform "alltraces"
     
     otelcol.processor.batch "alltraces" {
       timeout = "2s"
@@ -1359,7 +1359,7 @@ data:
       output {
         traces = [otelcol.exporter.otlp.alltraces.input]
       }
-    }
+    } // otelcol.processor.batch "alltraces"
     otelcol.exporter.otlp "alltraces" {
       client {
         endpoint = "all-traces-tempo.all-dbs.svc:4317"
@@ -1379,12 +1379,12 @@ data:
       sending_queue {
         enabled = true
       }
-    }
+    } // otelcol.exporter.otlp "alltraces"
     
     // Destination: productionLogs (loki)
     otelcol.exporter.loki "productionlogs" {
       forward_to = [loki.process.productionlogs.receiver]
-    }
+    } // otelcol.exporter.loki "productionlogs"
     
     loki.process "productionlogs" {
       stage.match {
@@ -1392,7 +1392,7 @@ data:
         action   = "drop"
       }
       forward_to = [loki.write.productionlogs.receiver]
-    }
+    } // loki.process "productionlogs"
     
     loki.write "productionlogs" {
       endpoint {
@@ -1414,7 +1414,7 @@ data:
         "cluster" = "split-destinations-cluster",
         "k8s_cluster_name" = "split-destinations-cluster",
       }
-    }
+    } // loki.write "productionlogs"
     
     remote.kubernetes.secret "productionlogs" {
       name      = "productionlogs-k8smon-k8s-monitoring"
@@ -1427,7 +1427,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.productionmetrics.receiver]
-    }
+    } // otelcol.exporter.prometheus "productionmetrics"
     
     prometheus.remote_write "productionmetrics" {
       endpoint {
@@ -1479,7 +1479,7 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "productionmetrics"
     
     remote.kubernetes.secret "productionmetrics" {
       name      = "productionmetrics-k8smon-k8s-monitoring"
@@ -1492,7 +1492,7 @@ data:
       output {
         traces = [otelcol.processor.transform.productiontraces.input]
       }
-    }
+    } // otelcol.processor.attributes "productiontraces"
     
     otelcol.processor.transform "productiontraces" {
       error_mode = "ignore"
@@ -1524,7 +1524,7 @@ data:
       output {
         traces = [otelcol.processor.filter.productiontraces.input]
       }
-    }
+    } // otelcol.processor.transform "productiontraces"
     
     otelcol.processor.filter "productiontraces" {
       error_mode = "ignore"
@@ -1537,7 +1537,7 @@ data:
       output {
         traces = [otelcol.processor.batch.productiontraces.input]
       }
-    }
+    } // otelcol.processor.filter "productiontraces"
     
     otelcol.processor.batch "productiontraces" {
       timeout = "2s"
@@ -1547,7 +1547,7 @@ data:
       output {
         traces = [otelcol.exporter.otlp.productiontraces.input]
       }
-    }
+    } // otelcol.processor.batch "productiontraces"
     otelcol.exporter.otlp "productiontraces" {
       client {
         endpoint = "prod-traces-tempo.prod-dbs.svc:4317"
@@ -1567,7 +1567,7 @@ data:
       sending_queue {
         enabled = true
       }
-    }
+    } // otelcol.exporter.otlp "productiontraces"
 ---
 # Source: k8s-monitoring/templates/beyla-config.yaml
 apiVersion: v1

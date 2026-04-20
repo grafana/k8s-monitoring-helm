@@ -147,7 +147,7 @@ data:
     // Destination: localLoki (loki)
     otelcol.exporter.loki "localloki" {
       forward_to = [loki.write.localloki.receiver]
-    }
+    } // otelcol.exporter.loki "localloki"
     
     loki.write "localloki" {
       endpoint {
@@ -169,7 +169,7 @@ data:
         "cluster" = "service-graph-metrics-test",
         "k8s_cluster_name" = "service-graph-metrics-test",
       }
-    }
+    } // loki.write "localloki"
     
     remote.kubernetes.secret "localloki" {
       name      = "localloki-k8smon-k8s-monitoring"
@@ -534,7 +534,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.localprometheus.receiver]
-    }
+    } // otelcol.exporter.prometheus "localprometheus"
     
     prometheus.remote_write "localprometheus" {
       endpoint {
@@ -577,7 +577,7 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "localprometheus"
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -781,7 +781,7 @@ data:
     // Destination: localLoki (loki)
     otelcol.exporter.loki "localloki" {
       forward_to = [loki.write.localloki.receiver]
-    }
+    } // otelcol.exporter.loki "localloki"
     
     loki.write "localloki" {
       endpoint {
@@ -803,7 +803,7 @@ data:
         "cluster" = "service-graph-metrics-test",
         "k8s_cluster_name" = "service-graph-metrics-test",
       }
-    }
+    } // loki.write "localloki"
     
     remote.kubernetes.secret "localloki" {
       name      = "localloki-k8smon-k8s-monitoring"
@@ -816,7 +816,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.localprometheus.receiver]
-    }
+    } // otelcol.exporter.prometheus "localprometheus"
     
     prometheus.remote_write "localprometheus" {
       endpoint {
@@ -859,14 +859,14 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "localprometheus"
     
     // Destination: localTempo (otlp)
     otelcol.processor.attributes "localtempo" {
       output {
         traces = [otelcol.processor.transform.localtempo.input]
       }
-    }
+    } // otelcol.processor.attributes "localtempo"
     
     otelcol.processor.transform "localtempo" {
       error_mode = "ignore"
@@ -901,7 +901,7 @@ data:
           otelcol.processor.batch.localtempo.input,
         ]
       }
-    }
+    } // otelcol.processor.transform "localtempo"
     
     otelcol.exporter.loadbalancing "localtempo_servicegraph" {
       resolver {
@@ -918,7 +918,7 @@ data:
           }
         }
       }
-    }
+    } // otelcol.exporter.loadbalancing "localtempo_servicegraph"
     
     otelcol.processor.batch "localtempo" {
       timeout = "2s"
@@ -928,7 +928,7 @@ data:
       output {
         traces = [otelcol.exporter.otlp.localtempo.input]
       }
-    }
+    } // otelcol.processor.batch "localtempo"
     otelcol.exporter.otlp "localtempo" {
       client {
         endpoint = "tempo.tempo.svc:4317"
@@ -948,7 +948,7 @@ data:
       sending_queue {
         enabled = true
       }
-    }
+    } // otelcol.exporter.otlp "localtempo"
 ---
 # Source: k8s-monitoring/templates/release-info.yaml
 apiVersion: v1
@@ -1311,7 +1311,7 @@ spec:
           add_metric_suffixes = true
           resource_to_telemetry_conversion = false
           forward_to = [prometheus.remote_write.localprometheus.receiver]
-        }
+        } // otelcol.exporter.prometheus "localprometheus"
   
         prometheus.remote_write "localprometheus" {
           endpoint {
@@ -1357,7 +1357,7 @@ spec:
           external_labels = {
             collector_id = env("POD_NAME"),
           }
-        }
+        } // prometheus.remote_write "localprometheus"
       create: true
     extraEnv:
     - name: POD_NAME

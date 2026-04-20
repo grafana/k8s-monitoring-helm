@@ -130,7 +130,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
 // Destination: localLoki (loki)
 otelcol.exporter.loki "localloki" {
   forward_to = [loki.write.localloki.receiver]
-}
+} // otelcol.exporter.loki "localloki"
 
 loki.write "localloki" {
   endpoint {
@@ -152,7 +152,7 @@ loki.write "localloki" {
     "cluster" = "istio-service-mesh-test",
     "k8s_cluster_name" = "istio-service-mesh-test",
   }
-}
+} // loki.write "localloki"
 
 remote.kubernetes.secret "localloki" {
   name      = "localloki-k8smon-k8s-monitoring"
@@ -165,7 +165,7 @@ otelcol.exporter.prometheus "localprometheus" {
   add_metric_suffixes = true
   resource_to_telemetry_conversion = false
   forward_to = [prometheus.remote_write.localprometheus.receiver]
-}
+} // otelcol.exporter.prometheus "localprometheus"
 
 prometheus.remote_write "localprometheus" {
   endpoint {
@@ -212,7 +212,7 @@ prometheus.remote_write "localprometheus" {
     min_keepalive_time = "5m"
     max_keepalive_time = "8h"
   }
-}
+} // prometheus.remote_write "localprometheus"
 
 remote.kubernetes.secret "localprometheus" {
   name      = "localprometheus-k8smon-k8s-monitoring"

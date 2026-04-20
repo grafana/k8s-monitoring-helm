@@ -231,7 +231,7 @@ data:
     // Destination: logs-service (loki)
     otelcol.exporter.loki "logs_service" {
       forward_to = [loki.write.logs_service.receiver]
-    }
+    } // otelcol.exporter.loki "logs_service"
     
     loki.write "logs_service" {
       endpoint {
@@ -256,7 +256,7 @@ data:
         "cluster" = "external-secrets-example-cluster",
         "k8s_cluster_name" = "external-secrets-example-cluster",
       }
-    }
+    } // loki.write "logs_service"
     
     remote.kubernetes.secret "logs_service" {
       name      = "my-monitoring-secret"
@@ -357,7 +357,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.metrics_service.receiver]
-    }
+    } // otelcol.exporter.prometheus "metrics_service"
     
     prometheus.remote_write "metrics_service" {
       endpoint {
@@ -408,7 +408,7 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "metrics_service"
     
     remote.kubernetes.secret "metrics_service" {
       name      = "my-monitoring-secret"
@@ -607,7 +607,7 @@ data:
     // Destination: logs-service (loki)
     otelcol.exporter.loki "logs_service" {
       forward_to = [loki.write.logs_service.receiver]
-    }
+    } // otelcol.exporter.loki "logs_service"
     
     loki.write "logs_service" {
       endpoint {
@@ -632,7 +632,7 @@ data:
         "cluster" = "external-secrets-example-cluster",
         "k8s_cluster_name" = "external-secrets-example-cluster",
       }
-    }
+    } // loki.write "logs_service"
     
     remote.kubernetes.secret "logs_service" {
       name      = "my-monitoring-secret"
@@ -645,7 +645,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.metrics_service.receiver]
-    }
+    } // otelcol.exporter.prometheus "metrics_service"
     
     prometheus.remote_write "metrics_service" {
       endpoint {
@@ -696,7 +696,7 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "metrics_service"
     
     remote.kubernetes.secret "metrics_service" {
       name      = "my-monitoring-secret"
@@ -709,7 +709,7 @@ data:
       output {
         traces = [otelcol.processor.transform.traces_service.input]
       }
-    }
+    } // otelcol.processor.attributes "traces_service"
     
     otelcol.processor.transform "traces_service" {
       error_mode = "ignore"
@@ -741,7 +741,7 @@ data:
       output {
         traces = [otelcol.processor.batch.traces_service.input]
       }
-    }
+    } // otelcol.processor.transform "traces_service"
     
     otelcol.processor.batch "traces_service" {
       timeout = "2s"
@@ -751,7 +751,7 @@ data:
       output {
         traces = [otelcol.exporter.otlp.traces_service.input]
       }
-    }
+    } // otelcol.processor.batch "traces_service"
     otelcol.exporter.otlp "traces_service" {
       client {
         endpoint = convert.nonsensitive(remote.kubernetes.secret.traces_service.data["tempo-host"])
@@ -778,11 +778,11 @@ data:
       sending_queue {
         enabled = true
       }
-    }
+    } // otelcol.exporter.otlp "traces_service"
     
     otelcol.auth.bearer "traces_service" {
       token = remote.kubernetes.secret.traces_service.data["tempoBearerToken"]
-    }
+    } // otelcol.auth.bearer "traces_service"
     
     remote.kubernetes.secret "traces_service" {
       name      = "my-tempo-secret"
