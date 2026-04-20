@@ -184,13 +184,14 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 
 {{/* Inputs: . (root object), featureKey (string) */}}
 {{ define "collectors.getCollectorForFeature" }}
+{{- $enabledCollectors := include "collectors.list.enabled" . | fromYamlArray }}
 {{- $collectorName := dig "collector" "" (get .Values .featureKey) }}
 {{- if not $collectorName }}
   {{- $collectorName = include (printf "features.%s.chooseCollector" $.featureKey) $ | trim }}
 {{- end }}
 {{- if not $collectorName }}
-  {{- if eq (keys .Values.collectors | len) 1 }}
-    {{- $collectorName = (index (keys .Values.collectors) 0) }}
+  {{- if eq (len $enabledCollectors) 1 }}
+    {{- $collectorName = (index $enabledCollectors 0) }}
   {{- end }}
 {{- end }}
 {{- $collectorName }}
@@ -200,4 +201,13 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
   {{- range $presetFile, $_ := $.Files.Glob "collectors/presets/*.yaml" }}
 - {{ base $presetFile | trimSuffix (ext $presetFile) | trim }}
   {{- end }}
+{{- end }}
+
+{{/* Lists the names of enabled collectors. Collectors default to enabled unless `enabled: false` is set. Input: . (root) */}}
+{{- define "collectors.list.enabled" }}
+{{- range $collectorName := keys .Values.collectors | sortAlpha }}
+  {{- if dig "enabled" true (get $.Values.collectors $collectorName | default dict) }}
+- {{ $collectorName }}
+  {{- end }}
+{{- end }}
 {{- end }}

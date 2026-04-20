@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Add `enabled` flag to collectors so they can be disabled without removing them from the values file (@petewall)
 *   Add validators to require clustering on collectors that are assigned cluster-enabled features (@petewall)
 *   Add validators to warn when deployment-level settings are placed under feature configs instead of telemetryServices (@petewall)
 *   Fix validation error messages referencing `labelSelectors` instead of the correct `labelMatchers` field (@petewall)

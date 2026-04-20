@@ -1,4 +1,4 @@
-{{- range $collectorName := keys .Values.collectors | sortAlpha }}
+{{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
   {{- if (dig "extraService" "enabled" false (get $.Values.collectors $collectorName | default dict)) }}
     {{- $values := dict "Values" $.Values "Chart" $.Chart "Release" $.Release "Files" $.Files "collectorName" $collectorName }}
     {{- $collectorValues := include "collector.alloy.valuesWithUpstream" $values | fromYaml }}

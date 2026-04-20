@@ -1,4 +1,4 @@
-{{- range $collectorName := keys .Values.collectors | sortAlpha }}
+{{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
 {{- $destinationNames := (get $.Values.collectors $collectorName).includeDestinations | default list }}
 {{- range $featureKey := include "features.list" $ | fromYamlArray }}
   {{- $featureCollectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) }}

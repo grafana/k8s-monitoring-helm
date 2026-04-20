@@ -1,0 +1,55 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Collectors - Enabled Flag
+templates:
+  - alloy.yaml
+  - alloy-config.yaml
+tests:
+  - it: renders Alloy resources for enabled collectors
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - hasDocuments: {count: 1}
+        template: alloy.yaml
+      - containsDocument:
+          kind: Alloy
+          apiVersion: collectors.grafana.com/v1alpha1
+          name: RELEASE-NAME-alloy-metrics
+        template: alloy.yaml
+      - hasDocuments: {count: 1}
+        template: alloy-config.yaml
+
+  - it: skips rendering for disabled collectors
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// Giving this Alloy something to do"
+        alloy-expensive:
+          enabled: false
+          extraConfig: "// not rendered"
+    asserts:
+      - hasDocuments: {count: 1}
+        template: alloy.yaml
+      - containsDocument:
+          kind: Alloy
+          apiVersion: collectors.grafana.com/v1alpha1
+          name: RELEASE-NAME-alloy-metrics
+        template: alloy.yaml
+      - hasDocuments: {count: 1}
+        template: alloy-config.yaml
+
+  - it: treats missing enabled field as enabled
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// Giving this Alloy something to do"
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+          extraConfig: "// also renders"
+    asserts:
+      - hasDocuments: {count: 2}
+        template: alloy.yaml

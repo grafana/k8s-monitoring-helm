@@ -5,9 +5,11 @@
 
 {{- define "features.selfReporting.chooseCollector" }}
 {{- if eq (include "features.selfReporting.enabled" .) "true" }}
+  {{- $enabledCollectors := include "collectors.list.enabled" . | fromYamlArray }}
   {{- $chosenCollector := "" }}
-  {{- range $collectorName, $collectorValues := .Values.collectors }}
-    {{- if and (not $chosenCollector) (has "singleton" $collectorValues.presets) }}
+  {{- range $collectorName := $enabledCollectors }}
+    {{- $collectorValues := get $.Values.collectors $collectorName | default dict }}
+    {{- if and (not $chosenCollector) (has "singleton" ($collectorValues.presets | default list)) }}
       {{- $chosenCollector = $collectorName }}
     {{- end }}
   {{- end }}
@@ -23,8 +25,8 @@
       {{- end }}
     {{- end }}
   {{- end }}
-  {{- if not $chosenCollector }}
-    {{- $chosenCollector = index (keys .Values.collectors) 0 }}
+  {{- if and (not $chosenCollector) (gt (len $enabledCollectors) 0) }}
+    {{- $chosenCollector = index $enabledCollectors 0 }}
   {{- end }}
 {{- $chosenCollector -}}
 {{- end }}
@@ -120,7 +122,8 @@ grafana_kubernetes_monitoring_feature_info{{ include "label_list" (merge $featur
   {{- end }}
 # HELP grafana_kubernetes_monitoring_collector_info A metric to report the collectors of the Kubernetes Monitoring Helm chart
 # TYPE grafana_kubernetes_monitoring_collector_info gauge
-{{- range $collectorName, $collectorValues := .Values.collectors }}
+{{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
+  {{- $collectorValues := get $.Values.collectors $collectorName | default dict }}
   {{- $resolvedValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
   {{- $kind := dig "controller" "type" "deployment" $resolvedValues }}
   {{- $presets := join "," ($collectorValues.presets | default list) }}
