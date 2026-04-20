@@ -139,7 +139,7 @@ remotecfg {
     {{- $msg = append $msg "  alloy:" }}
     {{- $msg = append $msg "    extraEnv:" }}
     {{- $msg = append $msg "      - name: GCLOUD_RW_API_KEY" }}
-    {{- $msg = append $msg "        value: <Grafana Cloud Access Policy Token" }}
+    {{- $msg = append $msg "        value: <Grafana Cloud Access Policy Token>" }}
     {{- $msg = append $msg "OR" }}
     {{- $msg = append $msg "        valueFrom:" }}
     {{- $msg = append $msg "          secretKeyRef:" }}
