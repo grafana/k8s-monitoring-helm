@@ -1,5 +1,5 @@
 {{- if eq $.Values.global.platform "openshift" }}
-{{- range $collectorName := keys .Values.collectors | sortAlpha }}
+{{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
 {{- $values := (dict "Values" $.Values "Files" $.Files "Release" $.Release "collectorName" $collectorName) }}
 {{- $collectorValues := (include "collector.alloy.values" $values | fromYaml) }}
 {{- $alloyFullName := include "collector.alloy.fullname" $values }}

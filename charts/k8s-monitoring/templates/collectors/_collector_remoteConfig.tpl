@@ -1,7 +1,7 @@
 {{- /* Builds the alloy config for remoteConfig. Input: $ */ -}}
 {{- define "collectors.remoteConfig.collector.values" -}}
 {{- $values := dict }}
-{{- range $collectorName := keys .Values.collectors | sortAlpha }}
+{{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
   {{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
   {{- if (dig "remoteConfig" "enabled" false $collectorValues) }}
     {{- $collectorType := $collectorValues.controller.type }}
@@ -117,39 +117,37 @@ remotecfg {
 
 {{- define "collectors.validate.remoteConfig" }}
 {{- $collectorValues := include "collector.alloy.values" . | fromYaml }}
-{{- if $collectorValues.enabled }}
-  {{- if $collectorValues.remoteConfig.enabled }}
-    {{- $hasCollectorIdEnv := false }}
-    {{- $hasAPIKey := false }}
-    {{- range $env := $collectorValues.alloy.extraEnv }}
-      {{- if eq $env.name "GCLOUD_FM_COLLECTOR_ID" }}{{ $hasCollectorIdEnv = true }}{{- end }}
-      {{- if eq $env.name "GCLOUD_RW_API_KEY" }}{{ $hasAPIKey = true }}{{- end }}
-    {{- end }}
-    {{- if not $hasCollectorIdEnv }}
-      {{- $msg := list "" "The remote configuration feature requires the environment variable GCLOUD_FM_COLLECTOR_ID to be set. Please set:" }}
-      {{- $msg = append $msg (printf "%s:" .collectorName ) }}
-      {{- $msg = append $msg "  alloy:" }}
-      {{- $msg = append $msg "    extraEnv:" }}
-      {{- $msg = append $msg "      - name: GCLOUD_FM_COLLECTOR_ID" }}
-      {{- $msg = append $msg "        value: " }}
-      {{- fail (join "\n" $msg) }}
-    {{- end }}
-    {{- if not $hasAPIKey }}
-      {{- $msg := list "" "The remote configuration feature requires the environment variable GCLOUD_RW_API_KEY to be set. Please set:" }}
-      {{- $msg = append $msg (printf "%s:" .collectorName ) }}
-      {{- $msg = append $msg "  alloy:" }}
-      {{- $msg = append $msg "    extraEnv:" }}
-      {{- $msg = append $msg "      - name: GCLOUD_RW_API_KEY" }}
-      {{- $msg = append $msg "        value: <Grafana Cloud Access Policy Token" }}
-      {{- $msg = append $msg "OR" }}
-      {{- $msg = append $msg "        valueFrom:" }}
-      {{- $msg = append $msg "          secretKeyRef:" }}
-      {{- $msg = append $msg "            name: <secret name>" }}
-      {{- $msg = append $msg "            key: <secret key>" }}
-      {{- fail (join "\n" $msg) }}
-    {{- end }}
+{{- if $collectorValues.remoteConfig.enabled }}
+  {{- $hasCollectorIdEnv := false }}
+  {{- $hasAPIKey := false }}
+  {{- range $env := $collectorValues.alloy.extraEnv }}
+    {{- if eq $env.name "GCLOUD_FM_COLLECTOR_ID" }}{{ $hasCollectorIdEnv = true }}{{- end }}
+    {{- if eq $env.name "GCLOUD_RW_API_KEY" }}{{ $hasAPIKey = true }}{{- end }}
   {{- end }}
+  {{- if not $hasCollectorIdEnv }}
+    {{- $msg := list "" "The remote configuration feature requires the environment variable GCLOUD_FM_COLLECTOR_ID to be set. Please set:" }}
+    {{- $msg = append $msg (printf "%s:" .collectorName ) }}
+    {{- $msg = append $msg "  alloy:" }}
+    {{- $msg = append $msg "    extraEnv:" }}
+    {{- $msg = append $msg "      - name: GCLOUD_FM_COLLECTOR_ID" }}
+    {{- $msg = append $msg "        value: " }}
+    {{- fail (join "\n" $msg) }}
   {{- end }}
+  {{- if not $hasAPIKey }}
+    {{- $msg := list "" "The remote configuration feature requires the environment variable GCLOUD_RW_API_KEY to be set. Please set:" }}
+    {{- $msg = append $msg (printf "%s:" .collectorName ) }}
+    {{- $msg = append $msg "  alloy:" }}
+    {{- $msg = append $msg "    extraEnv:" }}
+    {{- $msg = append $msg "      - name: GCLOUD_RW_API_KEY" }}
+    {{- $msg = append $msg "        value: <Grafana Cloud Access Policy Token" }}
+    {{- $msg = append $msg "OR" }}
+    {{- $msg = append $msg "        valueFrom:" }}
+    {{- $msg = append $msg "          secretKeyRef:" }}
+    {{- $msg = append $msg "            name: <secret name>" }}
+    {{- $msg = append $msg "            key: <secret key>" }}
+    {{- fail (join "\n" $msg) }}
+  {{- end }}
+{{- end }}
 {{- end }}
 
 {{- define "secrets.list.remoteConfig" -}}

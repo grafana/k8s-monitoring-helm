@@ -24,7 +24,7 @@
   {{- end }}
 
   {{- include "collectors.validate.featuresEnabled" . }}
-  {{- range $collectorName := keys .Values.collectors | sortAlpha }}
+  {{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
     {{- include "collectors.validate.remoteConfig" (deepCopy $ | merge (dict "collectorName" $collectorName)) }}
   {{- end }}
   {{- include "telemetryServices.validate" . }}
@@ -61,7 +61,7 @@
   {{- $aFeatureIsEnabled = or $aFeatureIsEnabled (eq (include (printf "features.%s.enabled" $feature) $) "true") }}
 {{- end }}
 
-{{- range $collectorName := keys .Values.collectors | sortAlpha }}
+{{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
   {{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
   {{- $aFeatureIsEnabled = or $aFeatureIsEnabled (dig "remoteConfig" "enabled" false $collectorValues) }}
   {{- $aFeatureIsEnabled = or $aFeatureIsEnabled (hasKey $collectorValues "extraConfig") }}

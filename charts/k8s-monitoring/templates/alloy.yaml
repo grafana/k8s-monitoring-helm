@@ -1,4 +1,4 @@
-{{- range $collectorName := keys .Values.collectors | sortAlpha }}
+{{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
 {{- include "crdValidation" $ }}
 {{- $values := dict "Values" $.Values "Files" $.Files "Release" $.Release "collectorName" $collectorName }}
 {{- $alloyValues := (include "collector.alloy.values" $values | fromYaml) | merge (dict "nameOverride" $collectorName) }}

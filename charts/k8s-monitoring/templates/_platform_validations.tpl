@@ -18,7 +18,7 @@
 {{- end }}
 
 {{ define "validations.platform.aks" -}}
-  {{- range $collectorName := keys .Values.collectors | sortAlpha }}
+  {{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
     {{- $collectorValues := (include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml) }}
     {{- if ne (dig "controller" "podAnnotations" "kubernetes.azure.com/set-kube-service-host-fqdn" "false" $collectorValues) "true" }}
       {{- $msg := list "" "This Kubernetes cluster appears to be Azure AKS." }}

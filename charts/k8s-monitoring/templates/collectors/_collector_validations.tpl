@@ -1,6 +1,6 @@
 {{/* Inputs: Values (root Values), collectorName (string), featureKey (string), featureName (string) */}}
 {{- define "collectors.validate.collectorIsAssigned" }}
-{{- $allCollectors := (keys .Values.collectors | sortAlpha) }}
+{{- $allCollectors := include "collectors.list.enabled" . | fromYamlArray }}
 {{- if not .collectorName }}
   {{- $msg := list "" (printf "The %s feature requires a collector to be assigned." .featureName) }}
   {{- $msg = append $msg "Please assign one by setting the following:" }}
@@ -10,7 +10,7 @@
   {{- fail (join "\n" $msg) }}
 {{- end }}
 {{- if not (has .collectorName $allCollectors) }}
-  {{- $msg := list "" (printf "The %s feature wants to use a collector named \"%s\", but that collector does not exist." .featureName .collectorName) }}
+  {{- $msg := list "" (printf "The %s feature wants to use a collector named \"%s\", but that collector does not exist or is disabled." .featureName .collectorName) }}
   {{- $msg = append $msg "Please assign one by setting the following:" }}
   {{- $msg = append $msg (printf "%s:" .featureKey) }}
   {{- $msg = append $msg (printf "  collector: %s" (include "english_list_or" $allCollectors)) }}
@@ -26,14 +26,17 @@
   {{- $collectorsUtilized = append $collectorsUtilized $assignedCollector }}
 {{- end }}
 
-{{- range $collectorName := keys .Values.collectors | sortAlpha }}
+{{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
   {{- $usedByAFeature := has $collectorName $collectorsUtilized }}
   {{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
   {{- $extraConfigDefined := not (not $collectorValues.extraConfig) }}
   {{- $remoteConfigEnabled := $collectorValues.remoteConfig.enabled }}
   {{- if not (or $usedByAFeature $extraConfigDefined $remoteConfigEnabled) }}
     {{- $msg := list "" (printf "The %s collector is enabled, but there are no enabled features that will use it." $collectorName) }}
-    {{- $msg = append $msg "Please disable the collector by removing it from the collectors list." }}
+    {{- $msg = append $msg "Please disable the collector by removing it from the collectors list or by setting:" }}
+    {{- $msg = append $msg "collectors:" }}
+    {{- $msg = append $msg (printf "  %s:" $collectorName) }}
+    {{- $msg = append $msg "    enabled: false" }}
     {{- fail (join "\n" $msg) }}
   {{- end }}
 {{- end }}
@@ -65,7 +68,8 @@
 {{- end }}
 
 {{- define "collectors.validate.atLeastOneEnabled" }}
-  {{- if eq (keys .Values.collectors | len) 0 }}
+  {{- $enabledCollectors := include "collectors.list.enabled" . | fromYamlArray }}
+  {{- if eq (len $enabledCollectors) 0 }}
     {{- $msg := list "" "At least one collector should be enabled" }}
     {{- $msg = append $msg "Please enable one by setting:" }}
     {{- $msg = append $msg "collectors:" }}

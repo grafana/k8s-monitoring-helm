@@ -15,4 +15,36 @@ tests:
       - failedTemplate:
           errorMessage: |-
             The alloy-logs collector is enabled, but there are no enabled features that will use it.
-            Please disable the collector by removing it from the collectors list.
+            Please disable the collector by removing it from the collectors list or by setting:
+            collectors:
+              alloy-logs:
+                enabled: false
+
+  - it: does not create resources for collectors with enabled false
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// Giving this Alloy something to do"
+        alloy-logs:
+          enabled: false
+          presets: [filesystem-log-reader, daemonset]
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: errors when all collectors are disabled
+    set:
+      cluster: {name: test-cluster}
+      clusterMetrics: {enabled: true}
+      collectors:
+        alloy-metrics:
+          enabled: false
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            At least one collector should be enabled
+            Please enable one by setting:
+            collectors:
+              <collector-name>:
+                <collector-settings>
+            See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/README.md for more details.
