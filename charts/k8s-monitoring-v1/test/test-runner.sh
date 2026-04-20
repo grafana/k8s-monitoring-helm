@@ -49,7 +49,7 @@ do
   expectedOutputFile="${testDir}/output.yaml"
 
   count=$((count+1))
-  output=$(helm template k8smon "${helmChartPath}" -f "${inputFile}")
+  output=$(helm template k8smon "${helmChartPath}" -f "${inputFile}" | sed 's|value: "AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U"|&  # trufflehog:ignore|')
   if diffFromExpected=$(diff <(echo "${output}") "${expectedOutputFile}"); then
     passed=$((passed+1))  
     echo -ne "${GREEN}*${ENDCOLOR}"
