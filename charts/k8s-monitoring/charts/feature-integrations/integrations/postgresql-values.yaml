@@ -16,14 +16,14 @@ metrics:
   # -- How frequently to scrape metrics from PostgreSQL Exporter.
   # @default -- `60s`
   # @section -- Scrape Settings
-  scrapeInterval:
+  scrapeInterval: ""
 
   # -- The timeout for scraping metrics from PostgreSQL Exporter.
   # @default -- `10s`
   # @section -- Scrape Settings
   scrapeTimeout: ""
 
-  # -- Sets the max_cache_size for prometheus.relabel component.
+  # -- (number) Sets the max_cache_size for prometheus.relabel component.
   # This should be at least 2x-5x your largest scrape target or samples appended rate.
   # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
   # Overrides global.maxCacheSize
@@ -207,11 +207,11 @@ exporter:
       # -- Enable the selection of query ID and SQL statement.
       # @section -- Exporter Collectors
       includeQuery: false
-      # -- Maximum length of the statement query text.
+      # -- (number) Maximum length of the statement query text.
       # @default -- 120
       # @section -- Exporter Collectors
       queryLength:
-      # -- Maximum number of statements to fetch.
+      # -- (number) Maximum number of statements to fetch.
       # @default -- 100
       # @section -- Exporter Collectors
       limit:
@@ -304,6 +304,10 @@ databaseObservability:
       # -- How frequently to collect query information from the database.
       # @section -- Database Observability - Collectors
       collectInterval: 1m
+      # -- (number) Max number of recent queries to collect details for.
+      # @default -- `100`
+      # @section -- Database Observability - Collectors
+      statementsLimit:
 
     # Collect query samples.
     querySamples:

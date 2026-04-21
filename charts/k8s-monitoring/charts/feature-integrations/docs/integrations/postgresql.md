@@ -95,6 +95,7 @@ integrations:
 | databaseObservability.collectors.explainPlans.perCollectRatio | float | `1` | Ratio of explain plan queries to collect per collect interval. |
 | databaseObservability.collectors.queryDetails.collectInterval | string | `"1m"` | How frequently to collect query information from the database. |
 | databaseObservability.collectors.queryDetails.enabled | bool | `true` | Enable collection of query information. |
+| databaseObservability.collectors.queryDetails.statementsLimit | number | `100` | Max number of recent queries to collect details for. |
 | databaseObservability.collectors.querySamples.collectInterval | string | `"1m"` | How frequently to collect query samples from the database. |
 | databaseObservability.collectors.querySamples.disableQueryRedaction | bool | `false` | Collect unredacted SQL query text including parameters. |
 | databaseObservability.collectors.querySamples.enabled | bool | `true` | Enable collection of query samples. |

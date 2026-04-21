@@ -118,7 +118,7 @@ integrations:
 | databaseObservability.collectors.locks.threshold | string | `"1s"` | Threshold for locks to be considered slow. Locks that exceed this duration are logged. |
 | databaseObservability.collectors.queryDetails.collectInterval | string | `"1m"` | How frequently to collect query information from the database. |
 | databaseObservability.collectors.queryDetails.enabled | bool | `true` | Enable collection of query information. |
-| databaseObservability.collectors.queryDetails.statementsLimit | string | `250` | Max number of recent queries to collect details for. |
+| databaseObservability.collectors.queryDetails.statementsLimit | number | `250` | Max number of recent queries to collect details for. |
 | databaseObservability.collectors.querySamples.autoEnableSetupConsumers | bool | `false` | Whether to enable some specific performance_schema.setup_consumers settings. |
 | databaseObservability.collectors.querySamples.collectInterval | string | `"1m"` | How frequently to collect query samples from the database. |
 | databaseObservability.collectors.querySamples.disableQueryRedaction | bool | `false` | Collect unredacted SQL query text including parameters. |

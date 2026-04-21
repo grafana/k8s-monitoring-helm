@@ -191,6 +191,9 @@ database_observability.postgres {{ include "helper.alloy_name" .name | quote }} 
     {{- with .databaseObservability.collectors.queryDetails }}
   query_details {
     collect_interval = {{ .collectInterval | quote }}
+    {{- if .statementsLimit }}
+    statements_limit = {{ .statementsLimit | int }}
+    {{- end }}
   }
     {{- end }}
   {{- end }}
