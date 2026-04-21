@@ -79,3 +79,21 @@
     {{- fail (join "\n" $msg) }}
   {{- end }}
 {{- end }}
+
+{{/* Fails if two collector keys normalize to the same Kubernetes-safe name (e.g. alloyMetrics and alloymetrics). */}}
+{{- define "collectors.validate.uniqueNames" }}
+  {{- $byNormalized := dict }}
+  {{- range $collectorName := keys (.Values.collectors | default dict) | sortAlpha }}
+    {{- $normalized := include "helper.kubernetesName" $collectorName | trim }}
+    {{- $existing := index $byNormalized $normalized | default list }}
+    {{- $_ := set $byNormalized $normalized (append $existing $collectorName) }}
+  {{- end }}
+  {{- range $normalized, $collectorNames := $byNormalized }}
+    {{- if gt (len $collectorNames) 1 }}
+      {{- $msg := list "" (printf "Multiple collectors resolve to the same Kubernetes resource name %q: %s" $normalized (join ", " $collectorNames)) }}
+      {{- $msg = append $msg "Collector names are normalized to lowercase DNS-1123 names when used as Kubernetes resource names, so they must be unique after normalization." }}
+      {{- $msg = append $msg "Please rename all but one of these collectors." }}
+      {{- fail (join "\n" $msg) }}
+    {{- end }}
+  {{- end }}
+{{- end }}

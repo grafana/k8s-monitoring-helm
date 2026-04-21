@@ -75,7 +75,7 @@
   {{- if hasKey $collectorValues "fullnameOverride" }}
     {{- $collectorValues.fullnameOverride | trunc 63 | trimSuffix "-" }}
   {{- else }}
-    {{- $name := default .collectorName .Values.nameOverride }}
+    {{- $name := include "helper.kubernetesName" (default .collectorName .Values.nameOverride) }}
     {{- if contains $name .Release.Name }}
       {{- .Release.Name | trunc 63 | trimSuffix "-" }}
     {{- else }}
@@ -91,7 +91,7 @@ app.kubernetes.io/part-of: alloy
 {{- end }}
 
 {{- define "collector.alloy.selectorLabels" }}
-app.kubernetes.io/name: {{ .collectorName }}
+app.kubernetes.io/name: {{ include "helper.kubernetesName" .collectorName }}
 app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{- end }}
 

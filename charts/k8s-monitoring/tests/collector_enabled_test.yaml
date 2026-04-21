@@ -53,3 +53,21 @@ tests:
     asserts:
       - hasDocuments: {count: 2}
         template: alloy.yaml
+
+  - it: normalizes camelCase collector names to DNS-1123 resource names
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloyMetrics:
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - containsDocument:
+          kind: Alloy
+          apiVersion: collectors.grafana.com/v1alpha1
+          name: RELEASE-NAME-alloymetrics
+        template: alloy.yaml
+      - containsDocument:
+          kind: ConfigMap
+          apiVersion: v1
+          name: RELEASE-NAME-alloymetrics
+        template: alloy-config.yaml
