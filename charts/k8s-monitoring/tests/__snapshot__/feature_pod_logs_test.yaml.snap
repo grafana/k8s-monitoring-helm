@@ -143,6 +143,17 @@ renders the config to gather Kubernetes Pod logs:
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
+
+          // If kubernetes.io/config.mirror is set, this is a static pod, created by the kubelet.
+          // It's logs live on a different path.
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
+            separator = "/"
+            regex = "(.+/.+)"
+            action = "replace"
+            replacement = "/var/log/pods/*$1/*.log"
+            target_label = "__path__"
+          }
         }
 
         local.file_match "pod_logs" {
@@ -156,9 +167,11 @@ renders the config to gather Kubernetes Pod logs:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -224,6 +237,7 @@ renders the config to gather Kubernetes Pod logs:
       loki.write "loki" {
         endpoint {
           url = "http://loki.loki.svc:3100/api/push"
+          retry_on_http_429 = true
           tls_config {
             insecure_skip_verify = false
           }

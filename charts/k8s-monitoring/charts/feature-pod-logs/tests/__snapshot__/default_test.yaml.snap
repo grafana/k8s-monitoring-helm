@@ -60,7 +60,6 @@ should allow overriding the default labelsToKeep:
           // choose the first value found from the following ordered list:
           // - pod.annotation[resource.opentelemetry.io/service.name]
           // - pod.label[app.kubernetes.io/name]
-          // - k8s.pod.name
           // - k8s.container.name
           rule {
             action = "replace"
@@ -143,6 +142,17 @@ should allow overriding the default labelsToKeep:
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
+
+          // If kubernetes.io/config.mirror is set, this is a static pod, created by the kubelet.
+          // It's logs live on a different path.
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
+            separator = "/"
+            regex = "(.+/.+)"
+            action = "replace"
+            replacement = "/var/log/pods/*$1/*.log"
+            target_label = "__path__"
+          }
         }
 
         local.file_match "pod_logs" {
@@ -156,9 +166,11 @@ should allow overriding the default labelsToKeep:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -269,7 +281,6 @@ should allow setting static labels:
           // choose the first value found from the following ordered list:
           // - pod.annotation[resource.opentelemetry.io/service.name]
           // - pod.label[app.kubernetes.io/name]
-          // - k8s.pod.name
           // - k8s.container.name
           rule {
             action = "replace"
@@ -352,6 +363,17 @@ should allow setting static labels:
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
+
+          // If kubernetes.io/config.mirror is set, this is a static pod, created by the kubelet.
+          // It's logs live on a different path.
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
+            separator = "/"
+            regex = "(.+/.+)"
+            action = "replace"
+            replacement = "/var/log/pods/*$1/*.log"
+            target_label = "__path__"
+          }
         }
 
         local.file_match "pod_logs" {
@@ -365,9 +387,11 @@ should allow setting static labels:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -485,7 +509,6 @@ should allow setting structured metadata:
           // choose the first value found from the following ordered list:
           // - pod.annotation[resource.opentelemetry.io/service.name]
           // - pod.label[app.kubernetes.io/name]
-          // - k8s.pod.name
           // - k8s.container.name
           rule {
             action = "replace"
@@ -568,6 +591,17 @@ should allow setting structured metadata:
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
+
+          // If kubernetes.io/config.mirror is set, this is a static pod, created by the kubelet.
+          // It's logs live on a different path.
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
+            separator = "/"
+            regex = "(.+/.+)"
+            action = "replace"
+            replacement = "/var/log/pods/*$1/*.log"
+            target_label = "__path__"
+          }
         }
 
         local.file_match "pod_logs" {
@@ -581,9 +615,11 @@ should allow setting structured metadata:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -782,6 +818,17 @@ should allow using label selectors:
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
+
+          // If kubernetes.io/config.mirror is set, this is a static pod, created by the kubelet.
+          // It's logs live on a different path.
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
+            separator = "/"
+            regex = "(.+/.+)"
+            action = "replace"
+            replacement = "/var/log/pods/*$1/*.log"
+            target_label = "__path__"
+          }
         }
 
         local.file_match "pod_logs" {
@@ -795,9 +842,11 @@ should allow using label selectors:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -994,6 +1043,17 @@ should allow using label selectors with multiple values:
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
+
+          // If kubernetes.io/config.mirror is set, this is a static pod, created by the kubelet.
+          // It's logs live on a different path.
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
+            separator = "/"
+            regex = "(.+/.+)"
+            action = "replace"
+            replacement = "/var/log/pods/*$1/*.log"
+            target_label = "__path__"
+          }
         }
 
         local.file_match "pod_logs" {
@@ -1007,9 +1067,11 @@ should allow using label selectors with multiple values:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -1120,7 +1182,6 @@ should allow using the secret filter:
           // choose the first value found from the following ordered list:
           // - pod.annotation[resource.opentelemetry.io/service.name]
           // - pod.label[app.kubernetes.io/name]
-          // - k8s.pod.name
           // - k8s.container.name
           rule {
             action = "replace"
@@ -1203,6 +1264,17 @@ should allow using the secret filter:
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
+
+          // If kubernetes.io/config.mirror is set, this is a static pod, created by the kubelet.
+          // It's logs live on a different path.
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
+            separator = "/"
+            regex = "(.+/.+)"
+            action = "replace"
+            replacement = "/var/log/pods/*$1/*.log"
+            target_label = "__path__"
+          }
         }
 
         local.file_match "pod_logs" {
@@ -1216,9 +1288,11 @@ should allow using the secret filter:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -1268,8 +1342,7 @@ should allow using the secret filter:
         }
 
         loki.secretfilter "pod_logs" {
-          include_generic = false
-          partial_mask = 3
+          redact_percent = 80
           forward_to = argument.logs_destinations.value
         }
       }
@@ -1417,6 +1490,17 @@ should allow using the secret filter with a gitleaks config and other settings:
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
+
+          // If kubernetes.io/config.mirror is set, this is a static pod, created by the kubelet.
+          // It's logs live on a different path.
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
+            separator = "/"
+            regex = "(.+/.+)"
+            action = "replace"
+            replacement = "/var/log/pods/*$1/*.log"
+            target_label = "__path__"
+          }
         }
 
         local.file_match "pod_logs" {
@@ -1430,9 +1514,11 @@ should allow using the secret filter with a gitleaks config and other settings:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -1483,9 +1569,6 @@ should allow using the secret filter with a gitleaks config and other settings:
 
         loki.secretfilter "pod_logs" {
           gitleaks_config = "/var/log/gitleaks.toml"
-          enable_entropy = false
-          include_generic = false
-          partial_mask = 0
           redact_with = "<ALLOY-REDACTED-SECRET:$SECRET_NAME:$SECRET_HASH>"
           forward_to = argument.logs_destinations.value
         }
@@ -1552,7 +1635,6 @@ should allow using the secret filter with an allowlist:
           // choose the first value found from the following ordered list:
           // - pod.annotation[resource.opentelemetry.io/service.name]
           // - pod.label[app.kubernetes.io/name]
-          // - k8s.pod.name
           // - k8s.container.name
           rule {
             action = "replace"
@@ -1635,6 +1717,17 @@ should allow using the secret filter with an allowlist:
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
+
+          // If kubernetes.io/config.mirror is set, this is a static pod, created by the kubelet.
+          // It's logs live on a different path.
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
+            separator = "/"
+            regex = "(.+/.+)"
+            action = "replace"
+            replacement = "/var/log/pods/*$1/*.log"
+            target_label = "__path__"
+          }
         }
 
         local.file_match "pod_logs" {
@@ -1648,9 +1741,11 @@ should allow using the secret filter with an allowlist:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -1700,12 +1795,11 @@ should allow using the secret filter with an allowlist:
         }
 
         loki.secretfilter "pod_logs" {
-          include_generic = false
-          partial_mask = 3
           allowlist = [
             ".*secret.*",
             ".*token.*",
           ]
+          redact_percent = 80
           forward_to = argument.logs_destinations.value
         }
       }
@@ -1853,6 +1947,17 @@ should allow using the secret filter with an inclusion filter, to split which lo
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
+
+          // If kubernetes.io/config.mirror is set, this is a static pod, created by the kubelet.
+          // It's logs live on a different path.
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
+            separator = "/"
+            regex = "(.+/.+)"
+            action = "replace"
+            replacement = "/var/log/pods/*$1/*.log"
+            target_label = "__path__"
+          }
         }
 
         local.file_match "pod_logs" {
@@ -1866,9 +1971,11 @@ should allow using the secret filter with an inclusion filter, to split which lo
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -1914,15 +2021,13 @@ should allow using the secret filter with an inclusion filter, to split which lo
             values = ["__tenant_id__","app_kubernetes_io_name","container","instance","job","level","namespace","service_name","service_namespace","deployment_environment","deployment_environment_name","k8s_namespace_name","k8s_deployment_name","k8s_statefulset_name","k8s_daemonset_name","k8s_cronjob_name","k8s_job_name","k8s_node_name"]
           }
 
-          forward_to = [
-            loki.process.secret_filter_prefilter.receiver,
-          ]
+          forward_to = [loki.process.secret_filter_prefilter.receiver]
         }
 
         loki.process "secret_filter_prefilter" {
           stage.static_labels {
             values = {
-              "k8s_monitoring_secret_filter_inclusion": "false"
+              k8s_monitoring_secret_filter_inclusion = "false",
             }
           }
           stage.match {
@@ -1930,7 +2035,7 @@ should allow using the secret filter with an inclusion filter, to split which lo
 
             stage.static_labels {
               values = {
-                "k8s_monitoring_secret_filter_inclusion": "true"
+                k8s_monitoring_secret_filter_inclusion = "true",
               }
             }
           }
@@ -1942,7 +2047,7 @@ should allow using the secret filter with an inclusion filter, to split which lo
 
         loki.process "secret_filter_exclusion" {
           stage.match {
-            selector = "{"k8s_monitoring_secret_filter_inclusion": "true"}"
+            selector = "{k8s_monitoring_secret_filter_inclusion=\"true\"}"
             action = "drop"
           }
 
@@ -1951,16 +2056,14 @@ should allow using the secret filter with an inclusion filter, to split which lo
 
         loki.process "secret_filter_inclusion" {
           stage.match {
-            selector = "{"k8s_monitoring_secret_filter_inclusion": "false"}"
+            selector = "{k8s_monitoring_secret_filter_inclusion=\"false\"}"
             action = "drop"
           }
           forward_to = [loki.secretfilter.pod_logs.receiver]
         }
 
         loki.secretfilter "pod_logs" {
-          enable_entropy = false
-          include_generic = false
-          partial_mask = 0
+          redact_percent = 80
           forward_to = argument.logs_destinations.value
         }
       }
@@ -2026,7 +2129,6 @@ should render the default configuration:
           // choose the first value found from the following ordered list:
           // - pod.annotation[resource.opentelemetry.io/service.name]
           // - pod.label[app.kubernetes.io/name]
-          // - k8s.pod.name
           // - k8s.container.name
           rule {
             action = "replace"
@@ -2109,6 +2211,17 @@ should render the default configuration:
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
+
+          // If kubernetes.io/config.mirror is set, this is a static pod, created by the kubelet.
+          // It's logs live on a different path.
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
+            separator = "/"
+            regex = "(.+/.+)"
+            action = "replace"
+            replacement = "/var/log/pods/*$1/*.log"
+            target_label = "__path__"
+          }
         }
 
         local.file_match "pod_logs" {
@@ -2122,9 +2235,11 @@ should render the default configuration:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {

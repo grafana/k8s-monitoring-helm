@@ -60,12 +60,6 @@ uses destination secret:
 
 
       // Destination: prometheus (prometheus)
-
-      remote.kubernetes.secret "prometheus" {
-        name      = "my-prom-secret"
-        namespace = "default"
-      }
-
       otelcol.exporter.prometheus "prometheus" {
         add_metric_suffixes = true
         resource_to_telemetry_conversion = false
@@ -124,4 +118,9 @@ uses destination secret:
         external_labels = {
           collector_id = env("POD_NAME"),
         }
+      }
+
+      remote.kubernetes.secret "prometheus" {
+        name      = "my-prom-secret"
+        namespace = "default"
       }

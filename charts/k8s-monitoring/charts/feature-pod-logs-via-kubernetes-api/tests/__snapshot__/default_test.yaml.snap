@@ -119,9 +119,11 @@ should allow setting static labels:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -293,9 +295,11 @@ should allow setting structured metadata:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -466,9 +470,11 @@ should allow using label selectors:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -637,9 +643,11 @@ should allow using label selectors with multiple values:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -804,9 +812,11 @@ should allow using the secret filter:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -851,8 +861,7 @@ should allow using the secret filter:
         }
 
         loki.secretfilter "pod_logs" {
-          include_generic = false
-          partial_mask = 3
+          redact_percent = 80
           forward_to = argument.logs_destinations.value
         }
       }
@@ -977,9 +986,11 @@ should allow using the secret filter with a gitleaks config and other settings:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -1150,9 +1161,11 @@ should allow using the secret filter with an allowlist:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -1197,12 +1210,11 @@ should allow using the secret filter with an allowlist:
         }
 
         loki.secretfilter "pod_logs" {
-          include_generic = false
-          partial_mask = 3
           allowlist = [
             ".*secret.*",
             ".*token.*",
           ]
+          redact_percent = 80
           forward_to = argument.logs_destinations.value
         }
       }
@@ -1327,9 +1339,11 @@ should allow using the secret filter with an inclusion filter, to split which lo
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -1412,9 +1426,7 @@ should allow using the secret filter with an inclusion filter, to split which lo
         }
 
         loki.secretfilter "pod_logs" {
-          enable_entropy = false
-          include_generic = false
-          partial_mask = 0
+          redact_percent = 80
           forward_to = argument.logs_destinations.value
         }
       }
@@ -1539,9 +1551,11 @@ should render the default configuration:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {

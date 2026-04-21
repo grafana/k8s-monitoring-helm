@@ -166,6 +166,17 @@ works when a logs-only integration is enabled:
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
+
+          // If kubernetes.io/config.mirror is set, this is a static pod, created by the kubelet.
+          // It's logs live on a different path.
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
+            separator = "/"
+            regex = "(.+/.+)"
+            action = "replace"
+            replacement = "/var/log/pods/*$1/*.log"
+            target_label = "__path__"
+          }
         }
 
         local.file_match "pod_logs" {
@@ -179,9 +190,11 @@ works when a logs-only integration is enabled:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -283,6 +296,7 @@ works when a logs-only integration is enabled:
       loki.write "loki" {
         endpoint {
           url = "http://loki.loki.svc:3100/loki/api/v1/push"
+          retry_on_http_429 = true
           tls_config {
             insecure_skip_verify = false
           }
@@ -503,7 +517,7 @@ works with a metrics-only integration:
             scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
             scrape_protocols = argument.scrape_protocols.value
             scrape_classic_histograms = argument.scrape_classic_histograms.value
-      scrape_native_histograms = argument.scrape_native_histograms.value
+            scrape_native_histograms = argument.scrape_native_histograms.value
 
             clustering {
               enabled = coalesce(argument.clustering.value, false)
@@ -601,7 +615,7 @@ works with a metrics-only integration:
           label_selectors = ["app.kubernetes.io/name=alloy-metrics"]
         }
 
-        alloy_integration_scrape  "alloy" {
+        alloy_integration_scrape "alloy" {
           targets = alloy_integration_discovery.alloy.output
           job_label = "integrations/alloy"
           clustering = true
@@ -922,6 +936,17 @@ works with multiple logs-only integrations:
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
+
+          // If kubernetes.io/config.mirror is set, this is a static pod, created by the kubelet.
+          // It's logs live on a different path.
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
+            separator = "/"
+            regex = "(.+/.+)"
+            action = "replace"
+            replacement = "/var/log/pods/*$1/*.log"
+            target_label = "__path__"
+          }
         }
 
         local.file_match "pod_logs" {
@@ -935,9 +960,11 @@ works with multiple logs-only integrations:
 
         loki.process "pod_logs" {
           stage.match {
-            selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+            selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
             // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-            stage.cri {}
+            stage.cri {
+              max_partial_lines = 100
+            }
 
             // Set the extract flags and stream values as labels
             stage.labels {
@@ -1113,6 +1140,7 @@ works with multiple logs-only integrations:
       loki.write "loki" {
         endpoint {
           url = "http://loki.loki.svc:3100/loki/api/v1/push"
+          retry_on_http_429 = true
           tls_config {
             insecure_skip_verify = false
           }
@@ -1185,6 +1213,11 @@ works with multiple metrics-only integrations:
               separator = "@"
               regex = coalesce(argument.port_name.value, "grafana") + "@Running@true@false"
               action = "keep"
+            }
+
+            rule {
+              source_labels = ["__meta_kubernetes_pod_node_name"]
+              target_label = "node"
             }
 
 
@@ -1335,7 +1368,7 @@ works with multiple metrics-only integrations:
             scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
             scrape_protocols = argument.scrape_protocols.value
             scrape_classic_histograms = argument.scrape_classic_histograms.value
-      scrape_native_histograms = argument.scrape_native_histograms.value
+            scrape_native_histograms = argument.scrape_native_histograms.value
 
             clustering {
               enabled = coalesce(argument.clustering.value, false)
@@ -1455,6 +1488,11 @@ works with multiple metrics-only integrations:
               separator = "@"
               regex = coalesce(argument.port_name.value, "http-metrics") + "@Running@true@false"
               action = "keep"
+            }
+
+            rule {
+              source_labels = ["__meta_kubernetes_pod_node_name"]
+              target_label = "node"
             }
 
             // the loki-mixin expects the job label to be namespace/component
@@ -1612,7 +1650,7 @@ works with multiple metrics-only integrations:
             scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
             scrape_protocols = argument.scrape_protocols.value
             scrape_classic_histograms = argument.scrape_classic_histograms.value
-      scrape_native_histograms = argument.scrape_native_histograms.value
+            scrape_native_histograms = argument.scrape_native_histograms.value
 
             clustering {
               enabled = coalesce(argument.clustering.value, false)
@@ -1742,6 +1780,11 @@ works with multiple metrics-only integrations:
               separator = "@"
               regex = coalesce(argument.port_name.value, "http-metrics") + "@Running@true@false"
               action = "keep"
+            }
+
+            rule {
+              source_labels = ["__meta_kubernetes_pod_node_name"]
+              target_label = "node"
             }
 
             // the mimir-mixin expects the job label to be namespace/component
@@ -1897,7 +1940,7 @@ works with multiple metrics-only integrations:
             scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
             scrape_protocols = argument.scrape_protocols.value
             scrape_classic_histograms = argument.scrape_classic_histograms.value
-      scrape_native_histograms = argument.scrape_native_histograms.value
+            scrape_native_histograms = argument.scrape_native_histograms.value
 
             clustering {
               enabled = coalesce(argument.clustering.value, false)
