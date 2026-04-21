@@ -145,6 +145,30 @@ tests:
         matchSnapshot:
           path: data["metrics.alloy"]
 
+  - it: renders new db o11y options (statements_limit)
+    set:
+      testing: {enabled: true}
+      postgresql:
+        instances:
+          - name: limited-db
+            exporter:
+              dataSource:
+                host: limited-db.postgresql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            databaseObservability:
+              enabled: true
+              collectors:
+                queryDetails:
+                  enabled: true
+                  statementsLimit: 50
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
   - it: requires metrics
     set:
       deployAsConfigMap: true

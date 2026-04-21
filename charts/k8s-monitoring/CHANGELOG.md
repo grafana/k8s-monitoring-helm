@@ -2,8 +2,7 @@
 
 ## 3.8.7
 
-*   Fix node log level parsing broken since v4.0 due to case mismatch in selectors (@petewall)
-*   Switch from deprecated Endpoints discovery to EndpointSlice for Kubernetes 1.33+ compatibility (@petewall)
+*   PostgreSQL: Add `statementsLimit` option to the Database Observability `queryDetails` collector (@petewall)
 *   Fix pre-delete hook failing when the finalizer is not present (@petewall)
 *   Remove extra `/var/configs` volume mount from OpenCost (@petewall)
 
