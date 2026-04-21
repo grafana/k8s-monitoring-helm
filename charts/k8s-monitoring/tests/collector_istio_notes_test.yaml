@@ -1,0 +1,224 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Collectors - Notes - Istio warning
+templates:
+  - NOTES.txt
+release:
+  namespace: grafana
+tests:
+  - it: warns when namespace has Istio ambient label and clustering uses the default port name
+    set:
+      cluster: {name: istio-test}
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prometheus-server.prometheus.svc:9090
+      clusterMetrics: {enabled: true}
+      telemetryServices: {kube-state-metrics: {deploy: true}}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+    kubernetesProvider:
+      scheme:
+        "v1/Namespace":
+          gvr:
+            version: "v1"
+            resource: "namespaces"
+          namespaced: false
+      objects:
+        - kind: Namespace
+          apiVersion: v1
+          metadata:
+            name: grafana
+            labels:
+              istio.io/dataplane-mode: ambient
+    asserts:
+      - matchRegexRaw:
+          pattern: 'appears to be part of an Istio Service Mesh \(label: istio.io/dataplane-mode=ambient\)'
+      - matchRegexRaw:
+          pattern: '\* alloy-metrics'
+      - matchRegexRaw:
+          pattern: 'portName: tcp'
+
+  - it: warns when namespace has istio-injection=enabled sidecar label
+    set:
+      cluster: {name: istio-test}
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prometheus-server.prometheus.svc:9090
+      clusterMetrics: {enabled: true}
+      telemetryServices: {kube-state-metrics: {deploy: true}}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+    kubernetesProvider:
+      scheme:
+        "v1/Namespace":
+          gvr:
+            version: "v1"
+            resource: "namespaces"
+          namespaced: false
+      objects:
+        - kind: Namespace
+          apiVersion: v1
+          metadata:
+            name: grafana
+            labels:
+              istio-injection: enabled
+    asserts:
+      - matchRegexRaw:
+          pattern: 'istio-injection=enabled'
+      - matchRegexRaw:
+          pattern: '\* alloy-metrics'
+
+  - it: warns when namespace has istio.io/rev revision label
+    set:
+      cluster: {name: istio-test}
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prometheus-server.prometheus.svc:9090
+      clusterMetrics: {enabled: true}
+      telemetryServices: {kube-state-metrics: {deploy: true}}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+    kubernetesProvider:
+      scheme:
+        "v1/Namespace":
+          gvr:
+            version: "v1"
+            resource: "namespaces"
+          namespaced: false
+      objects:
+        - kind: Namespace
+          apiVersion: v1
+          metadata:
+            name: grafana
+            labels:
+              istio.io/rev: stable
+    asserts:
+      - matchRegexRaw:
+          pattern: 'istio.io/rev=stable'
+
+  - it: does not warn when port name is already set to a non-HTTP value
+    set:
+      cluster: {name: istio-test}
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prometheus-server.prometheus.svc:9090
+      clusterMetrics: {enabled: true}
+      telemetryServices: {kube-state-metrics: {deploy: true}}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+          alloy:
+            clustering:
+              portName: tcp
+    kubernetesProvider:
+      scheme:
+        "v1/Namespace":
+          gvr:
+            version: "v1"
+            resource: "namespaces"
+          namespaced: false
+      objects:
+        - kind: Namespace
+          apiVersion: v1
+          metadata:
+            name: grafana
+            labels:
+              istio.io/dataplane-mode: ambient
+    asserts:
+      - notMatchRegexRaw:
+          pattern: 'Istio Service Mesh'
+
+  - it: does not warn when namespace has no Istio labels
+    set:
+      cluster: {name: istio-test}
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prometheus-server.prometheus.svc:9090
+      clusterMetrics: {enabled: true}
+      telemetryServices: {kube-state-metrics: {deploy: true}}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+    kubernetesProvider:
+      scheme:
+        "v1/Namespace":
+          gvr:
+            version: "v1"
+            resource: "namespaces"
+          namespaced: false
+      objects:
+        - kind: Namespace
+          apiVersion: v1
+          metadata:
+            name: grafana
+            labels:
+              kubernetes.io/metadata.name: grafana
+    asserts:
+      - notMatchRegexRaw:
+          pattern: 'Istio Service Mesh'
+
+  - it: does not warn when clustering is not enabled on any collector
+    set:
+      cluster: {name: istio-test}
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prometheus-server.prometheus.svc:9090
+      clusterEvents: {enabled: true}
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+    kubernetesProvider:
+      scheme:
+        "v1/Namespace":
+          gvr:
+            version: "v1"
+            resource: "namespaces"
+          namespaced: false
+      objects:
+        - kind: Namespace
+          apiVersion: v1
+          metadata:
+            name: grafana
+            labels:
+              istio.io/dataplane-mode: ambient
+    asserts:
+      - notMatchRegexRaw:
+          pattern: 'Istio Service Mesh'
+
+  - it: does not warn when istio-injection is set to disabled
+    set:
+      cluster: {name: istio-test}
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prometheus-server.prometheus.svc:9090
+      clusterMetrics: {enabled: true}
+      telemetryServices: {kube-state-metrics: {deploy: true}}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+    kubernetesProvider:
+      scheme:
+        "v1/Namespace":
+          gvr:
+            version: "v1"
+            resource: "namespaces"
+          namespaced: false
+      objects:
+        - kind: Namespace
+          apiVersion: v1
+          metadata:
+            name: grafana
+            labels:
+              istio-injection: disabled
+    asserts:
+      - notMatchRegexRaw:
+          pattern: 'Istio Service Mesh'
