@@ -164,9 +164,9 @@ integrations:
 | exporter.collectors.mysqlUser.enabled | bool | `true` | Enable mysql.user collector. |
 | exporter.collectors.mysqlUser.privileges | bool | `false` | Enable collecting user privileges from mysql.user. |
 | exporter.collectors.perfSchemaEventsStatements.enabled | bool | `false` | Enable perf_schema.eventsstatements collector. |
-| exporter.collectors.perfSchemaEventsStatements.limit | string | `250` | Limit the number of events statements digests, in descending order by last_seen. |
-| exporter.collectors.perfSchemaEventsStatements.textLimit | string | `120` (`0` when databaseObservability is enabled) | Maximum length of the normalized statement text. |
-| exporter.collectors.perfSchemaEventsStatements.timeLimit | string | `86400` | Limit how old, in seconds, the last_seen events statements can be. |
+| exporter.collectors.perfSchemaEventsStatements.limit | number | `250` | Limit the number of events statements digests, in descending order by last_seen. |
+| exporter.collectors.perfSchemaEventsStatements.textLimit | number | `120` (`0` when databaseObservability is enabled) | Maximum length of the normalized statement text. |
+| exporter.collectors.perfSchemaEventsStatements.timeLimit | number | `86400` | Limit how old, in seconds, the last_seen events statements can be. |
 
 ### General Settings
 
@@ -199,7 +199,7 @@ integrations:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | metrics.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for MySQL metrics. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
-| metrics.maxCacheSize | string | `100000` | Sets the max_cache_size for prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
+| metrics.maxCacheSize | number | `100000` | Sets the max_cache_size for prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
 | metrics.tuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | metrics.tuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 
