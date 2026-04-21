@@ -95,6 +95,7 @@ integrations:
 | databaseObservability.collectors.explainPlans.perCollectRatio | float | `1` | Ratio of explain plan queries to collect per collect interval. |
 | databaseObservability.collectors.queryDetails.collectInterval | string | `"1m"` | How frequently to collect query information from the database. |
 | databaseObservability.collectors.queryDetails.enabled | bool | `true` | Enable collection of query information. |
+| databaseObservability.collectors.queryDetails.statementsLimit | number | `100` | Max number of recent queries to collect details for. |
 | databaseObservability.collectors.querySamples.collectInterval | string | `"1m"` | How frequently to collect query samples from the database. |
 | databaseObservability.collectors.querySamples.disableQueryRedaction | bool | `false` | Collect unredacted SQL query text including parameters. |
 | databaseObservability.collectors.querySamples.enabled | bool | `true` | Enable collection of query samples. |
@@ -160,8 +161,8 @@ integrations:
 | exporter.collectors.statStatements.excludeDatabases | list | `[]` | List of databases to exclude from stat_statements collection. |
 | exporter.collectors.statStatements.excludeUsers | list | `[]` | List of users to exclude from stat_statements collection. |
 | exporter.collectors.statStatements.includeQuery | bool | `false` | Enable the selection of query ID and SQL statement. |
-| exporter.collectors.statStatements.limit | string | 100 | Maximum number of statements to fetch. |
-| exporter.collectors.statStatements.queryLength | string | 120 | Maximum length of the statement query text. |
+| exporter.collectors.statStatements.limit | number | 100 | Maximum number of statements to fetch. |
+| exporter.collectors.statStatements.queryLength | number | 120 | Maximum length of the statement query text. |
 | exporter.collectors.statUserTables.enabled | bool | `true` | Enable the stat_user_tables collector. |
 | exporter.collectors.statWALReceiver.enabled | bool | `false` | Enable the stat_wal_receiver collector. |
 | exporter.collectors.statioUserIndexes.enabled | bool | `false` | Enable the statio_user_indexes collector. |
@@ -200,7 +201,7 @@ integrations:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | metrics.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for PostgreSQL metrics. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
-| metrics.maxCacheSize | string | `100000` | Sets the max_cache_size for prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
+| metrics.maxCacheSize | number | `100000` | Sets the max_cache_size for prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
 | metrics.tuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | metrics.tuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 

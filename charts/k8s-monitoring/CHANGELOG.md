@@ -2,13 +2,21 @@
 
 ## Unreleased
 
+*   PostgreSQL: Add `statementsLimit` option to the Database Observability `queryDetails` collector (@petewall)
 *   Normalize collector and destination names to DNS-1123 resource names so mixed-case or underscore-containing keys (e.g. `alloyMetrics`, `my_dest`) render valid Kubernetes resources, and fail when two keys collapse to the same normalized name (@petewall)
+
+## 4.0.3
+
 *   Add `enabled` flag to collectors so they can be disabled without removing them from the values file (@petewall)
+*   Update Alloy Operator, Beyla, Node Exporter and OpenCost (@petewall)
 *   Add validators to require clustering on collectors that are assigned cluster-enabled features (@petewall)
 *   Add validators to warn when deployment-level settings are placed under feature configs instead of telemetryServices (@petewall)
 *   Fix validation error messages referencing `labelSelectors` instead of the correct `labelMatchers` field (@petewall)
-*   Fix node log level parsing broken since v4.0 due to case mismatch in selectors (@petewall)
+
+## 4.0.2
+
 *   Switch from deprecated Endpoints discovery to EndpointSlice for Kubernetes 1.33+ compatibility (@petewall)
+*   Fix node log level parsing broken since v4.0 due to case mismatch in selectors (@petewall)
 *   Use glob syntax instead of regular expressions in Beyla discovery config (@petewall)
 
 ## 4.0.1
