@@ -5,6 +5,7 @@
 
   {{- include "destinations.validate" . -}}
   {{- include "collectors.validate.atLeastOneEnabled" . }}
+  {{- include "collectors.validate.uniqueNames" . }}
 
   {{- /* Feature Config Influence */}}
   {{- $updatedValues := $.Values }}

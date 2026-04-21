@@ -62,6 +62,40 @@ tests:
     asserts:
       - notFailedTemplate: {}
 
+  - it: errors when two destination names normalize to the same Kubernetes name
+    set:
+      cluster: {name: test-cluster}
+      clusterMetrics: {enabled: true}
+      telemetryServices: {kube-state-metrics: {deploy: true}}
+      destinations:
+        myProm:
+          type: prometheus
+        myprom:
+          type: prometheus
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Multiple destinations resolve to the same Kubernetes resource name "myprom": myProm, myprom
+            Destination names are normalized to lowercase DNS-1123 names when used as Kubernetes resource names, so they must be unique after normalization.
+            Please rename all but one of these destinations.
+
+  - it: errors when destinations differ only by underscore vs dash
+    set:
+      cluster: {name: test-cluster}
+      clusterMetrics: {enabled: true}
+      telemetryServices: {kube-state-metrics: {deploy: true}}
+      destinations:
+        my_prom:
+          type: prometheus
+        my-prom:
+          type: prometheus
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Multiple destinations resolve to the same Kubernetes resource name "my-prom": my-prom, my_prom
+            Destination names are normalized to lowercase DNS-1123 names when used as Kubernetes resource names, so they must be unique after normalization.
+            Please rename all but one of these destinations.
+
   - it: detects if you're using an otlp destination with an invalid protocol
     set:
       cluster:

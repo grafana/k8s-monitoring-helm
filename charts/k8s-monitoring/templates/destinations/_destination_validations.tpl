@@ -1,3 +1,21 @@
+{{/* Fails if two destination keys normalize to the same Kubernetes-safe name (e.g. myDest and mydest, or my_dest and my-dest). */}}
+{{- define "destinations.validate.uniqueNames" }}
+  {{- $byNormalized := dict }}
+  {{- range $destinationName := keys (.Values.destinations | default dict) | sortAlpha }}
+    {{- $normalized := include "helper.kubernetesName" $destinationName | trim }}
+    {{- $existing := index $byNormalized $normalized | default list }}
+    {{- $_ := set $byNormalized $normalized (append $existing $destinationName) }}
+  {{- end }}
+  {{- range $normalized, $destinationNames := $byNormalized }}
+    {{- if gt (len $destinationNames) 1 }}
+      {{- $msg := list "" (printf "Multiple destinations resolve to the same Kubernetes resource name %q: %s" $normalized (join ", " $destinationNames)) }}
+      {{- $msg = append $msg "Destination names are normalized to lowercase DNS-1123 names when used as Kubernetes resource names, so they must be unique after normalization." }}
+      {{- $msg = append $msg "Please rename all but one of these destinations." }}
+      {{- fail (join "\n" $msg) }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
 {{/* Inputs: destinations (array of destination names), type (string), featureName (string) */}}
 {{- define "destinations.validate.destinationListNotEmpty" }}
 {{- if empty .destinations }}
@@ -11,6 +29,7 @@
 {{/* Does some basic destination validation */}}
 {{/* Inputs: . (Values) */}}
 {{- define "destinations.validate" }}
+  {{- include "destinations.validate.uniqueNames" . }}
   {{- range $destinationName , $destination := .Values.destinations }}
     {{- if (regexFind "[^-_a-zA-Z0-9]" $destinationName) }}
       {{- $msg := list "" (printf "Destination \"%s\" has invalid characters in its name." $destinationName) }}

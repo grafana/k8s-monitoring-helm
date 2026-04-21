@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Normalize collector and destination names to DNS-1123 resource names so mixed-case or underscore-containing keys (e.g. `alloyMetrics`, `my_dest`) render valid Kubernetes resources, and fail when two keys collapse to the same normalized name (@petewall)
 *   Add `enabled` flag to collectors so they can be disabled without removing them from the values file (@petewall)
 *   Add validators to require clustering on collectors that are assigned cluster-enabled features (@petewall)
 *   Add validators to warn when deployment-level settings are placed under feature configs instead of telemetryServices (@petewall)

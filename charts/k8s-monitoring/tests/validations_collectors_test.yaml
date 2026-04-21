@@ -48,3 +48,18 @@ tests:
               <collector-name>:
                 <collector-settings>
             See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/README.md for more details.
+
+  - it: errors when two collector names normalize to the same Kubernetes name
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloyMetrics:
+          extraConfig: "// Giving this Alloy something to do"
+        alloymetrics:
+          extraConfig: "// This collides with alloyMetrics after normalization"
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Multiple collectors resolve to the same Kubernetes resource name "alloymetrics": alloyMetrics, alloymetrics
+            Collector names are normalized to lowercase DNS-1123 names when used as Kubernetes resource names, so they must be unique after normalization.
+            Please rename all but one of these collectors.
