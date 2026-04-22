@@ -10,7 +10,7 @@ can restrict events from a given list of levels:
           job_name   = "integrations/kubernetes/eventhandler"
           log_format = "logfmt"
           forward_to = [loki.process.cluster_events.receiver]
-        }
+        } // loki.source.kubernetes_events "cluster_events"
 
         loki.process "cluster_events" {
 
@@ -81,8 +81,8 @@ can restrict events from a given list of levels:
           }
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.process "cluster_events"
+      } // declare "cluster_events"
 can restrict events to a given list of levels:
   1: |
     |-
@@ -95,7 +95,7 @@ can restrict events to a given list of levels:
           job_name   = "integrations/kubernetes/eventhandler"
           log_format = "logfmt"
           forward_to = [loki.process.cluster_events.receiver]
-        }
+        } // loki.source.kubernetes_events "cluster_events"
 
         loki.process "cluster_events" {
 
@@ -182,5 +182,5 @@ can restrict events to a given list of levels:
           }
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.process "cluster_events"
+      } // declare "cluster_events"

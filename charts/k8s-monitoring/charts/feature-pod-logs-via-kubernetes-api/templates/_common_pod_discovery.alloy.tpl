@@ -113,5 +113,5 @@ discovery.relabel "filtered_pods" {
 {{- if .Values.extraDiscoveryRules }}
 {{ .Values.extraDiscoveryRules | indent 2 }}
 {{- end }}
-}
+} // discovery.relabel "filtered_pods"
 {{- end }}

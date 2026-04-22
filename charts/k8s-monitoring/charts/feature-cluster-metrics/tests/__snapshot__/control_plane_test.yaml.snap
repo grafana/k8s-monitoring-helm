@@ -7,7 +7,7 @@ should render the configuration with control plane components included:
         }
         discovery.kubernetes "nodes" {
           role = "node"
-        }
+        } // discovery.kubernetes "nodes"
 
         discovery.relabel "nodes" {
           targets = discovery.kubernetes.nodes.targets
@@ -20,12 +20,12 @@ should render the configuration with control plane components included:
             replacement = "kubernetes"
             target_label = "source"
           }
-        }
+        } // discovery.relabel "nodes"
 
         // Kubelet
         discovery.relabel "kubelet" {
           targets = discovery.relabel.nodes.output
-        }
+        } // discovery.relabel "kubelet"
 
         prometheus.scrape "kubelet" {
           targets  = discovery.relabel.kubelet.output
@@ -49,7 +49,7 @@ should render the configuration with control plane components included:
           }
 
           forward_to = [prometheus.relabel.kubelet.receiver]
-        }
+        } // prometheus.scrape "kubelet"
 
         prometheus.relabel "kubelet" {
           max_cache_size = 100000
@@ -60,7 +60,7 @@ should render the configuration with control plane components included:
           }
 
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.relabel "kubelet"
 
         // Kubelet Resources
         discovery.relabel "kubelet_resources" {
@@ -69,7 +69,7 @@ should render the configuration with control plane components included:
             replacement   = "/metrics/resource"
             target_label  = "__metrics_path__"
           }
-        }
+        } // discovery.relabel "kubelet_resources"
 
         prometheus.scrape "kubelet_resources" {
           targets = discovery.relabel.kubelet_resources.output
@@ -93,7 +93,7 @@ should render the configuration with control plane components included:
           }
 
           forward_to = [prometheus.relabel.kubelet_resources.receiver]
-        }
+        } // prometheus.scrape "kubelet_resources"
 
         prometheus.relabel "kubelet_resources" {
           max_cache_size = 100000
@@ -104,7 +104,7 @@ should render the configuration with control plane components included:
           }
 
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.relabel "kubelet_resources"
 
         // cAdvisor
         discovery.relabel "cadvisor" {
@@ -113,7 +113,7 @@ should render the configuration with control plane components included:
             replacement   = "/metrics/cadvisor"
             target_label  = "__metrics_path__"
           }
-        }
+        } // discovery.relabel "cadvisor"
 
         prometheus.scrape "cadvisor" {
           targets = discovery.relabel.cadvisor.output
@@ -137,7 +137,7 @@ should render the configuration with control plane components included:
           }
 
           forward_to = [prometheus.relabel.cadvisor.receiver]
-        }
+        } // prometheus.scrape "cadvisor"
 
         prometheus.relabel "cadvisor" {
           max_cache_size = 100000
@@ -215,7 +215,7 @@ should render the configuration with control plane components included:
             replacement = ""
           }
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.relabel "cadvisor"
 
         discovery.kubernetes "apiserver" {
           role = "endpointslice"
@@ -228,7 +228,7 @@ should render the configuration with control plane components included:
           namespaces {
             names = ["default"]
           }
-        }
+        } // discovery.kubernetes "apiserver"
 
         discovery.relabel "apiserver" {
           targets = discovery.kubernetes.apiserver.targets
@@ -253,7 +253,7 @@ should render the configuration with control plane components included:
             replacement = "kubernetes"
             target_label = "source"
           }
-        }
+        } // discovery.relabel "apiserver"
 
         prometheus.scrape "apiserver" {
           targets = discovery.relabel.apiserver.output
@@ -276,7 +276,7 @@ should render the configuration with control plane components included:
             enabled = true
           }
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.relabel "apiserver"
 
         discovery.kubernetes "kube_controller_manager" {
           role = "pod"
@@ -287,7 +287,7 @@ should render the configuration with control plane components included:
             role = "pod"
             label = "component=kube-controller-manager"
           }
-        }
+        } // discovery.kubernetes "kube_controller_manager"
 
         discovery.relabel "kube_controller_manager" {
           targets = discovery.kubernetes.kube_controller_manager.targets
@@ -296,7 +296,7 @@ should render the configuration with control plane components included:
             replacement = "$1:10257"
             target_label = "__address__"
           }
-        }
+        } // discovery.relabel "kube_controller_manager"
 
         prometheus.scrape "kube_controller_manager" {
           targets           = discovery.relabel.kube_controller_manager.output
@@ -315,7 +315,7 @@ should render the configuration with control plane components included:
             enabled = true
           }
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.relabel "kube_controller_manager"
 
         // KubeDNS
         discovery.kubernetes "kube_dns" {
@@ -327,7 +327,7 @@ should render the configuration with control plane components included:
             role = "endpointslice"
             label = "kubernetes.io/service-name=kube-dns"
           }
-        }
+        } // discovery.kubernetes "kube_dns"
 
         discovery.relabel "kube_dns" {
           targets = discovery.kubernetes.kube_dns.targets
@@ -411,7 +411,7 @@ should render the configuration with control plane components included:
             replacement = "kubernetes"
             target_label = "source"
           }
-        }
+        } // discovery.relabel "kube_dns"
 
         prometheus.scrape "kube_dns" {
           targets = discovery.relabel.kube_dns.output
@@ -426,7 +426,7 @@ should render the configuration with control plane components included:
             enabled = true
           }
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.relabel "kube_dns"
 
         discovery.kubernetes "kube_proxy" {
           role = "pod"
@@ -437,7 +437,7 @@ should render the configuration with control plane components included:
             role = "pod"
             label = "k8s-app=kube-proxy"
           }
-        }
+        } // discovery.kubernetes "kube_proxy"
 
         discovery.relabel "kube_proxy" {
           targets = discovery.kubernetes.kube_proxy.targets
@@ -446,7 +446,7 @@ should render the configuration with control plane components included:
             replacement = "$1:10249"
             target_label = "__address__"
           }
-        }
+        } // discovery.relabel "kube_proxy"
 
         prometheus.scrape "kube_proxy" {
           targets           = discovery.relabel.kube_proxy.output
@@ -461,7 +461,7 @@ should render the configuration with control plane components included:
             enabled = true
           }
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.relabel "kube_proxy"
 
         discovery.kubernetes "kube_scheduler" {
           role = "pod"
@@ -472,7 +472,7 @@ should render the configuration with control plane components included:
             role = "pod"
             label = "component=kube-scheduler"
           }
-        }
+        } // discovery.kubernetes "kube_scheduler"
 
         discovery.relabel "kube_scheduler" {
           targets = discovery.kubernetes.kube_scheduler.targets
@@ -481,7 +481,7 @@ should render the configuration with control plane components included:
             replacement = "$1:10259"
             target_label = "__address__"
           }
-        }
+        } // discovery.relabel "kube_scheduler"
 
         prometheus.scrape "kube_scheduler" {
           targets           = discovery.relabel.kube_scheduler.output
@@ -500,5 +500,5 @@ should render the configuration with control plane components included:
             enabled = true
           }
           forward_to = argument.metrics_destinations.value
-        }
-      }
+        } // prometheus.relabel "kube_scheduler"
+      } // declare "cluster_metrics"

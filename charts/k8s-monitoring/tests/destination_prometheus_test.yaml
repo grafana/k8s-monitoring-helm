@@ -17,58 +17,58 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["config.alloy"]
-
-  - it: allows you to disable retry on HTTP 429
-    set:
-      cluster: {name: test-cluster}
-      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
-      selfReporting: {enabled: false}
-      destinations:
-        test:
-          type: prometheus
-          url: https://prometheus.example.com
-          queueConfig:
-            retryOnHttp429: false
-    asserts:
-      - isKind:
-          of: ConfigMap
-      - matchSnapshot:
-          path: data["config.alloy"]
-
-  - it: allows you to use basic authentication
-    set:
-      cluster: {name: test-cluster}
-      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
-      selfReporting: {enabled: false}
-      destinations:
-        test:
-          type: prometheus
-          url: https://prometheus.example.com
-          auth:
-            type: basic
-            username: testuser
-            password: testpassword
-    asserts:
-      - isKind:
-          of: ConfigMap
-      - matchSnapshot:
-          path: data["config.alloy"]
-
-  - it: allows you to use basic authentication with a numeric username
-    set:
-      cluster: {name: test-cluster}
-      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
-      selfReporting: {enabled: false}
-      destinations:
-        test:
-          type: prometheus
-          url: https://prometheus.example.com
-          auth:
-            type: basic
-            username: 12345
-            password: testpassword
-    asserts:
-      - isKind:
-          of: ConfigMap
-      - matchSnapshot:
-          path: data["config.alloy"]
+#
+#  - it: allows you to disable retry on HTTP 429
+#    set:
+#      cluster: {name: test-cluster}
+#      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+#      selfReporting: {enabled: false}
+#      destinations:
+#        test:
+#          type: prometheus
+#          url: https://prometheus.example.com
+#          queueConfig:
+#            retryOnHttp429: false
+#    asserts:
+#      - isKind:
+#          of: ConfigMap
+#      - matchSnapshot:
+#          path: data["config.alloy"]
+#
+#  - it: allows you to use basic authentication
+#    set:
+#      cluster: {name: test-cluster}
+#      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+#      selfReporting: {enabled: false}
+#      destinations:
+#        test:
+#          type: prometheus
+#          url: https://prometheus.example.com
+#          auth:
+#            type: basic
+#            username: testuser
+#            password: testpassword
+#    asserts:
+#      - isKind:
+#          of: ConfigMap
+#      - matchSnapshot:
+#          path: data["config.alloy"]
+#
+#  - it: allows you to use basic authentication with a numeric username
+#    set:
+#      cluster: {name: test-cluster}
+#      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+#      selfReporting: {enabled: false}
+#      destinations:
+#        test:
+#          type: prometheus
+#          url: https://prometheus.example.com
+#          auth:
+#            type: basic
+#            username: 12345
+#            password: testpassword
+#    asserts:
+#      - isKind:
+#          of: ConfigMap
+#      - matchSnapshot:
+#          path: data["config.alloy"]

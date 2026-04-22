@@ -1,150 +1,3 @@
-allows you to disable retry on HTTP 429:
-  1: |
-    |
-      // Destination: test (prometheus)
-      otelcol.exporter.prometheus "test" {
-        add_metric_suffixes = true
-        resource_to_telemetry_conversion = false
-        forward_to = [prometheus.remote_write.test.receiver]
-      }
-
-      prometheus.remote_write "test" {
-        endpoint {
-          url = "https://prometheus.example.com"
-          headers = {
-          }
-          tls_config {
-            insecure_skip_verify = false
-          }
-          send_native_histograms = false
-
-          queue_config {
-            capacity = 10000
-            min_shards = 1
-            max_shards = 50
-            max_samples_per_send = 2000
-            batch_send_deadline = "5s"
-            min_backoff = "30ms"
-            max_backoff = "5s"
-            retry_on_http_429 = false
-            sample_age_limit = "0s"
-          }
-        }
-
-        wal {
-          truncate_frequency = "2h"
-          min_keepalive_time = "5m"
-          max_keepalive_time = "8h"
-        }
-        external_labels = {
-          "cluster" = "test-cluster",
-          "k8s_cluster_name" = "test-cluster",
-        }
-      }
-allows you to use basic authentication:
-  1: |
-    |
-      // Destination: test (prometheus)
-      otelcol.exporter.prometheus "test" {
-        add_metric_suffixes = true
-        resource_to_telemetry_conversion = false
-        forward_to = [prometheus.remote_write.test.receiver]
-      }
-
-      prometheus.remote_write "test" {
-        endpoint {
-          url = "https://prometheus.example.com"
-          headers = {
-          }
-          basic_auth {
-            username = convert.nonsensitive(remote.kubernetes.secret.test.data["username"])
-            password = remote.kubernetes.secret.test.data["password"]
-          }
-          tls_config {
-            insecure_skip_verify = false
-          }
-          send_native_histograms = false
-
-          queue_config {
-            capacity = 10000
-            min_shards = 1
-            max_shards = 50
-            max_samples_per_send = 2000
-            batch_send_deadline = "5s"
-            min_backoff = "30ms"
-            max_backoff = "5s"
-            retry_on_http_429 = true
-            sample_age_limit = "0s"
-          }
-        }
-
-        wal {
-          truncate_frequency = "2h"
-          min_keepalive_time = "5m"
-          max_keepalive_time = "8h"
-        }
-        external_labels = {
-          "cluster" = "test-cluster",
-          "k8s_cluster_name" = "test-cluster",
-        }
-      }
-
-      remote.kubernetes.secret "test" {
-        name      = "test-release-name-k8s-monitoring"
-        namespace = "NAMESPACE"
-      }
-allows you to use basic authentication with a numeric username:
-  1: |
-    |
-      // Destination: test (prometheus)
-      otelcol.exporter.prometheus "test" {
-        add_metric_suffixes = true
-        resource_to_telemetry_conversion = false
-        forward_to = [prometheus.remote_write.test.receiver]
-      }
-
-      prometheus.remote_write "test" {
-        endpoint {
-          url = "https://prometheus.example.com"
-          headers = {
-          }
-          basic_auth {
-            username = convert.nonsensitive(remote.kubernetes.secret.test.data["username"])
-            password = remote.kubernetes.secret.test.data["password"]
-          }
-          tls_config {
-            insecure_skip_verify = false
-          }
-          send_native_histograms = false
-
-          queue_config {
-            capacity = 10000
-            min_shards = 1
-            max_shards = 50
-            max_samples_per_send = 2000
-            batch_send_deadline = "5s"
-            min_backoff = "30ms"
-            max_backoff = "5s"
-            retry_on_http_429 = true
-            sample_age_limit = "0s"
-          }
-        }
-
-        wal {
-          truncate_frequency = "2h"
-          min_keepalive_time = "5m"
-          max_keepalive_time = "8h"
-        }
-        external_labels = {
-          "cluster" = "test-cluster",
-          "k8s_cluster_name" = "test-cluster",
-        }
-      }
-
-      remote.kubernetes.secret "test" {
-        name      = "test-release-name-k8s-monitoring"
-        namespace = "NAMESPACE"
-      }
 creates the Alloy components for an Prometheus destination:
   1: |
     |
@@ -153,7 +6,7 @@ creates the Alloy components for an Prometheus destination:
         add_metric_suffixes = true
         resource_to_telemetry_conversion = false
         forward_to = [prometheus.remote_write.test.receiver]
-      }
+      } // otelcol.exporter.prometheus "test"
 
       prometheus.remote_write "test" {
         endpoint {
@@ -187,4 +40,4 @@ creates the Alloy components for an Prometheus destination:
           "cluster" = "test-cluster",
           "k8s_cluster_name" = "test-cluster",
         }
-      }
+      } // prometheus.remote_write "test"

@@ -67,7 +67,7 @@ declare "tempo_integration" {
         names = coalesce(argument.namespaces.value, [])
       }
       {{- include "feature.integrations.attachNodeMetadata" . | nindent 6 }}
-    }
+    } // discovery.kubernetes "tempo_pods"
 
     // tempo relabelings (pre-scrape)
     discovery.relabel "tempo_pods" {
@@ -99,7 +99,7 @@ declare "tempo_integration" {
       }
 
       {{ include "feature.integrations.commonDiscoveryRules" . | nindent 6 }}
-    }
+    } // discovery.relabel "tempo_pods"
 
     export "output" {
       value = discovery.relabel.tempo_pods.output
@@ -178,7 +178,7 @@ declare "tempo_integration" {
       clustering {
         enabled = coalesce(argument.clustering.value, false)
       }
-    }
+    } // prometheus.scrape "tempo"
 
     // tempo metric relabelings (post-scrape)
     prometheus.relabel "tempo" {
@@ -218,7 +218,7 @@ declare "tempo_integration" {
         target_label = "container"
         replacement = "memcached"
       }
-    }
+    } // prometheus.relabel "tempo"
   }
   {{- range $instance := $.Values.tempo.instances }}
     {{- include "integrations.tempo.include.metrics" (deepCopy $ | merge (dict "instance" $instance)) | nindent 2 }}

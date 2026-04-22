@@ -28,7 +28,7 @@ discovery.kubernetes "services" {
     label = {{ $labelSelectors | join "," | quote }}
   }
 {{- end }}
-}
+} // discovery.kubernetes "services"
 
 discovery.relabel "annotation_autodiscovery_services" {
   targets = discovery.kubernetes.services.targets
@@ -167,5 +167,5 @@ discovery.relabel "annotation_autodiscovery_services" {
 {{- if .Values.extraDiscoveryRules }}
 {{ .Values.extraDiscoveryRules | indent 2 }}
 {{- end }}
-}
+} // discovery.relabel "annotation_autodiscovery_services"
 {{- end -}}

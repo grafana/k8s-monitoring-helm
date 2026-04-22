@@ -68,7 +68,7 @@ prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   textfile {
     directory = "/etc/release-info"
   }
-}
+} // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
 
 discovery.relabel "kubernetes_monitoring_telemetry" {
   targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -82,7 +82,7 @@ discovery.relabel "kubernetes_monitoring_telemetry" {
     action = "replace"
     replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
   }
-}
+} // discovery.relabel "kubernetes_monitoring_telemetry"
 
 prometheus.scrape "kubernetes_monitoring_telemetry" {
   job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -92,7 +92,7 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
     enabled = true
   }
   forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-}
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
 
 prometheus.relabel "kubernetes_monitoring_telemetry" {
   rule {
@@ -103,7 +103,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
   forward_to = [
     {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
   ]
-}
+} // prometheus.relabel "kubernetes_monitoring_telemetry"
 {{- end }}
 {{- end }}
 

@@ -73,7 +73,7 @@ data:
             names = coalesce(argument.namespaces.value, [])
           }
     
-        }
+        } // discovery.kubernetes "alloy_pods"
     
         // alloy relabelings (pre-scrape)
         discovery.relabel "alloy_pods" {
@@ -164,7 +164,7 @@ data:
             target_label = "source"
           }
     
-        }
+        } // discovery.relabel "alloy_pods"
     
         export "output" {
           value = discovery.relabel.alloy_pods.output
@@ -243,7 +243,7 @@ data:
           clustering {
             enabled = coalesce(argument.clustering.value, false)
           }
-        }
+        } // prometheus.scrape "alloy"
     
         // alloy metric relabelings (post-scrape)
         prometheus.relabel "alloy" {
@@ -328,7 +328,7 @@ data:
             action = "labeldrop"
             regex = "exported_(namespace|pod|container|job|instance)"
           }
-        }
+        } // prometheus.relabel "alloy"
       }
     
       alloy_integration_discovery "alloy_receiver" {
@@ -383,7 +383,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.localprometheus.receiver]
-    }
+    } // otelcol.exporter.prometheus "localprometheus"
     
     prometheus.remote_write "localprometheus" {
       endpoint {
@@ -417,7 +417,7 @@ data:
         "cluster" = "tail-sampling-test",
         "k8s_cluster_name" = "tail-sampling-test",
       }
-    }
+    } // prometheus.remote_write "localprometheus"
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -458,7 +458,7 @@ data:
           logs = [otelcol.processor.resourcedetection.default.input]
           traces = [otelcol.processor.resourcedetection.default.input]
         }
-      }
+      } // otelcol.receiver.otlp "receiver"
     
       // Resource Detection Processor
       otelcol.processor.resourcedetection "default" {
@@ -553,7 +553,7 @@ data:
           traces = argument.traces_destinations.value
         }
       }
-    }
+    } // declare "application_observability"
     application_observability "feature" {
       metrics_destinations = [
         otelcol.exporter.prometheus.localprometheus.input,
@@ -571,7 +571,7 @@ data:
       textfile {
         directory = "/etc/release-info"
       }
-    }
+    } // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
     
     discovery.relabel "kubernetes_monitoring_telemetry" {
       targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -585,7 +585,7 @@ data:
         action = "replace"
         replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
       }
-    }
+    } // discovery.relabel "kubernetes_monitoring_telemetry"
     
     prometheus.scrape "kubernetes_monitoring_telemetry" {
       job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -595,7 +595,7 @@ data:
         enabled = true
       }
       forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-    }
+    } // prometheus.scrape "kubernetes_monitoring_telemetry"
     
     prometheus.relabel "kubernetes_monitoring_telemetry" {
       rule {
@@ -606,7 +606,7 @@ data:
       forward_to = [
         prometheus.remote_write.localprometheus.receiver,
       ]
-    }
+    } // prometheus.relabel "kubernetes_monitoring_telemetry"
     
     
     
@@ -614,7 +614,7 @@ data:
     // Destination: localLoki (loki)
     otelcol.exporter.loki "localloki" {
       forward_to = [loki.write.localloki.receiver]
-    }
+    } // otelcol.exporter.loki "localloki"
     
     loki.write "localloki" {
       endpoint {
@@ -636,12 +636,12 @@ data:
         "cluster" = "tail-sampling-test",
         "k8s_cluster_name" = "tail-sampling-test",
       }
-    }
+    } // loki.write "localloki"
     
     remote.kubernetes.secret "localloki" {
       name      = "localloki-k8smon-k8s-monitoring"
       namespace = "default"
-    }
+    } // remote.kubernetes.secret "localloki"
     
     
     // Destination: localPrometheus (prometheus)
@@ -649,7 +649,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.localprometheus.receiver]
-    }
+    } // otelcol.exporter.prometheus "localprometheus"
     
     prometheus.remote_write "localprometheus" {
       endpoint {
@@ -683,14 +683,14 @@ data:
         "cluster" = "tail-sampling-test",
         "k8s_cluster_name" = "tail-sampling-test",
       }
-    }
+    } // prometheus.remote_write "localprometheus"
     
     // Destination: localTempo (otlp)
     otelcol.processor.attributes "localtempo" {
       output {
         traces = [otelcol.processor.transform.localtempo.input]
       }
-    }
+    } // otelcol.processor.attributes "localtempo"
     
     otelcol.processor.transform "localtempo" {
       error_mode = "ignore"
@@ -722,7 +722,7 @@ data:
       output {
         traces = [otelcol.exporter.loadbalancing.localtempo_sampler.input]
       }
-    }
+    } // otelcol.processor.transform "localtempo"
     
     otelcol.exporter.loadbalancing "localtempo_sampler" {
       resolver {
@@ -739,7 +739,7 @@ data:
           }
         }
       }
-    }
+    } // otelcol.exporter.loadbalancing "localtempo_sampler"
     
     otelcol.processor.batch "localtempo" {
       timeout = "2s"
@@ -749,7 +749,7 @@ data:
       output {
         traces = [otelcol.exporter.otlp.localtempo.input]
       }
-    }
+    } // otelcol.processor.batch "localtempo"
     otelcol.exporter.otlp "localtempo" {
       client {
         endpoint = "tempo.tempo.svc:4317"
@@ -769,7 +769,7 @@ data:
       sending_queue {
         enabled = true
       }
-    }
+    } // otelcol.exporter.otlp "localtempo"
 ---
 # Source: k8s-monitoring/templates/release-info.yaml
 apiVersion: v1
@@ -1114,7 +1114,7 @@ spec:
           output {
             traces = [otelcol.exporter.otlp.localtempo.input]
           }
-        }
+        } // otelcol.processor.batch "localtempo"
         otelcol.exporter.otlp "localtempo" {
           client {
             endpoint = "tempo.tempo.svc:4317"
@@ -1134,7 +1134,7 @@ spec:
           sending_queue {
             enabled = true
           }
-        }
+        } // otelcol.exporter.otlp "localtempo"
       create: true
     resources: {}
     securityContext:

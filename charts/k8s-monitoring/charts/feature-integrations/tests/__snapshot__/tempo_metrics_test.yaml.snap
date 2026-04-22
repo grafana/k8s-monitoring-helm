@@ -41,7 +41,7 @@ should allow you to disable the default allow list:
               names = coalesce(argument.namespaces.value, [])
             }
 
-          }
+          } // discovery.kubernetes "tempo_pods"
 
           // tempo relabelings (pre-scrape)
           discovery.relabel "tempo_pods" {
@@ -146,7 +146,7 @@ should allow you to disable the default allow list:
               target_label = "source"
             }
 
-          }
+          } // discovery.relabel "tempo_pods"
 
           export "output" {
             value = discovery.relabel.tempo_pods.output
@@ -225,7 +225,7 @@ should allow you to disable the default allow list:
             clustering {
               enabled = coalesce(argument.clustering.value, false)
             }
-          }
+          } // prometheus.scrape "tempo"
 
           // tempo metric relabelings (post-scrape)
           prometheus.relabel "tempo" {
@@ -265,7 +265,7 @@ should allow you to disable the default allow list:
               target_label = "container"
               replacement = "memcached"
             }
-          }
+          } // prometheus.relabel "tempo"
         }
 
         tempo_integration_discovery "tempo" {
@@ -330,7 +330,7 @@ should create the tempo metrics config:
               names = coalesce(argument.namespaces.value, [])
             }
 
-          }
+          } // discovery.kubernetes "tempo_pods"
 
           // tempo relabelings (pre-scrape)
           discovery.relabel "tempo_pods" {
@@ -435,7 +435,7 @@ should create the tempo metrics config:
               target_label = "source"
             }
 
-          }
+          } // discovery.relabel "tempo_pods"
 
           export "output" {
             value = discovery.relabel.tempo_pods.output
@@ -514,7 +514,7 @@ should create the tempo metrics config:
             clustering {
               enabled = coalesce(argument.clustering.value, false)
             }
-          }
+          } // prometheus.scrape "tempo"
 
           // tempo metric relabelings (post-scrape)
           prometheus.relabel "tempo" {
@@ -554,7 +554,7 @@ should create the tempo metrics config:
               target_label = "container"
               replacement = "memcached"
             }
-          }
+          } // prometheus.relabel "tempo"
         }
 
         tempo_integration_discovery "tempo" {

@@ -12,7 +12,7 @@ discovery.kubernetes "kube_scheduler" {
     role = "pod"
     label = {{ .Values.kubeScheduler.selectorLabel | quote }}
   }
-}
+} // discovery.kubernetes "kube_scheduler"
 
 discovery.relabel "kube_scheduler" {
   targets = discovery.kubernetes.kube_scheduler.targets
@@ -24,7 +24,7 @@ discovery.relabel "kube_scheduler" {
 {{- if .Values.kubeScheduler.extraDiscoveryRules }}
 {{ .Values.kubeScheduler.extraDiscoveryRules | indent 2 }}
 {{- end }}
-}
+} // discovery.relabel "kube_scheduler"
 
 prometheus.scrape "kube_scheduler" {
   targets           = discovery.relabel.kube_scheduler.output
@@ -44,7 +44,7 @@ prometheus.scrape "kube_scheduler" {
   }
 {{- if or $metricAllowList $metricDenyList .Values.kubeScheduler.extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.kube_scheduler.receiver]
-}
+} // prometheus.scrape "kube_scheduler"
 
 prometheus.relabel "kube_scheduler" {
   max_cache_size = {{ .Values.kubeScheduler.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -67,6 +67,6 @@ prometheus.relabel "kube_scheduler" {
 {{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "kube_scheduler"
 {{- end }}
 {{- end }}

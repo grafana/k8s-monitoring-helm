@@ -15,7 +15,7 @@ creates a module with default Beyla configuration:
             role = "pod"
             label = "app.kubernetes.io/name=beyla"
           }
-        }
+        } // discovery.kubernetes "beyla_pods"
 
         discovery.relabel "beyla_pods" {
           targets = discovery.kubernetes.beyla_pods.targets
@@ -24,7 +24,7 @@ creates a module with default Beyla configuration:
             action = "replace"
             target_label = "instance"
           }
-        }
+        } // discovery.relabel "beyla_pods"
 
         prometheus.scrape "beyla_applications" {
           targets         = discovery.relabel.beyla_pods.output
@@ -37,7 +37,7 @@ creates a module with default Beyla configuration:
             enabled = true
           }
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.scrape "beyla_applications"
 
         prometheus.scrape "beyla_internal" {
           targets         = discovery.relabel.beyla_pods.output
@@ -52,5 +52,5 @@ creates a module with default Beyla configuration:
             enabled = true
           }
           forward_to = argument.metrics_destinations.value
-        }
-      }
+        } // prometheus.relabel "beyla"
+      } // declare "auto_instrumentation"

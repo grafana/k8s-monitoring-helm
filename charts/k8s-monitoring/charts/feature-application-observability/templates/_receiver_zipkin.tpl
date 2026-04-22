@@ -10,5 +10,5 @@ otelcol.receiver.zipkin "receiver" {
     traces = {{ .traces }}
 {{- end }}
   }
-}
+} // otelcol.receiver.zipkin "receiver"
 {{- end }}
