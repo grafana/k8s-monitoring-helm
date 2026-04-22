@@ -176,6 +176,22 @@ The Pod Logs feature has been split into three features:
 *   `podLogsViaKubernetesAPI` gathers Pod logs in the Loki format by streaming them from the Kubernetes API server. This
     was previously the `podLogs` feature, using `gatherMethod: kubernetesAPI`.
 
+### Version 3.5
+
+#### Native histogram scraping disabled by default
+
+Version 3.5.7 added the Alloy v1.11.0 upgrade, which changed the default of `scrape_native_histograms` on
+`prometheus.scrape` components from `true` to `false`. To expose this, the chart added a global toggle
+`global.scrapeNativeHistograms`, which also defaults to `false`. Clusters that relied on native histograms being
+scraped implicitly in earlier chart versions will stop receiving them after upgrading.
+
+To restore the previous behavior, set:
+
+```yaml
+global:
+  scrapeNativeHistograms: true
+```
+
 ### Version 3.4
 
 <!--alex disable hook-->
