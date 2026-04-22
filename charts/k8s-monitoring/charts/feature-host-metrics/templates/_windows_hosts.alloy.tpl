@@ -45,7 +45,7 @@ discovery.kubernetes "windows_exporter_pods" {
 {{- end }}
 
 {{- include "feature.hostMetrics.attachNodeMetadata" . | trim | nindent 2 }}
-}
+} // discovery.kubernetes "windows_exporter_pods"
 
 discovery.relabel "windows_exporter" {
   targets = discovery.kubernetes.windows_exporter_pods.targets
@@ -72,7 +72,7 @@ discovery.relabel "windows_exporter" {
 {{- if .Values.windowsHosts.extraDiscoveryRules }}
   {{- .Values.windowsHosts.extraDiscoveryRules | nindent 2 }}
 {{- end }}
-}
+} // discovery.relabel "windows_exporter"
 
 prometheus.scrape "windows_exporter" {
   targets  = discovery.relabel.windows_exporter.output
@@ -87,7 +87,7 @@ prometheus.scrape "windows_exporter" {
   }
 {{- if or $metricAllowList $metricDenyList .Values.windowsHosts.extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.windows_exporter.receiver]
-}
+} // prometheus.scrape "windows_exporter"
 
 prometheus.relabel "windows_exporter" {
   max_cache_size = {{ .Values.windowsHosts.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -110,6 +110,6 @@ prometheus.relabel "windows_exporter" {
 {{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "windows_exporter"
 {{- end }}
 {{- end }}

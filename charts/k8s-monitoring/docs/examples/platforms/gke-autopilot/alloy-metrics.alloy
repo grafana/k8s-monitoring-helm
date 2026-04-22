@@ -5,7 +5,7 @@ declare "cluster_metrics" {
   }
   discovery.kubernetes "nodes" {
     role = "node"
-  }
+  } // discovery.kubernetes "nodes"
 
   discovery.relabel "nodes" {
     targets = discovery.kubernetes.nodes.targets
@@ -18,12 +18,12 @@ declare "cluster_metrics" {
       replacement = "kubernetes"
       target_label = "source"
     }
-  }
+  } // discovery.relabel "nodes"
 
   // Kubelet
   discovery.relabel "kubelet" {
     targets = discovery.relabel.nodes.output
-  }
+  } // discovery.relabel "kubelet"
 
   prometheus.scrape "kubelet" {
     targets  = discovery.relabel.kubelet.output
@@ -47,7 +47,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = [prometheus.relabel.kubelet.receiver]
-  }
+  } // prometheus.scrape "kubelet"
 
   prometheus.relabel "kubelet" {
     max_cache_size = 100000
@@ -58,7 +58,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "kubelet"
 
   // Kubelet Resources
   discovery.relabel "kubelet_resources" {
@@ -67,7 +67,7 @@ declare "cluster_metrics" {
       replacement   = "/metrics/resource"
       target_label  = "__metrics_path__"
     }
-  }
+  } // discovery.relabel "kubelet_resources"
 
   prometheus.scrape "kubelet_resources" {
     targets = discovery.relabel.kubelet_resources.output
@@ -91,7 +91,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = [prometheus.relabel.kubelet_resources.receiver]
-  }
+  } // prometheus.scrape "kubelet_resources"
 
   prometheus.relabel "kubelet_resources" {
     max_cache_size = 100000
@@ -102,7 +102,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "kubelet_resources"
 
   // cAdvisor
   discovery.relabel "cadvisor" {
@@ -111,7 +111,7 @@ declare "cluster_metrics" {
       replacement   = "/metrics/cadvisor"
       target_label  = "__metrics_path__"
     }
-  }
+  } // discovery.relabel "cadvisor"
 
   prometheus.scrape "cadvisor" {
     targets = discovery.relabel.cadvisor.output
@@ -135,7 +135,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = [prometheus.relabel.cadvisor.receiver]
-  }
+  } // prometheus.scrape "cadvisor"
 
   prometheus.relabel "cadvisor" {
     max_cache_size = 100000
@@ -213,7 +213,7 @@ declare "cluster_metrics" {
       replacement = ""
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "cadvisor"
   discovery.kubernetes "kube_state_metrics" {
     role = "endpoints"
 
@@ -224,7 +224,7 @@ declare "cluster_metrics" {
     namespaces {
       names = ["default"]
     }
-  }
+  } // discovery.kubernetes "kube_state_metrics"
 
   discovery.relabel "kube_state_metrics" {
     targets = discovery.kubernetes.kube_state_metrics.targets
@@ -235,7 +235,7 @@ declare "cluster_metrics" {
       target_label = "source"
     }
 
-  }
+  } // discovery.relabel "kube_state_metrics"
 
   prometheus.scrape "kube_state_metrics" {
     targets = discovery.relabel.kube_state_metrics.output
@@ -255,7 +255,7 @@ declare "cluster_metrics" {
       enabled = true
     }
     forward_to = [prometheus.relabel.kube_state_metrics.receiver]
-  }
+  } // prometheus.scrape "kube_state_metrics"
 
   prometheus.relabel "kube_state_metrics" {
     max_cache_size = 100000
@@ -265,8 +265,8 @@ declare "cluster_metrics" {
       action = "keep"
     }
     forward_to = argument.metrics_destinations.value
-  }
-}
+  } // prometheus.relabel "kube_state_metrics"
+} // declare "cluster_metrics"
 cluster_metrics "feature" {
   metrics_destinations = [
     prometheus.remote_write.prometheus.receiver,
@@ -312,7 +312,7 @@ declare "alloy_integration" {
         names = coalesce(argument.namespaces.value, [])
       }
 
-    }
+    } // discovery.kubernetes "alloy_pods"
 
     // alloy relabelings (pre-scrape)
     discovery.relabel "alloy_pods" {
@@ -403,7 +403,7 @@ declare "alloy_integration" {
         target_label = "source"
       }
 
-    }
+    } // discovery.relabel "alloy_pods"
 
     export "output" {
       value = discovery.relabel.alloy_pods.output
@@ -482,7 +482,7 @@ declare "alloy_integration" {
       clustering {
         enabled = coalesce(argument.clustering.value, false)
       }
-    }
+    } // prometheus.scrape "alloy"
 
     // alloy metric relabelings (post-scrape)
     prometheus.relabel "alloy" {
@@ -567,7 +567,7 @@ declare "alloy_integration" {
         action = "labeldrop"
         regex = "exported_(namespace|pod|container|job|instance)"
       }
-    }
+    } // prometheus.relabel "alloy"
   }
 
   alloy_integration_discovery "alloy" {
@@ -603,7 +603,7 @@ otelcol.exporter.prometheus "prometheus" {
   add_metric_suffixes = true
   resource_to_telemetry_conversion = false
   forward_to = [prometheus.remote_write.prometheus.receiver]
-}
+} // otelcol.exporter.prometheus "prometheus"
 
 prometheus.remote_write "prometheus" {
   endpoint {
@@ -646,5 +646,5 @@ prometheus.remote_write "prometheus" {
     min_keepalive_time = "5m"
     max_keepalive_time = "8h"
   }
-}
+} // prometheus.remote_write "prometheus"
 

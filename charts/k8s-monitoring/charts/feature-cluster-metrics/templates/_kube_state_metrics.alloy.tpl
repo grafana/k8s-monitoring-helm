@@ -37,7 +37,7 @@ discovery.kubernetes "kube_state_metrics" {
     names = [{{ (index .Values "kube-state-metrics").namespace | quote }}]
   }
 {{- end }}
-}
+} // discovery.kubernetes "kube_state_metrics"
 
 discovery.relabel "kube_state_metrics" {
   targets = discovery.kubernetes.kube_state_metrics.targets
@@ -48,7 +48,7 @@ discovery.relabel "kube_state_metrics" {
     target_label = "source"
   }
   {{- (index .Values "kube-state-metrics").extraDiscoveryRules | nindent 2 }}
-}
+} // discovery.relabel "kube_state_metrics"
 
 prometheus.scrape "kube_state_metrics" {
   targets = discovery.relabel.kube_state_metrics.output
@@ -70,7 +70,7 @@ prometheus.scrape "kube_state_metrics" {
 
 {{- if or $metricAllowList $metricDenyList (index .Values "kube-state-metrics").extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.kube_state_metrics.receiver]
-}
+} // prometheus.scrape "kube_state_metrics"
 
 prometheus.relabel "kube_state_metrics" {
   max_cache_size = {{ (index .Values "kube-state-metrics").maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -95,6 +95,6 @@ prometheus.relabel "kube_state_metrics" {
 {{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "kube_state_metrics"
 {{- end }}
 {{- end }}

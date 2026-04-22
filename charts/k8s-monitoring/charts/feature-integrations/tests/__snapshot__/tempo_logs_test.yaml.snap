@@ -41,7 +41,7 @@ should add the Tempo processing stage to the logs config:
               names = coalesce(argument.namespaces.value, [])
             }
 
-          }
+          } // discovery.kubernetes "tempo_pods"
 
           // tempo relabelings (pre-scrape)
           discovery.relabel "tempo_pods" {
@@ -146,7 +146,7 @@ should add the Tempo processing stage to the logs config:
               target_label = "source"
             }
 
-          }
+          } // discovery.relabel "tempo_pods"
 
           export "output" {
             value = discovery.relabel.tempo_pods.output
@@ -225,7 +225,7 @@ should add the Tempo processing stage to the logs config:
             clustering {
               enabled = coalesce(argument.clustering.value, false)
             }
-          }
+          } // prometheus.scrape "tempo"
 
           // tempo metric relabelings (post-scrape)
           prometheus.relabel "tempo" {
@@ -265,7 +265,7 @@ should add the Tempo processing stage to the logs config:
               target_label = "container"
               replacement = "memcached"
             }
-          }
+          } // prometheus.relabel "tempo"
         }
 
         tempo_integration_discovery "tempo" {

@@ -15,7 +15,7 @@ should add the attach_metadata block to the discovery.kubernetes:
           attach_metadata {
             node = true
           }
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "filtered_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -151,17 +151,17 @@ should add the attach_metadata block to the discovery.kubernetes:
             regex = "^(?:;*)?([^;]+).*$"
             target_label = "nodepool"
           }
-        }
+        } // discovery.relabel "filtered_pods"
 
         local.file_match "pod_logs" {
           path_targets = discovery.relabel.filtered_pods.output
-        }
+        } // local.file_match "pod_logs"
 
         loki.source.file "pod_logs" {
           targets    = local.file_match.pod_logs.targets
           tail_from_end = true
           forward_to = [loki.process.pod_logs.receiver]
-        }
+        } // loki.source.file "pod_logs"
 
         loki.process "pod_logs" {
           stage.match {
@@ -211,8 +211,8 @@ should add the attach_metadata block to the discovery.kubernetes:
           }
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.secretfilter "pod_logs"
+      } // declare "pod_logs_via_loki"
 should add the node architecture label rules to the discovery relabel:
   1: |
     |-
@@ -230,7 +230,7 @@ should add the node architecture label rules to the discovery relabel:
           attach_metadata {
             node = true
           }
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "filtered_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -363,17 +363,17 @@ should add the node architecture label rules to the discovery relabel:
             regex = "^(?:;*)?([^;]+).*$"
             target_label = "architecture"
           }
-        }
+        } // discovery.relabel "filtered_pods"
 
         local.file_match "pod_logs" {
           path_targets = discovery.relabel.filtered_pods.output
-        }
+        } // local.file_match "pod_logs"
 
         loki.source.file "pod_logs" {
           targets    = local.file_match.pod_logs.targets
           tail_from_end = true
           forward_to = [loki.process.pod_logs.receiver]
-        }
+        } // loki.source.file "pod_logs"
 
         loki.process "pod_logs" {
           stage.match {
@@ -424,8 +424,8 @@ should add the node architecture label rules to the discovery relabel:
           }
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.secretfilter "pod_logs"
+      } // declare "pod_logs_via_loki"
 should add the node availability zone label rules to the discovery relabel:
   1: |
     |-
@@ -443,7 +443,7 @@ should add the node availability zone label rules to the discovery relabel:
           attach_metadata {
             node = true
           }
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "filtered_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -577,17 +577,17 @@ should add the node availability zone label rules to the discovery relabel:
             regex = "^(?:;*)?([^;]+).*$"
             target_label = "availability_zone"
           }
-        }
+        } // discovery.relabel "filtered_pods"
 
         local.file_match "pod_logs" {
           path_targets = discovery.relabel.filtered_pods.output
-        }
+        } // local.file_match "pod_logs"
 
         loki.source.file "pod_logs" {
           targets    = local.file_match.pod_logs.targets
           tail_from_end = true
           forward_to = [loki.process.pod_logs.receiver]
-        }
+        } // loki.source.file "pod_logs"
 
         loki.process "pod_logs" {
           stage.match {
@@ -638,8 +638,8 @@ should add the node availability zone label rules to the discovery relabel:
           }
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.secretfilter "pod_logs"
+      } // declare "pod_logs_via_loki"
 should add the node instance type label rules to the discovery relabel:
   1: |
     |-
@@ -657,7 +657,7 @@ should add the node instance type label rules to the discovery relabel:
           attach_metadata {
             node = true
           }
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "filtered_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -790,17 +790,17 @@ should add the node instance type label rules to the discovery relabel:
             regex = "^(?:;*)?([^;]+).*$"
             target_label = "instance_type"
           }
-        }
+        } // discovery.relabel "filtered_pods"
 
         local.file_match "pod_logs" {
           path_targets = discovery.relabel.filtered_pods.output
-        }
+        } // local.file_match "pod_logs"
 
         loki.source.file "pod_logs" {
           targets    = local.file_match.pod_logs.targets
           tail_from_end = true
           forward_to = [loki.process.pod_logs.receiver]
-        }
+        } // loki.source.file "pod_logs"
 
         loki.process "pod_logs" {
           stage.match {
@@ -851,8 +851,8 @@ should add the node instance type label rules to the discovery relabel:
           }
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.secretfilter "pod_logs"
+      } // declare "pod_logs_via_loki"
 should add the node os label rules to the discovery relabel:
   1: |
     |-
@@ -870,7 +870,7 @@ should add the node os label rules to the discovery relabel:
           attach_metadata {
             node = true
           }
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "filtered_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -1004,17 +1004,17 @@ should add the node os label rules to the discovery relabel:
             regex = "^(?:;*)?([^;]+).*$"
             target_label = "os"
           }
-        }
+        } // discovery.relabel "filtered_pods"
 
         local.file_match "pod_logs" {
           path_targets = discovery.relabel.filtered_pods.output
-        }
+        } // local.file_match "pod_logs"
 
         loki.source.file "pod_logs" {
           targets    = local.file_match.pod_logs.targets
           tail_from_end = true
           forward_to = [loki.process.pod_logs.receiver]
-        }
+        } // loki.source.file "pod_logs"
 
         loki.process "pod_logs" {
           stage.match {
@@ -1065,8 +1065,8 @@ should add the node os label rules to the discovery relabel:
           }
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.secretfilter "pod_logs"
+      } // declare "pod_logs_via_loki"
 should add the node pool label rules to the discovery relabel:
   1: |
     |-
@@ -1084,7 +1084,7 @@ should add the node pool label rules to the discovery relabel:
           attach_metadata {
             node = true
           }
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "filtered_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -1220,17 +1220,17 @@ should add the node pool label rules to the discovery relabel:
             regex = "^(?:;*)?([^;]+).*$"
             target_label = "nodepool"
           }
-        }
+        } // discovery.relabel "filtered_pods"
 
         local.file_match "pod_logs" {
           path_targets = discovery.relabel.filtered_pods.output
-        }
+        } // local.file_match "pod_logs"
 
         loki.source.file "pod_logs" {
           targets    = local.file_match.pod_logs.targets
           tail_from_end = true
           forward_to = [loki.process.pod_logs.receiver]
-        }
+        } // loki.source.file "pod_logs"
 
         loki.process "pod_logs" {
           stage.match {
@@ -1281,8 +1281,8 @@ should add the node pool label rules to the discovery relabel:
           }
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.secretfilter "pod_logs"
+      } // declare "pod_logs_via_loki"
 should add the node region label rules to the discovery relabel:
   1: |
     |-
@@ -1300,7 +1300,7 @@ should add the node region label rules to the discovery relabel:
           attach_metadata {
             node = true
           }
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "filtered_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -1433,17 +1433,17 @@ should add the node region label rules to the discovery relabel:
             regex = "^(?:;*)?([^;]+).*$"
             target_label = "region"
           }
-        }
+        } // discovery.relabel "filtered_pods"
 
         local.file_match "pod_logs" {
           path_targets = discovery.relabel.filtered_pods.output
-        }
+        } // local.file_match "pod_logs"
 
         loki.source.file "pod_logs" {
           targets    = local.file_match.pod_logs.targets
           tail_from_end = true
           forward_to = [loki.process.pod_logs.receiver]
-        }
+        } // loki.source.file "pod_logs"
 
         loki.process "pod_logs" {
           stage.match {
@@ -1494,8 +1494,8 @@ should add the node region label rules to the discovery relabel:
           }
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.secretfilter "pod_logs"
+      } // declare "pod_logs_via_loki"
 should add the node role label rules to the discovery relabel:
   1: |
     |-
@@ -1513,7 +1513,7 @@ should add the node role label rules to the discovery relabel:
           attach_metadata {
             node = true
           }
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "filtered_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -1648,17 +1648,17 @@ should add the node role label rules to the discovery relabel:
             regex = "^(?:;*)?([^;]+).*$"
             target_label = "node_role"
           }
-        }
+        } // discovery.relabel "filtered_pods"
 
         local.file_match "pod_logs" {
           path_targets = discovery.relabel.filtered_pods.output
-        }
+        } // local.file_match "pod_logs"
 
         loki.source.file "pod_logs" {
           targets    = local.file_match.pod_logs.targets
           tail_from_end = true
           forward_to = [loki.process.pod_logs.receiver]
-        }
+        } // loki.source.file "pod_logs"
 
         loki.process "pod_logs" {
           stage.match {
@@ -1709,5 +1709,5 @@ should add the node role label rules to the discovery relabel:
           }
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.secretfilter "pod_logs"
+      } // declare "pod_logs_via_loki"

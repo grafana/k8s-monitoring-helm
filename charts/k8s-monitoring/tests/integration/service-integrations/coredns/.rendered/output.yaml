@@ -45,7 +45,7 @@ data:
       }
       discovery.kubernetes "nodes" {
         role = "node"
-      }
+      } // discovery.kubernetes "nodes"
     
       discovery.relabel "nodes" {
         targets = discovery.kubernetes.nodes.targets
@@ -58,12 +58,12 @@ data:
           replacement = "kubernetes"
           target_label = "source"
         }
-      }
+      } // discovery.relabel "nodes"
     
       // Kubelet
       discovery.relabel "kubelet" {
         targets = discovery.relabel.nodes.output
-      }
+      } // discovery.relabel "kubelet"
     
       prometheus.scrape "kubelet" {
         targets  = discovery.relabel.kubelet.output
@@ -87,7 +87,7 @@ data:
         }
     
         forward_to = [prometheus.relabel.kubelet.receiver]
-      }
+      } // prometheus.scrape "kubelet"
     
       prometheus.relabel "kubelet" {
         max_cache_size = 100000
@@ -98,7 +98,7 @@ data:
         }
     
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.relabel "kubelet"
     
       // Kubelet Resources
       discovery.relabel "kubelet_resources" {
@@ -107,7 +107,7 @@ data:
           replacement   = "/metrics/resource"
           target_label  = "__metrics_path__"
         }
-      }
+      } // discovery.relabel "kubelet_resources"
     
       prometheus.scrape "kubelet_resources" {
         targets = discovery.relabel.kubelet_resources.output
@@ -131,7 +131,7 @@ data:
         }
     
         forward_to = [prometheus.relabel.kubelet_resources.receiver]
-      }
+      } // prometheus.scrape "kubelet_resources"
     
       prometheus.relabel "kubelet_resources" {
         max_cache_size = 100000
@@ -142,7 +142,7 @@ data:
         }
     
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.relabel "kubelet_resources"
     
       // cAdvisor
       discovery.relabel "cadvisor" {
@@ -151,7 +151,7 @@ data:
           replacement   = "/metrics/cadvisor"
           target_label  = "__metrics_path__"
         }
-      }
+      } // discovery.relabel "cadvisor"
     
       prometheus.scrape "cadvisor" {
         targets = discovery.relabel.cadvisor.output
@@ -175,7 +175,7 @@ data:
         }
     
         forward_to = [prometheus.relabel.cadvisor.receiver]
-      }
+      } // prometheus.scrape "cadvisor"
     
       prometheus.relabel "cadvisor" {
         max_cache_size = 100000
@@ -253,7 +253,7 @@ data:
           replacement = ""
         }
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.relabel "cadvisor"
     
       // KubeDNS
       discovery.kubernetes "kube_dns" {
@@ -265,7 +265,7 @@ data:
           role = "endpointslice"
           label = "kubernetes.io/service-name=kube-dns"
         }
-      }
+      } // discovery.kubernetes "kube_dns"
     
       discovery.relabel "kube_dns" {
         targets = discovery.kubernetes.kube_dns.targets
@@ -349,7 +349,7 @@ data:
           replacement = "kubernetes"
           target_label = "source"
         }
-      }
+      } // discovery.relabel "kube_dns"
     
       prometheus.scrape "kube_dns" {
         targets = discovery.relabel.kube_dns.output
@@ -364,7 +364,7 @@ data:
           enabled = true
         }
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.relabel "kube_dns"
       discovery.kubernetes "kube_state_metrics" {
         role = "endpoints"
     
@@ -375,7 +375,7 @@ data:
         namespaces {
           names = ["default"]
         }
-      }
+      } // discovery.kubernetes "kube_state_metrics"
     
       discovery.relabel "kube_state_metrics" {
         targets = discovery.kubernetes.kube_state_metrics.targets
@@ -386,7 +386,7 @@ data:
           target_label = "source"
         }
     
-      }
+      } // discovery.relabel "kube_state_metrics"
     
       prometheus.scrape "kube_state_metrics" {
         targets = discovery.relabel.kube_state_metrics.output
@@ -406,7 +406,7 @@ data:
           enabled = true
         }
         forward_to = [prometheus.relabel.kube_state_metrics.receiver]
-      }
+      } // prometheus.scrape "kube_state_metrics"
     
       prometheus.relabel "kube_state_metrics" {
         max_cache_size = 100000
@@ -416,8 +416,8 @@ data:
           action = "keep"
         }
         forward_to = argument.metrics_destinations.value
-      }
-    }
+      } // prometheus.relabel "kube_state_metrics"
+    } // declare "cluster_metrics"
     cluster_metrics "feature" {
       metrics_destinations = [
         prometheus.remote_write.localprometheus.receiver,
@@ -441,7 +441,7 @@ data:
       textfile {
         directory = "/etc/release-info"
       }
-    }
+    } // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
     
     discovery.relabel "kubernetes_monitoring_telemetry" {
       targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -455,7 +455,7 @@ data:
         action = "replace"
         replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
       }
-    }
+    } // discovery.relabel "kubernetes_monitoring_telemetry"
     
     prometheus.scrape "kubernetes_monitoring_telemetry" {
       job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -465,7 +465,7 @@ data:
         enabled = true
       }
       forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-    }
+    } // prometheus.scrape "kubernetes_monitoring_telemetry"
     
     prometheus.relabel "kubernetes_monitoring_telemetry" {
       rule {
@@ -476,7 +476,7 @@ data:
       forward_to = [
         prometheus.remote_write.localprometheus.receiver,
       ]
-    }
+    } // prometheus.relabel "kubernetes_monitoring_telemetry"
     
     
     
@@ -486,7 +486,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.localprometheus.receiver]
-    }
+    } // otelcol.exporter.prometheus "localprometheus"
     
     prometheus.remote_write "localprometheus" {
       endpoint {
@@ -529,7 +529,7 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "localprometheus"
 ---
 # Source: k8s-monitoring/templates/release-info.yaml
 apiVersion: v1

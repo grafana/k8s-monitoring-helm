@@ -13,7 +13,7 @@ discovery.kubernetes "kube_dns" {
     role = "endpointslice"
     label = "kubernetes.io/service-name=kube-dns"
   }
-}
+} // discovery.kubernetes "kube_dns"
 
 discovery.relabel "kube_dns" {
   targets = discovery.kubernetes.kube_dns.targets
@@ -100,7 +100,7 @@ discovery.relabel "kube_dns" {
 {{- if .Values.kubeDNS.extraDiscoveryRules }}
 {{ .Values.kubeDNS.extraDiscoveryRules | indent 2 }}
 {{- end }}
-}
+} // discovery.relabel "kube_dns"
 
 prometheus.scrape "kube_dns" {
   targets = discovery.relabel.kube_dns.output
@@ -116,7 +116,7 @@ prometheus.scrape "kube_dns" {
   }
 {{- if or $metricAllowList $metricDenyList .Values.kubeDNS.extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.kube_dns.receiver]
-}
+} // prometheus.scrape "kube_dns"
 
 prometheus.relabel "kube_dns" {
   max_cache_size = {{ .Values.kubeDNS.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -139,6 +139,6 @@ prometheus.relabel "kube_dns" {
 {{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "kube_dns"
 {{- end }}
 {{- end }}

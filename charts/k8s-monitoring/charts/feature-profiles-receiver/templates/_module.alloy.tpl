@@ -11,12 +11,12 @@ declare "profiles_receiver" {
     }
 {{ if .Values.profileProcessingRules }}
     forward_to = [pyroscope.relabel.default.receiver]
-  }
+  } // pyroscope.receive_http "default"
 
   pyroscope.relabel "default" {
 {{ .Values.profileProcessingRules | indent 4 }}
 {{- end }}
     forward_to = argument.profiles_destinations.value
-  }
-}
+  } // pyroscope.relabel "default"
+} // declare "profiles_receiver"
 {{- end }}

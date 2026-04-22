@@ -14,7 +14,7 @@ declare "prometheus_operator_objects" {
       default_scrape_timeout = "10s"
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "podmonitors"
 
   // Prometheus Operator Probe objects
   prometheus.operator.probes "probes" {
@@ -26,7 +26,7 @@ declare "prometheus_operator_objects" {
       default_scrape_timeout = "10s"
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "probes"
 
   // Prometheus Operator ServiceMonitor objects
   prometheus.operator.servicemonitors "service_monitors" {
@@ -39,8 +39,8 @@ declare "prometheus_operator_objects" {
       default_scrape_timeout = "10s"
     }
     forward_to = argument.metrics_destinations.value
-  }
-}
+  } // prometheus.relabel "servicemonitors"
+} // declare "prometheus_operator_objects"
 prometheus_operator_objects "feature" {
   metrics_destinations = [
     prometheus.remote_write.metrics_service.receiver,
@@ -51,7 +51,7 @@ prometheus_operator_objects "feature" {
 remote.kubernetes.secret "alloy_metrics_remote_cfg" {
   name      = "my-monitoring-secret"
   namespace = "default"
-}
+} // remote.kubernetes.secret "alloy_metrics_remote_cfg"
 
 remotecfg {
   id = string.format("k8smon-%s-%s-%s", "external-secrets-example-cluster", "default", constants.hostname)
@@ -84,7 +84,7 @@ otelcol.exporter.prometheus "metrics_service" {
   add_metric_suffixes = true
   resource_to_telemetry_conversion = false
   forward_to = [prometheus.remote_write.metrics_service.receiver]
-}
+} // otelcol.exporter.prometheus "metrics_service"
 
 prometheus.remote_write "metrics_service" {
   endpoint {
@@ -135,10 +135,10 @@ prometheus.remote_write "metrics_service" {
     min_keepalive_time = "5m"
     max_keepalive_time = "8h"
   }
-}
+} // prometheus.remote_write "metrics_service"
 
 remote.kubernetes.secret "metrics_service" {
   name      = "my-monitoring-secret"
   namespace = "monitoring"
-}
+} // remote.kubernetes.secret "metrics_service"
 

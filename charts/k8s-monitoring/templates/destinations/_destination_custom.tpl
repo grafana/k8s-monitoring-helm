@@ -5,26 +5,26 @@
 {{- if eq .ecosystem "prometheus" }}
 otelcol.exporter.prometheus {{ include "helper.alloy_name" $.destinationName | quote }} {
   forward_to = [{{ .metrics.target }}]
-}
+} // otelcol.exporter.prometheus "{{ include "helper.alloy_name" $.destinationName }}"
 {{- else if eq .ecosystem "otlp" }}
 otelcol.receiver.prometheus {{ include "helper.alloy_name" $.destinationName | quote }} {
   output {
     metrics = [{{ .metrics.target }}]
   }
-}
+} // otelcol.receiver.prometheus "{{ include "helper.alloy_name" $.destinationName }}"
 {{- end }}
 {{- end }}
 {{- if .logs.enabled }}
 {{- if eq .ecosystem "loki" }}
 otelcol.exporter.loki {{ include "helper.alloy_name" $.destinationName | quote }} {
   forward_to = [{{ .logs.target }}]
-}
+} // otelcol.exporter.loki "{{ include "helper.alloy_name" $.destinationName }}"
 {{- else if eq .ecosystem "otlp" }}
 otelcol.receiver.loki {{ include "helper.alloy_name" $.destinationName | quote }} {
   output {
     logs = [{{ .logs.target }}]
   }
-}
+} // otelcol.receiver.loki "{{ include "helper.alloy_name" $.destinationName }}"
 {{- end }}
 {{- end }}
 {{ .config | trim | nindent 0 }}

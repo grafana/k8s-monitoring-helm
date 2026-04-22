@@ -5,5 +5,5 @@
 remote.kubernetes.secret {{ include "helper.alloy_name" $objectName | quote }} {
   name      = {{ include "secrets.kubernetesSecretName" . | quote }}
   namespace = {{ include "secrets.kubernetesSecretNamespace" . | quote }}
-}
+} // remote.kubernetes.secret "{{ include "helper.alloy_name" $objectName }}"
 {{ end }}

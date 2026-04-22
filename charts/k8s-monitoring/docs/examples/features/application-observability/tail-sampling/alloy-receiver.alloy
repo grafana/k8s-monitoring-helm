@@ -27,7 +27,7 @@ declare "application_observability" {
       logs = [otelcol.processor.resourcedetection.default.input]
       traces = [otelcol.processor.resourcedetection.default.input]
     }
-  }
+  } // otelcol.receiver.otlp "receiver"
 
   // Resource Detection Processor
   otelcol.processor.resourcedetection "default" {
@@ -122,7 +122,7 @@ declare "application_observability" {
       traces = argument.traces_destinations.value
     }
   }
-}
+} // declare "application_observability"
 application_observability "feature" {
   metrics_destinations = [
     otelcol.processor.attributes.otlp_gateway.input,
@@ -154,7 +154,7 @@ prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   textfile {
     directory = "/etc/release-info"
   }
-}
+} // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
 
 discovery.relabel "kubernetes_monitoring_telemetry" {
   targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -168,7 +168,7 @@ discovery.relabel "kubernetes_monitoring_telemetry" {
     action = "replace"
     replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
   }
-}
+} // discovery.relabel "kubernetes_monitoring_telemetry"
 
 prometheus.scrape "kubernetes_monitoring_telemetry" {
   job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -178,7 +178,7 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
     enabled = true
   }
   forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-}
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
 
 prometheus.relabel "kubernetes_monitoring_telemetry" {
   rule {
@@ -189,7 +189,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
   forward_to = [
     otelcol.receiver.prometheus.otlp_gateway.receiver,
   ]
-}
+} // prometheus.relabel "kubernetes_monitoring_telemetry"
 
 
 
@@ -199,18 +199,18 @@ otelcol.receiver.prometheus "otlp_gateway" {
   output {
     metrics = [otelcol.processor.attributes.otlp_gateway.input]
   }
-}
+} // otelcol.receiver.prometheus "otlp_gateway"
 otelcol.receiver.loki "otlp_gateway" {
   output {
     logs = [otelcol.processor.attributes.otlp_gateway.input]
   }
-}
+} // otelcol.receiver.loki "otlp_gateway"
 otelcol.processor.attributes "otlp_gateway" {
   output {
     metrics = [otelcol.processor.transform.otlp_gateway.input]
     logs = [otelcol.processor.transform.otlp_gateway.input]
   }
-}
+} // otelcol.processor.attributes "otlp_gateway"
 
 otelcol.processor.transform "otlp_gateway" {
   error_mode = "ignore"
@@ -315,7 +315,7 @@ otelcol.processor.transform "otlp_gateway" {
     metrics = [otelcol.processor.batch.otlp_gateway.input]
     logs = [otelcol.processor.batch.otlp_gateway.input]
   }
-}
+} // otelcol.processor.transform "otlp_gateway"
 
 otelcol.processor.batch "otlp_gateway" {
   timeout = "2s"
@@ -326,7 +326,7 @@ otelcol.processor.batch "otlp_gateway" {
     metrics = [otelcol.exporter.otlp.otlp_gateway.input]
     logs = [otelcol.exporter.otlp.otlp_gateway.input]
   }
-}
+} // otelcol.processor.batch "otlp_gateway"
 otelcol.exporter.otlp "otlp_gateway" {
   client {
     endpoint = "http://otlp-gateway.example.com"
@@ -346,14 +346,14 @@ otelcol.exporter.otlp "otlp_gateway" {
   sending_queue {
     enabled = true
   }
-}
+} // otelcol.exporter.otlp "otlp_gateway"
 
 // Destination: tail-sampler (otlp)
 otelcol.processor.attributes "tail_sampler" {
   output {
     traces = [otelcol.processor.transform.tail_sampler.input]
   }
-}
+} // otelcol.processor.attributes "tail_sampler"
 
 otelcol.processor.transform "tail_sampler" {
   error_mode = "ignore"
@@ -385,7 +385,7 @@ otelcol.processor.transform "tail_sampler" {
   output {
     traces = [otelcol.processor.batch.tail_sampler.input]
   }
-}
+} // otelcol.processor.transform "tail_sampler"
 
 otelcol.processor.batch "tail_sampler" {
   timeout = "2s"
@@ -395,7 +395,7 @@ otelcol.processor.batch "tail_sampler" {
   output {
     traces = [otelcol.exporter.otlp.tail_sampler.input]
   }
-}
+} // otelcol.processor.batch "tail_sampler"
 otelcol.exporter.otlp "tail_sampler" {
   client {
     endpoint = "tail-sampler-deployment.default.svc.cluster.local:4317"
@@ -415,5 +415,5 @@ otelcol.exporter.otlp "tail_sampler" {
   sending_queue {
     enabled = true
   }
-}
+} // otelcol.exporter.otlp "tail_sampler"
 
