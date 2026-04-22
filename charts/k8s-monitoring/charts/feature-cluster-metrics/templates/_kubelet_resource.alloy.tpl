@@ -37,7 +37,7 @@ discovery.relabel "kubelet_resources" {
 {{- if .Values.kubeletResource.extraRelabelingRules }}
 {{ .Values.kubeletResource.extraRelabelingRules | indent 2 }}
 {{- end }}
-}
+} // discovery.relabel "kubelet_resources"
 
 prometheus.scrape "kubelet_resources" {
   targets = discovery.relabel.kubelet_resources.output
@@ -61,7 +61,7 @@ prometheus.scrape "kubelet_resources" {
   }
 
   forward_to = [prometheus.relabel.kubelet_resources.receiver]
-}
+} // prometheus.scrape "kubelet_resources"
 
 prometheus.relabel "kubelet_resources" {
   max_cache_size = {{ .Values.kubeletResource.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -85,6 +85,6 @@ prometheus.relabel "kubelet_resources" {
 {{- end }}
 
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "kubelet_resources"
 {{- end }}
 {{- end }}

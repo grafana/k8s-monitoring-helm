@@ -41,7 +41,7 @@ should add the Mimir processing stage to the logs config:
               names = coalesce(argument.namespaces.value, [])
             }
 
-          }
+          } // discovery.kubernetes "mimir_pods"
 
           // mimir relabelings (pre-scrape)
           discovery.relabel "mimir_pods" {
@@ -144,7 +144,7 @@ should add the Mimir processing stage to the logs config:
               target_label = "source"
             }
 
-          }
+          } // discovery.relabel "mimir_pods"
 
           export "output" {
             value = discovery.relabel.mimir_pods.output
@@ -223,7 +223,7 @@ should add the Mimir processing stage to the logs config:
             clustering {
               enabled = coalesce(argument.clustering.value, false)
             }
-          }
+          } // prometheus.scrape "mimir"
 
           // mimir metric relabelings (post-scrape)
           prometheus.relabel "mimir" {
@@ -263,7 +263,7 @@ should add the Mimir processing stage to the logs config:
               target_label = "container"
               replacement = "memcached"
             }
-          }
+          } // prometheus.relabel "mimir"
         }
 
         mimir_integration_discovery "mimir" {

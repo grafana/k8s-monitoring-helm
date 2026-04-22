@@ -70,5 +70,5 @@ otelcol.receiver.otlp "receiver" {
     traces = {{ .traces }}
 {{- end }}
   }
-}
+} // otelcol.receiver.otlp "receiver"
 {{- end }}

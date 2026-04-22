@@ -41,5 +41,5 @@ loki.source.podlogs "default" {
     enabled = true
   }
   forward_to = [loki.relabel.pod_logs_objects.receiver]
-}
+} // loki.source.podlogs "default"
 {{- end -}}

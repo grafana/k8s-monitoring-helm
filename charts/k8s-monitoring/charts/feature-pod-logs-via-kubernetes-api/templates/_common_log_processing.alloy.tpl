@@ -82,7 +82,7 @@ loki.process "pod_logs" {
 {{ if .Values.secretFilter.enabled }}
 {{- if .Values.secretFilter.inclusionSelector }}
   forward_to = [loki.process.secret_filter_prefilter.receiver]
-}
+} // loki.process "pod_logs"
 
 loki.process "secret_filter_prefilter" {
   stage.static_labels {
@@ -103,7 +103,7 @@ loki.process "secret_filter_prefilter" {
     loki.process.secret_filter_inclusion.receiver,
     loki.process.secret_filter_exclusion.receiver,
   ]
-}
+} // loki.process "secret_filter_prefilter"
 
 loki.process "secret_filter_exclusion" {
   stage.match {
@@ -112,7 +112,7 @@ loki.process "secret_filter_exclusion" {
   }
 
   forward_to = argument.logs_destinations.value
-}
+} // loki.process "secret_filter_exclusion"
 
 loki.process "secret_filter_inclusion" {
   stage.match {
@@ -122,7 +122,7 @@ loki.process "secret_filter_inclusion" {
 
 {{- end }}
   forward_to = [loki.secretfilter.pod_logs.receiver]
-}
+} // loki.process "secret_filter_inclusion"
 
 loki.secretfilter "pod_logs" {
 {{- if .Values.secretFilter.gitleaksConfigPathFrom }}
@@ -144,6 +144,6 @@ loki.secretfilter "pod_logs" {
 {{- end }}
 {{- end }}
   forward_to = argument.logs_destinations.value
-}
+} // loki.secretfilter "pod_logs"
 
 {{- end }}

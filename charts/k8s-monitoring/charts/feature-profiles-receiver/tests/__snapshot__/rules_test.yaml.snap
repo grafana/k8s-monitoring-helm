@@ -13,7 +13,7 @@ should render the correct configuration:
           }
 
           forward_to = [pyroscope.relabel.default.receiver]
-        }
+        } // pyroscope.receive_http "default"
 
         pyroscope.relabel "default" {
           // This creates a consistent hash value (0 or 1) for each unique combination of labels
@@ -35,5 +35,5 @@ should render the correct configuration:
           }
 
           forward_to = argument.profiles_destinations.value
-        }
-      }
+        } // pyroscope.relabel "default"
+      } // declare "profiles_receiver"

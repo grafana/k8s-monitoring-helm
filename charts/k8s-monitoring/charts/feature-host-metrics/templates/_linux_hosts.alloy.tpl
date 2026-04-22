@@ -46,7 +46,7 @@ discovery.kubernetes "node_exporter" {
 {{- end }}
 
 {{- include "feature.hostMetrics.attachNodeMetadata" . | trim | nindent 2 }}
-}
+} // discovery.kubernetes "node_exporter"
 
 discovery.relabel "node_exporter" {
   targets = discovery.kubernetes.node_exporter.targets
@@ -142,7 +142,7 @@ discovery.relabel "node_exporter" {
 {{- if .Values.linuxHosts.extraDiscoveryRules }}
   {{- .Values.linuxHosts.extraDiscoveryRules | nindent 2 }}
 {{- end }}
-}
+} // discovery.relabel "node_exporter"
 
 prometheus.scrape "node_exporter" {
   targets = discovery.relabel.node_exporter.output
@@ -166,7 +166,7 @@ prometheus.scrape "node_exporter" {
 
 {{- if or $metricAllowList $metricDenyList .Values.linuxHosts.metricsTuning.dropMetricsForFilesystem .Values.linuxHosts.extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.node_exporter.receiver]
-}
+} // prometheus.scrape "node_exporter"
 
 prometheus.relabel "node_exporter" {
   max_cache_size = {{ .Values.linuxHosts.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -200,6 +200,6 @@ prometheus.relabel "node_exporter" {
 {{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "node_exporter"
 {{- end }}
 {{- end }}

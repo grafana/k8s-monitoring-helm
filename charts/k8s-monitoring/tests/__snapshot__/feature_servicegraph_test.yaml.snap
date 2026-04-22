@@ -73,7 +73,7 @@ routes metrics to the correct destination with multiple OTLP destinations:
           logs = [otelcol.exporter.otlp.datadoggateway.input]
           traces = [otelcol.exporter.otlp.datadoggateway.input]
         }
-      }
+      } // otelcol.processor.batch "datadoggateway"
       otelcol.exporter.otlp "datadoggateway" {
         client {
           endpoint = "https://datadog.example.com/otlp"
@@ -93,7 +93,7 @@ routes metrics to the correct destination with multiple OTLP destinations:
         sending_queue {
           enabled = true
         }
-      }
+      } // otelcol.exporter.otlp "datadoggateway"
 
       // Destination: otlpGateway (otlp)
       otelcol.processor.batch "otlpgateway" {
@@ -106,7 +106,7 @@ routes metrics to the correct destination with multiple OTLP destinations:
           logs = [otelcol.exporter.otlp.otlpgateway.input]
           traces = [otelcol.exporter.otlp.otlpgateway.input]
         }
-      }
+      } // otelcol.processor.batch "otlpgateway"
       otelcol.exporter.otlp "otlpgateway" {
         client {
           endpoint = "https://otlp.example.com/otlp"
@@ -126,7 +126,7 @@ routes metrics to the correct destination with multiple OTLP destinations:
         sending_queue {
           enabled = true
         }
-      }
+      } // otelcol.exporter.otlp "otlpgateway"
 uses destination secret:
   1: |
     |-
@@ -193,7 +193,7 @@ uses destination secret:
         add_metric_suffixes = true
         resource_to_telemetry_conversion = false
         forward_to = [prometheus.remote_write.prometheus.receiver]
-      }
+      } // otelcol.exporter.prometheus "prometheus"
 
       prometheus.remote_write "prometheus" {
         endpoint {
@@ -247,9 +247,9 @@ uses destination secret:
         external_labels = {
           collector_id = env("POD_NAME"),
         }
-      }
+      } // prometheus.remote_write "prometheus"
 
       remote.kubernetes.secret "prometheus" {
         name      = "my-prom-secret"
         namespace = "default"
-      }
+      } // remote.kubernetes.secret "prometheus"

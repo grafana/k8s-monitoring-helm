@@ -24,7 +24,7 @@ declare "pod_logs_via_opentelemetry" {
     output {
       logs = [otelcol.processor.k8sattributes.pod_logs.input]
     }
-  }
+  } // otelcol.receiver.filelog "pod_logs"
 
   otelcol.processor.k8sattributes "pod_logs" {
     pod_association {
@@ -101,8 +101,8 @@ declare "pod_logs_via_opentelemetry" {
     output {
       logs = argument.logs_destinations.value
     }
-  }
-}
+  } // otelcol.processor.transform "pod_logs"
+} // declare "pod_logs_via_opentelemetry"
 pod_logs_via_opentelemetry "feature" {
   logs_destinations = [
     otelcol.processor.attributes.log_storage.input,
@@ -124,12 +124,12 @@ otelcol.receiver.loki "log_storage" {
   output {
     logs = [otelcol.processor.attributes.log_storage.input]
   }
-}
+} // otelcol.receiver.loki "log_storage"
 otelcol.processor.attributes "log_storage" {
   output {
     logs = [otelcol.processor.transform.log_storage.input]
   }
-}
+} // otelcol.processor.attributes "log_storage"
 
 otelcol.processor.transform "log_storage" {
   error_mode = "ignore"
@@ -194,7 +194,7 @@ otelcol.processor.transform "log_storage" {
   output {
     logs = [otelcol.processor.batch.log_storage.input]
   }
-}
+} // otelcol.processor.transform "log_storage"
 
 otelcol.processor.batch "log_storage" {
   timeout = "2s"
@@ -204,7 +204,7 @@ otelcol.processor.batch "log_storage" {
   output {
     logs = [otelcol.exporter.otlphttp.log_storage.input]
   }
-}
+} // otelcol.processor.batch "log_storage"
 otelcol.exporter.otlphttp "log_storage" {
   client {
     endpoint = "http://loki.loki.svc:3100/otlp"
@@ -228,15 +228,15 @@ otelcol.exporter.otlphttp "log_storage" {
   sending_queue {
     enabled = true
   }
-}
+} // otelcol.exporter.otlphttp "log_storage"
 
 otelcol.auth.basic "log_storage" {
   username = convert.nonsensitive(remote.kubernetes.secret.log_storage.data["username"])
   password = remote.kubernetes.secret.log_storage.data["password"]
-}
+} // otelcol.auth.basic "log_storage"
 
 remote.kubernetes.secret "log_storage" {
   name      = "log-storage-k8smon-k8s-monitoring"
   namespace = "default"
-}
+} // remote.kubernetes.secret "log_storage"
 

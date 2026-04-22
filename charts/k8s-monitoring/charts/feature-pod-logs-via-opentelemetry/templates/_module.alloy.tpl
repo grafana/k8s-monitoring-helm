@@ -36,7 +36,7 @@ declare "pod_logs_via_opentelemetry" {
     output {
       logs = [otelcol.processor.k8sattributes.pod_logs.input]
     }
-  }
+  } // otelcol.receiver.filelog "pod_logs"
 
   otelcol.processor.k8sattributes "pod_logs" {
     pod_association {
@@ -151,6 +151,6 @@ declare "pod_logs_via_opentelemetry" {
     output {
       logs = argument.logs_destinations.value
     }
-  }
-}
+  } // otelcol.processor.transform "pod_logs"
+} // declare "pod_logs_via_opentelemetry"
 {{- end -}}

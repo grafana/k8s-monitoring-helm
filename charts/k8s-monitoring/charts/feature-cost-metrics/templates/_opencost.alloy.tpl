@@ -38,7 +38,7 @@ discovery.kubernetes "opencost" {
     names = [{{ .Release.Namespace | quote }}]
   }
 {{- end }}
-}
+} // discovery.kubernetes "opencost"
 
 discovery.relabel "opencost" {
   targets = discovery.kubernetes.opencost.targets
@@ -50,7 +50,7 @@ discovery.relabel "opencost" {
 {{- if .Values.opencost.extraDiscoveryRules }}
 {{ .Values.opencost.extraDiscoveryRules | indent 2 }}
 {{- end }}
-}
+} // discovery.relabel "opencost"
 
 prometheus.scrape "opencost" {
   targets      = discovery.relabel.opencost.output
@@ -66,7 +66,7 @@ prometheus.scrape "opencost" {
   }
 {{- if or $metricAllowList $metricDenyList .Values.opencost.extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.opencost.receiver]
-}
+} // prometheus.scrape "opencost"
 
 prometheus.relabel "opencost" {
   max_cache_size = {{ .Values.opencost.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -89,5 +89,5 @@ prometheus.relabel "opencost" {
 {{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "opencost"
 {{- end }}
