@@ -4,6 +4,7 @@
 
 *   Add the ability to replace the contents of an Alloy component (@petewall)
 *   Add the ability to set the cluster name using arbitrary sources with `cluster.nameFrom` (@petewall)
+*   Run Alloy collectors as non-root (uid/gid 473) by default; the `privileged` preset still overrides to uid 0 when required (@petewall)
 
 ## Unreleased
 

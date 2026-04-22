@@ -19,6 +19,13 @@ collectors:
   alloy-audit-logs:
     presets: [filesystem-log-reader, daemonset]
     includeDestinations: [loki]
+    # kube-apiserver writes audit logs with mode 0600 (root-only). Override the default non-root security context so
+    # Alloy runs as root and can read them.
+    alloy:
+      securityContext:
+        runAsNonRoot: false
+        runAsUser: 0
+        runAsGroup: 0
     controller:
       nodeSelector:
         node-role.kubernetes.io/control-plane: ""
