@@ -36,7 +36,7 @@ causing each replica to independently scrape all targets and emit duplicate metr
   {{- end }}
   {{- if $istioLabel }}
     {{- $affected := list }}
-    {{- range $collectorName := keys .Values.collectors | sortAlpha }}
+    {{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
       {{- $collectorValues := include "collector.alloy.valuesWithUpstream" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
       {{- if dig "alloy" "clustering" "enabled" false $collectorValues }}
         {{- $portName := dig "alloy" "clustering" "portName" "http" $collectorValues }}

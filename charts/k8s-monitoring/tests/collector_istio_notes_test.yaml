@@ -222,3 +222,37 @@ tests:
     asserts:
       - notMatchRegexRaw:
           pattern: 'Istio Service Mesh'
+
+  - it: does not warn for clustered, but disabled, collectors
+    set:
+      cluster: {name: istio-test}
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prometheus-server.prometheus.svc:9090
+      clusterMetrics: {enabled: true}
+      clusterEvents: {enabled: true}
+      telemetryServices: {kube-state-metrics: {deploy: true}}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, deployment]
+          enabled: false
+        alloy-singleton:
+          presets: [singleton]
+    kubernetesProvider:
+      scheme:
+        "v1/Namespace":
+          gvr:
+            version: "v1"
+            resource: "namespaces"
+          namespaced: false
+      objects:
+        - kind: Namespace
+          apiVersion: v1
+          metadata:
+            name: grafana
+            labels:
+              istio.io/dataplane-mode: ambient
+    asserts:
+      - notMatchRegexRaw:
+          pattern: 'Istio Service Mesh'
