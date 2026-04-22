@@ -9,6 +9,7 @@
 
 ## 3.8.7
 
+*   Warn in NOTES.txt when installing into an Istio-enabled namespace with Alloy clustering using the default "http" port name, which breaks clustering peer discovery and causes duplicate metrics (@petewall)
 *   PostgreSQL: Add `statementsLimit` option to the Database Observability `queryDetails` collector (@petewall)
 *   Fix pre-delete hook failing when the finalizer is not present (@petewall)
 *   Remove extra `/var/configs` volume mount from OpenCost (@petewall)
