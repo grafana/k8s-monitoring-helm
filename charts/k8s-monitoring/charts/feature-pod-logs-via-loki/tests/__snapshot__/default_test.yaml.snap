@@ -21,27 +21,28 @@ should allow setting static labels:
             action = "replace"
             target_label = "namespace"
           }
+          rule {  // Drop anything with a "falsy" annotation value
+            source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
+            regex = "(false|no|skip)"
+            action = "drop"
+          }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
             replacement = "$1"
@@ -56,7 +57,6 @@ should allow setting static labels:
           // - pod.label[app.kubernetes.io/name]
           // - k8s.container.name
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
@@ -74,7 +74,6 @@ should allow setting static labels:
           // - pod.annotation[resource.opentelemetry.io/service.namespace]
           // - pod.namespace
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
               "namespace",
@@ -121,7 +120,6 @@ should allow setting static labels:
           rule {
             source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -132,7 +130,6 @@ should allow setting static labels:
             source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
             separator = "/"
             regex = "(.+/.+)"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -228,27 +225,28 @@ should allow setting structured metadata:
             action = "replace"
             target_label = "namespace"
           }
+          rule {  // Drop anything with a "falsy" annotation value
+            source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
+            regex = "(false|no|skip)"
+            action = "drop"
+          }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
             replacement = "$1"
@@ -263,7 +261,6 @@ should allow setting structured metadata:
           // - pod.label[app.kubernetes.io/name]
           // - k8s.container.name
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
@@ -281,7 +278,6 @@ should allow setting structured metadata:
           // - pod.annotation[resource.opentelemetry.io/service.namespace]
           // - pod.namespace
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
               "namespace",
@@ -328,7 +324,6 @@ should allow setting structured metadata:
           rule {
             source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -339,7 +334,6 @@ should allow setting structured metadata:
             source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
             separator = "/"
             regex = "(.+/.+)"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -434,27 +428,28 @@ should allow using label selectors:
             action = "replace"
             target_label = "namespace"
           }
+          rule {  // Drop anything with a "falsy" annotation value
+            source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
+            regex = "(false|no|skip)"
+            action = "drop"
+          }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
             replacement = "$1"
@@ -469,7 +464,6 @@ should allow using label selectors:
           // - pod.label[app.kubernetes.io/name]
           // - k8s.container.name
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
@@ -487,7 +481,6 @@ should allow using label selectors:
           // - pod.annotation[resource.opentelemetry.io/service.namespace]
           // - pod.namespace
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
               "namespace",
@@ -534,7 +527,6 @@ should allow using label selectors:
           rule {
             source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -545,7 +537,6 @@ should allow using label selectors:
             source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
             separator = "/"
             regex = "(.+/.+)"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -638,27 +629,28 @@ should allow using label selectors with multiple values:
             action = "replace"
             target_label = "namespace"
           }
+          rule {  // Drop anything with a "falsy" annotation value
+            source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
+            regex = "(false|no|skip)"
+            action = "drop"
+          }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
             replacement = "$1"
@@ -673,7 +665,6 @@ should allow using label selectors with multiple values:
           // - pod.label[app.kubernetes.io/name]
           // - k8s.container.name
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
@@ -691,7 +682,6 @@ should allow using label selectors with multiple values:
           // - pod.annotation[resource.opentelemetry.io/service.namespace]
           // - pod.namespace
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
               "namespace",
@@ -738,7 +728,6 @@ should allow using label selectors with multiple values:
           rule {
             source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -749,7 +738,6 @@ should allow using label selectors with multiple values:
             source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
             separator = "/"
             regex = "(.+/.+)"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -838,27 +826,28 @@ should allow using the secret filter:
             action = "replace"
             target_label = "namespace"
           }
+          rule {  // Drop anything with a "falsy" annotation value
+            source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
+            regex = "(false|no|skip)"
+            action = "drop"
+          }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
             replacement = "$1"
@@ -873,7 +862,6 @@ should allow using the secret filter:
           // - pod.label[app.kubernetes.io/name]
           // - k8s.container.name
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
@@ -891,7 +879,6 @@ should allow using the secret filter:
           // - pod.annotation[resource.opentelemetry.io/service.namespace]
           // - pod.namespace
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
               "namespace",
@@ -938,7 +925,6 @@ should allow using the secret filter:
           rule {
             source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -949,7 +935,6 @@ should allow using the secret filter:
             source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
             separator = "/"
             regex = "(.+/.+)"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -1043,27 +1028,28 @@ should allow using the secret filter with a gitleaks config and other settings:
             action = "replace"
             target_label = "namespace"
           }
+          rule {  // Drop anything with a "falsy" annotation value
+            source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
+            regex = "(false|no|skip)"
+            action = "drop"
+          }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
             replacement = "$1"
@@ -1078,7 +1064,6 @@ should allow using the secret filter with a gitleaks config and other settings:
           // - pod.label[app.kubernetes.io/name]
           // - k8s.container.name
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
@@ -1096,7 +1081,6 @@ should allow using the secret filter with a gitleaks config and other settings:
           // - pod.annotation[resource.opentelemetry.io/service.namespace]
           // - pod.namespace
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
               "namespace",
@@ -1143,7 +1127,6 @@ should allow using the secret filter with a gitleaks config and other settings:
           rule {
             source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -1154,7 +1137,6 @@ should allow using the secret filter with a gitleaks config and other settings:
             source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
             separator = "/"
             regex = "(.+/.+)"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -1249,27 +1231,28 @@ should allow using the secret filter with an allowlist:
             action = "replace"
             target_label = "namespace"
           }
+          rule {  // Drop anything with a "falsy" annotation value
+            source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
+            regex = "(false|no|skip)"
+            action = "drop"
+          }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
             replacement = "$1"
@@ -1284,7 +1267,6 @@ should allow using the secret filter with an allowlist:
           // - pod.label[app.kubernetes.io/name]
           // - k8s.container.name
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
@@ -1302,7 +1284,6 @@ should allow using the secret filter with an allowlist:
           // - pod.annotation[resource.opentelemetry.io/service.namespace]
           // - pod.namespace
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
               "namespace",
@@ -1349,7 +1330,6 @@ should allow using the secret filter with an allowlist:
           rule {
             source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -1360,7 +1340,6 @@ should allow using the secret filter with an allowlist:
             source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
             separator = "/"
             regex = "(.+/.+)"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -1458,27 +1437,28 @@ should allow using the secret filter with an inclusion filter, to split which lo
             action = "replace"
             target_label = "namespace"
           }
+          rule {  // Drop anything with a "falsy" annotation value
+            source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
+            regex = "(false|no|skip)"
+            action = "drop"
+          }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
             replacement = "$1"
@@ -1493,7 +1473,6 @@ should allow using the secret filter with an inclusion filter, to split which lo
           // - pod.label[app.kubernetes.io/name]
           // - k8s.container.name
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
@@ -1511,7 +1490,6 @@ should allow using the secret filter with an inclusion filter, to split which lo
           // - pod.annotation[resource.opentelemetry.io/service.namespace]
           // - pod.namespace
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
               "namespace",
@@ -1558,7 +1536,6 @@ should allow using the secret filter with an inclusion filter, to split which lo
           rule {
             source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -1569,7 +1546,6 @@ should allow using the secret filter with an inclusion filter, to split which lo
             source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
             separator = "/"
             regex = "(.+/.+)"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -1701,27 +1677,28 @@ should render the default configuration:
             action = "replace"
             target_label = "namespace"
           }
+          rule {  // Drop anything with a "falsy" annotation value
+            source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
+            regex = "(false|no|skip)"
+            action = "drop"
+          }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
             replacement = "$1"
@@ -1736,7 +1713,6 @@ should render the default configuration:
           // - pod.label[app.kubernetes.io/name]
           // - k8s.container.name
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
@@ -1754,7 +1730,6 @@ should render the default configuration:
           // - pod.annotation[resource.opentelemetry.io/service.namespace]
           // - pod.namespace
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
               "namespace",
@@ -1801,7 +1776,6 @@ should render the default configuration:
           rule {
             source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -1812,7 +1786,6 @@ should render the default configuration:
             source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
             separator = "/"
             regex = "(.+/.+)"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }

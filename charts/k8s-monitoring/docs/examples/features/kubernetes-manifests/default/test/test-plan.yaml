@@ -1,0 +1,66 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: kubernetes-manifests
+
+subject:
+  releaseName: k8smon
+  path: ../../../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - directory: dependencies
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Loki
+              type: loki
+              url: http://loki.loki.svc:3100
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                httpHeaderValue1: "1"
+              isDefault: true
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: kubernetes-manifests-cluster
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+
+          queries:
+            # Manifest change logs are being collected with the correct job label
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/manifests"}[1h])
+              type: logql
+
+            # Logs have an action label set
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/manifests", action=~".+"}[1h])
+              type: logql
+
+            # Created events exist
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/manifests", action="created"}[1h])
+              type: logql
+
+            # Deleted events exist
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/manifests", action="deleted"}[1h])
+              type: logql
+
+            # Logs have a k8s_kind label set
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/manifests", k8s_kind=~".+"}[1h])
+              type: logql
+
+            # Logs have a k8s_namespace_name label set
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/manifests", k8s_namespace_name=~".+"}[1h])
+              type: logql

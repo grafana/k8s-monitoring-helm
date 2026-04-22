@@ -48,6 +48,11 @@ should add the attach_metadata block to the discovery.kubernetes:
               tag_name  = "$1"
               from      = "pod"
             }
+            annotation {
+              tag_name = "logs.grafana.com/pods.enabled"
+              key      = "logs.grafana.com/pods.enabled"
+              from     = "pod"
+            }
             label {
               tag_name = "app_kubernetes_io_name"
               key      = "app.kubernetes.io/name"
@@ -61,9 +66,23 @@ should add the attach_metadata block to the discovery.kubernetes:
           }
 
           output {
+            logs = [otelcol.processor.filter.pod_logs.input]
+          }
+        } // otelcol.processor.k8sattributes "pod_logs"
+
+        otelcol.processor.filter "pod_logs" {
+          error_mode = "ignore"
+          logs {
+            log_record = [
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "false"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "no"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "skip"`,
+            ]
+          }
+          output {
             logs = [otelcol.processor.transform.pod_logs.input]
           }
-        }
+        } // otelcol.processor.filter "pod_logs"
 
         otelcol.processor.transform "pod_logs" {
           error_mode = "ignore"
@@ -71,6 +90,7 @@ should add the attach_metadata block to the discovery.kubernetes:
             context = "resource"
             statements = [
               `delete_key(attributes, "k8s.container.restart_count")`,
+              `delete_key(attributes, "logs.grafana.com/pods.enabled")`,
 
               `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil`,
               `set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil`,
@@ -152,6 +172,11 @@ should add the node architecture label rules to the discovery relabel:
               tag_name  = "$1"
               from      = "pod"
             }
+            annotation {
+              tag_name = "logs.grafana.com/pods.enabled"
+              key      = "logs.grafana.com/pods.enabled"
+              from     = "pod"
+            }
             label {
               tag_name = "app_kubernetes_io_name"
               key      = "app.kubernetes.io/name"
@@ -165,9 +190,23 @@ should add the node architecture label rules to the discovery relabel:
           }
 
           output {
+            logs = [otelcol.processor.filter.pod_logs.input]
+          }
+        } // otelcol.processor.k8sattributes "pod_logs"
+
+        otelcol.processor.filter "pod_logs" {
+          error_mode = "ignore"
+          logs {
+            log_record = [
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "false"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "no"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "skip"`,
+            ]
+          }
+          output {
             logs = [otelcol.processor.transform.pod_logs.input]
           }
-        }
+        } // otelcol.processor.filter "pod_logs"
 
         otelcol.processor.transform "pod_logs" {
           error_mode = "ignore"
@@ -175,6 +214,7 @@ should add the node architecture label rules to the discovery relabel:
             context = "resource"
             statements = [
               `delete_key(attributes, "k8s.container.restart_count")`,
+              `delete_key(attributes, "logs.grafana.com/pods.enabled")`,
 
               `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil`,
               `set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil`,
@@ -256,6 +296,11 @@ should add the node availability zone label rules to the discovery relabel:
               tag_name  = "$1"
               from      = "pod"
             }
+            annotation {
+              tag_name = "logs.grafana.com/pods.enabled"
+              key      = "logs.grafana.com/pods.enabled"
+              from     = "pod"
+            }
             label {
               tag_name = "app_kubernetes_io_name"
               key      = "app.kubernetes.io/name"
@@ -269,9 +314,23 @@ should add the node availability zone label rules to the discovery relabel:
           }
 
           output {
+            logs = [otelcol.processor.filter.pod_logs.input]
+          }
+        } // otelcol.processor.k8sattributes "pod_logs"
+
+        otelcol.processor.filter "pod_logs" {
+          error_mode = "ignore"
+          logs {
+            log_record = [
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "false"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "no"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "skip"`,
+            ]
+          }
+          output {
             logs = [otelcol.processor.transform.pod_logs.input]
           }
-        }
+        } // otelcol.processor.filter "pod_logs"
 
         otelcol.processor.transform "pod_logs" {
           error_mode = "ignore"
@@ -279,6 +338,7 @@ should add the node availability zone label rules to the discovery relabel:
             context = "resource"
             statements = [
               `delete_key(attributes, "k8s.container.restart_count")`,
+              `delete_key(attributes, "logs.grafana.com/pods.enabled")`,
 
               `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil`,
               `set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil`,
@@ -360,6 +420,11 @@ should add the node instance type label rules to the discovery relabel:
               tag_name  = "$1"
               from      = "pod"
             }
+            annotation {
+              tag_name = "logs.grafana.com/pods.enabled"
+              key      = "logs.grafana.com/pods.enabled"
+              from     = "pod"
+            }
             label {
               tag_name = "app_kubernetes_io_name"
               key      = "app.kubernetes.io/name"
@@ -373,9 +438,23 @@ should add the node instance type label rules to the discovery relabel:
           }
 
           output {
+            logs = [otelcol.processor.filter.pod_logs.input]
+          }
+        } // otelcol.processor.k8sattributes "pod_logs"
+
+        otelcol.processor.filter "pod_logs" {
+          error_mode = "ignore"
+          logs {
+            log_record = [
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "false"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "no"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "skip"`,
+            ]
+          }
+          output {
             logs = [otelcol.processor.transform.pod_logs.input]
           }
-        }
+        } // otelcol.processor.filter "pod_logs"
 
         otelcol.processor.transform "pod_logs" {
           error_mode = "ignore"
@@ -383,6 +462,7 @@ should add the node instance type label rules to the discovery relabel:
             context = "resource"
             statements = [
               `delete_key(attributes, "k8s.container.restart_count")`,
+              `delete_key(attributes, "logs.grafana.com/pods.enabled")`,
 
               `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil`,
               `set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil`,
@@ -464,6 +544,11 @@ should add the node os label rules to the discovery relabel:
               tag_name  = "$1"
               from      = "pod"
             }
+            annotation {
+              tag_name = "logs.grafana.com/pods.enabled"
+              key      = "logs.grafana.com/pods.enabled"
+              from     = "pod"
+            }
             label {
               tag_name = "app_kubernetes_io_name"
               key      = "app.kubernetes.io/name"
@@ -477,9 +562,23 @@ should add the node os label rules to the discovery relabel:
           }
 
           output {
+            logs = [otelcol.processor.filter.pod_logs.input]
+          }
+        } // otelcol.processor.k8sattributes "pod_logs"
+
+        otelcol.processor.filter "pod_logs" {
+          error_mode = "ignore"
+          logs {
+            log_record = [
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "false"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "no"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "skip"`,
+            ]
+          }
+          output {
             logs = [otelcol.processor.transform.pod_logs.input]
           }
-        }
+        } // otelcol.processor.filter "pod_logs"
 
         otelcol.processor.transform "pod_logs" {
           error_mode = "ignore"
@@ -487,6 +586,7 @@ should add the node os label rules to the discovery relabel:
             context = "resource"
             statements = [
               `delete_key(attributes, "k8s.container.restart_count")`,
+              `delete_key(attributes, "logs.grafana.com/pods.enabled")`,
 
               `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil`,
               `set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil`,
@@ -568,6 +668,11 @@ should add the node pool label rules to the discovery relabel:
               tag_name  = "$1"
               from      = "pod"
             }
+            annotation {
+              tag_name = "logs.grafana.com/pods.enabled"
+              key      = "logs.grafana.com/pods.enabled"
+              from     = "pod"
+            }
             label {
               tag_name = "app_kubernetes_io_name"
               key      = "app.kubernetes.io/name"
@@ -581,9 +686,23 @@ should add the node pool label rules to the discovery relabel:
           }
 
           output {
+            logs = [otelcol.processor.filter.pod_logs.input]
+          }
+        } // otelcol.processor.k8sattributes "pod_logs"
+
+        otelcol.processor.filter "pod_logs" {
+          error_mode = "ignore"
+          logs {
+            log_record = [
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "false"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "no"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "skip"`,
+            ]
+          }
+          output {
             logs = [otelcol.processor.transform.pod_logs.input]
           }
-        }
+        } // otelcol.processor.filter "pod_logs"
 
         otelcol.processor.transform "pod_logs" {
           error_mode = "ignore"
@@ -591,6 +710,7 @@ should add the node pool label rules to the discovery relabel:
             context = "resource"
             statements = [
               `delete_key(attributes, "k8s.container.restart_count")`,
+              `delete_key(attributes, "logs.grafana.com/pods.enabled")`,
 
               `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil`,
               `set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil`,
@@ -672,6 +792,11 @@ should add the node region label rules to the discovery relabel:
               tag_name  = "$1"
               from      = "pod"
             }
+            annotation {
+              tag_name = "logs.grafana.com/pods.enabled"
+              key      = "logs.grafana.com/pods.enabled"
+              from     = "pod"
+            }
             label {
               tag_name = "app_kubernetes_io_name"
               key      = "app.kubernetes.io/name"
@@ -685,9 +810,23 @@ should add the node region label rules to the discovery relabel:
           }
 
           output {
+            logs = [otelcol.processor.filter.pod_logs.input]
+          }
+        } // otelcol.processor.k8sattributes "pod_logs"
+
+        otelcol.processor.filter "pod_logs" {
+          error_mode = "ignore"
+          logs {
+            log_record = [
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "false"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "no"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "skip"`,
+            ]
+          }
+          output {
             logs = [otelcol.processor.transform.pod_logs.input]
           }
-        }
+        } // otelcol.processor.filter "pod_logs"
 
         otelcol.processor.transform "pod_logs" {
           error_mode = "ignore"
@@ -695,6 +834,7 @@ should add the node region label rules to the discovery relabel:
             context = "resource"
             statements = [
               `delete_key(attributes, "k8s.container.restart_count")`,
+              `delete_key(attributes, "logs.grafana.com/pods.enabled")`,
 
               `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil`,
               `set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil`,
@@ -776,6 +916,11 @@ should add the node role label rules to the discovery relabel:
               tag_name  = "$1"
               from      = "pod"
             }
+            annotation {
+              tag_name = "logs.grafana.com/pods.enabled"
+              key      = "logs.grafana.com/pods.enabled"
+              from     = "pod"
+            }
             label {
               tag_name = "app_kubernetes_io_name"
               key      = "app.kubernetes.io/name"
@@ -789,9 +934,23 @@ should add the node role label rules to the discovery relabel:
           }
 
           output {
+            logs = [otelcol.processor.filter.pod_logs.input]
+          }
+        } // otelcol.processor.k8sattributes "pod_logs"
+
+        otelcol.processor.filter "pod_logs" {
+          error_mode = "ignore"
+          logs {
+            log_record = [
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "false"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "no"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "skip"`,
+            ]
+          }
+          output {
             logs = [otelcol.processor.transform.pod_logs.input]
           }
-        }
+        } // otelcol.processor.filter "pod_logs"
 
         otelcol.processor.transform "pod_logs" {
           error_mode = "ignore"
@@ -799,6 +958,7 @@ should add the node role label rules to the discovery relabel:
             context = "resource"
             statements = [
               `delete_key(attributes, "k8s.container.restart_count")`,
+              `delete_key(attributes, "logs.grafana.com/pods.enabled")`,
 
               `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil`,
               `set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil`,

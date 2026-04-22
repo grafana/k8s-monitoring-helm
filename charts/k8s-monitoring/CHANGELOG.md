@@ -15,6 +15,7 @@
 *   Database Observability: emit `disable_collectors` for any MySQL or PostgreSQL collector explicitly turned off via `databaseObservability.collectors.<name>.enabled: false` (@cristiangreco)
 *   Database Observability: realign some default `databaseObservability.collectors` values with Alloy upstream defaults (@cristiangreco)
 *   Database Observability: remove the unused `databaseObservability.collectors.explainPlans.excludeSchemas` value from the PostgreSQL settings (@cristiangreco)
+*   Add the ability to capture Kubernetes Manifests as log data (@petewall)
 
 ## 4.0.4
 

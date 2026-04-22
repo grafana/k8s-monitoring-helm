@@ -1,0 +1,57 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: manifest-sources
+---
+# A Deployment that k8s-manifest-tail will watch and log manifest changes for
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-app
+  namespace: manifest-sources
+  labels:
+    app: example-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: example-app
+  template:
+    metadata:
+      labels:
+        app: example-app
+    spec:
+      containers:
+        - name: busybox
+          image: busybox
+          args:
+            - /bin/sh
+            - -c
+            - "while true; do echo 'running'; sleep 60; done"
+---
+# A StatefulSet that k8s-manifest-tail will watch and log manifest changes for
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: example-statefulset
+  namespace: manifest-sources
+  labels:
+    app: example-statefulset
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: example-statefulset
+  template:
+    metadata:
+      labels:
+        app: example-statefulset
+    spec:
+      containers:
+        - name: busybox
+          image: busybox
+          args:
+            - /bin/sh
+            - -c
+            - "while true; do echo 'running'; sleep 60; done"
