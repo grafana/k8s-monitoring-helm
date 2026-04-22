@@ -23,7 +23,7 @@ discovery.kubernetes "pprof_pods" {
     names = {{ .Values.pprof.namespaces | toJson }}
   }
 {{- end }}
-}
+} // discovery.kubernetes "pprof_pods"
 
 discovery.relabel "pprof_pods" {
   targets = discovery.kubernetes.pprof_pods.targets
@@ -123,7 +123,7 @@ discovery.relabel "pprof_pods" {
 {{- if .Values.pprof.extraDiscoveryRules }}
 {{ .Values.pprof.extraDiscoveryRules | indent 2 }}
 {{- end }}
-}
+} // discovery.relabel "pprof_pods"
 
 {{- $allProfileTypes := keys .Values.pprof.types | sortAlpha }}
 {{ range $currentType := $allProfileTypes }}
@@ -211,7 +211,7 @@ discovery.relabel "pprof_pods_{{ $currentType }}" {
     regex         = "(.+)"
     target_label  = "__profile_path__"
   }
-}
+} // discovery.relabel "pprof_pods_{{ $currentType }}"
 
 pyroscope.scrape "pyroscope_scrape_{{ $currentType }}" {
   targets = discovery.relabel.pprof_pods_{{ $currentType }}.output
@@ -230,7 +230,7 @@ pyroscope.scrape "pyroscope_scrape_{{ $currentType }}" {
   scrape_timeout = {{ $.Values.pprof.scrapeTimeout | quote }}
 
   forward_to = argument.profiles_destinations.value
-}
+} // pyroscope.scrape "pyroscope_scrape_{{ $currentType }}"
 {{- end }}
 {{- end }}
 {{- end }}

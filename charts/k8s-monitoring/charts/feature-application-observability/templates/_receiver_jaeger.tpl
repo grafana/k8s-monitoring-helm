@@ -32,5 +32,5 @@ otelcol.receiver.jaeger "receiver" {
     traces = {{ .traces }}
 {{- end }}
   }
-}
+} // otelcol.receiver.jaeger "receiver"
 {{- end }}

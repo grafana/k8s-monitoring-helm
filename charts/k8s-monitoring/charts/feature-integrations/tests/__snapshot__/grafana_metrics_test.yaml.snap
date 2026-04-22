@@ -41,7 +41,7 @@ should create the grafana metrics config:
               names = coalesce(argument.namespaces.value, [])
             }
 
-          }
+          } // discovery.kubernetes "grafana_pods"
 
           // grafana relabelings (pre-scrape)
           discovery.relabel "grafana_pods" {
@@ -139,7 +139,7 @@ should create the grafana metrics config:
               target_label = "source"
             }
 
-          }
+          } // discovery.relabel "grafana_pods"
 
           export "output" {
             value = discovery.relabel.grafana_pods.output
@@ -218,7 +218,7 @@ should create the grafana metrics config:
             clustering {
               enabled = coalesce(argument.clustering.value, false)
             }
-          }
+          } // prometheus.scrape "grafana"
 
           // grafana metric relabelings (post-scrape)
           prometheus.relabel "grafana" {
@@ -249,7 +249,7 @@ should create the grafana metrics config:
               action = "labeldrop"
               regex = "node"
             }
-          }
+          } // prometheus.relabel "grafana"
         }
 
         grafana_integration_discovery "grafana" {

@@ -55,7 +55,7 @@ declare "node_logs" {
   {{- end }}
 
     forward_to = [] // No forward_to is used in this component, the defined rules are used in the loki.source.journal component
-  }
+  } // loki.relabel "journal"
 
   loki.source.journal "worker" {
     path = {{ .Values.journal.path | quote }}
@@ -67,7 +67,7 @@ declare "node_logs" {
       instance = sys.env("HOSTNAME"),
     }
     forward_to = [loki.process.journal_logs.receiver]
-  }
+  } // loki.source.journal "worker"
 
   loki.process "journal_logs" {
     stage.static_labels {
@@ -174,6 +174,6 @@ declare "node_logs" {
     {{ end }}
 
     forward_to = argument.logs_destinations.value
-  }
-}
+  } // loki.process "journal_logs"
+} // declare "node_logs"
 {{- end -}}

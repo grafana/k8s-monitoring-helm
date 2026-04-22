@@ -41,7 +41,7 @@ should create the loki metrics config:
               names = coalesce(argument.namespaces.value, [])
             }
 
-          }
+          } // discovery.kubernetes "loki_pods"
 
           // loki relabelings (pre-scrape)
           discovery.relabel "loki_pods" {
@@ -146,7 +146,7 @@ should create the loki metrics config:
               target_label = "source"
             }
 
-          }
+          } // discovery.relabel "loki_pods"
 
           export "output" {
             value = discovery.relabel.loki_pods.output
@@ -225,7 +225,7 @@ should create the loki metrics config:
             clustering {
               enabled = coalesce(argument.clustering.value, false)
             }
-          }
+          } // prometheus.scrape "loki"
 
           // loki metric relabelings (post-scrape)
           prometheus.relabel "loki" {
@@ -265,7 +265,7 @@ should create the loki metrics config:
               target_label = "container"
               replacement = "memcached"
             }
-          }
+          } // prometheus.relabel "loki"
         }
 
         loki_integration_discovery "loki" {

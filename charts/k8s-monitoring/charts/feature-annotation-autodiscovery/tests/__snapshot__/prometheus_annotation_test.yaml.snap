@@ -8,7 +8,7 @@ creates a module with default discovery, scraping, and processing configurations
 
         discovery.kubernetes "pods" {
           role = "pod"
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "annotation_autodiscovery_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -162,11 +162,11 @@ creates a module with default discovery, scraping, and processing configurations
             replacement = "10s"
             target_label = "__scrape_timeout__"
           }
-        }
+        } // discovery.relabel "annotation_autodiscovery_pods"
 
         discovery.kubernetes "services" {
           role = "service"
-        }
+        } // discovery.kubernetes "services"
 
         discovery.relabel "annotation_autodiscovery_services" {
           targets = discovery.kubernetes.services.targets
@@ -283,7 +283,7 @@ creates a module with default discovery, scraping, and processing configurations
             replacement = "10s"
             target_label = "__scrape_timeout__"
           }
-        }
+        } // discovery.relabel "annotation_autodiscovery_services"
 
         discovery.relabel "annotation_autodiscovery_http" {
           targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
@@ -292,7 +292,7 @@ creates a module with default discovery, scraping, and processing configurations
             regex = "https"
             action = "drop"
           }
-        }
+        } // discovery.relabel "annotation_autodiscovery_http"
 
         discovery.relabel "annotation_autodiscovery_https" {
           targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
@@ -301,7 +301,7 @@ creates a module with default discovery, scraping, and processing configurations
             regex = "https"
             action = "keep"
           }
-        }
+        } // discovery.relabel "annotation_autodiscovery_https"
 
         prometheus.scrape "annotation_autodiscovery_http" {
           targets = discovery.relabel.annotation_autodiscovery_http.output
@@ -315,7 +315,7 @@ creates a module with default discovery, scraping, and processing configurations
           }
 
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.scrape "annotation_autodiscovery_http"
 
         prometheus.scrape "annotation_autodiscovery_https" {
           targets = discovery.relabel.annotation_autodiscovery_https.output
@@ -332,5 +332,5 @@ creates a module with default discovery, scraping, and processing configurations
           }
 
           forward_to = argument.metrics_destinations.value
-        }
-      }
+        } // prometheus.relabel "annotation_autodiscovery"
+      } // declare "annotation_autodiscovery"

@@ -8,7 +8,7 @@ can exclude a specified list of namespaces:
 
         discovery.kubernetes "pods" {
           role = "pod"
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "annotation_autodiscovery_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -167,11 +167,11 @@ can exclude a specified list of namespaces:
             replacement = "10s"
             target_label = "__scrape_timeout__"
           }
-        }
+        } // discovery.relabel "annotation_autodiscovery_pods"
 
         discovery.kubernetes "services" {
           role = "service"
-        }
+        } // discovery.kubernetes "services"
 
         discovery.relabel "annotation_autodiscovery_services" {
           targets = discovery.kubernetes.services.targets
@@ -293,7 +293,7 @@ can exclude a specified list of namespaces:
             replacement = "10s"
             target_label = "__scrape_timeout__"
           }
-        }
+        } // discovery.relabel "annotation_autodiscovery_services"
 
         discovery.relabel "annotation_autodiscovery_http" {
           targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
@@ -302,7 +302,7 @@ can exclude a specified list of namespaces:
             regex = "https"
             action = "drop"
           }
-        }
+        } // discovery.relabel "annotation_autodiscovery_http"
 
         discovery.relabel "annotation_autodiscovery_https" {
           targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
@@ -311,7 +311,7 @@ can exclude a specified list of namespaces:
             regex = "https"
             action = "keep"
           }
-        }
+        } // discovery.relabel "annotation_autodiscovery_https"
 
         prometheus.scrape "annotation_autodiscovery_http" {
           targets = discovery.relabel.annotation_autodiscovery_http.output
@@ -325,7 +325,7 @@ can exclude a specified list of namespaces:
           }
 
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.scrape "annotation_autodiscovery_http"
 
         prometheus.scrape "annotation_autodiscovery_https" {
           targets = discovery.relabel.annotation_autodiscovery_https.output
@@ -342,8 +342,8 @@ can exclude a specified list of namespaces:
           }
 
           forward_to = argument.metrics_destinations.value
-        }
-      }
+        } // prometheus.relabel "annotation_autodiscovery"
+      } // declare "annotation_autodiscovery"
 can use a specified list of namespaces:
   1: |
     |-
@@ -357,7 +357,7 @@ can use a specified list of namespaces:
           namespaces {
             names = ["a","b"]
           }
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "annotation_autodiscovery_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -511,14 +511,14 @@ can use a specified list of namespaces:
             replacement = "10s"
             target_label = "__scrape_timeout__"
           }
-        }
+        } // discovery.relabel "annotation_autodiscovery_pods"
 
         discovery.kubernetes "services" {
           role = "service"
           namespaces {
             names = ["a","b"]
           }
-        }
+        } // discovery.kubernetes "services"
 
         discovery.relabel "annotation_autodiscovery_services" {
           targets = discovery.kubernetes.services.targets
@@ -635,7 +635,7 @@ can use a specified list of namespaces:
             replacement = "10s"
             target_label = "__scrape_timeout__"
           }
-        }
+        } // discovery.relabel "annotation_autodiscovery_services"
 
         discovery.relabel "annotation_autodiscovery_http" {
           targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
@@ -644,7 +644,7 @@ can use a specified list of namespaces:
             regex = "https"
             action = "drop"
           }
-        }
+        } // discovery.relabel "annotation_autodiscovery_http"
 
         discovery.relabel "annotation_autodiscovery_https" {
           targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
@@ -653,7 +653,7 @@ can use a specified list of namespaces:
             regex = "https"
             action = "keep"
           }
-        }
+        } // discovery.relabel "annotation_autodiscovery_https"
 
         prometheus.scrape "annotation_autodiscovery_http" {
           targets = discovery.relabel.annotation_autodiscovery_http.output
@@ -667,7 +667,7 @@ can use a specified list of namespaces:
           }
 
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.scrape "annotation_autodiscovery_http"
 
         prometheus.scrape "annotation_autodiscovery_https" {
           targets = discovery.relabel.annotation_autodiscovery_https.output
@@ -684,5 +684,5 @@ can use a specified list of namespaces:
           }
 
           forward_to = argument.metrics_destinations.value
-        }
-      }
+        } // prometheus.relabel "annotation_autodiscovery"
+      } // declare "annotation_autodiscovery"

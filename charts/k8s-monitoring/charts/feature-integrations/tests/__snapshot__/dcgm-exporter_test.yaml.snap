@@ -41,7 +41,7 @@ should create the DCGM Exporter config:
               names = coalesce(argument.namespaces.value, [])
             }
 
-          }
+          } // discovery.kubernetes "dcgm_exporter_pods"
 
           // DCGM Exporter relabelings (pre-scrape)
           discovery.relabel "dcgm_exporter_pods" {
@@ -59,7 +59,7 @@ should create the DCGM Exporter config:
               regex = coalesce(argument.port_name.value, "metrics") + "@Running@true@false"
               action = "keep"
             }
-          }
+          } // discovery.relabel "dcgm_exporter_pods"
 
           export "output" {
             value = discovery.relabel.dcgm_exporter_pods.output
@@ -139,7 +139,7 @@ should create the DCGM Exporter config:
             }
 
             forward_to = [prometheus.relabel.dcgm_exporter.receiver]
-          }
+          } // prometheus.scrape "dcgm_exporter"
 
           // DCGM Exporter metric relabelings (post-scrape)
           prometheus.relabel "dcgm_exporter" {
@@ -224,7 +224,7 @@ should create the DCGM Exporter config:
               action = "labeldrop"
               regex = "exported_(namespace|pod|container|job|instance)"
             }
-          }
+          } // prometheus.relabel "dcgm_exporter"
         }
 
         dcgm_exporter_integration_discovery "dcgm_exporter" {

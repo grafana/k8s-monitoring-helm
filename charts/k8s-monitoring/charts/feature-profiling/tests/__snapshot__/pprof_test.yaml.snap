@@ -12,7 +12,7 @@ allows you to remove the bearer token:
             role = "pod"
             field = "spec.nodeName=" + sys.env("HOSTNAME")
           }
-        }
+        } // discovery.kubernetes "pprof_pods"
 
         discovery.relabel "pprof_pods" {
           targets = discovery.kubernetes.pprof_pods.targets
@@ -91,7 +91,7 @@ allows you to remove the bearer token:
             replacement = "alloy/pyroscope.pprof"
             target_label = "source"
           }
-        }
+        } // discovery.relabel "pprof_pods"
 
         discovery.relabel "pprof_pods_block" {
           targets = discovery.relabel.pprof_pods.output
@@ -170,7 +170,7 @@ allows you to remove the bearer token:
             regex         = "(.+)"
             target_label  = "__profile_path__"
           }
-        }
+        } // discovery.relabel "pprof_pods_block"
 
         pyroscope.scrape "pyroscope_scrape_block" {
           targets = discovery.relabel.pprof_pods_block.output
@@ -209,7 +209,7 @@ allows you to remove the bearer token:
           scrape_timeout = "18s"
 
           forward_to = argument.profiles_destinations.value
-        }
+        } // pyroscope.scrape "pyroscope_scrape_block"
         discovery.relabel "pprof_pods_cpu" {
           targets = discovery.relabel.pprof_pods.output
 
@@ -287,7 +287,7 @@ allows you to remove the bearer token:
             regex         = "(.+)"
             target_label  = "__profile_path__"
           }
-        }
+        } // discovery.relabel "pprof_pods_cpu"
 
         pyroscope.scrape "pyroscope_scrape_cpu" {
           targets = discovery.relabel.pprof_pods_cpu.output
@@ -326,7 +326,7 @@ allows you to remove the bearer token:
           scrape_timeout = "18s"
 
           forward_to = argument.profiles_destinations.value
-        }
+        } // pyroscope.scrape "pyroscope_scrape_cpu"
         discovery.relabel "pprof_pods_fgprof" {
           targets = discovery.relabel.pprof_pods.output
 
@@ -404,7 +404,7 @@ allows you to remove the bearer token:
             regex         = "(.+)"
             target_label  = "__profile_path__"
           }
-        }
+        } // discovery.relabel "pprof_pods_fgprof"
 
         pyroscope.scrape "pyroscope_scrape_fgprof" {
           targets = discovery.relabel.pprof_pods_fgprof.output
@@ -443,7 +443,7 @@ allows you to remove the bearer token:
           scrape_timeout = "18s"
 
           forward_to = argument.profiles_destinations.value
-        }
+        } // pyroscope.scrape "pyroscope_scrape_fgprof"
         discovery.relabel "pprof_pods_goroutine" {
           targets = discovery.relabel.pprof_pods.output
 
@@ -521,7 +521,7 @@ allows you to remove the bearer token:
             regex         = "(.+)"
             target_label  = "__profile_path__"
           }
-        }
+        } // discovery.relabel "pprof_pods_goroutine"
 
         pyroscope.scrape "pyroscope_scrape_goroutine" {
           targets = discovery.relabel.pprof_pods_goroutine.output
@@ -560,7 +560,7 @@ allows you to remove the bearer token:
           scrape_timeout = "18s"
 
           forward_to = argument.profiles_destinations.value
-        }
+        } // pyroscope.scrape "pyroscope_scrape_goroutine"
         discovery.relabel "pprof_pods_memory" {
           targets = discovery.relabel.pprof_pods.output
 
@@ -638,7 +638,7 @@ allows you to remove the bearer token:
             regex         = "(.+)"
             target_label  = "__profile_path__"
           }
-        }
+        } // discovery.relabel "pprof_pods_memory"
 
         pyroscope.scrape "pyroscope_scrape_memory" {
           targets = discovery.relabel.pprof_pods_memory.output
@@ -677,7 +677,7 @@ allows you to remove the bearer token:
           scrape_timeout = "18s"
 
           forward_to = argument.profiles_destinations.value
-        }
+        } // pyroscope.scrape "pyroscope_scrape_memory"
         discovery.relabel "pprof_pods_mutex" {
           targets = discovery.relabel.pprof_pods.output
 
@@ -755,7 +755,7 @@ allows you to remove the bearer token:
             regex         = "(.+)"
             target_label  = "__profile_path__"
           }
-        }
+        } // discovery.relabel "pprof_pods_mutex"
 
         pyroscope.scrape "pyroscope_scrape_mutex" {
           targets = discovery.relabel.pprof_pods_mutex.output
@@ -794,8 +794,8 @@ allows you to remove the bearer token:
           scrape_timeout = "18s"
 
           forward_to = argument.profiles_destinations.value
-        }
-      }
+        } // pyroscope.scrape "pyroscope_scrape_mutex"
+      } // declare "profiling"
 should be able to filter by label and annotation:
   1: |
     |-
@@ -811,7 +811,7 @@ should be able to filter by label and annotation:
             label = "app.kubernetes.io/name=secret-program,colors in (blue,green)"
             field = "spec.nodeName=" + sys.env("HOSTNAME")
           }
-        }
+        } // discovery.kubernetes "pprof_pods"
 
         discovery.relabel "pprof_pods" {
           targets = discovery.kubernetes.pprof_pods.targets
@@ -895,7 +895,7 @@ should be able to filter by label and annotation:
             replacement = "alloy/pyroscope.pprof"
             target_label = "source"
           }
-        }
+        } // discovery.relabel "pprof_pods"
 
         discovery.relabel "pprof_pods_block" {
           targets = discovery.relabel.pprof_pods.output
@@ -974,7 +974,7 @@ should be able to filter by label and annotation:
             regex         = "(.+)"
             target_label  = "__profile_path__"
           }
-        }
+        } // discovery.relabel "pprof_pods_block"
 
         pyroscope.scrape "pyroscope_scrape_block" {
           targets = discovery.relabel.pprof_pods_block.output
@@ -1014,7 +1014,7 @@ should be able to filter by label and annotation:
           scrape_timeout = "18s"
 
           forward_to = argument.profiles_destinations.value
-        }
+        } // pyroscope.scrape "pyroscope_scrape_block"
         discovery.relabel "pprof_pods_cpu" {
           targets = discovery.relabel.pprof_pods.output
 
@@ -1092,7 +1092,7 @@ should be able to filter by label and annotation:
             regex         = "(.+)"
             target_label  = "__profile_path__"
           }
-        }
+        } // discovery.relabel "pprof_pods_cpu"
 
         pyroscope.scrape "pyroscope_scrape_cpu" {
           targets = discovery.relabel.pprof_pods_cpu.output
@@ -1132,7 +1132,7 @@ should be able to filter by label and annotation:
           scrape_timeout = "18s"
 
           forward_to = argument.profiles_destinations.value
-        }
+        } // pyroscope.scrape "pyroscope_scrape_cpu"
         discovery.relabel "pprof_pods_fgprof" {
           targets = discovery.relabel.pprof_pods.output
 
@@ -1210,7 +1210,7 @@ should be able to filter by label and annotation:
             regex         = "(.+)"
             target_label  = "__profile_path__"
           }
-        }
+        } // discovery.relabel "pprof_pods_fgprof"
 
         pyroscope.scrape "pyroscope_scrape_fgprof" {
           targets = discovery.relabel.pprof_pods_fgprof.output
@@ -1250,7 +1250,7 @@ should be able to filter by label and annotation:
           scrape_timeout = "18s"
 
           forward_to = argument.profiles_destinations.value
-        }
+        } // pyroscope.scrape "pyroscope_scrape_fgprof"
         discovery.relabel "pprof_pods_goroutine" {
           targets = discovery.relabel.pprof_pods.output
 
@@ -1328,7 +1328,7 @@ should be able to filter by label and annotation:
             regex         = "(.+)"
             target_label  = "__profile_path__"
           }
-        }
+        } // discovery.relabel "pprof_pods_goroutine"
 
         pyroscope.scrape "pyroscope_scrape_goroutine" {
           targets = discovery.relabel.pprof_pods_goroutine.output
@@ -1368,7 +1368,7 @@ should be able to filter by label and annotation:
           scrape_timeout = "18s"
 
           forward_to = argument.profiles_destinations.value
-        }
+        } // pyroscope.scrape "pyroscope_scrape_goroutine"
         discovery.relabel "pprof_pods_memory" {
           targets = discovery.relabel.pprof_pods.output
 
@@ -1446,7 +1446,7 @@ should be able to filter by label and annotation:
             regex         = "(.+)"
             target_label  = "__profile_path__"
           }
-        }
+        } // discovery.relabel "pprof_pods_memory"
 
         pyroscope.scrape "pyroscope_scrape_memory" {
           targets = discovery.relabel.pprof_pods_memory.output
@@ -1486,7 +1486,7 @@ should be able to filter by label and annotation:
           scrape_timeout = "18s"
 
           forward_to = argument.profiles_destinations.value
-        }
+        } // pyroscope.scrape "pyroscope_scrape_memory"
         discovery.relabel "pprof_pods_mutex" {
           targets = discovery.relabel.pprof_pods.output
 
@@ -1564,7 +1564,7 @@ should be able to filter by label and annotation:
             regex         = "(.+)"
             target_label  = "__profile_path__"
           }
-        }
+        } // discovery.relabel "pprof_pods_mutex"
 
         pyroscope.scrape "pyroscope_scrape_mutex" {
           targets = discovery.relabel.pprof_pods_mutex.output
@@ -1604,8 +1604,8 @@ should be able to filter by label and annotation:
           scrape_timeout = "18s"
 
           forward_to = argument.profiles_destinations.value
-        }
-      }
+        } // pyroscope.scrape "pyroscope_scrape_mutex"
+      } // declare "profiling"
 should build the pprof profiling configuration:
   1: |
     |-
@@ -1620,7 +1620,7 @@ should build the pprof profiling configuration:
             role = "pod"
             field = "spec.nodeName=" + sys.env("HOSTNAME")
           }
-        }
+        } // discovery.kubernetes "pprof_pods"
 
         discovery.relabel "pprof_pods" {
           targets = discovery.kubernetes.pprof_pods.targets
@@ -1699,7 +1699,7 @@ should build the pprof profiling configuration:
             replacement = "alloy/pyroscope.pprof"
             target_label = "source"
           }
-        }
+        } // discovery.relabel "pprof_pods"
 
         discovery.relabel "pprof_pods_block" {
           targets = discovery.relabel.pprof_pods.output
@@ -1778,7 +1778,7 @@ should build the pprof profiling configuration:
             regex         = "(.+)"
             target_label  = "__profile_path__"
           }
-        }
+        } // discovery.relabel "pprof_pods_block"
 
         pyroscope.scrape "pyroscope_scrape_block" {
           targets = discovery.relabel.pprof_pods_block.output
@@ -1818,7 +1818,7 @@ should build the pprof profiling configuration:
           scrape_timeout = "18s"
 
           forward_to = argument.profiles_destinations.value
-        }
+        } // pyroscope.scrape "pyroscope_scrape_block"
         discovery.relabel "pprof_pods_cpu" {
           targets = discovery.relabel.pprof_pods.output
 
@@ -1896,7 +1896,7 @@ should build the pprof profiling configuration:
             regex         = "(.+)"
             target_label  = "__profile_path__"
           }
-        }
+        } // discovery.relabel "pprof_pods_cpu"
 
         pyroscope.scrape "pyroscope_scrape_cpu" {
           targets = discovery.relabel.pprof_pods_cpu.output
@@ -1936,7 +1936,7 @@ should build the pprof profiling configuration:
           scrape_timeout = "18s"
 
           forward_to = argument.profiles_destinations.value
-        }
+        } // pyroscope.scrape "pyroscope_scrape_cpu"
         discovery.relabel "pprof_pods_fgprof" {
           targets = discovery.relabel.pprof_pods.output
 
@@ -2014,7 +2014,7 @@ should build the pprof profiling configuration:
             regex         = "(.+)"
             target_label  = "__profile_path__"
           }
-        }
+        } // discovery.relabel "pprof_pods_fgprof"
 
         pyroscope.scrape "pyroscope_scrape_fgprof" {
           targets = discovery.relabel.pprof_pods_fgprof.output
@@ -2054,7 +2054,7 @@ should build the pprof profiling configuration:
           scrape_timeout = "18s"
 
           forward_to = argument.profiles_destinations.value
-        }
+        } // pyroscope.scrape "pyroscope_scrape_fgprof"
         discovery.relabel "pprof_pods_goroutine" {
           targets = discovery.relabel.pprof_pods.output
 
@@ -2132,7 +2132,7 @@ should build the pprof profiling configuration:
             regex         = "(.+)"
             target_label  = "__profile_path__"
           }
-        }
+        } // discovery.relabel "pprof_pods_goroutine"
 
         pyroscope.scrape "pyroscope_scrape_goroutine" {
           targets = discovery.relabel.pprof_pods_goroutine.output
@@ -2172,7 +2172,7 @@ should build the pprof profiling configuration:
           scrape_timeout = "18s"
 
           forward_to = argument.profiles_destinations.value
-        }
+        } // pyroscope.scrape "pyroscope_scrape_goroutine"
         discovery.relabel "pprof_pods_memory" {
           targets = discovery.relabel.pprof_pods.output
 
@@ -2250,7 +2250,7 @@ should build the pprof profiling configuration:
             regex         = "(.+)"
             target_label  = "__profile_path__"
           }
-        }
+        } // discovery.relabel "pprof_pods_memory"
 
         pyroscope.scrape "pyroscope_scrape_memory" {
           targets = discovery.relabel.pprof_pods_memory.output
@@ -2290,7 +2290,7 @@ should build the pprof profiling configuration:
           scrape_timeout = "18s"
 
           forward_to = argument.profiles_destinations.value
-        }
+        } // pyroscope.scrape "pyroscope_scrape_memory"
         discovery.relabel "pprof_pods_mutex" {
           targets = discovery.relabel.pprof_pods.output
 
@@ -2368,7 +2368,7 @@ should build the pprof profiling configuration:
             regex         = "(.+)"
             target_label  = "__profile_path__"
           }
-        }
+        } // discovery.relabel "pprof_pods_mutex"
 
         pyroscope.scrape "pyroscope_scrape_mutex" {
           targets = discovery.relabel.pprof_pods_mutex.output
@@ -2408,5 +2408,5 @@ should build the pprof profiling configuration:
           scrape_timeout = "18s"
 
           forward_to = argument.profiles_destinations.value
-        }
-      }
+        } // pyroscope.scrape "pyroscope_scrape_mutex"
+      } // declare "profiling"

@@ -37,7 +37,7 @@ discovery.relabel "cadvisor" {
 {{- if .Values.cadvisor.extraDiscoveryRules }}
 {{ .Values.cadvisor.extraDiscoveryRules | indent 2 }}
 {{- end }}
-}
+} // discovery.relabel "cadvisor"
 
 prometheus.scrape "cadvisor" {
   targets = discovery.relabel.cadvisor.output
@@ -61,7 +61,7 @@ prometheus.scrape "cadvisor" {
   }
 
   forward_to = [prometheus.relabel.cadvisor.receiver]
-}
+} // prometheus.scrape "cadvisor"
 
 prometheus.relabel "cadvisor" {
   max_cache_size = {{ .Values.cadvisor.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -174,6 +174,6 @@ prometheus.relabel "cadvisor" {
 {{ .Values.cadvisor.extraMetricProcessingRules | indent 2 }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "cadvisor"
 {{- end }}
 {{- end }}

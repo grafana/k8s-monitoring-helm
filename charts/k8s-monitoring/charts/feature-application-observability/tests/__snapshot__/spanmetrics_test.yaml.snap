@@ -31,7 +31,7 @@ creates the pipeline with the spanmetrics connector:
             logs = [otelcol.processor.resourcedetection.default.input]
             traces = [otelcol.processor.resourcedetection.default.input]
           }
-        }
+        } // otelcol.receiver.otlp "receiver"
 
         // Resource Detection Processor
         otelcol.processor.resourcedetection "default" {
@@ -126,7 +126,7 @@ creates the pipeline with the spanmetrics connector:
           output {
             traces = [otelcol.connector.spanmetrics.default.input]
           }
-        }
+        } // otelcol.processor.filter "span_metrics_prefilter"
 
         otelcol.connector.spanmetrics "default" {
           dimension {
@@ -167,7 +167,7 @@ creates the pipeline with the spanmetrics connector:
           output {
             metrics = [otelcol.processor.batch.default.input]
           }
-        }
+        } // otelcol.processor.transform "span_metrics_transform"
 
         // Batch Processor
         otelcol.processor.batch "default" {
@@ -181,4 +181,4 @@ creates the pipeline with the spanmetrics connector:
             traces = argument.traces_destinations.value
           }
         }
-      }
+      } // declare "application_observability"
