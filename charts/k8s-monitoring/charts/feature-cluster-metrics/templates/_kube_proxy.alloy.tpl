@@ -12,7 +12,7 @@ discovery.kubernetes "kube_proxy" {
     role = "pod"
     label = {{ .Values.kubeProxy.selectorLabel | quote }}
   }
-}
+} // discovery.kubernetes "kube_proxy"
 
 discovery.relabel "kube_proxy" {
   targets = discovery.kubernetes.kube_proxy.targets
@@ -24,7 +24,7 @@ discovery.relabel "kube_proxy" {
 {{- if .Values.kubeProxy.extraDiscoveryRules }}
 {{ .Values.kubeProxy.extraDiscoveryRules | indent 2 }}
 {{- end }}
-}
+} // discovery.relabel "kube_proxy"
 
 prometheus.scrape "kube_proxy" {
   targets           = discovery.relabel.kube_proxy.output
@@ -40,7 +40,7 @@ prometheus.scrape "kube_proxy" {
   }
 {{- if or $metricAllowList $metricDenyList .Values.kubeProxy.extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.kube_proxy.receiver]
-}
+} // prometheus.scrape "kube_proxy"
 
 prometheus.relabel "kube_proxy" {
   max_cache_size = {{ .Values.kubeProxy.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -63,6 +63,6 @@ prometheus.relabel "kube_proxy" {
 {{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "kube_proxy"
 {{- end }}
 {{- end }}

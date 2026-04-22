@@ -7,7 +7,7 @@ should be able to find the Kubelet and cAdvisor via the API server proxy:
         }
         discovery.kubernetes "nodes" {
           role = "node"
-        }
+        } // discovery.kubernetes "nodes"
 
         discovery.relabel "nodes" {
           targets = discovery.kubernetes.nodes.targets
@@ -20,7 +20,7 @@ should be able to find the Kubelet and cAdvisor via the API server proxy:
             replacement = "kubernetes"
             target_label = "source"
           }
-        }
+        } // discovery.relabel "nodes"
 
         // Kubelet
         discovery.relabel "kubelet" {
@@ -35,7 +35,7 @@ should be able to find the Kubelet and cAdvisor via the API server proxy:
             replacement   = "/api/v1/nodes/${1}/proxy/metrics"
             target_label  = "__metrics_path__"
           }
-        }
+        } // discovery.relabel "kubelet"
 
         prometheus.scrape "kubelet" {
           targets  = discovery.relabel.kubelet.output
@@ -59,7 +59,7 @@ should be able to find the Kubelet and cAdvisor via the API server proxy:
           }
 
           forward_to = [prometheus.relabel.kubelet.receiver]
-        }
+        } // prometheus.scrape "kubelet"
 
         prometheus.relabel "kubelet" {
           max_cache_size = 100000
@@ -70,7 +70,7 @@ should be able to find the Kubelet and cAdvisor via the API server proxy:
           }
 
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.relabel "kubelet"
 
         // Kubelet Resources
         discovery.relabel "kubelet_resources" {
@@ -86,7 +86,7 @@ should be able to find the Kubelet and cAdvisor via the API server proxy:
             target_label  = "__metrics_path__"
           }
 
-        }
+        } // discovery.relabel "kubelet_resources"
 
         prometheus.scrape "kubelet_resources" {
           targets = discovery.relabel.kubelet_resources.output
@@ -110,7 +110,7 @@ should be able to find the Kubelet and cAdvisor via the API server proxy:
           }
 
           forward_to = [prometheus.relabel.kubelet_resources.receiver]
-        }
+        } // prometheus.scrape "kubelet_resources"
 
         prometheus.relabel "kubelet_resources" {
           max_cache_size = 100000
@@ -121,7 +121,7 @@ should be able to find the Kubelet and cAdvisor via the API server proxy:
           }
 
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.relabel "kubelet_resources"
 
         // Kubelet Probes
         discovery.relabel "kubelet_probes" {
@@ -137,7 +137,7 @@ should be able to find the Kubelet and cAdvisor via the API server proxy:
             target_label  = "__metrics_path__"
           }
 
-        }
+        } // discovery.relabel "kubelet_probes"
 
         prometheus.scrape "kubelet_probes" {
           targets  = discovery.relabel.kubelet_probes.output
@@ -161,7 +161,7 @@ should be able to find the Kubelet and cAdvisor via the API server proxy:
           }
 
           forward_to = [prometheus.relabel.kubelet_probes.receiver]
-        }
+        } // prometheus.scrape "kubelet_probes"
 
         prometheus.relabel "kubelet_probes" {
           max_cache_size = 100000
@@ -172,7 +172,7 @@ should be able to find the Kubelet and cAdvisor via the API server proxy:
           }
 
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.relabel "kubelet_probes"
 
         // cAdvisor
         discovery.relabel "cadvisor" {
@@ -188,7 +188,7 @@ should be able to find the Kubelet and cAdvisor via the API server proxy:
             target_label  = "__metrics_path__"
           }
 
-        }
+        } // discovery.relabel "cadvisor"
 
         prometheus.scrape "cadvisor" {
           targets = discovery.relabel.cadvisor.output
@@ -212,7 +212,7 @@ should be able to find the Kubelet and cAdvisor via the API server proxy:
           }
 
           forward_to = [prometheus.relabel.cadvisor.receiver]
-        }
+        } // prometheus.scrape "cadvisor"
 
         prometheus.relabel "cadvisor" {
           max_cache_size = 100000
@@ -290,5 +290,5 @@ should be able to find the Kubelet and cAdvisor via the API server proxy:
             replacement = ""
           }
           forward_to = argument.metrics_destinations.value
-        }
-      }
+        } // prometheus.relabel "cadvisor"
+      } // declare "cluster_metrics"

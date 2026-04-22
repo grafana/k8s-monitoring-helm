@@ -64,7 +64,7 @@ data:
           role = "pod"
           label = "app.kubernetes.io/name=beyla"
         }
-      }
+      } // discovery.kubernetes "beyla_pods"
     
       discovery.relabel "beyla_pods" {
         targets = discovery.kubernetes.beyla_pods.targets
@@ -73,7 +73,7 @@ data:
           action = "replace"
           target_label = "instance"
         }
-      }
+      } // discovery.relabel "beyla_pods"
     
       prometheus.scrape "beyla_applications" {
         targets         = discovery.relabel.beyla_pods.output
@@ -86,7 +86,7 @@ data:
           enabled = true
         }
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.scrape "beyla_applications"
     
       prometheus.scrape "beyla_internal" {
         targets         = discovery.relabel.beyla_pods.output
@@ -101,8 +101,8 @@ data:
           enabled = true
         }
         forward_to = argument.metrics_destinations.value
-      }
-    }
+      } // prometheus.relabel "beyla"
+    } // declare "auto_instrumentation"
     auto_instrumentation "feature" {
       metrics_destinations = [
         prometheus.remote_write.localprometheus.receiver,
@@ -117,7 +117,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.localprometheus.receiver]
-    }
+    } // otelcol.exporter.prometheus "localprometheus"
     
     prometheus.remote_write "localprometheus" {
       endpoint {
@@ -160,7 +160,7 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "localprometheus"
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -201,7 +201,7 @@ data:
           logs = [otelcol.processor.resourcedetection.default.input]
           traces = [otelcol.processor.resourcedetection.default.input]
         }
-      }
+      } // otelcol.receiver.otlp "receiver"
     
       // Resource Detection Processor
       otelcol.processor.resourcedetection "default" {
@@ -296,7 +296,7 @@ data:
           traces = argument.traces_destinations.value
         }
       }
-    }
+    } // declare "application_observability"
     application_observability "feature" {
       metrics_destinations = [
         otelcol.exporter.prometheus.localprometheus.input,
@@ -314,7 +314,7 @@ data:
       textfile {
         directory = "/etc/release-info"
       }
-    }
+    } // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
     
     discovery.relabel "kubernetes_monitoring_telemetry" {
       targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -328,7 +328,7 @@ data:
         action = "replace"
         replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
       }
-    }
+    } // discovery.relabel "kubernetes_monitoring_telemetry"
     
     prometheus.scrape "kubernetes_monitoring_telemetry" {
       job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -338,7 +338,7 @@ data:
         enabled = true
       }
       forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-    }
+    } // prometheus.scrape "kubernetes_monitoring_telemetry"
     
     prometheus.relabel "kubernetes_monitoring_telemetry" {
       rule {
@@ -349,7 +349,7 @@ data:
       forward_to = [
         prometheus.remote_write.localprometheus.receiver,
       ]
-    }
+    } // prometheus.relabel "kubernetes_monitoring_telemetry"
     
     
     
@@ -357,7 +357,7 @@ data:
     // Destination: localLoki (loki)
     otelcol.exporter.loki "localloki" {
       forward_to = [loki.write.localloki.receiver]
-    }
+    } // otelcol.exporter.loki "localloki"
     
     loki.write "localloki" {
       endpoint {
@@ -379,12 +379,12 @@ data:
         "cluster" = "auto-instrumentation-test",
         "k8s_cluster_name" = "auto-instrumentation-test",
       }
-    }
+    } // loki.write "localloki"
     
     remote.kubernetes.secret "localloki" {
       name      = "localloki-k8smon-k8s-monitoring"
       namespace = "default"
-    }
+    } // remote.kubernetes.secret "localloki"
     
     
     // Destination: localPrometheus (prometheus)
@@ -392,7 +392,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.localprometheus.receiver]
-    }
+    } // otelcol.exporter.prometheus "localprometheus"
     
     prometheus.remote_write "localprometheus" {
       endpoint {
@@ -435,14 +435,14 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "localprometheus"
     
     // Destination: localTempo (otlp)
     otelcol.processor.attributes "localtempo" {
       output {
         traces = [otelcol.processor.transform.localtempo.input]
       }
-    }
+    } // otelcol.processor.attributes "localtempo"
     
     otelcol.processor.transform "localtempo" {
       error_mode = "ignore"
@@ -474,7 +474,7 @@ data:
       output {
         traces = [otelcol.processor.batch.localtempo.input]
       }
-    }
+    } // otelcol.processor.transform "localtempo"
     
     otelcol.processor.batch "localtempo" {
       timeout = "2s"
@@ -484,7 +484,7 @@ data:
       output {
         traces = [otelcol.exporter.otlp.localtempo.input]
       }
-    }
+    } // otelcol.processor.batch "localtempo"
     otelcol.exporter.otlp "localtempo" {
       client {
         endpoint = "tempo.tempo.svc:4317"
@@ -504,7 +504,7 @@ data:
       sending_queue {
         enabled = true
       }
-    }
+    } // otelcol.exporter.otlp "localtempo"
 ---
 # Source: k8s-monitoring/templates/beyla-config.yaml
 apiVersion: v1

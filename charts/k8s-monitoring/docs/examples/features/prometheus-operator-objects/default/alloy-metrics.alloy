@@ -19,7 +19,7 @@ declare "prometheus_operator_objects" {
       default_scrape_timeout = "10s"
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "podmonitors"
 
   // Prometheus Operator Probe objects
   prometheus.operator.probes "probes" {
@@ -31,7 +31,7 @@ declare "prometheus_operator_objects" {
       default_scrape_timeout = "10s"
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "probes"
 
   // Prometheus Operator ServiceMonitor objects
   prometheus.operator.servicemonitors "service_monitors" {
@@ -57,8 +57,8 @@ declare "prometheus_operator_objects" {
       default_scrape_timeout = "10s"
     }
     forward_to = argument.metrics_destinations.value
-  }
-}
+  } // prometheus.relabel "servicemonitors"
+} // declare "prometheus_operator_objects"
 prometheus_operator_objects "feature" {
   metrics_destinations = [
     prometheus.remote_write.prometheus.receiver,
@@ -71,7 +71,7 @@ prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   textfile {
     directory = "/etc/release-info"
   }
-}
+} // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
 
 discovery.relabel "kubernetes_monitoring_telemetry" {
   targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -85,7 +85,7 @@ discovery.relabel "kubernetes_monitoring_telemetry" {
     action = "replace"
     replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
   }
-}
+} // discovery.relabel "kubernetes_monitoring_telemetry"
 
 prometheus.scrape "kubernetes_monitoring_telemetry" {
   job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -95,7 +95,7 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
     enabled = true
   }
   forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-}
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
 
 prometheus.relabel "kubernetes_monitoring_telemetry" {
   rule {
@@ -106,7 +106,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
   forward_to = [
     prometheus.remote_write.prometheus.receiver,
   ]
-}
+} // prometheus.relabel "kubernetes_monitoring_telemetry"
 
 
 
@@ -116,7 +116,7 @@ otelcol.exporter.prometheus "prometheus" {
   add_metric_suffixes = true
   resource_to_telemetry_conversion = false
   forward_to = [prometheus.remote_write.prometheus.receiver]
-}
+} // otelcol.exporter.prometheus "prometheus"
 
 prometheus.remote_write "prometheus" {
   endpoint {
@@ -159,5 +159,5 @@ prometheus.remote_write "prometheus" {
     min_keepalive_time = "5m"
     max_keepalive_time = "8h"
   }
-}
+} // prometheus.remote_write "prometheus"
 

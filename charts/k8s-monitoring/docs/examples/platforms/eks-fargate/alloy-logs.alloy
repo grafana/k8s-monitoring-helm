@@ -6,7 +6,7 @@ declare "pod_logs_via_kubernetes_api" {
 
   discovery.kubernetes "pods" {
     role = "pod"
-  }
+  } // discovery.kubernetes "pods"
 
   discovery.relabel "filtered_pods" {
     targets = discovery.kubernetes.pods.targets
@@ -105,7 +105,7 @@ declare "pod_logs_via_kubernetes_api" {
       regex = "(.+)"
       target_label = "app_kubernetes_io_name"
     }
-  }
+  } // discovery.relabel "filtered_pods"
 
   loki.source.kubernetes "pod_logs" {
     targets = discovery.relabel.filtered_pods.output
@@ -113,7 +113,7 @@ declare "pod_logs_via_kubernetes_api" {
       enabled = true
     }
     forward_to = [loki.process.pod_logs.receiver]
-  }
+  } // loki.source.kubernetes "pod_logs"
 
   loki.process "pod_logs" {
     stage.match {
@@ -163,8 +163,8 @@ declare "pod_logs_via_kubernetes_api" {
     }
 
     forward_to = argument.logs_destinations.value
-  }
-}
+  } // loki.secretfilter "pod_logs"
+} // declare "pod_logs_via_kubernetes_api"
 pod_logs_via_kubernetes_api "feature" {
   logs_destinations = [
     loki.write.loki.receiver,
@@ -177,7 +177,7 @@ pod_logs_via_kubernetes_api "feature" {
 // Destination: loki (loki)
 otelcol.exporter.loki "loki" {
   forward_to = [loki.write.loki.receiver]
-}
+} // otelcol.exporter.loki "loki"
 
 loki.write "loki" {
   endpoint {
@@ -194,5 +194,5 @@ loki.write "loki" {
     "cluster" = "eks-fargate-example-cluster",
     "k8s_cluster_name" = "eks-fargate-example-cluster",
   }
-}
+} // loki.write "loki"
 

@@ -15,7 +15,7 @@ should render the default configuration:
             enabled = true
           }
           forward_to = [loki.relabel.pod_logs_objects.receiver]
-        }
+        } // loki.source.podlogs "default"
 
 
         loki.relabel "pod_logs_objects" {
@@ -37,7 +37,7 @@ should render the default configuration:
           }
 
           forward_to = [loki.process.pod_logs_objects.receiver]
-        }
+        } // loki.relabel "pod_logs_objects"
 
         loki.process "pod_logs_objects" {
           stage.match {
@@ -86,5 +86,5 @@ should render the default configuration:
 
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.secretfilter "pod_logs_objects"
+      } // declare "pod_logs_objects"

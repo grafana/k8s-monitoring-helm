@@ -42,7 +42,7 @@ data:
         }
     
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.relabel "podmonitors"
     
       // Prometheus Operator Probe objects
       prometheus.operator.probes "probes" {
@@ -54,7 +54,7 @@ data:
           default_scrape_timeout = "10s"
         }
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.relabel "probes"
     
       // Prometheus Operator Probe objects
       prometheus.operator.scrapeconfigs "scrapeConfigs" {
@@ -66,7 +66,7 @@ data:
           default_scrape_timeout = "10s"
         }
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.relabel "scrapeConfigs"
     
       // Prometheus Operator ServiceMonitor objects
       prometheus.operator.servicemonitors "service_monitors" {
@@ -89,8 +89,8 @@ data:
           action = "drop"
         }
         forward_to = argument.metrics_destinations.value
-      }
-    }
+      } // prometheus.relabel "servicemonitors"
+    } // declare "prometheus_operator_objects"
     prometheus_operator_objects "feature" {
       metrics_destinations = [
         prometheus.remote_write.localprometheus.receiver,
@@ -103,7 +103,7 @@ data:
       textfile {
         directory = "/etc/release-info"
       }
-    }
+    } // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
     
     discovery.relabel "kubernetes_monitoring_telemetry" {
       targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -117,7 +117,7 @@ data:
         action = "replace"
         replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
       }
-    }
+    } // discovery.relabel "kubernetes_monitoring_telemetry"
     
     prometheus.scrape "kubernetes_monitoring_telemetry" {
       job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -127,7 +127,7 @@ data:
         enabled = true
       }
       forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-    }
+    } // prometheus.scrape "kubernetes_monitoring_telemetry"
     
     prometheus.relabel "kubernetes_monitoring_telemetry" {
       rule {
@@ -138,7 +138,7 @@ data:
       forward_to = [
         prometheus.remote_write.localprometheus.receiver,
       ]
-    }
+    } // prometheus.relabel "kubernetes_monitoring_telemetry"
     
     
     
@@ -148,7 +148,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.localprometheus.receiver]
-    }
+    } // otelcol.exporter.prometheus "localprometheus"
     
     prometheus.remote_write "localprometheus" {
       endpoint {
@@ -191,7 +191,7 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "localprometheus"
 ---
 # Source: k8s-monitoring/templates/release-info.yaml
 apiVersion: v1

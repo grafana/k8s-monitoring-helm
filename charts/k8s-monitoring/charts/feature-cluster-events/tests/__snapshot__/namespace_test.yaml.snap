@@ -10,7 +10,7 @@ can restrict events from a given list of namespaces:
           job_name   = "integrations/kubernetes/eventhandler"
           log_format = "logfmt"
           forward_to = [loki.process.cluster_events.receiver]
-        }
+        } // loki.source.kubernetes_events "cluster_events"
 
         loki.process "cluster_events" {
           stage.drop {
@@ -81,8 +81,8 @@ can restrict events from a given list of namespaces:
           }
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.process "cluster_events"
+      } // declare "cluster_events"
 can restrict events to a given list of namespaces:
   1: |
     |-
@@ -96,7 +96,7 @@ can restrict events to a given list of namespaces:
           log_format = "logfmt"
           namespaces = ["a","b"]
           forward_to = [loki.process.cluster_events.receiver]
-        }
+        } // loki.source.kubernetes_events "cluster_events"
 
         loki.process "cluster_events" {
 
@@ -162,5 +162,5 @@ can restrict events to a given list of namespaces:
           }
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.process "cluster_events"
+      } // declare "cluster_events"

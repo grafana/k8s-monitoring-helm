@@ -20,14 +20,14 @@ otelcol.receiver.prometheus {{ include "helper.alloy_name" $.destinationName | q
   output {
     metrics = [{{ include "destinations.otlp.alloy.otlp.metrics.target" (dict "destination" . "destinationName" $.destinationName) | trim }}]
   }
-}
+} // otelcol.receiver.prometheus "{{ include "helper.alloy_name" $.destinationName }}"
 {{- end }}
 {{- if eq (include "destinations.otlp.supports_logs" .) "true" }}
 otelcol.receiver.loki {{ include "helper.alloy_name" $.destinationName | quote }} {
   output {
     logs = [{{ include "destinations.otlp.alloy.otlp.logs.target" (dict "destination" . "destinationName" $.destinationName) | trim }}]
   }
-}
+} // otelcol.receiver.loki "{{ include "helper.alloy_name" $.destinationName }}"
 {{- end }}
 otelcol.processor.attributes {{ include "helper.alloy_name" $.destinationName | quote }} {
 {{- range $action := .processors.attributes.actions }}
@@ -64,7 +64,7 @@ otelcol.processor.attributes {{ include "helper.alloy_name" $.destinationName | 
     traces = [otelcol.processor.transform.{{ include "helper.alloy_name" $.destinationName }}.input]
 {{- end }}
   }
-}
+} // otelcol.processor.attributes "{{ include "helper.alloy_name" $.destinationName }}"
 
 otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | quote }} {
   error_mode = {{ .processors.transform.errorMode | quote }}
@@ -238,7 +238,7 @@ otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | q
     traces = [otelcol.processor.filter.{{ include "helper.alloy_name" $.destinationName }}.input]
 {{- end }}
   }
-}
+} // otelcol.processor.transform "{{ include "helper.alloy_name" $.destinationName }}"
 
 otelcol.processor.filter {{ include "helper.alloy_name" $.destinationName | quote }} {
   error_mode = {{ .processors.filters.errorMode | quote }}
@@ -316,7 +316,7 @@ otelcol.processor.filter {{ include "helper.alloy_name" $.destinationName | quot
 {{- end }}
 {{- end }}
   }
-}
+} {{- if .processors.filters.enabled }} // otelcol.processor.filter "{{ include "helper.alloy_name" $.destinationName }}"{{- else }} // otelcol.processor.transform "{{ include "helper.alloy_name" $.destinationName }}"{{- end }}
 
 {{- if .processors.tailSampling.enabled }}
 
@@ -337,7 +337,7 @@ otelcol.exporter.loadbalancing {{ printf "%s_sampler" (include "helper.alloy_nam
       }
     }
   }
-}
+} // otelcol.exporter.loadbalancing "{{ printf "%s_sampler" (include "helper.alloy_name" $.destinationName) }}"
 {{- end }}
 
 {{- if .processors.serviceGraphMetrics.enabled }}
@@ -359,7 +359,7 @@ otelcol.exporter.loadbalancing {{ printf "%s_servicegraph" (include "helper.allo
       }
     }
   }
-}
+} // otelcol.exporter.loadbalancing "{{ printf "%s_servicegraph" (include "helper.alloy_name" $.destinationName) }}"
 {{- end }}
 {{ include "destinations.otlp.alloy.exporter" $ }}
 {{- end }}
@@ -405,7 +405,7 @@ otelcol.processor.batch {{ include "helper.alloy_name" $.destinationName | quote
     traces = [{{ $target }}]
 {{- end }}
   }
-}
+} {{- if .processors.batch.enabled }} // otelcol.processor.batch "{{ include "helper.alloy_name" $.destinationName }}"{{- end }}
 {{- if .processors.memoryLimiter.enabled }}
 
 otelcol.processor.memory_limiter {{ include "helper.alloy_name" $.destinationName | quote }} {
@@ -428,7 +428,7 @@ otelcol.processor.memory_limiter {{ include "helper.alloy_name" $.destinationNam
     traces = [{{ $target }}]
 {{- end }}
   }
-}
+} // otelcol.processor.memory_limiter "{{ include "helper.alloy_name" $.destinationName }}"
 {{- end }}
 
 {{- if eq .protocol "grpc" }}
@@ -530,28 +530,28 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" $.destinationName | quo
     }
 {{- end }}
   }
-}
+} {{- if eq .protocol "grpc" }} // otelcol.exporter.otlp "{{ include "helper.alloy_name" $.destinationName }}"{{- else if eq .protocol "http" }} // otelcol.exporter.otlphttp "{{ include "helper.alloy_name" $.destinationName }}"{{- end }}
 {{- if eq (include "secrets.authType" .) "basic" }}
 
 otelcol.auth.basic {{ include "helper.alloy_name" $.destinationName | quote }} {
   username = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.username" "nonsensitive" true) }}
   password = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.password") }}
-}
+} // otelcol.auth.basic "{{ include "helper.alloy_name" $.destinationName }}"
 {{- else if eq (include "secrets.authType" .) "bearerToken" }}
 {{- if .auth.bearerTokenFile }}
 
 local.file {{ include "helper.alloy_name" $.destinationName | quote }} {
   filename = {{ .auth.bearerTokenFile | quote }}
-}
+} // local.file "{{ include "helper.alloy_name" $.destinationName }}"
 
 otelcol.auth.bearer {{ include "helper.alloy_name" $.destinationName | quote }} {
   token = local.file.{{ include "helper.alloy_name" $.destinationName }}.content
-}
+} // otelcol.auth.bearer "{{ include "helper.alloy_name" $.destinationName }}"
 {{- else }}
 
 otelcol.auth.bearer {{ include "helper.alloy_name" $.destinationName | quote }} {
   token = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.bearerToken") }}
-}
+} // otelcol.auth.bearer "{{ include "helper.alloy_name" $.destinationName }}"
 {{- end }}
 {{- else if eq (include "secrets.authType" .) "oauth2" }}
 
@@ -613,7 +613,7 @@ otelcol.auth.oauth2 {{ include "helper.alloy_name" $.destinationName | quote }} 
     {{- end }}
   }
   {{- end }}
-}
+} // otelcol.auth.oauth2 "{{ include "helper.alloy_name" $.destinationName }}"
 {{- else if eq (include "secrets.authType" .) "sigv4" }}
 
 otelcol.auth.sigv4 {{ include "helper.alloy_name" $.destinationName | quote }} {
@@ -636,7 +636,7 @@ otelcol.auth.sigv4 {{ include "helper.alloy_name" $.destinationName | quote }} {
     {{- end }}
   }
   {{- end }}
-}
+} // otelcol.auth.sigv4 "{{ include "helper.alloy_name" $.destinationName }}"
 {{- end }}
 {{- end }}
 {{- end }}

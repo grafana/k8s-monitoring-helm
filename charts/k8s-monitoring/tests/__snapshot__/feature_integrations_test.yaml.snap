@@ -13,7 +13,7 @@ works when a logs-only integration is enabled:
             role = "pod"
             field = "spec.nodeName=" + sys.env("HOSTNAME")
           }
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "filtered_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -160,17 +160,17 @@ works when a logs-only integration is enabled:
             target_label = "job"
             replacement = "$1/$2"
           }
-        }
+        } // discovery.relabel "filtered_pods"
 
         local.file_match "pod_logs" {
           path_targets = discovery.relabel.filtered_pods.output
-        }
+        } // local.file_match "pod_logs"
 
         loki.source.file "pod_logs" {
           targets    = local.file_match.pod_logs.targets
           tail_from_end = true
           forward_to = [loki.process.pod_logs.receiver]
-        }
+        } // loki.source.file "pod_logs"
 
         loki.process "pod_logs" {
           stage.match {
@@ -263,8 +263,8 @@ works when a logs-only integration is enabled:
           }
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.secretfilter "pod_logs"
+      } // declare "pod_logs_via_loki"
       pod_logs_via_loki "feature" {
         logs_destinations = [
           loki.write.loki.receiver,
@@ -285,7 +285,7 @@ works when a logs-only integration is enabled:
       // Destination: loki (loki)
       otelcol.exporter.loki "loki" {
         forward_to = [loki.write.loki.receiver]
-      }
+      } // otelcol.exporter.loki "loki"
 
       loki.write "loki" {
         endpoint {
@@ -302,7 +302,7 @@ works when a logs-only integration is enabled:
           "cluster" = "ci-test-cluster",
           "k8s_cluster_name" = "ci-test-cluster",
         }
-      }
+      } // loki.write "loki"
 works with a metrics-only integration:
   1: |
     |
@@ -312,7 +312,7 @@ works with a metrics-only integration:
         textfile {
           directory = "/etc/release-info"
         }
-      }
+      } // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
 
       discovery.relabel "kubernetes_monitoring_telemetry" {
         targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -326,7 +326,7 @@ works with a metrics-only integration:
           action = "replace"
           replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
         }
-      }
+      } // discovery.relabel "kubernetes_monitoring_telemetry"
 
       prometheus.scrape "kubernetes_monitoring_telemetry" {
         job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -336,7 +336,7 @@ works with a metrics-only integration:
           enabled = true
         }
         forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-      }
+      } // prometheus.scrape "kubernetes_monitoring_telemetry"
 
       prometheus.relabel "kubernetes_monitoring_telemetry" {
         rule {
@@ -347,7 +347,7 @@ works with a metrics-only integration:
         forward_to = [
           prometheus.remote_write.prom.receiver,
         ]
-      }
+      } // prometheus.relabel "kubernetes_monitoring_telemetry"
 
 
 
@@ -357,7 +357,7 @@ works with a metrics-only integration:
         add_metric_suffixes = true
         resource_to_telemetry_conversion = false
         forward_to = [prometheus.remote_write.prom.receiver]
-      }
+      } // otelcol.exporter.prometheus "prom"
 
       prometheus.remote_write "prom" {
         endpoint {
@@ -400,7 +400,7 @@ works with a metrics-only integration:
           min_keepalive_time = "5m"
           max_keepalive_time = "8h"
         }
-      }
+      } // prometheus.remote_write "prom"
 works with multiple logs-only integrations:
   1: |
     |
@@ -416,7 +416,7 @@ works with multiple logs-only integrations:
             role = "pod"
             field = "spec.nodeName=" + sys.env("HOSTNAME")
           }
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "filtered_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -602,17 +602,17 @@ works with multiple logs-only integrations:
             target_label = "job"
             replacement = "$1/$2"
           }
-        }
+        } // discovery.relabel "filtered_pods"
 
         local.file_match "pod_logs" {
           path_targets = discovery.relabel.filtered_pods.output
-        }
+        } // local.file_match "pod_logs"
 
         loki.source.file "pod_logs" {
           targets    = local.file_match.pod_logs.targets
           tail_from_end = true
           forward_to = [loki.process.pod_logs.receiver]
-        }
+        } // loki.source.file "pod_logs"
 
         loki.process "pod_logs" {
           stage.match {
@@ -793,8 +793,8 @@ works with multiple logs-only integrations:
           }
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.secretfilter "pod_logs"
+      } // declare "pod_logs_via_loki"
       pod_logs_via_loki "feature" {
         logs_destinations = [
           loki.write.loki.receiver,
@@ -815,7 +815,7 @@ works with multiple logs-only integrations:
       // Destination: loki (loki)
       otelcol.exporter.loki "loki" {
         forward_to = [loki.write.loki.receiver]
-      }
+      } // otelcol.exporter.loki "loki"
 
       loki.write "loki" {
         endpoint {
@@ -832,7 +832,7 @@ works with multiple logs-only integrations:
           "cluster" = "ci-test-cluster",
           "k8s_cluster_name" = "ci-test-cluster",
         }
-      }
+      } // loki.write "loki"
 works with multiple metrics-only integrations:
   1: |
     |
@@ -842,7 +842,7 @@ works with multiple metrics-only integrations:
         textfile {
           directory = "/etc/release-info"
         }
-      }
+      } // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
 
       discovery.relabel "kubernetes_monitoring_telemetry" {
         targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -856,7 +856,7 @@ works with multiple metrics-only integrations:
           action = "replace"
           replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
         }
-      }
+      } // discovery.relabel "kubernetes_monitoring_telemetry"
 
       prometheus.scrape "kubernetes_monitoring_telemetry" {
         job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -866,7 +866,7 @@ works with multiple metrics-only integrations:
           enabled = true
         }
         forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-      }
+      } // prometheus.scrape "kubernetes_monitoring_telemetry"
 
       prometheus.relabel "kubernetes_monitoring_telemetry" {
         rule {
@@ -877,7 +877,7 @@ works with multiple metrics-only integrations:
         forward_to = [
           prometheus.remote_write.prom.receiver,
         ]
-      }
+      } // prometheus.relabel "kubernetes_monitoring_telemetry"
 
 
 
@@ -887,7 +887,7 @@ works with multiple metrics-only integrations:
         add_metric_suffixes = true
         resource_to_telemetry_conversion = false
         forward_to = [prometheus.remote_write.prom.receiver]
-      }
+      } // otelcol.exporter.prometheus "prom"
 
       prometheus.remote_write "prom" {
         endpoint {
@@ -930,4 +930,4 @@ works with multiple metrics-only integrations:
           min_keepalive_time = "5m"
           max_keepalive_time = "8h"
         }
-      }
+      } // prometheus.remote_write "prom"

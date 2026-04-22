@@ -44,7 +44,7 @@ data:
         namespaces {
           names = ["production"]
         }
-      }
+      } // discovery.kubernetes "pods"
     
       discovery.relabel "filtered_pods" {
         targets = discovery.kubernetes.pods.targets
@@ -143,7 +143,7 @@ data:
           regex = "(.+)"
           target_label = "app_kubernetes_io_name"
         }
-      }
+      } // discovery.relabel "filtered_pods"
     
       loki.source.kubernetes "pod_logs" {
         targets = discovery.relabel.filtered_pods.output
@@ -151,7 +151,7 @@ data:
           enabled = true
         }
         forward_to = [loki.process.pod_logs.receiver]
-      }
+      } // loki.source.kubernetes "pod_logs"
     
       loki.process "pod_logs" {
         stage.match {
@@ -201,8 +201,8 @@ data:
         }
     
         forward_to = argument.logs_destinations.value
-      }
-    }
+      } // loki.secretfilter "pod_logs"
+    } // declare "pod_logs_via_kubernetes_api"
     pod_logs_via_kubernetes_api "feature" {
       logs_destinations = [
         loki.write.loki.receiver,
@@ -221,7 +221,7 @@ data:
     // Destination: loki (loki)
     otelcol.exporter.loki "loki" {
       forward_to = [loki.write.loki.receiver]
-    }
+    } // otelcol.exporter.loki "loki"
     
     loki.write "loki" {
       endpoint {
@@ -243,12 +243,12 @@ data:
         "cluster" = "pod-logs-via-k8s-api-cluster",
         "k8s_cluster_name" = "pod-logs-via-k8s-api-cluster",
       }
-    }
+    } // loki.write "loki"
     
     remote.kubernetes.secret "loki" {
       name      = "loki-k8smon-k8s-monitoring"
       namespace = "default"
-    }
+    } // remote.kubernetes.secret "loki"
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1

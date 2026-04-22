@@ -43,7 +43,7 @@ data:
           role = "pod"
           field = "spec.nodeName=" + sys.env("HOSTNAME")
         }
-      }
+      } // discovery.kubernetes "pods"
     
       discovery.relabel "filtered_pods" {
         targets = discovery.kubernetes.pods.targets
@@ -167,17 +167,17 @@ data:
           replacement = "/var/log/pods/*$1/*.log"
           target_label = "__path__"
         }
-      }
+      } // discovery.relabel "filtered_pods"
     
       local.file_match "pod_logs" {
         path_targets = discovery.relabel.filtered_pods.output
-      }
+      } // local.file_match "pod_logs"
     
       loki.source.file "pod_logs" {
         targets    = local.file_match.pod_logs.targets
         tail_from_end = true
         forward_to = [loki.process.pod_logs.receiver]
-      }
+      } // loki.source.file "pod_logs"
     
       loki.process "pod_logs" {
         stage.match {
@@ -227,8 +227,8 @@ data:
         }
     
         forward_to = argument.logs_destinations.value
-      }
-    }
+      } // loki.secretfilter "pod_logs"
+    } // declare "pod_logs_via_loki"
     pod_logs_via_loki "feature" {
       logs_destinations = [
         loki.write.loki.receiver,
@@ -241,7 +241,7 @@ data:
     // Destination: loki (loki)
     otelcol.exporter.loki "loki" {
       forward_to = [loki.write.loki.receiver]
-    }
+    } // otelcol.exporter.loki "loki"
     
     loki.write "loki" {
       endpoint {
@@ -259,7 +259,7 @@ data:
         "cluster" = "bearer-token-example-cluster",
         "k8s_cluster_name" = "bearer-token-example-cluster",
       }
-    }
+    } // loki.write "loki"
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -285,7 +285,7 @@ data:
           default_scrape_timeout = "10s"
         }
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.relabel "podmonitors"
     
       // Prometheus Operator Probe objects
       prometheus.operator.probes "probes" {
@@ -297,7 +297,7 @@ data:
           default_scrape_timeout = "10s"
         }
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.relabel "probes"
     
       // Prometheus Operator ServiceMonitor objects
       prometheus.operator.servicemonitors "service_monitors" {
@@ -310,8 +310,8 @@ data:
           default_scrape_timeout = "10s"
         }
         forward_to = argument.metrics_destinations.value
-      }
-    }
+      } // prometheus.relabel "servicemonitors"
+    } // declare "prometheus_operator_objects"
     prometheus_operator_objects "feature" {
       metrics_destinations = [
         prometheus.remote_write.prometheus.receiver,
@@ -326,7 +326,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.prometheus.receiver]
-    }
+    } // otelcol.exporter.prometheus "prometheus"
     
     prometheus.remote_write "prometheus" {
       endpoint {
@@ -370,12 +370,12 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "prometheus"
     
     remote.kubernetes.secret "prometheus" {
       name      = "prometheus-k8smon-k8s-monitoring"
       namespace = "default"
-    }
+    } // remote.kubernetes.secret "prometheus"
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -413,7 +413,7 @@ data:
         output {
           traces = [otelcol.processor.resourcedetection.default.input]
         }
-      }
+      } // otelcol.receiver.jaeger "receiver"
     
       // Resource Detection Processor
       otelcol.processor.resourcedetection "default" {
@@ -508,7 +508,7 @@ data:
           traces = argument.traces_destinations.value
         }
       }
-    }
+    } // declare "application_observability"
     application_observability "feature" {
       metrics_destinations = [
         otelcol.exporter.prometheus.prometheus.input,
@@ -526,7 +526,7 @@ data:
       textfile {
         directory = "/etc/release-info"
       }
-    }
+    } // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
     
     discovery.relabel "kubernetes_monitoring_telemetry" {
       targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -540,7 +540,7 @@ data:
         action = "replace"
         replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
       }
-    }
+    } // discovery.relabel "kubernetes_monitoring_telemetry"
     
     prometheus.scrape "kubernetes_monitoring_telemetry" {
       job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -550,7 +550,7 @@ data:
         enabled = true
       }
       forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-    }
+    } // prometheus.scrape "kubernetes_monitoring_telemetry"
     
     prometheus.relabel "kubernetes_monitoring_telemetry" {
       rule {
@@ -561,7 +561,7 @@ data:
       forward_to = [
         prometheus.remote_write.prometheus.receiver,
       ]
-    }
+    } // prometheus.relabel "kubernetes_monitoring_telemetry"
     
     
     
@@ -569,7 +569,7 @@ data:
     // Destination: loki (loki)
     otelcol.exporter.loki "loki" {
       forward_to = [loki.write.loki.receiver]
-    }
+    } // otelcol.exporter.loki "loki"
     
     loki.write "loki" {
       endpoint {
@@ -587,14 +587,14 @@ data:
         "cluster" = "bearer-token-example-cluster",
         "k8s_cluster_name" = "bearer-token-example-cluster",
       }
-    }
+    } // loki.write "loki"
     
     // Destination: prometheus (prometheus)
     otelcol.exporter.prometheus "prometheus" {
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.prometheus.receiver]
-    }
+    } // otelcol.exporter.prometheus "prometheus"
     
     prometheus.remote_write "prometheus" {
       endpoint {
@@ -638,12 +638,12 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "prometheus"
     
     remote.kubernetes.secret "prometheus" {
       name      = "prometheus-k8smon-k8s-monitoring"
       namespace = "default"
-    }
+    } // remote.kubernetes.secret "prometheus"
     
     
     // Destination: tempo (otlp)
@@ -651,7 +651,7 @@ data:
       output {
         traces = [otelcol.processor.transform.tempo.input]
       }
-    }
+    } // otelcol.processor.attributes "tempo"
     
     otelcol.processor.transform "tempo" {
       error_mode = "ignore"
@@ -683,7 +683,7 @@ data:
       output {
         traces = [otelcol.processor.batch.tempo.input]
       }
-    }
+    } // otelcol.processor.transform "tempo"
     
     otelcol.processor.batch "tempo" {
       timeout = "2s"
@@ -693,7 +693,7 @@ data:
       output {
         traces = [otelcol.exporter.otlp.tempo.input]
       }
-    }
+    } // otelcol.processor.batch "tempo"
     otelcol.exporter.otlp "tempo" {
       client {
         endpoint = "http://tempo.tempo.svc:4317"
@@ -720,16 +720,16 @@ data:
       sending_queue {
         enabled = true
       }
-    }
+    } // otelcol.exporter.otlp "tempo"
     
     otelcol.auth.bearer "tempo" {
       token = remote.kubernetes.secret.tempo.data["tempoBearerToken"]
-    }
+    } // otelcol.auth.bearer "tempo"
     
     remote.kubernetes.secret "tempo" {
       name      = "my-tempo-secret"
       namespace = "tempo"
-    }
+    } // remote.kubernetes.secret "tempo"
 ---
 # Source: k8s-monitoring/templates/release-info.yaml
 apiVersion: v1

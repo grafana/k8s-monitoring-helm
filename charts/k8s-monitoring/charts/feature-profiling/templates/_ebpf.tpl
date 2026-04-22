@@ -24,7 +24,7 @@ discovery.kubernetes "ebpf_pods" {
     names = {{ .Values.ebpf.namespaces | toJson }}
   }
 {{- end }}
-}
+} // discovery.kubernetes "ebpf_pods"
 
 discovery.relabel "ebpf_pods" {
   targets = discovery.kubernetes.ebpf_pods.targets
@@ -136,7 +136,7 @@ discovery.relabel "ebpf_pods" {
 {{- if .Values.ebpf.extraDiscoveryRules }}
 {{ .Values.ebpf.extraDiscoveryRules | indent 2 }}
 {{- end }}
-}
+} // discovery.relabel "ebpf_pods"
 
 pyroscope.ebpf "ebpf_pods" {
   targets = discovery.relabel.ebpf_pods.output
@@ -150,6 +150,6 @@ pyroscope.ebpf "ebpf_pods" {
   ruby_enabled = {{ .Values.ebpf.rubyEnabled }}
   v8_enabled = {{ .Values.ebpf.v8Enabled }}
   forward_to = argument.profiles_destinations.value
-}
+} // pyroscope.ebpf "ebpf_pods"
 {{- end }}
 {{- end }}

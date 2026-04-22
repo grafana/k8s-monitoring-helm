@@ -14,7 +14,7 @@ discovery.kubernetes "apiserver" {
   namespaces {
     names = ["default"]
   }
-}
+} // discovery.kubernetes "apiserver"
 
 discovery.relabel "apiserver" {
   targets = discovery.kubernetes.apiserver.targets
@@ -43,7 +43,7 @@ discovery.relabel "apiserver" {
 {{- if .Values.apiServer.extraDiscoveryRules }}
   {{ .Values.apiServer.extraDiscoveryRules | indent 2 }}
 {{- end }}
-}
+} // discovery.relabel "apiserver"
 
 prometheus.scrape "apiserver" {
   targets = discovery.relabel.apiserver.output
@@ -68,7 +68,7 @@ prometheus.scrape "apiserver" {
 {{- if or $metricAllowList $metricDenyList .Values.apiServer.extraMetricProcessingRules }}
 
   forward_to = [prometheus.relabel.apiserver.receiver]
-}
+} // prometheus.scrape "apiserver"
 
 prometheus.relabel "apiserver" {
   max_cache_size = {{ .Values.apiServer.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -94,6 +94,6 @@ prometheus.relabel "apiserver" {
 
 {{- end }}
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "apiserver"
 {{- end }}
 {{- end }}

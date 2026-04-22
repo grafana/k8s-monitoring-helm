@@ -45,7 +45,7 @@ data:
           role = "pod"
           field = "spec.nodeName=" + sys.env("HOSTNAME")
         }
-      }
+      } // discovery.kubernetes "pods"
     
       discovery.relabel "filtered_pods" {
         targets = discovery.kubernetes.pods.targets
@@ -169,17 +169,17 @@ data:
           replacement = "/var/log/pods/*$1/*.log"
           target_label = "__path__"
         }
-      }
+      } // discovery.relabel "filtered_pods"
     
       local.file_match "pod_logs" {
         path_targets = discovery.relabel.filtered_pods.output
-      }
+      } // local.file_match "pod_logs"
     
       loki.source.file "pod_logs" {
         targets    = local.file_match.pod_logs.targets
         tail_from_end = true
         forward_to = [loki.process.pod_logs.receiver]
-      }
+      } // loki.source.file "pod_logs"
     
       loki.process "pod_logs" {
         stage.match {
@@ -229,8 +229,8 @@ data:
         }
     
         forward_to = argument.logs_destinations.value
-      }
-    }
+      } // loki.secretfilter "pod_logs"
+    } // declare "pod_logs_via_loki"
     pod_logs_via_loki "feature" {
       logs_destinations = [
         loki.write.localloki.receiver,
@@ -243,7 +243,7 @@ data:
     // Destination: localLoki (loki)
     otelcol.exporter.loki "localloki" {
       forward_to = [loki.write.localloki.receiver]
-    }
+    } // otelcol.exporter.loki "localloki"
     
     loki.write "localloki" {
       endpoint {
@@ -265,12 +265,12 @@ data:
         "cluster" = "annotation-autodiscovery-test",
         "k8s_cluster_name" = "annotation-autodiscovery-test",
       }
-    }
+    } // loki.write "localloki"
     
     remote.kubernetes.secret "localloki" {
       name      = "localloki-k8smon-k8s-monitoring"
       namespace = "default"
-    }
+    } // remote.kubernetes.secret "localloki"
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -292,7 +292,7 @@ data:
           role = "pod"
           label = "color=blue"
         }
-      }
+      } // discovery.kubernetes "pods"
     
       discovery.relabel "annotation_autodiscovery_pods" {
         targets = discovery.kubernetes.pods.targets
@@ -458,11 +458,11 @@ data:
           source_labels = ["__scrape_timeout__"]
           target_label = "scrape_timeout"
         }
-      }
+      } // discovery.relabel "annotation_autodiscovery_pods"
     
       discovery.kubernetes "services" {
         role = "service"
-      }
+      } // discovery.kubernetes "services"
     
       discovery.relabel "annotation_autodiscovery_services" {
         targets = discovery.kubernetes.services.targets
@@ -587,7 +587,7 @@ data:
           source_labels = ["__scrape_timeout__"]
           target_label = "scrape_timeout"
         }
-      }
+      } // discovery.relabel "annotation_autodiscovery_services"
     
       discovery.relabel "annotation_autodiscovery_http" {
         targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
@@ -596,7 +596,7 @@ data:
           regex = "https"
           action = "drop"
         }
-      }
+      } // discovery.relabel "annotation_autodiscovery_http"
     
       discovery.relabel "annotation_autodiscovery_https" {
         targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
@@ -605,7 +605,7 @@ data:
           regex = "https"
           action = "keep"
         }
-      }
+      } // discovery.relabel "annotation_autodiscovery_https"
     
       prometheus.scrape "annotation_autodiscovery_http" {
         targets = discovery.relabel.annotation_autodiscovery_http.output
@@ -619,7 +619,7 @@ data:
         }
     
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.scrape "annotation_autodiscovery_http"
     
       prometheus.scrape "annotation_autodiscovery_https" {
         targets = discovery.relabel.annotation_autodiscovery_https.output
@@ -636,8 +636,8 @@ data:
         }
     
         forward_to = argument.metrics_destinations.value
-      }
-    }
+      } // prometheus.relabel "annotation_autodiscovery"
+    } // declare "annotation_autodiscovery"
     annotation_autodiscovery "feature" {
       metrics_destinations = [
         prometheus.remote_write.prometheus.receiver,
@@ -649,7 +649,7 @@ data:
       textfile {
         directory = "/etc/release-info"
       }
-    }
+    } // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
     
     discovery.relabel "kubernetes_monitoring_telemetry" {
       targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -663,7 +663,7 @@ data:
         action = "replace"
         replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
       }
-    }
+    } // discovery.relabel "kubernetes_monitoring_telemetry"
     
     prometheus.scrape "kubernetes_monitoring_telemetry" {
       job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -673,7 +673,7 @@ data:
         enabled = true
       }
       forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-    }
+    } // prometheus.scrape "kubernetes_monitoring_telemetry"
     
     prometheus.relabel "kubernetes_monitoring_telemetry" {
       rule {
@@ -684,7 +684,7 @@ data:
       forward_to = [
         prometheus.remote_write.prometheus.receiver,
       ]
-    }
+    } // prometheus.relabel "kubernetes_monitoring_telemetry"
     
     
     
@@ -694,7 +694,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.prometheus.receiver]
-    }
+    } // otelcol.exporter.prometheus "prometheus"
     
     prometheus.remote_write "prometheus" {
       endpoint {
@@ -737,7 +737,7 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "prometheus"
 ---
 # Source: k8s-monitoring/templates/release-info.yaml
 apiVersion: v1

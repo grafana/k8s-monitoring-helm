@@ -26,7 +26,7 @@ declare "application_observability" {
     output {
       traces = [otelcol.processor.resourcedetection.default.input]
     }
-  }
+  } // otelcol.receiver.jaeger "receiver"
 
   // Resource Detection Processor
   otelcol.processor.resourcedetection "default" {
@@ -121,7 +121,7 @@ declare "application_observability" {
       traces = argument.traces_destinations.value
     }
   }
-}
+} // declare "application_observability"
 application_observability "feature" {
   metrics_destinations = [
     otelcol.exporter.prometheus.metrics_service.input,
@@ -139,7 +139,7 @@ prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   textfile {
     directory = "/etc/release-info"
   }
-}
+} // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
 
 discovery.relabel "kubernetes_monitoring_telemetry" {
   targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -153,7 +153,7 @@ discovery.relabel "kubernetes_monitoring_telemetry" {
     action = "replace"
     replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
   }
-}
+} // discovery.relabel "kubernetes_monitoring_telemetry"
 
 prometheus.scrape "kubernetes_monitoring_telemetry" {
   job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -163,7 +163,7 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
     enabled = true
   }
   forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-}
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
 
 prometheus.relabel "kubernetes_monitoring_telemetry" {
   rule {
@@ -174,7 +174,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
   forward_to = [
     prometheus.remote_write.metrics_service.receiver,
   ]
-}
+} // prometheus.relabel "kubernetes_monitoring_telemetry"
 
 
 
@@ -182,7 +182,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
 // Destination: logs-service (loki)
 otelcol.exporter.loki "logs_service" {
   forward_to = [loki.write.logs_service.receiver]
-}
+} // otelcol.exporter.loki "logs_service"
 
 loki.write "logs_service" {
   endpoint {
@@ -207,12 +207,12 @@ loki.write "logs_service" {
     "cluster" = "external-secrets-example-cluster",
     "k8s_cluster_name" = "external-secrets-example-cluster",
   }
-}
+} // loki.write "logs_service"
 
 remote.kubernetes.secret "logs_service" {
   name      = "my-monitoring-secret"
   namespace = "monitoring"
-}
+} // remote.kubernetes.secret "logs_service"
 
 
 // Destination: metrics-service (prometheus)
@@ -220,7 +220,7 @@ otelcol.exporter.prometheus "metrics_service" {
   add_metric_suffixes = true
   resource_to_telemetry_conversion = false
   forward_to = [prometheus.remote_write.metrics_service.receiver]
-}
+} // otelcol.exporter.prometheus "metrics_service"
 
 prometheus.remote_write "metrics_service" {
   endpoint {
@@ -271,12 +271,12 @@ prometheus.remote_write "metrics_service" {
     min_keepalive_time = "5m"
     max_keepalive_time = "8h"
   }
-}
+} // prometheus.remote_write "metrics_service"
 
 remote.kubernetes.secret "metrics_service" {
   name      = "my-monitoring-secret"
   namespace = "monitoring"
-}
+} // remote.kubernetes.secret "metrics_service"
 
 
 // Destination: traces-service (otlp)
@@ -284,7 +284,7 @@ otelcol.processor.attributes "traces_service" {
   output {
     traces = [otelcol.processor.transform.traces_service.input]
   }
-}
+} // otelcol.processor.attributes "traces_service"
 
 otelcol.processor.transform "traces_service" {
   error_mode = "ignore"
@@ -316,7 +316,7 @@ otelcol.processor.transform "traces_service" {
   output {
     traces = [otelcol.processor.batch.traces_service.input]
   }
-}
+} // otelcol.processor.transform "traces_service"
 
 otelcol.processor.batch "traces_service" {
   timeout = "2s"
@@ -326,7 +326,7 @@ otelcol.processor.batch "traces_service" {
   output {
     traces = [otelcol.exporter.otlp.traces_service.input]
   }
-}
+} // otelcol.processor.batch "traces_service"
 otelcol.exporter.otlp "traces_service" {
   client {
     endpoint = convert.nonsensitive(remote.kubernetes.secret.traces_service.data["tempo-host"])
@@ -353,14 +353,14 @@ otelcol.exporter.otlp "traces_service" {
   sending_queue {
     enabled = true
   }
-}
+} // otelcol.exporter.otlp "traces_service"
 
 otelcol.auth.bearer "traces_service" {
   token = remote.kubernetes.secret.traces_service.data["tempoBearerToken"]
-}
+} // otelcol.auth.bearer "traces_service"
 
 remote.kubernetes.secret "traces_service" {
   name      = "my-tempo-secret"
   namespace = "tempo"
-}
+} // remote.kubernetes.secret "traces_service"
 

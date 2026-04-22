@@ -43,7 +43,7 @@ data:
           role = "pod"
           field = "spec.nodeName=" + sys.env("HOSTNAME")
         }
-      }
+      } // discovery.kubernetes "pods"
     
       discovery.relabel "filtered_pods" {
         targets = discovery.kubernetes.pods.targets
@@ -181,17 +181,17 @@ data:
           target_label = "instance"
           replacement = "mysql-cluster"
         }
-      }
+      } // discovery.relabel "filtered_pods"
     
       local.file_match "pod_logs" {
         path_targets = discovery.relabel.filtered_pods.output
-      }
+      } // local.file_match "pod_logs"
     
       loki.source.file "pod_logs" {
         targets    = local.file_match.pod_logs.targets
         tail_from_end = true
         forward_to = [loki.process.pod_logs.receiver]
-      }
+      } // loki.source.file "pod_logs"
     
       loki.process "pod_logs" {
         stage.match {
@@ -272,8 +272,8 @@ data:
         }
     
         forward_to = argument.logs_destinations.value
-      }
-    }
+      } // loki.secretfilter "pod_logs"
+    } // declare "pod_logs_via_loki"
     pod_logs_via_loki "feature" {
       logs_destinations = [
         loki.write.loki.receiver,
@@ -286,7 +286,7 @@ data:
     // Destination: loki (loki)
     otelcol.exporter.loki "loki" {
       forward_to = [loki.write.loki.receiver]
-    }
+    } // otelcol.exporter.loki "loki"
     
     loki.write "loki" {
       endpoint {
@@ -303,7 +303,7 @@ data:
         "cluster" = "multiple-integrations-example",
         "k8s_cluster_name" = "multiple-integrations-example",
       }
-    }
+    } // loki.write "loki"
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -445,7 +445,7 @@ data:
       remote.kubernetes.secret "mysql_cluster" {
         name      = "mysql-cluster-k8smon-integrations"
         namespace = "default"
-      }
+      } // remote.kubernetes.secret "mysql_cluster"
     
       prometheus.exporter.mysql "mysql_cluster" {
         data_source_name = string.format("%s:%s@(%s:%d)/",
@@ -499,7 +499,7 @@ data:
       textfile {
         directory = "/etc/release-info"
       }
-    }
+    } // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
     
     discovery.relabel "kubernetes_monitoring_telemetry" {
       targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -513,7 +513,7 @@ data:
         action = "replace"
         replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
       }
-    }
+    } // discovery.relabel "kubernetes_monitoring_telemetry"
     
     prometheus.scrape "kubernetes_monitoring_telemetry" {
       job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -523,7 +523,7 @@ data:
         enabled = true
       }
       forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-    }
+    } // prometheus.scrape "kubernetes_monitoring_telemetry"
     
     prometheus.relabel "kubernetes_monitoring_telemetry" {
       rule {
@@ -534,7 +534,7 @@ data:
       forward_to = [
         prometheus.remote_write.prometheus.receiver,
       ]
-    }
+    } // prometheus.relabel "kubernetes_monitoring_telemetry"
     
     
     
@@ -544,7 +544,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.prometheus.receiver]
-    }
+    } // otelcol.exporter.prometheus "prometheus"
     
     prometheus.remote_write "prometheus" {
       endpoint {
@@ -587,7 +587,7 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "prometheus"
 ---
 # Source: k8s-monitoring/templates/release-info.yaml
 apiVersion: v1

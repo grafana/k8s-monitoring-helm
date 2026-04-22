@@ -8,7 +8,7 @@ declare "cluster_events" {
     job_name   = "integrations/kubernetes/eventhandler"
     log_format = "logfmt"
     forward_to = [loki.process.cluster_events.receiver]
-  }
+  } // loki.source.kubernetes_events "cluster_events"
 
   loki.process "cluster_events" {
 
@@ -74,8 +74,8 @@ declare "cluster_events" {
     }
 
     forward_to = argument.logs_destinations.value
-  }
-}
+  } // loki.process "cluster_events"
+} // declare "cluster_events"
 cluster_events "feature" {
   logs_destinations = [
     loki.write.loki.receiver,
@@ -87,7 +87,7 @@ prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   textfile {
     directory = "/etc/release-info"
   }
-}
+} // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
 
 discovery.relabel "kubernetes_monitoring_telemetry" {
   targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -101,7 +101,7 @@ discovery.relabel "kubernetes_monitoring_telemetry" {
     action = "replace"
     replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
   }
-}
+} // discovery.relabel "kubernetes_monitoring_telemetry"
 
 prometheus.scrape "kubernetes_monitoring_telemetry" {
   job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -111,7 +111,7 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
     enabled = true
   }
   forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-}
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
 
 prometheus.relabel "kubernetes_monitoring_telemetry" {
   rule {
@@ -122,7 +122,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
   forward_to = [
     prometheus.remote_write.prometheus.receiver,
   ]
-}
+} // prometheus.relabel "kubernetes_monitoring_telemetry"
 
 
 
@@ -130,7 +130,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
 // Destination: loki (loki)
 otelcol.exporter.loki "loki" {
   forward_to = [loki.write.loki.receiver]
-}
+} // otelcol.exporter.loki "loki"
 
 loki.write "loki" {
   endpoint {
@@ -147,14 +147,14 @@ loki.write "loki" {
     "cluster" = "gke-autopilot-example-cluster",
     "k8s_cluster_name" = "gke-autopilot-example-cluster",
   }
-}
+} // loki.write "loki"
 
 // Destination: prometheus (prometheus)
 otelcol.exporter.prometheus "prometheus" {
   add_metric_suffixes = true
   resource_to_telemetry_conversion = false
   forward_to = [prometheus.remote_write.prometheus.receiver]
-}
+} // otelcol.exporter.prometheus "prometheus"
 
 prometheus.remote_write "prometheus" {
   endpoint {
@@ -197,5 +197,5 @@ prometheus.remote_write "prometheus" {
     min_keepalive_time = "5m"
     max_keepalive_time = "8h"
   }
-}
+} // prometheus.remote_write "prometheus"
 

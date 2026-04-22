@@ -32,7 +32,7 @@ discovery.relabel "kubelet" {
 {{- if .Values.kubelet.extraDiscoveryRules }}
 {{ .Values.kubelet.extraDiscoveryRules | indent 2 }}
 {{- end }}
-}
+} // discovery.relabel "kubelet"
 
 prometheus.scrape "kubelet" {
   targets  = discovery.relabel.kubelet.output
@@ -56,7 +56,7 @@ prometheus.scrape "kubelet" {
   }
 
   forward_to = [prometheus.relabel.kubelet.receiver]
-}
+} // prometheus.scrape "kubelet"
 
 prometheus.relabel "kubelet" {
   max_cache_size = {{ .Values.kubelet.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -80,6 +80,6 @@ prometheus.relabel "kubelet" {
 {{- end }}
 
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "kubelet"
 {{- end }}
 {{- end }}

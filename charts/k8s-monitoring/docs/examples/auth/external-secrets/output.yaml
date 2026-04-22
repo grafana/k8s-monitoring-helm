@@ -33,7 +33,7 @@ data:
           role = "pod"
           field = "spec.nodeName=" + sys.env("HOSTNAME")
         }
-      }
+      } // discovery.kubernetes "pods"
     
       discovery.relabel "filtered_pods" {
         targets = discovery.kubernetes.pods.targets
@@ -157,17 +157,17 @@ data:
           replacement = "/var/log/pods/*$1/*.log"
           target_label = "__path__"
         }
-      }
+      } // discovery.relabel "filtered_pods"
     
       local.file_match "pod_logs" {
         path_targets = discovery.relabel.filtered_pods.output
-      }
+      } // local.file_match "pod_logs"
     
       loki.source.file "pod_logs" {
         targets    = local.file_match.pod_logs.targets
         tail_from_end = true
         forward_to = [loki.process.pod_logs.receiver]
-      }
+      } // loki.source.file "pod_logs"
     
       loki.process "pod_logs" {
         stage.match {
@@ -217,8 +217,8 @@ data:
         }
     
         forward_to = argument.logs_destinations.value
-      }
-    }
+      } // loki.secretfilter "pod_logs"
+    } // declare "pod_logs_via_loki"
     pod_logs_via_loki "feature" {
       logs_destinations = [
         loki.write.logs_service.receiver,
@@ -231,7 +231,7 @@ data:
     // Destination: logs-service (loki)
     otelcol.exporter.loki "logs_service" {
       forward_to = [loki.write.logs_service.receiver]
-    }
+    } // otelcol.exporter.loki "logs_service"
     
     loki.write "logs_service" {
       endpoint {
@@ -256,12 +256,12 @@ data:
         "cluster" = "external-secrets-example-cluster",
         "k8s_cluster_name" = "external-secrets-example-cluster",
       }
-    }
+    } // loki.write "logs_service"
     
     remote.kubernetes.secret "logs_service" {
       name      = "my-monitoring-secret"
       namespace = "monitoring"
-    }
+    } // remote.kubernetes.secret "logs_service"
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -287,7 +287,7 @@ data:
           default_scrape_timeout = "10s"
         }
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.relabel "podmonitors"
     
       // Prometheus Operator Probe objects
       prometheus.operator.probes "probes" {
@@ -299,7 +299,7 @@ data:
           default_scrape_timeout = "10s"
         }
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.relabel "probes"
     
       // Prometheus Operator ServiceMonitor objects
       prometheus.operator.servicemonitors "service_monitors" {
@@ -312,8 +312,8 @@ data:
           default_scrape_timeout = "10s"
         }
         forward_to = argument.metrics_destinations.value
-      }
-    }
+      } // prometheus.relabel "servicemonitors"
+    } // declare "prometheus_operator_objects"
     prometheus_operator_objects "feature" {
       metrics_destinations = [
         prometheus.remote_write.metrics_service.receiver,
@@ -324,7 +324,7 @@ data:
     remote.kubernetes.secret "alloy_metrics_remote_cfg" {
       name      = "my-monitoring-secret"
       namespace = "default"
-    }
+    } // remote.kubernetes.secret "alloy_metrics_remote_cfg"
     
     remotecfg {
       id = string.format("k8smon-%s-%s-%s", "external-secrets-example-cluster", "default", constants.hostname)
@@ -357,7 +357,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.metrics_service.receiver]
-    }
+    } // otelcol.exporter.prometheus "metrics_service"
     
     prometheus.remote_write "metrics_service" {
       endpoint {
@@ -408,12 +408,12 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "metrics_service"
     
     remote.kubernetes.secret "metrics_service" {
       name      = "my-monitoring-secret"
       namespace = "monitoring"
-    }
+    } // remote.kubernetes.secret "metrics_service"
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -451,7 +451,7 @@ data:
         output {
           traces = [otelcol.processor.resourcedetection.default.input]
         }
-      }
+      } // otelcol.receiver.jaeger "receiver"
     
       // Resource Detection Processor
       otelcol.processor.resourcedetection "default" {
@@ -546,7 +546,7 @@ data:
           traces = argument.traces_destinations.value
         }
       }
-    }
+    } // declare "application_observability"
     application_observability "feature" {
       metrics_destinations = [
         otelcol.exporter.prometheus.metrics_service.input,
@@ -564,7 +564,7 @@ data:
       textfile {
         directory = "/etc/release-info"
       }
-    }
+    } // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
     
     discovery.relabel "kubernetes_monitoring_telemetry" {
       targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -578,7 +578,7 @@ data:
         action = "replace"
         replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
       }
-    }
+    } // discovery.relabel "kubernetes_monitoring_telemetry"
     
     prometheus.scrape "kubernetes_monitoring_telemetry" {
       job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -588,7 +588,7 @@ data:
         enabled = true
       }
       forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-    }
+    } // prometheus.scrape "kubernetes_monitoring_telemetry"
     
     prometheus.relabel "kubernetes_monitoring_telemetry" {
       rule {
@@ -599,7 +599,7 @@ data:
       forward_to = [
         prometheus.remote_write.metrics_service.receiver,
       ]
-    }
+    } // prometheus.relabel "kubernetes_monitoring_telemetry"
     
     
     
@@ -607,7 +607,7 @@ data:
     // Destination: logs-service (loki)
     otelcol.exporter.loki "logs_service" {
       forward_to = [loki.write.logs_service.receiver]
-    }
+    } // otelcol.exporter.loki "logs_service"
     
     loki.write "logs_service" {
       endpoint {
@@ -632,12 +632,12 @@ data:
         "cluster" = "external-secrets-example-cluster",
         "k8s_cluster_name" = "external-secrets-example-cluster",
       }
-    }
+    } // loki.write "logs_service"
     
     remote.kubernetes.secret "logs_service" {
       name      = "my-monitoring-secret"
       namespace = "monitoring"
-    }
+    } // remote.kubernetes.secret "logs_service"
     
     
     // Destination: metrics-service (prometheus)
@@ -645,7 +645,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.metrics_service.receiver]
-    }
+    } // otelcol.exporter.prometheus "metrics_service"
     
     prometheus.remote_write "metrics_service" {
       endpoint {
@@ -696,12 +696,12 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "metrics_service"
     
     remote.kubernetes.secret "metrics_service" {
       name      = "my-monitoring-secret"
       namespace = "monitoring"
-    }
+    } // remote.kubernetes.secret "metrics_service"
     
     
     // Destination: traces-service (otlp)
@@ -709,7 +709,7 @@ data:
       output {
         traces = [otelcol.processor.transform.traces_service.input]
       }
-    }
+    } // otelcol.processor.attributes "traces_service"
     
     otelcol.processor.transform "traces_service" {
       error_mode = "ignore"
@@ -741,7 +741,7 @@ data:
       output {
         traces = [otelcol.processor.batch.traces_service.input]
       }
-    }
+    } // otelcol.processor.transform "traces_service"
     
     otelcol.processor.batch "traces_service" {
       timeout = "2s"
@@ -751,7 +751,7 @@ data:
       output {
         traces = [otelcol.exporter.otlp.traces_service.input]
       }
-    }
+    } // otelcol.processor.batch "traces_service"
     otelcol.exporter.otlp "traces_service" {
       client {
         endpoint = convert.nonsensitive(remote.kubernetes.secret.traces_service.data["tempo-host"])
@@ -778,16 +778,16 @@ data:
       sending_queue {
         enabled = true
       }
-    }
+    } // otelcol.exporter.otlp "traces_service"
     
     otelcol.auth.bearer "traces_service" {
       token = remote.kubernetes.secret.traces_service.data["tempoBearerToken"]
-    }
+    } // otelcol.auth.bearer "traces_service"
     
     remote.kubernetes.secret "traces_service" {
       name      = "my-tempo-secret"
       namespace = "tempo"
-    }
+    } // remote.kubernetes.secret "traces_service"
 ---
 # Source: k8s-monitoring/templates/release-info.yaml
 apiVersion: v1

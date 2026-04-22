@@ -45,7 +45,7 @@ data:
           role = "pod"
           field = "spec.nodeName=" + sys.env("HOSTNAME")
         }
-      }
+      } // discovery.kubernetes "pods"
     
       discovery.relabel "filtered_pods" {
         targets = discovery.kubernetes.pods.targets
@@ -169,17 +169,17 @@ data:
           replacement = "/var/log/pods/*$1/*.log"
           target_label = "__path__"
         }
-      }
+      } // discovery.relabel "filtered_pods"
     
       local.file_match "pod_logs" {
         path_targets = discovery.relabel.filtered_pods.output
-      }
+      } // local.file_match "pod_logs"
     
       loki.source.file "pod_logs" {
         targets    = local.file_match.pod_logs.targets
         tail_from_end = true
         forward_to = [loki.process.pod_logs.receiver]
-      }
+      } // loki.source.file "pod_logs"
     
       loki.process "pod_logs" {
         stage.match {
@@ -229,7 +229,7 @@ data:
         }
     
         forward_to = [loki.process.secret_filter_prefilter.receiver]
-      }
+      } // loki.process "pod_logs"
     
       loki.process "secret_filter_prefilter" {
         stage.static_labels {
@@ -250,7 +250,7 @@ data:
           loki.process.secret_filter_inclusion.receiver,
           loki.process.secret_filter_exclusion.receiver,
         ]
-      }
+      } // loki.process "secret_filter_prefilter"
     
       loki.process "secret_filter_exclusion" {
         stage.match {
@@ -259,7 +259,7 @@ data:
         }
     
         forward_to = argument.logs_destinations.value
-      }
+      } // loki.process "secret_filter_exclusion"
     
       loki.process "secret_filter_inclusion" {
         stage.match {
@@ -267,13 +267,13 @@ data:
           action = "drop"
         }
         forward_to = [loki.secretfilter.pod_logs.receiver]
-      }
+      } // loki.process "secret_filter_inclusion"
     
       loki.secretfilter "pod_logs" {
         redact_with = "<REDACTED:$SECRET_NAME>"
         forward_to = argument.logs_destinations.value
-      }
-    }
+      } // loki.secretfilter "pod_logs"
+    } // declare "pod_logs_via_loki"
     pod_logs_via_loki "feature" {
       logs_destinations = [
         loki.write.localloki.receiver,
@@ -294,7 +294,7 @@ data:
     // Destination: localLoki (loki)
     otelcol.exporter.loki "localloki" {
       forward_to = [loki.write.localloki.receiver]
-    }
+    } // otelcol.exporter.loki "localloki"
     
     loki.write "localloki" {
       endpoint {
@@ -316,12 +316,12 @@ data:
         "cluster" = "pod-logs-feature-test",
         "k8s_cluster_name" = "pod-logs-feature-test",
       }
-    }
+    } // loki.write "localloki"
     
     remote.kubernetes.secret "localloki" {
       name      = "localloki-k8smon-k8s-monitoring"
       namespace = "default"
-    }
+    } // remote.kubernetes.secret "localloki"
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
