@@ -39,7 +39,7 @@ discovery.kubernetes "pods" {
     }
 {{- end }}
 {{- include "feature.podLogsViaLoki.attachNodeMetadata" . | indent 2 }}
-}
+} // discovery.kubernetes "pods"
 
 discovery.relabel "filtered_pods" {
   targets = discovery.kubernetes.pods.targets
@@ -181,5 +181,5 @@ discovery.relabel "filtered_pods" {
 {{- if .Values.extraDiscoveryRules }}
 {{ .Values.extraDiscoveryRules | indent 2 }}
 {{- end }}
-}
+} // discovery.relabel "filtered_pods"
 {{- end }}

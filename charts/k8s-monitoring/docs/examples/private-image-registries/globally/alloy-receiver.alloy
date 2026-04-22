@@ -27,7 +27,7 @@ declare "application_observability" {
       logs = [otelcol.processor.resourcedetection.default.input]
       traces = [otelcol.processor.resourcedetection.default.input]
     }
-  }
+  } // otelcol.receiver.otlp "receiver"
 
   // Resource Detection Processor
   otelcol.processor.resourcedetection "default" {
@@ -122,7 +122,7 @@ declare "application_observability" {
       traces = argument.traces_destinations.value
     }
   }
-}
+} // declare "application_observability"
 application_observability "feature" {
   metrics_destinations = [
     otelcol.exporter.prometheus.prometheus.input,
@@ -140,7 +140,7 @@ prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   textfile {
     directory = "/etc/release-info"
   }
-}
+} // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
 
 discovery.relabel "kubernetes_monitoring_telemetry" {
   targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -154,7 +154,7 @@ discovery.relabel "kubernetes_monitoring_telemetry" {
     action = "replace"
     replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
   }
-}
+} // discovery.relabel "kubernetes_monitoring_telemetry"
 
 prometheus.scrape "kubernetes_monitoring_telemetry" {
   job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -164,7 +164,7 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
     enabled = true
   }
   forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-}
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
 
 prometheus.relabel "kubernetes_monitoring_telemetry" {
   rule {
@@ -175,7 +175,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
   forward_to = [
     prometheus.remote_write.prometheus.receiver,
   ]
-}
+} // prometheus.relabel "kubernetes_monitoring_telemetry"
 
 
 
@@ -183,7 +183,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
 // Destination: loki (loki)
 otelcol.exporter.loki "loki" {
   forward_to = [loki.write.loki.receiver]
-}
+} // otelcol.exporter.loki "loki"
 
 loki.write "loki" {
   endpoint {
@@ -200,14 +200,14 @@ loki.write "loki" {
     "cluster" = "global-private-image-registries-example-cluster",
     "k8s_cluster_name" = "global-private-image-registries-example-cluster",
   }
-}
+} // loki.write "loki"
 
 // Destination: prometheus (prometheus)
 otelcol.exporter.prometheus "prometheus" {
   add_metric_suffixes = true
   resource_to_telemetry_conversion = false
   forward_to = [prometheus.remote_write.prometheus.receiver]
-}
+} // otelcol.exporter.prometheus "prometheus"
 
 prometheus.remote_write "prometheus" {
   endpoint {
@@ -250,14 +250,14 @@ prometheus.remote_write "prometheus" {
     min_keepalive_time = "5m"
     max_keepalive_time = "8h"
   }
-}
+} // prometheus.remote_write "prometheus"
 
 // Destination: tempo (otlp)
 otelcol.processor.attributes "tempo" {
   output {
     traces = [otelcol.processor.transform.tempo.input]
   }
-}
+} // otelcol.processor.attributes "tempo"
 
 otelcol.processor.transform "tempo" {
   error_mode = "ignore"
@@ -289,7 +289,7 @@ otelcol.processor.transform "tempo" {
   output {
     traces = [otelcol.exporter.loadbalancing.tempo_sampler.input]
   }
-}
+} // otelcol.processor.transform "tempo"
 
 otelcol.exporter.loadbalancing "tempo_sampler" {
   resolver {
@@ -306,7 +306,7 @@ otelcol.exporter.loadbalancing "tempo_sampler" {
       }
     }
   }
-}
+} // otelcol.exporter.loadbalancing "tempo_sampler"
 
 otelcol.processor.batch "tempo" {
   timeout = "2s"
@@ -316,7 +316,7 @@ otelcol.processor.batch "tempo" {
   output {
     traces = [otelcol.exporter.otlp.tempo.input]
   }
-}
+} // otelcol.processor.batch "tempo"
 otelcol.exporter.otlp "tempo" {
   client {
     endpoint = "http://tempo.tempo.svc:3200/api/v1/metrics"
@@ -336,5 +336,5 @@ otelcol.exporter.otlp "tempo" {
   sending_queue {
     enabled = true
   }
-}
+} // otelcol.exporter.otlp "tempo"
 

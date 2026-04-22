@@ -11,8 +11,8 @@ declare "profiles_receiver" {
     }
 
     forward_to = argument.profiles_destinations.value
-  }
-}
+  } // pyroscope.relabel "default"
+} // declare "profiles_receiver"
 profiles_receiver "feature" {
   profiles_destinations = [
     pyroscope.write.pyroscope.receiver,
@@ -44,5 +44,5 @@ pyroscope.write "pyroscope" {
     "cluster" = "profiles-receiver-cluster",
     "k8s_cluster_name" = "profiles-receiver-cluster",
   }
-}
+} // pyroscope.write "pyroscope"
 

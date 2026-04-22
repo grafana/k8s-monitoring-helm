@@ -13,7 +13,7 @@ declare "pod_logs_via_loki" {
     namespaces {
       names = ["alpha","bravo","delta"]
     }
-  }
+  } // discovery.kubernetes "pods"
 
   discovery.relabel "filtered_pods" {
     targets = discovery.kubernetes.pods.targets
@@ -137,17 +137,17 @@ declare "pod_logs_via_loki" {
       replacement = "/var/log/pods/*$1/*.log"
       target_label = "__path__"
     }
-  }
+  } // discovery.relabel "filtered_pods"
 
   local.file_match "pod_logs" {
     path_targets = discovery.relabel.filtered_pods.output
-  }
+  } // local.file_match "pod_logs"
 
   loki.source.file "pod_logs" {
     targets    = local.file_match.pod_logs.targets
     tail_from_end = true
     forward_to = [loki.process.pod_logs.receiver]
-  }
+  } // loki.source.file "pod_logs"
 
   loki.process "pod_logs" {
     stage.match {
@@ -197,8 +197,8 @@ declare "pod_logs_via_loki" {
     }
 
     forward_to = argument.logs_destinations.value
-  }
-}
+  } // loki.secretfilter "pod_logs"
+} // declare "pod_logs_via_loki"
 pod_logs_via_loki "feature" {
   logs_destinations = [
     loki.write.loki.receiver,
@@ -211,7 +211,7 @@ pod_logs_via_loki "feature" {
 // Destination: loki (loki)
 otelcol.exporter.loki "loki" {
   forward_to = [loki.write.loki.receiver]
-}
+} // otelcol.exporter.loki "loki"
 
 loki.write "loki" {
   endpoint {
@@ -233,10 +233,10 @@ loki.write "loki" {
     "cluster" = "include-by-namespace-test",
     "k8s_cluster_name" = "include-by-namespace-test",
   }
-}
+} // loki.write "loki"
 
 remote.kubernetes.secret "loki" {
   name      = "loki-k8smon-k8s-monitoring"
   namespace = "default"
-}
+} // remote.kubernetes.secret "loki"
 

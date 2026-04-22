@@ -37,7 +37,7 @@ discovery.relabel "kubelet_probes" {
 {{- if .Values.kubeletProbes.extraRelabelingRules }}
 {{ .Values.kubeletProbes.extraRelabelingRules | indent 2 }}
 {{- end }}
-}
+} // discovery.relabel "kubelet_probes"
 
 prometheus.scrape "kubelet_probes" {
   targets  = discovery.relabel.kubelet_probes.output
@@ -61,7 +61,7 @@ prometheus.scrape "kubelet_probes" {
   }
 
   forward_to = [prometheus.relabel.kubelet_probes.receiver]
-}
+} // prometheus.scrape "kubelet_probes"
 
 prometheus.relabel "kubelet_probes" {
   max_cache_size = {{ .Values.kubeletProbes.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -85,6 +85,6 @@ prometheus.relabel "kubelet_probes" {
 {{- end }}
 
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "kubelet_probes"
 {{- end }}
 {{- end }}

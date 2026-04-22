@@ -41,7 +41,7 @@ discovery.kubernetes "kepler" {
 {{- end }}
 
 {{- include "feature.hostMetrics.attachNodeMetadata" . | trim | nindent 2 }}
-}
+} // discovery.kubernetes "kepler"
 
 discovery.relabel "kepler" {
   targets = discovery.kubernetes.kepler.targets
@@ -55,7 +55,7 @@ discovery.relabel "kepler" {
 {{- if .Values.energyMetrics.extraDiscoveryRules }}
   {{- .Values.energyMetrics.extraDiscoveryRules | nindent 2 }}
 {{- end }}
-}
+} // discovery.relabel "kepler"
 
 prometheus.scrape "kepler" {
   targets      = discovery.relabel.kepler.output
@@ -71,7 +71,7 @@ prometheus.scrape "kepler" {
   }
 {{- if or $metricAllowList $metricDenyList .Values.energyMetrics.extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.kepler.receiver]
-}
+} // prometheus.scrape "kepler"
 
 prometheus.relabel "kepler" {
   max_cache_size = {{ .Values.energyMetrics.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -94,6 +94,6 @@ prometheus.relabel "kepler" {
 {{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "kepler"
 {{- end }}
 {{- end }}

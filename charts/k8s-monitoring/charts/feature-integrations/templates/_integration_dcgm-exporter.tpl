@@ -55,7 +55,7 @@ declare "dcgm_exporter_integration" {
         names = coalesce(argument.namespaces.value, [])
       }
       {{- include "feature.integrations.attachNodeMetadata" . | nindent 6 }}
-    }
+    } // discovery.kubernetes "dcgm_exporter_pods"
 
     // DCGM Exporter relabelings (pre-scrape)
     discovery.relabel "dcgm_exporter_pods" {
@@ -73,7 +73,7 @@ declare "dcgm_exporter_integration" {
         regex = coalesce(argument.port_name.value, "metrics") + "@Running@true@false"
         action = "keep"
       }
-    }
+    } // discovery.relabel "dcgm_exporter_pods"
 
     export "output" {
       value = discovery.relabel.dcgm_exporter_pods.output
@@ -153,7 +153,7 @@ declare "dcgm_exporter_integration" {
       }
 
       forward_to = [prometheus.relabel.dcgm_exporter.receiver]
-    }
+    } // prometheus.scrape "dcgm_exporter"
 
     // DCGM Exporter metric relabelings (post-scrape)
     prometheus.relabel "dcgm_exporter" {
@@ -238,7 +238,7 @@ declare "dcgm_exporter_integration" {
         action = "labeldrop"
         regex = "exported_(namespace|pod|container|job|instance)"
       }
-    }
+    } // prometheus.relabel "dcgm_exporter"
   }
   {{- range $instance := (index $.Values "dcgm-exporter").instances }}
     {{- include "integrations.dcgm-exporter.include.metrics" (deepCopy $ | merge (dict "instance" $instance)) | nindent 2 }}

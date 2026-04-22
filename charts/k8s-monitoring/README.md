@@ -600,6 +600,12 @@ details:
 | prometheusOperatorObjects.destinations | list | `[]` | The destinations where metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | prometheusOperatorObjects.enabled | bool | `false` | Enable gathering metrics from Prometheus Operator Objects. |
 
+### Configuration Management
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| replaceComponent | list | `[]` | *Experimental*: Replace the body of a generated Alloy component with custom content. Each entry must match the `type` and `name` of a component that the chart would otherwise render (e.g. `prometheus.relabel "metricsService"`). The templated component must end with a `} // <type> "<name>"` close tag for replacement to find it, otherwise the render fails. Set `module: <name>` to scope the replacement to a component inside a `declare "<module>" { ... }` block. |
+
 ### Features - Self-reporting
 
 | Key | Type | Default | Description |

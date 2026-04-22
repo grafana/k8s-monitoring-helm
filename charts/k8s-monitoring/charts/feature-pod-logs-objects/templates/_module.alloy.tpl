@@ -5,5 +5,5 @@ declare "pod_logs_objects" {
   }
   {{ include "feature.podLogsObjects.discovery.alloy" . | nindent 2 }}
   {{ include "feature.podLogsObjects.processing.alloy" . | nindent 2 }}
-}
+} // declare "pod_logs_objects"
 {{- end -}}

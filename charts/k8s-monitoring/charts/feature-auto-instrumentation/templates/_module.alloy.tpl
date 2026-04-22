@@ -19,7 +19,7 @@ declare "auto_instrumentation" {
       role = "pod"
       label = {{ $labelSelectors | join "," | quote }}
     }
-  }
+  } // discovery.kubernetes "beyla_pods"
 
   discovery.relabel "beyla_pods" {
     targets = discovery.kubernetes.beyla_pods.targets
@@ -32,7 +32,7 @@ declare "auto_instrumentation" {
 {{- if .Values.beyla.extraDiscoveryRules }}
 {{ .Values.beyla.extraDiscoveryRules | indent 4 }}
 {{- end }}
-  }
+  } // discovery.relabel "beyla_pods"
 
   prometheus.scrape "beyla_applications" {
     targets         = discovery.relabel.beyla_pods.output
@@ -49,7 +49,7 @@ declare "auto_instrumentation" {
 {{- else }}
     forward_to = argument.metrics_destinations.value
 {{- end }}
-  }
+  } // prometheus.scrape "beyla_applications"
 
   prometheus.scrape "beyla_internal" {
     targets         = discovery.relabel.beyla_pods.output
@@ -65,7 +65,7 @@ declare "auto_instrumentation" {
     }
 {{- if or $metricAllowList $metricDenyList .Values.beyla.extraMetricProcessingRules }}
     forward_to = [prometheus.relabel.beyla.receiver]
-  }
+  } // prometheus.scrape "beyla_internal"
 
   prometheus.relabel "beyla" {
     max_cache_size = {{ .Values.beyla.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -88,6 +88,6 @@ declare "auto_instrumentation" {
 {{- end }}
 {{- end }}
     forward_to = argument.metrics_destinations.value
-  }
-}
+  } // prometheus.relabel "beyla"
+} // declare "auto_instrumentation"
 {{- end -}}

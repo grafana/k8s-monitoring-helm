@@ -37,7 +37,7 @@ should create a ConfigMap that sets custom journal labels:
           }
 
           forward_to = [] // No forward_to is used in this component, the defined rules are used in the loki.source.journal component
-        }
+        } // loki.relabel "journal"
 
         loki.source.journal "worker" {
           path = "/var/log/journal"
@@ -49,7 +49,7 @@ should create a ConfigMap that sets custom journal labels:
             instance = sys.env("HOSTNAME"),
           }
           forward_to = [loki.process.journal_logs.receiver]
-        }
+        } // loki.source.journal "worker"
 
         loki.process "journal_logs" {
           stage.static_labels {
@@ -138,5 +138,5 @@ should create a ConfigMap that sets custom journal labels:
           }
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.process "journal_logs"
+      } // declare "node_logs"
