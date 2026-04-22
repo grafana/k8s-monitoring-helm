@@ -6,19 +6,19 @@ allows you to disable retry on failure:
         output {
           metrics = [otelcol.processor.attributes.test.input]
         }
-      }
+      } // otelcol.receiver.prometheus "test"
       otelcol.receiver.loki "test" {
         output {
           logs = [otelcol.processor.attributes.test.input]
         }
-      }
+      } // otelcol.receiver.loki "test"
       otelcol.processor.attributes "test" {
         output {
           metrics = [otelcol.processor.transform.test.input]
           logs = [otelcol.processor.transform.test.input]
           traces = [otelcol.processor.transform.test.input]
         }
-      }
+      } // otelcol.processor.attributes "test"
 
       otelcol.processor.transform "test" {
         error_mode = "ignore"
@@ -148,7 +148,7 @@ allows you to disable retry on failure:
           logs = [otelcol.processor.batch.test.input]
           traces = [otelcol.processor.batch.test.input]
         }
-      }
+      } // otelcol.processor.transform "test"
 
       otelcol.processor.batch "test" {
         timeout = "2s"
@@ -160,7 +160,7 @@ allows you to disable retry on failure:
           logs = [otelcol.exporter.otlp.test.input]
           traces = [otelcol.exporter.otlp.test.input]
         }
-      }
+      } // otelcol.processor.batch "test"
       otelcol.exporter.otlp "test" {
         client {
           endpoint = "https://otlp.example.com"
@@ -180,7 +180,7 @@ allows you to disable retry on failure:
         sending_queue {
           enabled = true
         }
-      }
+      } // otelcol.exporter.otlp "test"
 allows you to set per-signal paths when using http:
   1: |
     |
@@ -189,19 +189,19 @@ allows you to set per-signal paths when using http:
         output {
           metrics = [otelcol.processor.attributes.test.input]
         }
-      }
+      } // otelcol.receiver.prometheus "test"
       otelcol.receiver.loki "test" {
         output {
           logs = [otelcol.processor.attributes.test.input]
         }
-      }
+      } // otelcol.receiver.loki "test"
       otelcol.processor.attributes "test" {
         output {
           metrics = [otelcol.processor.transform.test.input]
           logs = [otelcol.processor.transform.test.input]
           traces = [otelcol.processor.transform.test.input]
         }
-      }
+      } // otelcol.processor.attributes "test"
 
       otelcol.processor.transform "test" {
         error_mode = "ignore"
@@ -331,7 +331,7 @@ allows you to set per-signal paths when using http:
           logs = [otelcol.processor.batch.test.input]
           traces = [otelcol.processor.batch.test.input]
         }
-      }
+      } // otelcol.processor.transform "test"
 
       otelcol.processor.batch "test" {
         timeout = "2s"
@@ -343,7 +343,7 @@ allows you to set per-signal paths when using http:
           logs = [otelcol.exporter.otlphttp.test.input]
           traces = [otelcol.exporter.otlphttp.test.input]
         }
-      }
+      } // otelcol.processor.batch "test"
       otelcol.exporter.otlphttp "test" {
         metrics_endpoint = "http://custom-backend.monitoring.svc.cluster.local:4318/v2/metric/otlp"
         logs_endpoint = "http://custom-backend.monitoring.svc.cluster.local:4318/v2/log/otlp"
@@ -366,7 +366,7 @@ allows you to set per-signal paths when using http:
         sending_queue {
           enabled = true
         }
-      }
+      } // otelcol.exporter.otlphttp "test"
 allows you to use basic authentication:
   1: |
     |
@@ -375,19 +375,19 @@ allows you to use basic authentication:
         output {
           metrics = [otelcol.processor.attributes.test.input]
         }
-      }
+      } // otelcol.receiver.prometheus "test"
       otelcol.receiver.loki "test" {
         output {
           logs = [otelcol.processor.attributes.test.input]
         }
-      }
+      } // otelcol.receiver.loki "test"
       otelcol.processor.attributes "test" {
         output {
           metrics = [otelcol.processor.transform.test.input]
           logs = [otelcol.processor.transform.test.input]
           traces = [otelcol.processor.transform.test.input]
         }
-      }
+      } // otelcol.processor.attributes "test"
 
       otelcol.processor.transform "test" {
         error_mode = "ignore"
@@ -517,7 +517,7 @@ allows you to use basic authentication:
           logs = [otelcol.processor.batch.test.input]
           traces = [otelcol.processor.batch.test.input]
         }
-      }
+      } // otelcol.processor.transform "test"
 
       otelcol.processor.batch "test" {
         timeout = "2s"
@@ -529,7 +529,7 @@ allows you to use basic authentication:
           logs = [otelcol.exporter.otlp.test.input]
           traces = [otelcol.exporter.otlp.test.input]
         }
-      }
+      } // otelcol.processor.batch "test"
       otelcol.exporter.otlp "test" {
         client {
           endpoint = "https://otlp.example.com"
@@ -550,17 +550,17 @@ allows you to use basic authentication:
         sending_queue {
           enabled = true
         }
-      }
+      } // otelcol.exporter.otlp "test"
 
       otelcol.auth.basic "test" {
         username = convert.nonsensitive(remote.kubernetes.secret.test.data["username"])
         password = remote.kubernetes.secret.test.data["password"]
-      }
+      } // otelcol.auth.basic "test"
 
       remote.kubernetes.secret "test" {
         name      = "test-release-name-k8s-monitoring"
         namespace = "NAMESPACE"
-      }
+      } // remote.kubernetes.secret "test"
 allows you to use basic authentication with a numeric username:
   1: |
     |
@@ -569,19 +569,19 @@ allows you to use basic authentication with a numeric username:
         output {
           metrics = [otelcol.processor.attributes.test.input]
         }
-      }
+      } // otelcol.receiver.prometheus "test"
       otelcol.receiver.loki "test" {
         output {
           logs = [otelcol.processor.attributes.test.input]
         }
-      }
+      } // otelcol.receiver.loki "test"
       otelcol.processor.attributes "test" {
         output {
           metrics = [otelcol.processor.transform.test.input]
           logs = [otelcol.processor.transform.test.input]
           traces = [otelcol.processor.transform.test.input]
         }
-      }
+      } // otelcol.processor.attributes "test"
 
       otelcol.processor.transform "test" {
         error_mode = "ignore"
@@ -711,7 +711,7 @@ allows you to use basic authentication with a numeric username:
           logs = [otelcol.processor.batch.test.input]
           traces = [otelcol.processor.batch.test.input]
         }
-      }
+      } // otelcol.processor.transform "test"
 
       otelcol.processor.batch "test" {
         timeout = "2s"
@@ -723,7 +723,7 @@ allows you to use basic authentication with a numeric username:
           logs = [otelcol.exporter.otlp.test.input]
           traces = [otelcol.exporter.otlp.test.input]
         }
-      }
+      } // otelcol.processor.batch "test"
       otelcol.exporter.otlp "test" {
         client {
           endpoint = "https://otlp.example.com"
@@ -744,17 +744,17 @@ allows you to use basic authentication with a numeric username:
         sending_queue {
           enabled = true
         }
-      }
+      } // otelcol.exporter.otlp "test"
 
       otelcol.auth.basic "test" {
         username = convert.nonsensitive(remote.kubernetes.secret.test.data["username"])
         password = remote.kubernetes.secret.test.data["password"]
-      }
+      } // otelcol.auth.basic "test"
 
       remote.kubernetes.secret "test" {
         name      = "test-release-name-k8s-monitoring"
         namespace = "NAMESPACE"
-      }
+      } // remote.kubernetes.secret "test"
 creates the Alloy components for an OTLP destination:
   1: |
     |
@@ -763,19 +763,19 @@ creates the Alloy components for an OTLP destination:
         output {
           metrics = [otelcol.processor.attributes.test.input]
         }
-      }
+      } // otelcol.receiver.prometheus "test"
       otelcol.receiver.loki "test" {
         output {
           logs = [otelcol.processor.attributes.test.input]
         }
-      }
+      } // otelcol.receiver.loki "test"
       otelcol.processor.attributes "test" {
         output {
           metrics = [otelcol.processor.transform.test.input]
           logs = [otelcol.processor.transform.test.input]
           traces = [otelcol.processor.transform.test.input]
         }
-      }
+      } // otelcol.processor.attributes "test"
 
       otelcol.processor.transform "test" {
         error_mode = "ignore"
@@ -905,7 +905,7 @@ creates the Alloy components for an OTLP destination:
           logs = [otelcol.processor.batch.test.input]
           traces = [otelcol.processor.batch.test.input]
         }
-      }
+      } // otelcol.processor.transform "test"
 
       otelcol.processor.batch "test" {
         timeout = "2s"
@@ -917,7 +917,7 @@ creates the Alloy components for an OTLP destination:
           logs = [otelcol.exporter.otlp.test.input]
           traces = [otelcol.exporter.otlp.test.input]
         }
-      }
+      } // otelcol.processor.batch "test"
       otelcol.exporter.otlp "test" {
         client {
           endpoint = "https://otlp.example.com"
@@ -937,4 +937,4 @@ creates the Alloy components for an OTLP destination:
         sending_queue {
           enabled = true
         }
-      }
+      } // otelcol.exporter.otlp "test"

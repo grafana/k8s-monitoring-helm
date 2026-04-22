@@ -13,7 +13,7 @@ should be able to filter by label and annotation:
             label = "app.kubernetes.io/name=secret-program,colors in (blue,green)"
             field = "spec.nodeName=" + sys.env("HOSTNAME")
           }
-        }
+        } // discovery.kubernetes "java_pods"
 
         discovery.relabel "potential_java_pods" {
           targets = discovery.kubernetes.java_pods.targets
@@ -27,11 +27,11 @@ should be able to filter by label and annotation:
             regex         = "true"
             action        = "keep"
           }
-        }
+        } // discovery.relabel "potential_java_pods"
 
         discovery.process "java_pods" {
           join = discovery.relabel.potential_java_pods.output
-        }
+        } // discovery.process "java_pods"
 
         discovery.relabel "java_pods" {
           targets = discovery.process.java_pods.targets
@@ -119,7 +119,7 @@ should be able to filter by label and annotation:
             replacement = "alloy/pyroscope.java"
             target_label = "source"
           }
-        }
+        } // discovery.relabel "java_pods"
 
         pyroscope.java "java_pods" {
           targets = discovery.relabel.java_pods.output
@@ -132,8 +132,8 @@ should be able to filter by label and annotation:
             event = "itimer"
           }
           forward_to = argument.profiles_destinations.value
-        }
-      }
+        } // pyroscope.java "java_pods"
+      } // declare "profiling"
 should be able to target all pods, without requiring the annotation:
   1: |
     |-
@@ -148,7 +148,7 @@ should be able to target all pods, without requiring the annotation:
             role = "pod"
             field = "spec.nodeName=" + sys.env("HOSTNAME")
           }
-        }
+        } // discovery.kubernetes "java_pods"
 
         discovery.relabel "potential_java_pods" {
           targets = discovery.kubernetes.java_pods.targets
@@ -162,11 +162,11 @@ should be able to target all pods, without requiring the annotation:
             regex         = "false"
             action        = "drop"
           }
-        }
+        } // discovery.relabel "potential_java_pods"
 
         discovery.process "java_pods" {
           join = discovery.relabel.potential_java_pods.output
-        }
+        } // discovery.process "java_pods"
 
         discovery.relabel "java_pods" {
           targets = discovery.process.java_pods.targets
@@ -249,7 +249,7 @@ should be able to target all pods, without requiring the annotation:
             replacement = "alloy/pyroscope.java"
             target_label = "source"
           }
-        }
+        } // discovery.relabel "java_pods"
 
         pyroscope.java "java_pods" {
           targets = discovery.relabel.java_pods.output
@@ -262,8 +262,8 @@ should be able to target all pods, without requiring the annotation:
             event = "itimer"
           }
           forward_to = argument.profiles_destinations.value
-        }
-      }
+        } // pyroscope.java "java_pods"
+      } // declare "profiling"
 should build the Java profiling configuration:
   1: |
     |-
@@ -278,7 +278,7 @@ should build the Java profiling configuration:
             role = "pod"
             field = "spec.nodeName=" + sys.env("HOSTNAME")
           }
-        }
+        } // discovery.kubernetes "java_pods"
 
         discovery.relabel "potential_java_pods" {
           targets = discovery.kubernetes.java_pods.targets
@@ -292,11 +292,11 @@ should build the Java profiling configuration:
             regex         = "true"
             action        = "keep"
           }
-        }
+        } // discovery.relabel "potential_java_pods"
 
         discovery.process "java_pods" {
           join = discovery.relabel.potential_java_pods.output
-        }
+        } // discovery.process "java_pods"
 
         discovery.relabel "java_pods" {
           targets = discovery.process.java_pods.targets
@@ -379,7 +379,7 @@ should build the Java profiling configuration:
             replacement = "alloy/pyroscope.java"
             target_label = "source"
           }
-        }
+        } // discovery.relabel "java_pods"
 
         pyroscope.java "java_pods" {
           targets = discovery.relabel.java_pods.output
@@ -392,5 +392,5 @@ should build the Java profiling configuration:
             event = "itimer"
           }
           forward_to = argument.profiles_destinations.value
-        }
-      }
+        } // pyroscope.java "java_pods"
+      } // declare "profiling"

@@ -24,7 +24,7 @@ discovery.kubernetes "java_pods" {
     names = {{ .Values.java.namespaces | toJson }}
   }
 {{- end }}
-}
+} // discovery.kubernetes "java_pods"
 
 discovery.relabel "potential_java_pods" {
   targets = discovery.kubernetes.java_pods.targets
@@ -46,11 +46,11 @@ discovery.relabel "potential_java_pods" {
     action        = "drop"
   }
 {{- end }}
-}
+} // discovery.relabel "potential_java_pods"
 
 discovery.process "java_pods" {
   join = discovery.relabel.potential_java_pods.output
-}
+} // discovery.process "java_pods"
 
 discovery.relabel "java_pods" {
   targets = discovery.process.java_pods.targets
@@ -162,7 +162,7 @@ discovery.relabel "java_pods" {
 {{- if .Values.java.extraDiscoveryRules }}
 {{ .Values.java.extraDiscoveryRules | indent 2 }}
 {{- end }}
-}
+} // discovery.relabel "java_pods"
 
 pyroscope.java "java_pods" {
   targets = discovery.relabel.java_pods.output
@@ -175,6 +175,6 @@ pyroscope.java "java_pods" {
     event = {{ .Values.java.profilingConfig.event | quote }}
   }
   forward_to = argument.profiles_destinations.value
-}
+} // pyroscope.java "java_pods"
 {{- end }}
 {{- end }}

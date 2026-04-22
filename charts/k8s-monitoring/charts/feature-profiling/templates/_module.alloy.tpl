@@ -7,5 +7,5 @@ declare "profiling" {
   {{- include "feature.profiling.ebpf.alloy" . | indent 2 }}
   {{- include "feature.profiling.java.alloy" . | indent 2 }}
   {{- include "feature.profiling.pprof.alloy" . | indent 2 }}
-}
+} // declare "profiling"
 {{- end -}}

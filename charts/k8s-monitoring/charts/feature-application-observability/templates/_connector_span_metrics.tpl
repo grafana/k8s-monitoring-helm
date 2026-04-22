@@ -23,7 +23,7 @@ otelcol.processor.filter "span_metrics_prefilter" {
   output {
     traces = [otelcol.connector.spanmetrics.{{ .name | default "default" }}.input]
   }
-}
+} // otelcol.processor.filter "span_metrics_prefilter"
 
 otelcol.connector.spanmetrics "{{ .name | default "default" }}" {
 {{- range $dimension := .Values.connectors.spanMetrics.dimensions }}
@@ -112,5 +112,5 @@ otelcol.processor.transform "span_metrics_transform" {
     metrics = {{ .metrics }}
 {{- end }}
   }
-}
+} // otelcol.processor.transform "span_metrics_transform"
 {{- end }}

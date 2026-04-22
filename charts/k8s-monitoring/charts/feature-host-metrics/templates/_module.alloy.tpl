@@ -8,5 +8,5 @@ declare "host_metrics" {
   {{- include "feature.hostMetrics.linuxHosts.alloy" . | indent 2 }}
   {{- include "feature.hostMetrics.windowsHosts.alloy" . | indent 2 }}
   {{- include "feature.hostMetrics.energyMetrics.alloy" . | indent 2 }}
-}
+} // declare "host_metrics"
 {{- end -}}

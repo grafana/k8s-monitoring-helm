@@ -45,7 +45,7 @@ prometheus.operator.scrapeconfigs "scrapeConfigs" {
 {{- end }}
 {{- if or $metricAllowList $metricDenyList .Values.scrapeConfigs.extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.scrapeConfigs.receiver]
-}
+} // prometheus.operator.scrapeconfigs "scrapeConfigs"
 
 prometheus.relabel "scrapeConfigs" {
   max_cache_size = {{ .Values.scrapeConfigs.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -68,6 +68,6 @@ prometheus.relabel "scrapeConfigs" {
 {{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "scrapeConfigs"
 {{- end }}
 {{- end }}

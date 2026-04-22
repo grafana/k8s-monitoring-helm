@@ -29,7 +29,7 @@ discovery.kubernetes "pods" {
   }
 {{- end }}
 {{- include "feature.annotationAutodiscovery.attachNodeMetadata" . | indent 2 }}
-}
+} // discovery.kubernetes "pods"
 
 discovery.relabel "annotation_autodiscovery_pods" {
   targets = discovery.kubernetes.pods.targets
@@ -206,5 +206,5 @@ discovery.relabel "annotation_autodiscovery_pods" {
 {{- if .Values.extraDiscoveryRules }}
 {{ .Values.extraDiscoveryRules | indent 2 }}
 {{- end }}
-}
+} // discovery.relabel "annotation_autodiscovery_pods"
 {{- end -}}

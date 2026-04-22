@@ -7,5 +7,5 @@ declare "pod_logs_via_loki" {
   {{- include "feature.podLogsViaLoki.discovery.alloy" . | nindent 2 }}
   {{- include "feature.podLogsViaLoki.gathering.alloy" . | nindent 2 }}
   {{- include "feature.podLogsViaLoki.processing.alloy" . | nindent 2 }}
-}
+} // declare "pod_logs_via_loki"
 {{- end -}}

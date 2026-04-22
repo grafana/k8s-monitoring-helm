@@ -12,7 +12,7 @@ discovery.kubernetes "kube_controller_manager" {
     role = "pod"
     label = {{ .Values.kubeControllerManager.selectorLabel | quote }}
   }
-}
+} // discovery.kubernetes "kube_controller_manager"
 
 discovery.relabel "kube_controller_manager" {
   targets = discovery.kubernetes.kube_controller_manager.targets
@@ -24,7 +24,7 @@ discovery.relabel "kube_controller_manager" {
 {{- if .Values.kubeControllerManager.extraDiscoveryRules }}
 {{ .Values.kubeControllerManager.extraDiscoveryRules | indent 2 }}
 {{- end }}
-}
+} // discovery.relabel "kube_controller_manager"
 
 prometheus.scrape "kube_controller_manager" {
   targets           = discovery.relabel.kube_controller_manager.output
@@ -44,7 +44,7 @@ prometheus.scrape "kube_controller_manager" {
   }
 {{- if or $metricAllowList $metricDenyList .Values.kubeControllerManager.extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.kube_controller_manager.receiver]
-}
+} // prometheus.scrape "kube_controller_manager"
 
 prometheus.relabel "kube_controller_manager" {
   max_cache_size = {{ .Values.kubeControllerManager.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -67,6 +67,6 @@ prometheus.relabel "kube_controller_manager" {
 {{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "kube_controller_manager"
 {{- end }}
 {{- end }}

@@ -8,7 +8,7 @@ should allow setting static labels:
 
         discovery.kubernetes "pods" {
           role = "pod"
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "filtered_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -107,7 +107,7 @@ should allow setting static labels:
             regex = "(.+)"
             target_label = "app_kubernetes_io_name"
           }
-        }
+        } // discovery.relabel "filtered_pods"
 
         loki.source.kubernetes "pod_logs" {
           targets = discovery.relabel.filtered_pods.output
@@ -115,7 +115,7 @@ should allow setting static labels:
             enabled = true
           }
           forward_to = [loki.process.pod_logs.receiver]
-        }
+        } // loki.source.kubernetes "pod_logs"
 
         loki.process "pod_logs" {
           stage.match {
@@ -172,8 +172,8 @@ should allow setting static labels:
           }
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.secretfilter "pod_logs"
+      } // declare "pod_logs_via_kubernetes_api"
 should allow setting structured metadata:
   1: |
     |-
@@ -184,7 +184,7 @@ should allow setting structured metadata:
 
         discovery.kubernetes "pods" {
           role = "pod"
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "filtered_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -283,7 +283,7 @@ should allow setting structured metadata:
             regex = "(.+)"
             target_label = "app_kubernetes_io_name"
           }
-        }
+        } // discovery.relabel "filtered_pods"
 
         loki.source.kubernetes "pod_logs" {
           targets = discovery.relabel.filtered_pods.output
@@ -291,7 +291,7 @@ should allow setting structured metadata:
             enabled = true
           }
           forward_to = [loki.process.pod_logs.receiver]
-        }
+        } // loki.source.kubernetes "pod_logs"
 
         loki.process "pod_logs" {
           stage.match {
@@ -343,8 +343,8 @@ should allow setting structured metadata:
           }
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.secretfilter "pod_logs"
+      } // declare "pod_logs_via_kubernetes_api"
 should allow using label selectors:
   1: |
     |-
@@ -359,7 +359,7 @@ should allow using label selectors:
             role = "pod"
             label = "app=myapp"
           }
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "filtered_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -458,7 +458,7 @@ should allow using label selectors:
             regex = "(.+)"
             target_label = "app_kubernetes_io_name"
           }
-        }
+        } // discovery.relabel "filtered_pods"
 
         loki.source.kubernetes "pod_logs" {
           targets = discovery.relabel.filtered_pods.output
@@ -466,7 +466,7 @@ should allow using label selectors:
             enabled = true
           }
           forward_to = [loki.process.pod_logs.receiver]
-        }
+        } // loki.source.kubernetes "pod_logs"
 
         loki.process "pod_logs" {
           stage.match {
@@ -516,8 +516,8 @@ should allow using label selectors:
           }
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.secretfilter "pod_logs"
+      } // declare "pod_logs_via_kubernetes_api"
 should allow using label selectors with multiple values:
   1: |
     |-
@@ -532,7 +532,7 @@ should allow using label selectors with multiple values:
             role = "pod"
             label = "color in (blue,green)"
           }
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "filtered_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -631,7 +631,7 @@ should allow using label selectors with multiple values:
             regex = "(.+)"
             target_label = "app_kubernetes_io_name"
           }
-        }
+        } // discovery.relabel "filtered_pods"
 
         loki.source.kubernetes "pod_logs" {
           targets = discovery.relabel.filtered_pods.output
@@ -639,7 +639,7 @@ should allow using label selectors with multiple values:
             enabled = true
           }
           forward_to = [loki.process.pod_logs.receiver]
-        }
+        } // loki.source.kubernetes "pod_logs"
 
         loki.process "pod_logs" {
           stage.match {
@@ -689,8 +689,8 @@ should allow using label selectors with multiple values:
           }
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.secretfilter "pod_logs"
+      } // declare "pod_logs_via_kubernetes_api"
 should allow using the secret filter:
   1: |
     |-
@@ -701,7 +701,7 @@ should allow using the secret filter:
 
         discovery.kubernetes "pods" {
           role = "pod"
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "filtered_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -800,7 +800,7 @@ should allow using the secret filter:
             regex = "(.+)"
             target_label = "app_kubernetes_io_name"
           }
-        }
+        } // discovery.relabel "filtered_pods"
 
         loki.source.kubernetes "pod_logs" {
           targets = discovery.relabel.filtered_pods.output
@@ -808,7 +808,7 @@ should allow using the secret filter:
             enabled = true
           }
           forward_to = [loki.process.pod_logs.receiver]
-        }
+        } // loki.source.kubernetes "pod_logs"
 
         loki.process "pod_logs" {
           stage.match {
@@ -858,13 +858,13 @@ should allow using the secret filter:
           }
 
           forward_to = [loki.secretfilter.pod_logs.receiver]
-        }
+        } // loki.process "secret_filter_inclusion"
 
         loki.secretfilter "pod_logs" {
           redact_percent = 80
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.secretfilter "pod_logs"
+      } // declare "pod_logs_via_kubernetes_api"
 should allow using the secret filter with a gitleaks config and other settings:
   1: |
     |-
@@ -875,7 +875,7 @@ should allow using the secret filter with a gitleaks config and other settings:
 
         discovery.kubernetes "pods" {
           role = "pod"
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "filtered_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -974,7 +974,7 @@ should allow using the secret filter with a gitleaks config and other settings:
             regex = "(.+)"
             target_label = "app_kubernetes_io_name"
           }
-        }
+        } // discovery.relabel "filtered_pods"
 
         loki.source.kubernetes "pod_logs" {
           targets = discovery.relabel.filtered_pods.output
@@ -982,7 +982,7 @@ should allow using the secret filter with a gitleaks config and other settings:
             enabled = true
           }
           forward_to = [loki.process.pod_logs.receiver]
-        }
+        } // loki.source.kubernetes "pod_logs"
 
         loki.process "pod_logs" {
           stage.match {
@@ -1032,14 +1032,14 @@ should allow using the secret filter with a gitleaks config and other settings:
           }
 
           forward_to = [loki.secretfilter.pod_logs.receiver]
-        }
+        } // loki.process "secret_filter_inclusion"
 
         loki.secretfilter "pod_logs" {
           gitleaks_config = "/var/log/gitleaks.toml"
           redact_with = "<ALLOY-REDACTED-SECRET:$SECRET_NAME:$SECRET_HASH>"
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.secretfilter "pod_logs"
+      } // declare "pod_logs_via_kubernetes_api"
 should allow using the secret filter with an allowlist:
   1: |
     |-
@@ -1050,7 +1050,7 @@ should allow using the secret filter with an allowlist:
 
         discovery.kubernetes "pods" {
           role = "pod"
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "filtered_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -1149,7 +1149,7 @@ should allow using the secret filter with an allowlist:
             regex = "(.+)"
             target_label = "app_kubernetes_io_name"
           }
-        }
+        } // discovery.relabel "filtered_pods"
 
         loki.source.kubernetes "pod_logs" {
           targets = discovery.relabel.filtered_pods.output
@@ -1157,7 +1157,7 @@ should allow using the secret filter with an allowlist:
             enabled = true
           }
           forward_to = [loki.process.pod_logs.receiver]
-        }
+        } // loki.source.kubernetes "pod_logs"
 
         loki.process "pod_logs" {
           stage.match {
@@ -1207,7 +1207,7 @@ should allow using the secret filter with an allowlist:
           }
 
           forward_to = [loki.secretfilter.pod_logs.receiver]
-        }
+        } // loki.process "secret_filter_inclusion"
 
         loki.secretfilter "pod_logs" {
           allowlist = [
@@ -1216,8 +1216,8 @@ should allow using the secret filter with an allowlist:
           ]
           redact_percent = 80
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.secretfilter "pod_logs"
+      } // declare "pod_logs_via_kubernetes_api"
 should allow using the secret filter with an inclusion filter, to split which logs are filtered:
   1: |
     |-
@@ -1228,7 +1228,7 @@ should allow using the secret filter with an inclusion filter, to split which lo
 
         discovery.kubernetes "pods" {
           role = "pod"
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "filtered_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -1327,7 +1327,7 @@ should allow using the secret filter with an inclusion filter, to split which lo
             regex = "(.+)"
             target_label = "app_kubernetes_io_name"
           }
-        }
+        } // discovery.relabel "filtered_pods"
 
         loki.source.kubernetes "pod_logs" {
           targets = discovery.relabel.filtered_pods.output
@@ -1335,7 +1335,7 @@ should allow using the secret filter with an inclusion filter, to split which lo
             enabled = true
           }
           forward_to = [loki.process.pod_logs.receiver]
-        }
+        } // loki.source.kubernetes "pod_logs"
 
         loki.process "pod_logs" {
           stage.match {
@@ -1385,7 +1385,7 @@ should allow using the secret filter with an inclusion filter, to split which lo
           }
 
           forward_to = [loki.process.secret_filter_prefilter.receiver]
-        }
+        } // loki.process "pod_logs"
 
         loki.process "secret_filter_prefilter" {
           stage.static_labels {
@@ -1406,7 +1406,7 @@ should allow using the secret filter with an inclusion filter, to split which lo
             loki.process.secret_filter_inclusion.receiver,
             loki.process.secret_filter_exclusion.receiver,
           ]
-        }
+        } // loki.process "secret_filter_prefilter"
 
         loki.process "secret_filter_exclusion" {
           stage.match {
@@ -1415,7 +1415,7 @@ should allow using the secret filter with an inclusion filter, to split which lo
           }
 
           forward_to = argument.logs_destinations.value
-        }
+        } // loki.process "secret_filter_exclusion"
 
         loki.process "secret_filter_inclusion" {
           stage.match {
@@ -1423,13 +1423,13 @@ should allow using the secret filter with an inclusion filter, to split which lo
             action = "drop"
           }
           forward_to = [loki.secretfilter.pod_logs.receiver]
-        }
+        } // loki.process "secret_filter_inclusion"
 
         loki.secretfilter "pod_logs" {
           redact_percent = 80
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.secretfilter "pod_logs"
+      } // declare "pod_logs_via_kubernetes_api"
 should render the default configuration:
   1: |
     |-
@@ -1440,7 +1440,7 @@ should render the default configuration:
 
         discovery.kubernetes "pods" {
           role = "pod"
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "filtered_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -1539,7 +1539,7 @@ should render the default configuration:
             regex = "(.+)"
             target_label = "app_kubernetes_io_name"
           }
-        }
+        } // discovery.relabel "filtered_pods"
 
         loki.source.kubernetes "pod_logs" {
           targets = discovery.relabel.filtered_pods.output
@@ -1547,7 +1547,7 @@ should render the default configuration:
             enabled = true
           }
           forward_to = [loki.process.pod_logs.receiver]
-        }
+        } // loki.source.kubernetes "pod_logs"
 
         loki.process "pod_logs" {
           stage.match {
@@ -1597,5 +1597,5 @@ should render the default configuration:
           }
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.secretfilter "pod_logs"
+      } // declare "pod_logs_via_kubernetes_api"

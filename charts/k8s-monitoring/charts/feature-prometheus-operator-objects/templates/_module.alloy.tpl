@@ -16,5 +16,5 @@ declare "prometheus_operator_objects" {
 {{- if .Values.serviceMonitors.enabled }}
   {{- include "feature.prometheusOperatorObjects.serviceMonitors.alloy" . | nindent 2 }}
 {{- end }}
-}
+} // declare "prometheus_operator_objects"
 {{- end -}}

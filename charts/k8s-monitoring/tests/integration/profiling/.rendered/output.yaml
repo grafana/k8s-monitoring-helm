@@ -33,7 +33,7 @@ data:
           role = "pod"
           field = "spec.nodeName=" + sys.env("HOSTNAME")
         }
-      }
+      } // discovery.kubernetes "ebpf_pods"
     
       discovery.relabel "ebpf_pods" {
         targets = discovery.kubernetes.ebpf_pods.targets
@@ -116,7 +116,7 @@ data:
           replacement = "alloy/pyroscope.ebpf"
           target_label = "source"
         }
-      }
+      } // discovery.relabel "ebpf_pods"
     
       pyroscope.ebpf "ebpf_pods" {
         targets = discovery.relabel.ebpf_pods.output
@@ -130,7 +130,7 @@ data:
         ruby_enabled = true
         v8_enabled = true
         forward_to = argument.profiles_destinations.value
-      }
+      } // pyroscope.ebpf "ebpf_pods"
       // Profiles: Java
       discovery.kubernetes "java_pods" {
         role = "pod"
@@ -138,7 +138,7 @@ data:
           role = "pod"
           field = "spec.nodeName=" + sys.env("HOSTNAME")
         }
-      }
+      } // discovery.kubernetes "java_pods"
     
       discovery.relabel "potential_java_pods" {
         targets = discovery.kubernetes.java_pods.targets
@@ -152,11 +152,11 @@ data:
           regex         = "true"
           action        = "keep"
         }
-      }
+      } // discovery.relabel "potential_java_pods"
     
       discovery.process "java_pods" {
         join = discovery.relabel.potential_java_pods.output
-      }
+      } // discovery.process "java_pods"
     
       discovery.relabel "java_pods" {
         targets = discovery.process.java_pods.targets
@@ -239,7 +239,7 @@ data:
           replacement = "alloy/pyroscope.java"
           target_label = "source"
         }
-      }
+      } // discovery.relabel "java_pods"
     
       pyroscope.java "java_pods" {
         targets = discovery.relabel.java_pods.output
@@ -252,7 +252,7 @@ data:
           event = "itimer"
         }
         forward_to = argument.profiles_destinations.value
-      }
+      } // pyroscope.java "java_pods"
       // Profiles: pprof
       discovery.kubernetes "pprof_pods" {
         role = "pod"
@@ -260,7 +260,7 @@ data:
           role = "pod"
           field = "spec.nodeName=" + sys.env("HOSTNAME")
         }
-      }
+      } // discovery.kubernetes "pprof_pods"
     
       discovery.relabel "pprof_pods" {
         targets = discovery.kubernetes.pprof_pods.targets
@@ -339,7 +339,7 @@ data:
           replacement = "alloy/pyroscope.pprof"
           target_label = "source"
         }
-      }
+      } // discovery.relabel "pprof_pods"
     
       discovery.relabel "pprof_pods_block" {
         targets = discovery.relabel.pprof_pods.output
@@ -418,7 +418,7 @@ data:
           regex         = "(.+)"
           target_label  = "__profile_path__"
         }
-      }
+      } // discovery.relabel "pprof_pods_block"
     
       pyroscope.scrape "pyroscope_scrape_block" {
         targets = discovery.relabel.pprof_pods_block.output
@@ -458,7 +458,7 @@ data:
         scrape_timeout = "18s"
     
         forward_to = argument.profiles_destinations.value
-      }
+      } // pyroscope.scrape "pyroscope_scrape_block"
       discovery.relabel "pprof_pods_cpu" {
         targets = discovery.relabel.pprof_pods.output
     
@@ -536,7 +536,7 @@ data:
           regex         = "(.+)"
           target_label  = "__profile_path__"
         }
-      }
+      } // discovery.relabel "pprof_pods_cpu"
     
       pyroscope.scrape "pyroscope_scrape_cpu" {
         targets = discovery.relabel.pprof_pods_cpu.output
@@ -576,7 +576,7 @@ data:
         scrape_timeout = "18s"
     
         forward_to = argument.profiles_destinations.value
-      }
+      } // pyroscope.scrape "pyroscope_scrape_cpu"
       discovery.relabel "pprof_pods_fgprof" {
         targets = discovery.relabel.pprof_pods.output
     
@@ -654,7 +654,7 @@ data:
           regex         = "(.+)"
           target_label  = "__profile_path__"
         }
-      }
+      } // discovery.relabel "pprof_pods_fgprof"
     
       pyroscope.scrape "pyroscope_scrape_fgprof" {
         targets = discovery.relabel.pprof_pods_fgprof.output
@@ -694,7 +694,7 @@ data:
         scrape_timeout = "18s"
     
         forward_to = argument.profiles_destinations.value
-      }
+      } // pyroscope.scrape "pyroscope_scrape_fgprof"
       discovery.relabel "pprof_pods_goroutine" {
         targets = discovery.relabel.pprof_pods.output
     
@@ -772,7 +772,7 @@ data:
           regex         = "(.+)"
           target_label  = "__profile_path__"
         }
-      }
+      } // discovery.relabel "pprof_pods_goroutine"
     
       pyroscope.scrape "pyroscope_scrape_goroutine" {
         targets = discovery.relabel.pprof_pods_goroutine.output
@@ -812,7 +812,7 @@ data:
         scrape_timeout = "18s"
     
         forward_to = argument.profiles_destinations.value
-      }
+      } // pyroscope.scrape "pyroscope_scrape_goroutine"
       discovery.relabel "pprof_pods_memory" {
         targets = discovery.relabel.pprof_pods.output
     
@@ -890,7 +890,7 @@ data:
           regex         = "(.+)"
           target_label  = "__profile_path__"
         }
-      }
+      } // discovery.relabel "pprof_pods_memory"
     
       pyroscope.scrape "pyroscope_scrape_memory" {
         targets = discovery.relabel.pprof_pods_memory.output
@@ -930,7 +930,7 @@ data:
         scrape_timeout = "18s"
     
         forward_to = argument.profiles_destinations.value
-      }
+      } // pyroscope.scrape "pyroscope_scrape_memory"
       discovery.relabel "pprof_pods_mutex" {
         targets = discovery.relabel.pprof_pods.output
     
@@ -1008,7 +1008,7 @@ data:
           regex         = "(.+)"
           target_label  = "__profile_path__"
         }
-      }
+      } // discovery.relabel "pprof_pods_mutex"
     
       pyroscope.scrape "pyroscope_scrape_mutex" {
         targets = discovery.relabel.pprof_pods_mutex.output
@@ -1048,8 +1048,8 @@ data:
         scrape_timeout = "18s"
     
         forward_to = argument.profiles_destinations.value
-      }
-    }
+      } // pyroscope.scrape "pyroscope_scrape_mutex"
+    } // declare "profiling"
     profiling "feature" {
       profiles_destinations = [
         pyroscope.write.pyro.receiver,
@@ -1080,7 +1080,7 @@ data:
         "cluster" = "profiling-feature-test",
         "k8s_cluster_name" = "profiling-feature-test",
       }
-    }
+    } // pyroscope.write "pyro"
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1

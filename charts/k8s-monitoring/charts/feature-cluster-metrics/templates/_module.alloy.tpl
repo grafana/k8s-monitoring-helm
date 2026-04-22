@@ -12,7 +12,7 @@ declare "cluster_metrics" {
   {{- if $discoverNodes }}
   discovery.kubernetes "nodes" {
     role = "node"
-  }
+  } // discovery.kubernetes "nodes"
 
   discovery.relabel "nodes" {
     targets = discovery.kubernetes.nodes.targets
@@ -25,7 +25,7 @@ declare "cluster_metrics" {
       replacement = "kubernetes"
       target_label = "source"
     }
-  }
+  } // discovery.relabel "nodes"
   {{- end }}
   {{- include "feature.clusterMetrics.kubelet.alloy" . | indent 2 }}
   {{- include "feature.clusterMetrics.kubeletResource.alloy" . | indent 2 }}
@@ -37,5 +37,5 @@ declare "cluster_metrics" {
   {{- include "feature.clusterMetrics.kubeProxy.alloy" . | indent 2 }}
   {{- include "feature.clusterMetrics.kubeScheduler.alloy" . | indent 2 }}
   {{- include "feature.clusterMetrics.kube_state_metrics.alloy" . | indent 2 }}
-}
+} // declare "cluster_metrics"
 {{- end -}}

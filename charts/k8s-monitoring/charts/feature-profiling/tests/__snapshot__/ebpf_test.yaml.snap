@@ -13,7 +13,7 @@ should be able to filter by label and annotation:
             label = "app.kubernetes.io/name=secret-program,colors in (blue,green)"
             field = "spec.nodeName=" + sys.env("HOSTNAME")
           }
-        }
+        } // discovery.kubernetes "ebpf_pods"
 
         discovery.relabel "ebpf_pods" {
           targets = discovery.kubernetes.ebpf_pods.targets
@@ -101,7 +101,7 @@ should be able to filter by label and annotation:
             replacement = "alloy/pyroscope.ebpf"
             target_label = "source"
           }
-        }
+        } // discovery.relabel "ebpf_pods"
 
         pyroscope.ebpf "ebpf_pods" {
           targets = discovery.relabel.ebpf_pods.output
@@ -115,8 +115,8 @@ should be able to filter by label and annotation:
           ruby_enabled = true
           v8_enabled = true
           forward_to = argument.profiles_destinations.value
-        }
-      }
+        } // pyroscope.ebpf "ebpf_pods"
+      } // declare "profiling"
 should be able to filter by namespace and extra discovery rules:
   1: |
     |-
@@ -134,7 +134,7 @@ should be able to filter by namespace and extra discovery rules:
           namespaces {
             names = ["default"]
           }
-        }
+        } // discovery.kubernetes "ebpf_pods"
 
         discovery.relabel "ebpf_pods" {
           targets = discovery.kubernetes.ebpf_pods.targets
@@ -222,7 +222,7 @@ should be able to filter by namespace and extra discovery rules:
             regex = "secret-program"
             action = "drop"
           }
-        }
+        } // discovery.relabel "ebpf_pods"
 
         pyroscope.ebpf "ebpf_pods" {
           targets = discovery.relabel.ebpf_pods.output
@@ -236,8 +236,8 @@ should be able to filter by namespace and extra discovery rules:
           ruby_enabled = true
           v8_enabled = true
           forward_to = argument.profiles_destinations.value
-        }
-      }
+        } // pyroscope.ebpf "ebpf_pods"
+      } // declare "profiling"
 should be able to target all pods, without requiring the annotation:
   1: |
     |-
@@ -252,7 +252,7 @@ should be able to target all pods, without requiring the annotation:
             role = "pod"
             field = "spec.nodeName=" + sys.env("HOSTNAME")
           }
-        }
+        } // discovery.kubernetes "ebpf_pods"
 
         discovery.relabel "ebpf_pods" {
           targets = discovery.kubernetes.ebpf_pods.targets
@@ -335,7 +335,7 @@ should be able to target all pods, without requiring the annotation:
             replacement = "alloy/pyroscope.ebpf"
             target_label = "source"
           }
-        }
+        } // discovery.relabel "ebpf_pods"
 
         pyroscope.ebpf "ebpf_pods" {
           targets = discovery.relabel.ebpf_pods.output
@@ -349,8 +349,8 @@ should be able to target all pods, without requiring the annotation:
           ruby_enabled = true
           v8_enabled = true
           forward_to = argument.profiles_destinations.value
-        }
-      }
+        } // pyroscope.ebpf "ebpf_pods"
+      } // declare "profiling"
 should build the eBPF profiling configuration:
   1: |
     |-
@@ -365,7 +365,7 @@ should build the eBPF profiling configuration:
             role = "pod"
             field = "spec.nodeName=" + sys.env("HOSTNAME")
           }
-        }
+        } // discovery.kubernetes "ebpf_pods"
 
         discovery.relabel "ebpf_pods" {
           targets = discovery.kubernetes.ebpf_pods.targets
@@ -448,7 +448,7 @@ should build the eBPF profiling configuration:
             replacement = "alloy/pyroscope.ebpf"
             target_label = "source"
           }
-        }
+        } // discovery.relabel "ebpf_pods"
 
         pyroscope.ebpf "ebpf_pods" {
           targets = discovery.relabel.ebpf_pods.output
@@ -462,5 +462,5 @@ should build the eBPF profiling configuration:
           ruby_enabled = true
           v8_enabled = true
           forward_to = argument.profiles_destinations.value
-        }
-      }
+        } // pyroscope.ebpf "ebpf_pods"
+      } // declare "profiling"

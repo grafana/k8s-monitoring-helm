@@ -12,7 +12,7 @@ will set appropriate selectors:
             role = "pod"
             label = "app=myapp,color=blue"
           }
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "annotation_autodiscovery_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -166,7 +166,7 @@ will set appropriate selectors:
             replacement = "10s"
             target_label = "__scrape_timeout__"
           }
-        }
+        } // discovery.relabel "annotation_autodiscovery_pods"
 
         discovery.kubernetes "services" {
           role = "service"
@@ -174,7 +174,7 @@ will set appropriate selectors:
             role = "service"
             label = "app=myapp,region in (north,east)"
           }
-        }
+        } // discovery.kubernetes "services"
 
         discovery.relabel "annotation_autodiscovery_services" {
           targets = discovery.kubernetes.services.targets
@@ -291,7 +291,7 @@ will set appropriate selectors:
             replacement = "10s"
             target_label = "__scrape_timeout__"
           }
-        }
+        } // discovery.relabel "annotation_autodiscovery_services"
 
         discovery.relabel "annotation_autodiscovery_http" {
           targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
@@ -300,7 +300,7 @@ will set appropriate selectors:
             regex = "https"
             action = "drop"
           }
-        }
+        } // discovery.relabel "annotation_autodiscovery_http"
 
         discovery.relabel "annotation_autodiscovery_https" {
           targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
@@ -309,7 +309,7 @@ will set appropriate selectors:
             regex = "https"
             action = "keep"
           }
-        }
+        } // discovery.relabel "annotation_autodiscovery_https"
 
         prometheus.scrape "annotation_autodiscovery_http" {
           targets = discovery.relabel.annotation_autodiscovery_http.output
@@ -323,7 +323,7 @@ will set appropriate selectors:
           }
 
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.scrape "annotation_autodiscovery_http"
 
         prometheus.scrape "annotation_autodiscovery_https" {
           targets = discovery.relabel.annotation_autodiscovery_https.output
@@ -340,5 +340,5 @@ will set appropriate selectors:
           }
 
           forward_to = argument.metrics_destinations.value
-        }
-      }
+        } // prometheus.relabel "annotation_autodiscovery"
+      } // declare "annotation_autodiscovery"

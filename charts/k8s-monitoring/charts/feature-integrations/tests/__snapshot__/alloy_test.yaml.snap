@@ -41,7 +41,7 @@ can create multiple Alloy configs with a different allowed metrics:
               names = coalesce(argument.namespaces.value, [])
             }
 
-          }
+          } // discovery.kubernetes "alloy_pods"
 
           // alloy relabelings (pre-scrape)
           discovery.relabel "alloy_pods" {
@@ -132,7 +132,7 @@ can create multiple Alloy configs with a different allowed metrics:
               target_label = "source"
             }
 
-          }
+          } // discovery.relabel "alloy_pods"
 
           export "output" {
             value = discovery.relabel.alloy_pods.output
@@ -211,7 +211,7 @@ can create multiple Alloy configs with a different allowed metrics:
             clustering {
               enabled = coalesce(argument.clustering.value, false)
             }
-          }
+          } // prometheus.scrape "alloy"
 
           // alloy metric relabelings (post-scrape)
           prometheus.relabel "alloy" {
@@ -296,7 +296,7 @@ can create multiple Alloy configs with a different allowed metrics:
               action = "labeldrop"
               regex = "exported_(namespace|pod|container|job|instance)"
             }
-          }
+          } // prometheus.relabel "alloy"
         }
 
         alloy_integration_discovery "alloy_one" {
@@ -399,7 +399,7 @@ should create the Alloy config:
               names = coalesce(argument.namespaces.value, [])
             }
 
-          }
+          } // discovery.kubernetes "alloy_pods"
 
           // alloy relabelings (pre-scrape)
           discovery.relabel "alloy_pods" {
@@ -490,7 +490,7 @@ should create the Alloy config:
               target_label = "source"
             }
 
-          }
+          } // discovery.relabel "alloy_pods"
 
           export "output" {
             value = discovery.relabel.alloy_pods.output
@@ -569,7 +569,7 @@ should create the Alloy config:
             clustering {
               enabled = coalesce(argument.clustering.value, false)
             }
-          }
+          } // prometheus.scrape "alloy"
 
           // alloy metric relabelings (post-scrape)
           prometheus.relabel "alloy" {
@@ -654,7 +654,7 @@ should create the Alloy config:
               action = "labeldrop"
               regex = "exported_(namespace|pod|container|job|instance)"
             }
-          }
+          } // prometheus.relabel "alloy"
         }
 
         alloy_integration_discovery "alloy_metrics" {
