@@ -38,7 +38,7 @@ declare "grafana_integration" {
         names = coalesce(argument.namespaces.value, [])
       }
 
-    }
+    } // discovery.kubernetes "grafana_pods"
 
     // grafana relabelings (pre-scrape)
     discovery.relabel "grafana_pods" {
@@ -136,7 +136,7 @@ declare "grafana_integration" {
         target_label = "source"
       }
 
-    }
+    } // discovery.relabel "grafana_pods"
 
     export "output" {
       value = discovery.relabel.grafana_pods.output
@@ -215,7 +215,7 @@ declare "grafana_integration" {
       clustering {
         enabled = coalesce(argument.clustering.value, false)
       }
-    }
+    } // prometheus.scrape "grafana"
 
     // grafana metric relabelings (post-scrape)
     prometheus.relabel "grafana" {
@@ -246,7 +246,7 @@ declare "grafana_integration" {
         action = "labeldrop"
         regex = "node"
       }
-    }
+    } // prometheus.relabel "grafana"
   }
 
   grafana_integration_discovery "grafana" {
@@ -279,7 +279,7 @@ prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   textfile {
     directory = "/etc/release-info"
   }
-}
+} // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
 
 discovery.relabel "kubernetes_monitoring_telemetry" {
   targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -293,7 +293,7 @@ discovery.relabel "kubernetes_monitoring_telemetry" {
     action = "replace"
     replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
   }
-}
+} // discovery.relabel "kubernetes_monitoring_telemetry"
 
 prometheus.scrape "kubernetes_monitoring_telemetry" {
   job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -303,7 +303,7 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
     enabled = true
   }
   forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-}
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
 
 prometheus.relabel "kubernetes_monitoring_telemetry" {
   rule {
@@ -314,7 +314,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
   forward_to = [
     prometheus.remote_write.prometheus.receiver,
   ]
-}
+} // prometheus.relabel "kubernetes_monitoring_telemetry"
 
 
 

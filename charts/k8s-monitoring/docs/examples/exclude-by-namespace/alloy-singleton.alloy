@@ -8,7 +8,7 @@ declare "cluster_events" {
     job_name   = "integrations/kubernetes/eventhandler"
     log_format = "logfmt"
     forward_to = [loki.process.cluster_events.receiver]
-  }
+  } // loki.source.kubernetes_events "cluster_events"
 
   loki.process "cluster_events" {
     stage.drop {
@@ -79,8 +79,8 @@ declare "cluster_events" {
     }
 
     forward_to = argument.logs_destinations.value
-  }
-}
+  } // loki.process "cluster_events"
+} // declare "cluster_events"
 cluster_events "feature" {
   logs_destinations = [
     loki.write.loki.receiver,
@@ -92,7 +92,7 @@ prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   textfile {
     directory = "/etc/release-info"
   }
-}
+} // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
 
 discovery.relabel "kubernetes_monitoring_telemetry" {
   targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -106,7 +106,7 @@ discovery.relabel "kubernetes_monitoring_telemetry" {
     action = "replace"
     replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
   }
-}
+} // discovery.relabel "kubernetes_monitoring_telemetry"
 
 prometheus.scrape "kubernetes_monitoring_telemetry" {
   job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -116,7 +116,7 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
     enabled = true
   }
   forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-}
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
 
 prometheus.relabel "kubernetes_monitoring_telemetry" {
   rule {
@@ -127,7 +127,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
   forward_to = [
     prometheus.remote_write.prometheus.receiver,
   ]
-}
+} // prometheus.relabel "kubernetes_monitoring_telemetry"
 
 
 

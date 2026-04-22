@@ -67,7 +67,7 @@ declare "loki_integration" {
         names = coalesce(argument.namespaces.value, [])
       }
       {{- include "feature.integrations.attachNodeMetadata" . | nindent 6 }}
-    }
+    } // discovery.kubernetes "loki_pods"
 
     // loki relabelings (pre-scrape)
     discovery.relabel "loki_pods" {
@@ -99,7 +99,7 @@ declare "loki_integration" {
       }
 
       {{ include "feature.integrations.commonDiscoveryRules" . | nindent 6 }}
-    }
+    } // discovery.relabel "loki_pods"
 
     export "output" {
       value = discovery.relabel.loki_pods.output
@@ -178,7 +178,7 @@ declare "loki_integration" {
       clustering {
         enabled = coalesce(argument.clustering.value, false)
       }
-    }
+    } // prometheus.scrape "loki"
 
     // loki metric relabelings (post-scrape)
     prometheus.relabel "loki" {
@@ -218,7 +218,7 @@ declare "loki_integration" {
         target_label = "container"
         replacement = "memcached"
       }
-    }
+    } // prometheus.relabel "loki"
   }
   {{- range $instance := $.Values.loki.instances }}
     {{- include "integrations.loki.include.metrics" (deepCopy $ | merge (dict "instance" $instance)) | nindent 2 }}

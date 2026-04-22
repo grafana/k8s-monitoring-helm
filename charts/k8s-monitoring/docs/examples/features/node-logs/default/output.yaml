@@ -63,7 +63,7 @@ data:
         }
     
         forward_to = [] // No forward_to is used in this component, the defined rules are used in the loki.source.journal component
-      }
+      } // loki.relabel "journal"
     
       loki.source.journal "worker" {
         path = "/var/log/journal"
@@ -75,7 +75,7 @@ data:
           instance = sys.env("HOSTNAME"),
         }
         forward_to = [loki.process.journal_logs.receiver]
-      }
+      } // loki.source.journal "worker"
     
       loki.process "journal_logs" {
         stage.static_labels {
@@ -164,8 +164,8 @@ data:
         }
     
         forward_to = argument.logs_destinations.value
-      }
-    }
+      } // loki.process "journal_logs"
+    } // declare "node_logs"
     node_logs "feature" {
       logs_destinations = [
         loki.write.loki.receiver,
@@ -214,7 +214,7 @@ data:
     remote.kubernetes.secret "loki" {
       name      = "loki-k8smon-k8s-monitoring"
       namespace = "default"
-    }
+    } // remote.kubernetes.secret "loki"
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1

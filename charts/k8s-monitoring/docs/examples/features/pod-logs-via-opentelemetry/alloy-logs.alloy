@@ -24,7 +24,7 @@ declare "pod_logs_via_opentelemetry" {
     output {
       logs = [otelcol.processor.k8sattributes.pod_logs.input]
     }
-  }
+  } // otelcol.receiver.filelog "pod_logs"
 
   otelcol.processor.k8sattributes "pod_logs" {
     pod_association {
@@ -101,8 +101,8 @@ declare "pod_logs_via_opentelemetry" {
     output {
       logs = argument.logs_destinations.value
     }
-  }
-}
+  } // otelcol.processor.transform "pod_logs"
+} // declare "pod_logs_via_opentelemetry"
 pod_logs_via_opentelemetry "feature" {
   logs_destinations = [
     otelcol.processor.attributes.log_storage.input,
@@ -238,5 +238,5 @@ otelcol.auth.basic "log_storage" {
 remote.kubernetes.secret "log_storage" {
   name      = "log-storage-k8smon-k8s-monitoring"
   namespace = "default"
-}
+} // remote.kubernetes.secret "log_storage"
 

@@ -5,7 +5,7 @@ declare "cluster_metrics" {
   }
   discovery.kubernetes "nodes" {
     role = "node"
-  }
+  } // discovery.kubernetes "nodes"
 
   discovery.relabel "nodes" {
     targets = discovery.kubernetes.nodes.targets
@@ -18,12 +18,12 @@ declare "cluster_metrics" {
       replacement = "kubernetes"
       target_label = "source"
     }
-  }
+  } // discovery.relabel "nodes"
 
   // Kubelet
   discovery.relabel "kubelet" {
     targets = discovery.relabel.nodes.output
-  }
+  } // discovery.relabel "kubelet"
 
   prometheus.scrape "kubelet" {
     targets  = discovery.relabel.kubelet.output
@@ -47,7 +47,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = [prometheus.relabel.kubelet.receiver]
-  }
+  } // prometheus.scrape "kubelet"
 
   prometheus.relabel "kubelet" {
     max_cache_size = 100000
@@ -58,7 +58,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "kubelet"
 
   // Kubelet Resources
   discovery.relabel "kubelet_resources" {
@@ -67,7 +67,7 @@ declare "cluster_metrics" {
       replacement   = "/metrics/resource"
       target_label  = "__metrics_path__"
     }
-  }
+  } // discovery.relabel "kubelet_resources"
 
   prometheus.scrape "kubelet_resources" {
     targets = discovery.relabel.kubelet_resources.output
@@ -91,7 +91,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = [prometheus.relabel.kubelet_resources.receiver]
-  }
+  } // prometheus.scrape "kubelet_resources"
 
   prometheus.relabel "kubelet_resources" {
     max_cache_size = 100000
@@ -102,7 +102,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "kubelet_resources"
 
   // cAdvisor
   discovery.relabel "cadvisor" {
@@ -111,7 +111,7 @@ declare "cluster_metrics" {
       replacement   = "/metrics/cadvisor"
       target_label  = "__metrics_path__"
     }
-  }
+  } // discovery.relabel "cadvisor"
 
   prometheus.scrape "cadvisor" {
     targets = discovery.relabel.cadvisor.output
@@ -135,7 +135,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = [prometheus.relabel.cadvisor.receiver]
-  }
+  } // prometheus.scrape "cadvisor"
 
   prometheus.relabel "cadvisor" {
     max_cache_size = 100000
@@ -213,7 +213,7 @@ declare "cluster_metrics" {
       replacement = ""
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "cadvisor"
 
   discovery.kubernetes "apiserver" {
     role = "endpointslice"
@@ -226,7 +226,7 @@ declare "cluster_metrics" {
     namespaces {
       names = ["default"]
     }
-  }
+  } // discovery.kubernetes "apiserver"
 
   discovery.relabel "apiserver" {
     targets = discovery.kubernetes.apiserver.targets
@@ -251,7 +251,7 @@ declare "cluster_metrics" {
       replacement = "kubernetes"
       target_label = "source"
     }
-  }
+  } // discovery.relabel "apiserver"
 
   prometheus.scrape "apiserver" {
     targets = discovery.relabel.apiserver.output
@@ -274,7 +274,7 @@ declare "cluster_metrics" {
       enabled = true
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "apiserver"
 
   discovery.kubernetes "kube_controller_manager" {
     role = "pod"
@@ -285,7 +285,7 @@ declare "cluster_metrics" {
       role = "pod"
       label = "component=kube-controller-manager"
     }
-  }
+  } // discovery.kubernetes "kube_controller_manager"
 
   discovery.relabel "kube_controller_manager" {
     targets = discovery.kubernetes.kube_controller_manager.targets
@@ -294,7 +294,7 @@ declare "cluster_metrics" {
       replacement = "$1:10257"
       target_label = "__address__"
     }
-  }
+  } // discovery.relabel "kube_controller_manager"
 
   prometheus.scrape "kube_controller_manager" {
     targets           = discovery.relabel.kube_controller_manager.output
@@ -313,7 +313,7 @@ declare "cluster_metrics" {
       enabled = true
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "kube_controller_manager"
 
   // KubeDNS
   discovery.kubernetes "kube_dns" {
@@ -325,7 +325,7 @@ declare "cluster_metrics" {
       role = "endpointslice"
       label = "kubernetes.io/service-name=kube-dns"
     }
-  }
+  } // discovery.kubernetes "kube_dns"
 
   discovery.relabel "kube_dns" {
     targets = discovery.kubernetes.kube_dns.targets
@@ -409,7 +409,7 @@ declare "cluster_metrics" {
       replacement = "kubernetes"
       target_label = "source"
     }
-  }
+  } // discovery.relabel "kube_dns"
 
   prometheus.scrape "kube_dns" {
     targets = discovery.relabel.kube_dns.output
@@ -424,7 +424,7 @@ declare "cluster_metrics" {
       enabled = true
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "kube_dns"
 
   discovery.kubernetes "kube_proxy" {
     role = "pod"
@@ -435,7 +435,7 @@ declare "cluster_metrics" {
       role = "pod"
       label = "k8s-app=kube-proxy"
     }
-  }
+  } // discovery.kubernetes "kube_proxy"
 
   discovery.relabel "kube_proxy" {
     targets = discovery.kubernetes.kube_proxy.targets
@@ -444,7 +444,7 @@ declare "cluster_metrics" {
       replacement = "$1:10249"
       target_label = "__address__"
     }
-  }
+  } // discovery.relabel "kube_proxy"
 
   prometheus.scrape "kube_proxy" {
     targets           = discovery.relabel.kube_proxy.output
@@ -459,7 +459,7 @@ declare "cluster_metrics" {
       enabled = true
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "kube_proxy"
 
   discovery.kubernetes "kube_scheduler" {
     role = "pod"
@@ -470,7 +470,7 @@ declare "cluster_metrics" {
       role = "pod"
       label = "component=kube-scheduler"
     }
-  }
+  } // discovery.kubernetes "kube_scheduler"
 
   discovery.relabel "kube_scheduler" {
     targets = discovery.kubernetes.kube_scheduler.targets
@@ -479,7 +479,7 @@ declare "cluster_metrics" {
       replacement = "$1:10259"
       target_label = "__address__"
     }
-  }
+  } // discovery.relabel "kube_scheduler"
 
   prometheus.scrape "kube_scheduler" {
     targets           = discovery.relabel.kube_scheduler.output
@@ -498,7 +498,7 @@ declare "cluster_metrics" {
       enabled = true
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "kube_scheduler"
   discovery.kubernetes "kube_state_metrics" {
     role = "endpoints"
 
@@ -509,7 +509,7 @@ declare "cluster_metrics" {
     namespaces {
       names = ["default"]
     }
-  }
+  } // discovery.kubernetes "kube_state_metrics"
 
   discovery.relabel "kube_state_metrics" {
     targets = discovery.kubernetes.kube_state_metrics.targets
@@ -520,7 +520,7 @@ declare "cluster_metrics" {
       target_label = "source"
     }
 
-  }
+  } // discovery.relabel "kube_state_metrics"
 
   prometheus.scrape "kube_state_metrics" {
     targets = discovery.relabel.kube_state_metrics.output
@@ -540,7 +540,7 @@ declare "cluster_metrics" {
       enabled = true
     }
     forward_to = [prometheus.relabel.kube_state_metrics.receiver]
-  }
+  } // prometheus.scrape "kube_state_metrics"
 
   prometheus.relabel "kube_state_metrics" {
     max_cache_size = 100000
@@ -550,8 +550,8 @@ declare "cluster_metrics" {
       action = "keep"
     }
     forward_to = argument.metrics_destinations.value
-  }
-}
+  } // prometheus.relabel "kube_state_metrics"
+} // declare "cluster_metrics"
 cluster_metrics "feature" {
   metrics_destinations = [
     prometheus.remote_write.prometheus.receiver,
@@ -575,7 +575,7 @@ declare "host_metrics" {
       names = ["default"]
     }
 
-  }
+  } // discovery.kubernetes "node_exporter"
 
   discovery.relabel "node_exporter" {
     targets = discovery.kubernetes.node_exporter.targets
@@ -667,7 +667,7 @@ declare "host_metrics" {
       target_label = "source"
     }
 
-  }
+  } // discovery.relabel "node_exporter"
 
   prometheus.scrape "node_exporter" {
     targets = discovery.relabel.node_exporter.output
@@ -686,7 +686,7 @@ declare "host_metrics" {
       enabled = true
     }
     forward_to = [prometheus.relabel.node_exporter.receiver]
-  }
+  } // prometheus.scrape "node_exporter"
 
   prometheus.relabel "node_exporter" {
     max_cache_size = 100000
@@ -703,7 +703,7 @@ declare "host_metrics" {
       action = "drop"
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "node_exporter"
 
   // Windows hosts via Windows Exporter
   discovery.kubernetes "windows_exporter_pods" {
@@ -716,7 +716,7 @@ declare "host_metrics" {
       names = ["default"]
     }
 
-  }
+  } // discovery.kubernetes "windows_exporter_pods"
 
   discovery.relabel "windows_exporter" {
     targets = discovery.kubernetes.windows_exporter_pods.targets
@@ -739,7 +739,7 @@ declare "host_metrics" {
       target_label = "instance"
     }
 
-  }
+  } // discovery.relabel "windows_exporter"
 
   prometheus.scrape "windows_exporter" {
     targets  = discovery.relabel.windows_exporter.output
@@ -753,7 +753,7 @@ declare "host_metrics" {
       enabled = true
     }
     forward_to = [prometheus.relabel.windows_exporter.receiver]
-  }
+  } // prometheus.scrape "windows_exporter"
 
   prometheus.relabel "windows_exporter" {
     max_cache_size = 100000
@@ -763,8 +763,8 @@ declare "host_metrics" {
       action = "keep"
     }
     forward_to = argument.metrics_destinations.value
-  }
-}
+  } // prometheus.relabel "windows_exporter"
+} // declare "host_metrics"
 host_metrics "feature" {
   metrics_destinations = [
     prometheus.remote_write.prometheus.receiver,

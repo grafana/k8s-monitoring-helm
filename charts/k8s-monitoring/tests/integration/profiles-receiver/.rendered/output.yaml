@@ -34,7 +34,7 @@ data:
         }
     
         forward_to = [pyroscope.relabel.default.receiver]
-      }
+      } // pyroscope.receive_http "default"
     
       pyroscope.relabel "default" {
         rule {
@@ -43,8 +43,8 @@ data:
         }
     
         forward_to = argument.profiles_destinations.value
-      }
-    }
+      } // pyroscope.relabel "default"
+    } // declare "profiles_receiver"
     profiles_receiver "feature" {
       profiles_destinations = [
         pyroscope.write.pyro.receiver,

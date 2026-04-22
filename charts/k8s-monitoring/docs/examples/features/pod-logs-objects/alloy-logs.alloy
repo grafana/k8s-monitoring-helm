@@ -13,7 +13,7 @@ declare "pod_logs_objects" {
       enabled = true
     }
     forward_to = [loki.relabel.pod_logs_objects.receiver]
-  }
+  } // loki.source.podlogs "default"
 
 
   loki.relabel "pod_logs_objects" {
@@ -35,7 +35,7 @@ declare "pod_logs_objects" {
     }
 
     forward_to = [loki.process.pod_logs_objects.receiver]
-  }
+  } // loki.relabel "pod_logs_objects"
 
   loki.process "pod_logs_objects" {
     stage.match {
@@ -84,8 +84,8 @@ declare "pod_logs_objects" {
 
 
     forward_to = argument.logs_destinations.value
-  }
-}
+  } // loki.secretfilter "pod_logs_objects"
+} // declare "pod_logs_objects"
 pod_logs_objects "feature" {
   logs_destinations = [
     loki.write.loki.receiver,
@@ -132,5 +132,5 @@ loki.write "loki" {
 remote.kubernetes.secret "loki" {
   name      = "loki-k8smon-k8s-monitoring"
   namespace = "default"
-}
+} // remote.kubernetes.secret "loki"
 

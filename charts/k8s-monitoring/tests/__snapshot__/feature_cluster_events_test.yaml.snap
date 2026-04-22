@@ -11,7 +11,7 @@ renders the config to gather Kubernetes Cluster Events:
           job_name   = "integrations/kubernetes/eventhandler"
           log_format = "logfmt"
           forward_to = [loki.process.cluster_events.receiver]
-        }
+        } // loki.source.kubernetes_events "cluster_events"
 
         loki.process "cluster_events" {
 
@@ -77,8 +77,8 @@ renders the config to gather Kubernetes Cluster Events:
           }
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.process "cluster_events"
+      } // declare "cluster_events"
       cluster_events "feature" {
         logs_destinations = [
           loki.write.loki.receiver,

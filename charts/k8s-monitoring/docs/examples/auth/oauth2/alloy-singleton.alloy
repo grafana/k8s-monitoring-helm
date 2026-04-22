@@ -8,7 +8,7 @@ declare "cluster_events" {
     job_name   = "integrations/kubernetes/eventhandler"
     log_format = "logfmt"
     forward_to = [loki.process.cluster_events.receiver]
-  }
+  } // loki.source.kubernetes_events "cluster_events"
 
   loki.process "cluster_events" {
 
@@ -74,8 +74,8 @@ declare "cluster_events" {
     }
 
     forward_to = argument.logs_destinations.value
-  }
-}
+  } // loki.process "cluster_events"
+} // declare "cluster_events"
 cluster_events "feature" {
   logs_destinations = [
     otelcol.receiver.loki.otel_endpoint.receiver,
@@ -87,7 +87,7 @@ prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   textfile {
     directory = "/etc/release-info"
   }
-}
+} // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
 
 discovery.relabel "kubernetes_monitoring_telemetry" {
   targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -101,7 +101,7 @@ discovery.relabel "kubernetes_monitoring_telemetry" {
     action = "replace"
     replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
   }
-}
+} // discovery.relabel "kubernetes_monitoring_telemetry"
 
 prometheus.scrape "kubernetes_monitoring_telemetry" {
   job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -111,7 +111,7 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
     enabled = true
   }
   forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-}
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
 
 prometheus.relabel "kubernetes_monitoring_telemetry" {
   rule {
@@ -122,7 +122,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
   forward_to = [
     otelcol.receiver.prometheus.otel_endpoint.receiver,
   ]
-}
+} // prometheus.relabel "kubernetes_monitoring_telemetry"
 
 
 
@@ -325,5 +325,5 @@ otelcol.auth.oauth2 "otel_endpoint" {
 remote.kubernetes.secret "otel_endpoint" {
   name      = "otel-endpoint-k8smon-k8s-monitoring"
   namespace = "default"
-}
+} // remote.kubernetes.secret "otel_endpoint"
 

@@ -23,7 +23,7 @@ declare "node_logs" {
     }
 
     forward_to = [] // No forward_to is used in this component, the defined rules are used in the loki.source.journal component
-  }
+  } // loki.relabel "journal"
 
   loki.source.journal "worker" {
     path = "/var/log/journal"
@@ -35,7 +35,7 @@ declare "node_logs" {
       instance = sys.env("HOSTNAME"),
     }
     forward_to = [loki.process.journal_logs.receiver]
-  }
+  } // loki.source.journal "worker"
 
   loki.process "journal_logs" {
     stage.static_labels {
@@ -124,8 +124,8 @@ declare "node_logs" {
     }
 
     forward_to = argument.logs_destinations.value
-  }
-}
+  } // loki.process "journal_logs"
+} // declare "node_logs"
 node_logs "feature" {
   logs_destinations = [
     otelcol.receiver.loki.otel_endpoint.receiver,
@@ -143,7 +143,7 @@ declare "pod_logs_via_loki" {
       role = "pod"
       field = "spec.nodeName=" + sys.env("HOSTNAME")
     }
-  }
+  } // discovery.kubernetes "pods"
 
   discovery.relabel "filtered_pods" {
     targets = discovery.kubernetes.pods.targets
@@ -267,17 +267,17 @@ declare "pod_logs_via_loki" {
       replacement = "/var/log/pods/*$1/*.log"
       target_label = "__path__"
     }
-  }
+  } // discovery.relabel "filtered_pods"
 
   local.file_match "pod_logs" {
     path_targets = discovery.relabel.filtered_pods.output
-  }
+  } // local.file_match "pod_logs"
 
   loki.source.file "pod_logs" {
     targets    = local.file_match.pod_logs.targets
     tail_from_end = true
     forward_to = [loki.process.pod_logs.receiver]
-  }
+  } // loki.source.file "pod_logs"
 
   loki.process "pod_logs" {
     stage.match {
@@ -327,8 +327,8 @@ declare "pod_logs_via_loki" {
     }
 
     forward_to = argument.logs_destinations.value
-  }
-}
+  } // loki.secretfilter "pod_logs"
+} // declare "pod_logs_via_loki"
 pod_logs_via_loki "feature" {
   logs_destinations = [
     otelcol.receiver.loki.otel_endpoint.receiver,
@@ -536,5 +536,5 @@ otelcol.auth.oauth2 "otel_endpoint" {
 remote.kubernetes.secret "otel_endpoint" {
   name      = "otel-endpoint-k8smon-k8s-monitoring"
   namespace = "default"
-}
+} // remote.kubernetes.secret "otel_endpoint"
 

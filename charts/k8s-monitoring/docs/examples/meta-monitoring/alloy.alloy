@@ -26,7 +26,7 @@ declare "application_observability" {
     output {
       traces = [otelcol.processor.resourcedetection.default.input]
     }
-  }
+  } // otelcol.receiver.jaeger "receiver"
 
   // Resource Detection Processor
   otelcol.processor.resourcedetection "default" {
@@ -121,7 +121,7 @@ declare "application_observability" {
       traces = argument.traces_destinations.value
     }
   }
-}
+} // declare "application_observability"
 application_observability "feature" {
   metrics_destinations = [
     otelcol.exporter.prometheus.prometheus.input,
@@ -141,7 +141,7 @@ declare "cluster_metrics" {
   }
   discovery.kubernetes "nodes" {
     role = "node"
-  }
+  } // discovery.kubernetes "nodes"
 
   discovery.relabel "nodes" {
     targets = discovery.kubernetes.nodes.targets
@@ -154,7 +154,7 @@ declare "cluster_metrics" {
       replacement = "kubernetes"
       target_label = "source"
     }
-  }
+  } // discovery.relabel "nodes"
 
   // cAdvisor
   discovery.relabel "cadvisor" {
@@ -163,7 +163,7 @@ declare "cluster_metrics" {
       replacement   = "/metrics/cadvisor"
       target_label  = "__metrics_path__"
     }
-  }
+  } // discovery.relabel "cadvisor"
 
   prometheus.scrape "cadvisor" {
     targets = discovery.relabel.cadvisor.output
@@ -187,7 +187,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = [prometheus.relabel.cadvisor.receiver]
-  }
+  } // prometheus.scrape "cadvisor"
 
   prometheus.relabel "cadvisor" {
     max_cache_size = 100000
@@ -270,7 +270,7 @@ declare "cluster_metrics" {
       regex = "collectors|logs|metrics|o11y"
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "cadvisor"
   discovery.kubernetes "kube_state_metrics" {
     role = "endpoints"
 
@@ -281,7 +281,7 @@ declare "cluster_metrics" {
     namespaces {
       names = ["default"]
     }
-  }
+  } // discovery.kubernetes "kube_state_metrics"
 
   discovery.relabel "kube_state_metrics" {
     targets = discovery.kubernetes.kube_state_metrics.targets
@@ -292,7 +292,7 @@ declare "cluster_metrics" {
       target_label = "source"
     }
 
-  }
+  } // discovery.relabel "kube_state_metrics"
 
   prometheus.scrape "kube_state_metrics" {
     targets = discovery.relabel.kube_state_metrics.output
@@ -312,7 +312,7 @@ declare "cluster_metrics" {
       enabled = true
     }
     forward_to = [prometheus.relabel.kube_state_metrics.receiver]
-  }
+  } // prometheus.scrape "kube_state_metrics"
 
   prometheus.relabel "kube_state_metrics" {
     max_cache_size = 100000
@@ -322,8 +322,8 @@ declare "cluster_metrics" {
       action = "keep"
     }
     forward_to = argument.metrics_destinations.value
-  }
-}
+  } // prometheus.relabel "kube_state_metrics"
+} // declare "cluster_metrics"
 cluster_metrics "feature" {
   metrics_destinations = [
     prometheus.remote_write.prometheus.receiver,
@@ -340,7 +340,7 @@ declare "cluster_events" {
     log_format = "logfmt"
     namespaces = ["collectors","logs","metrics","o11y"]
     forward_to = [loki.process.cluster_events.receiver]
-  }
+  } // loki.source.kubernetes_events "cluster_events"
 
   loki.process "cluster_events" {
 
@@ -406,8 +406,8 @@ declare "cluster_events" {
     }
 
     forward_to = argument.logs_destinations.value
-  }
-}
+  } // loki.process "cluster_events"
+} // declare "cluster_events"
 cluster_events "feature" {
   logs_destinations = [
     loki.write.loki.receiver,
@@ -432,7 +432,7 @@ declare "host_metrics" {
       names = ["default"]
     }
 
-  }
+  } // discovery.kubernetes "node_exporter"
 
   discovery.relabel "node_exporter" {
     targets = discovery.kubernetes.node_exporter.targets
@@ -524,7 +524,7 @@ declare "host_metrics" {
       target_label = "source"
     }
 
-  }
+  } // discovery.relabel "node_exporter"
 
   prometheus.scrape "node_exporter" {
     targets = discovery.relabel.node_exporter.output
@@ -543,7 +543,7 @@ declare "host_metrics" {
       enabled = true
     }
     forward_to = [prometheus.relabel.node_exporter.receiver]
-  }
+  } // prometheus.scrape "node_exporter"
 
   prometheus.relabel "node_exporter" {
     max_cache_size = 100000
@@ -560,8 +560,8 @@ declare "host_metrics" {
       action = "drop"
     }
     forward_to = argument.metrics_destinations.value
-  }
-}
+  } // prometheus.relabel "node_exporter"
+} // declare "host_metrics"
 host_metrics "feature" {
   metrics_destinations = [
     prometheus.remote_write.prometheus.receiver,
@@ -586,7 +586,7 @@ declare "pod_logs_via_loki" {
     attach_metadata {
       node = true
     }
-  }
+  } // discovery.kubernetes "pods"
 
   discovery.relabel "filtered_pods" {
     targets = discovery.kubernetes.pods.targets
@@ -823,17 +823,17 @@ declare "pod_logs_via_loki" {
       target_label = "job"
       replacement = "$1/$2"
     }
-  }
+  } // discovery.relabel "filtered_pods"
 
   local.file_match "pod_logs" {
     path_targets = discovery.relabel.filtered_pods.output
-  }
+  } // local.file_match "pod_logs"
 
   loki.source.file "pod_logs" {
     targets    = local.file_match.pod_logs.targets
     tail_from_end = true
     forward_to = [loki.process.pod_logs.receiver]
-  }
+  } // loki.source.file "pod_logs"
 
   loki.process "pod_logs" {
     stage.match {
@@ -1031,8 +1031,8 @@ declare "pod_logs_via_loki" {
     }
 
     forward_to = argument.logs_destinations.value
-  }
-}
+  } // loki.secretfilter "pod_logs"
+} // declare "pod_logs_via_loki"
 pod_logs_via_loki "feature" {
   logs_destinations = [
     loki.write.loki.receiver,
@@ -1051,7 +1051,7 @@ prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   textfile {
     directory = "/etc/release-info"
   }
-}
+} // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
 
 discovery.relabel "kubernetes_monitoring_telemetry" {
   targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -1065,7 +1065,7 @@ discovery.relabel "kubernetes_monitoring_telemetry" {
     action = "replace"
     replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
   }
-}
+} // discovery.relabel "kubernetes_monitoring_telemetry"
 
 prometheus.scrape "kubernetes_monitoring_telemetry" {
   job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -1075,7 +1075,7 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
     enabled = true
   }
   forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-}
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
 
 prometheus.relabel "kubernetes_monitoring_telemetry" {
   rule {
@@ -1086,7 +1086,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
   forward_to = [
     prometheus.remote_write.prometheus.receiver,
   ]
-}
+} // prometheus.relabel "kubernetes_monitoring_telemetry"
 
 
 

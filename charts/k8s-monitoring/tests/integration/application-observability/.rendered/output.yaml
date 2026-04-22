@@ -65,7 +65,7 @@ data:
           metrics = [otelcol.processor.resourcedetection.default.input]
           traces = [otelcol.processor.resourcedetection.default.input]
         }
-      }
+      } // otelcol.receiver.otlp "receiver"
     
       // Resource Detection Processor
       otelcol.processor.resourcedetection "default" {
@@ -149,7 +149,7 @@ data:
         output {
           traces = [otelcol.connector.spanmetrics.default.input]
         }
-      }
+      } // otelcol.processor.filter "span_metrics_prefilter"
     
       otelcol.connector.spanmetrics "default" {
         exclude_dimensions = []
@@ -183,7 +183,7 @@ data:
         output {
           metrics = [otelcol.processor.batch.default.input]
         }
-      }
+      } // otelcol.processor.transform "span_metrics_transform"
     
       // Batch Processor
       otelcol.processor.batch "default" {
@@ -196,7 +196,7 @@ data:
           traces = argument.traces_destinations.value
         }
       }
-    }
+    } // declare "application_observability"
     application_observability "feature" {
       metrics_destinations = [
         otelcol.exporter.prometheus.localprometheus.input,
@@ -261,7 +261,7 @@ data:
             names = coalesce(argument.namespaces.value, [])
           }
     
-        }
+        } // discovery.kubernetes "alloy_pods"
     
         // alloy relabelings (pre-scrape)
         discovery.relabel "alloy_pods" {
@@ -352,7 +352,7 @@ data:
             target_label = "source"
           }
     
-        }
+        } // discovery.relabel "alloy_pods"
     
         export "output" {
           value = discovery.relabel.alloy_pods.output
@@ -431,7 +431,7 @@ data:
           clustering {
             enabled = coalesce(argument.clustering.value, false)
           }
-        }
+        } // prometheus.scrape "alloy"
     
         // alloy metric relabelings (post-scrape)
         prometheus.relabel "alloy" {
@@ -516,7 +516,7 @@ data:
             action = "labeldrop"
             regex = "exported_(namespace|pod|container|job|instance)"
           }
-        }
+        } // prometheus.relabel "alloy"
       }
     
       alloy_integration_discovery "alloy_app" {
@@ -549,7 +549,7 @@ data:
       textfile {
         directory = "/etc/release-info"
       }
-    }
+    } // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
     
     discovery.relabel "kubernetes_monitoring_telemetry" {
       targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -563,7 +563,7 @@ data:
         action = "replace"
         replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
       }
-    }
+    } // discovery.relabel "kubernetes_monitoring_telemetry"
     
     prometheus.scrape "kubernetes_monitoring_telemetry" {
       job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -573,7 +573,7 @@ data:
         enabled = true
       }
       forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-    }
+    } // prometheus.scrape "kubernetes_monitoring_telemetry"
     
     prometheus.relabel "kubernetes_monitoring_telemetry" {
       rule {
@@ -584,7 +584,7 @@ data:
       forward_to = [
         prometheus.remote_write.localprometheus.receiver,
       ]
-    }
+    } // prometheus.relabel "kubernetes_monitoring_telemetry"
     
     
     

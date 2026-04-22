@@ -67,7 +67,7 @@ declare "grafana_integration" {
         names = coalesce(argument.namespaces.value, [])
       }
       {{- include "feature.integrations.attachNodeMetadata" . | nindent 6 }}
-    }
+    } // discovery.kubernetes "grafana_pods"
 
     // grafana relabelings (pre-scrape)
     discovery.relabel "grafana_pods" {
@@ -92,7 +92,7 @@ declare "grafana_integration" {
       }
 
       {{ include "feature.integrations.commonDiscoveryRules" . | nindent 6 }}
-    }
+    } // discovery.relabel "grafana_pods"
 
     export "output" {
       value = discovery.relabel.grafana_pods.output
@@ -171,7 +171,7 @@ declare "grafana_integration" {
       clustering {
         enabled = coalesce(argument.clustering.value, false)
       }
-    }
+    } // prometheus.scrape "grafana"
 
     // grafana metric relabelings (post-scrape)
     prometheus.relabel "grafana" {
@@ -202,7 +202,7 @@ declare "grafana_integration" {
         action = "labeldrop"
         regex = "node"
       }
-    }
+    } // prometheus.relabel "grafana"
   }
   {{- range $instance := $.Values.grafana.instances }}
     {{- include "integrations.grafana.include.metrics" (deepCopy $ | merge (dict "instance" $instance)) | nindent 2 }}

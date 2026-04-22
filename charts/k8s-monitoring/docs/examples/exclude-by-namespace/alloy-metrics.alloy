@@ -6,7 +6,7 @@ declare "annotation_autodiscovery" {
 
   discovery.kubernetes "pods" {
     role = "pod"
-  }
+  } // discovery.kubernetes "pods"
 
   discovery.relabel "annotation_autodiscovery_pods" {
     targets = discovery.kubernetes.pods.targets
@@ -165,11 +165,11 @@ declare "annotation_autodiscovery" {
       replacement = "10s"
       target_label = "__scrape_timeout__"
     }
-  }
+  } // discovery.relabel "annotation_autodiscovery_pods"
 
   discovery.kubernetes "services" {
     role = "service"
-  }
+  } // discovery.kubernetes "services"
 
   discovery.relabel "annotation_autodiscovery_services" {
     targets = discovery.kubernetes.services.targets
@@ -291,7 +291,7 @@ declare "annotation_autodiscovery" {
       replacement = "10s"
       target_label = "__scrape_timeout__"
     }
-  }
+  } // discovery.relabel "annotation_autodiscovery_services"
 
   discovery.relabel "annotation_autodiscovery_http" {
     targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
@@ -300,7 +300,7 @@ declare "annotation_autodiscovery" {
       regex = "https"
       action = "drop"
     }
-  }
+  } // discovery.relabel "annotation_autodiscovery_http"
 
   discovery.relabel "annotation_autodiscovery_https" {
     targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
@@ -309,7 +309,7 @@ declare "annotation_autodiscovery" {
       regex = "https"
       action = "keep"
     }
-  }
+  } // discovery.relabel "annotation_autodiscovery_https"
 
   prometheus.scrape "annotation_autodiscovery_http" {
     targets = discovery.relabel.annotation_autodiscovery_http.output
@@ -323,7 +323,7 @@ declare "annotation_autodiscovery" {
     }
 
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.scrape "annotation_autodiscovery_http"
 
   prometheus.scrape "annotation_autodiscovery_https" {
     targets = discovery.relabel.annotation_autodiscovery_https.output
@@ -340,8 +340,8 @@ declare "annotation_autodiscovery" {
     }
 
     forward_to = argument.metrics_destinations.value
-  }
-}
+  } // prometheus.relabel "annotation_autodiscovery"
+} // declare "annotation_autodiscovery"
 annotation_autodiscovery "feature" {
   metrics_destinations = [
     prometheus.remote_write.prometheus.receiver,
@@ -362,7 +362,7 @@ declare "auto_instrumentation" {
       role = "pod"
       label = "app.kubernetes.io/name=beyla"
     }
-  }
+  } // discovery.kubernetes "beyla_pods"
 
   discovery.relabel "beyla_pods" {
     targets = discovery.kubernetes.beyla_pods.targets
@@ -371,7 +371,7 @@ declare "auto_instrumentation" {
       action = "replace"
       target_label = "instance"
     }
-  }
+  } // discovery.relabel "beyla_pods"
 
   prometheus.scrape "beyla_applications" {
     targets         = discovery.relabel.beyla_pods.output
@@ -384,7 +384,7 @@ declare "auto_instrumentation" {
       enabled = true
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.scrape "beyla_applications"
 
   prometheus.scrape "beyla_internal" {
     targets         = discovery.relabel.beyla_pods.output
@@ -399,8 +399,8 @@ declare "auto_instrumentation" {
       enabled = true
     }
     forward_to = argument.metrics_destinations.value
-  }
-}
+  } // prometheus.relabel "beyla"
+} // declare "auto_instrumentation"
 auto_instrumentation "feature" {
   metrics_destinations = [
     prometheus.remote_write.prometheus.receiver,
@@ -413,7 +413,7 @@ declare "cluster_metrics" {
   }
   discovery.kubernetes "nodes" {
     role = "node"
-  }
+  } // discovery.kubernetes "nodes"
 
   discovery.relabel "nodes" {
     targets = discovery.kubernetes.nodes.targets
@@ -426,12 +426,12 @@ declare "cluster_metrics" {
       replacement = "kubernetes"
       target_label = "source"
     }
-  }
+  } // discovery.relabel "nodes"
 
   // Kubelet
   discovery.relabel "kubelet" {
     targets = discovery.relabel.nodes.output
-  }
+  } // discovery.relabel "kubelet"
 
   prometheus.scrape "kubelet" {
     targets  = discovery.relabel.kubelet.output
@@ -455,7 +455,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = [prometheus.relabel.kubelet.receiver]
-  }
+  } // prometheus.scrape "kubelet"
 
   prometheus.relabel "kubelet" {
     max_cache_size = 100000
@@ -466,7 +466,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "kubelet"
 
   // Kubelet Resources
   discovery.relabel "kubelet_resources" {
@@ -475,7 +475,7 @@ declare "cluster_metrics" {
       replacement   = "/metrics/resource"
       target_label  = "__metrics_path__"
     }
-  }
+  } // discovery.relabel "kubelet_resources"
 
   prometheus.scrape "kubelet_resources" {
     targets = discovery.relabel.kubelet_resources.output
@@ -499,7 +499,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = [prometheus.relabel.kubelet_resources.receiver]
-  }
+  } // prometheus.scrape "kubelet_resources"
 
   prometheus.relabel "kubelet_resources" {
     max_cache_size = 100000
@@ -510,7 +510,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "kubelet_resources"
 
   // cAdvisor
   discovery.relabel "cadvisor" {
@@ -519,7 +519,7 @@ declare "cluster_metrics" {
       replacement   = "/metrics/cadvisor"
       target_label  = "__metrics_path__"
     }
-  }
+  } // discovery.relabel "cadvisor"
 
   prometheus.scrape "cadvisor" {
     targets = discovery.relabel.cadvisor.output
@@ -543,7 +543,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = [prometheus.relabel.cadvisor.receiver]
-  }
+  } // prometheus.scrape "cadvisor"
 
   prometheus.relabel "cadvisor" {
     max_cache_size = 100000
@@ -626,7 +626,7 @@ declare "cluster_metrics" {
       action = "drop"
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "cadvisor"
   discovery.kubernetes "kube_state_metrics" {
     role = "endpoints"
 
@@ -637,7 +637,7 @@ declare "cluster_metrics" {
     namespaces {
       names = ["default"]
     }
-  }
+  } // discovery.kubernetes "kube_state_metrics"
 
   discovery.relabel "kube_state_metrics" {
     targets = discovery.kubernetes.kube_state_metrics.targets
@@ -648,7 +648,7 @@ declare "cluster_metrics" {
       target_label = "source"
     }
 
-  }
+  } // discovery.relabel "kube_state_metrics"
 
   prometheus.scrape "kube_state_metrics" {
     targets = discovery.relabel.kube_state_metrics.output
@@ -668,7 +668,7 @@ declare "cluster_metrics" {
       enabled = true
     }
     forward_to = [prometheus.relabel.kube_state_metrics.receiver]
-  }
+  } // prometheus.scrape "kube_state_metrics"
 
   prometheus.relabel "kube_state_metrics" {
     max_cache_size = 100000
@@ -678,8 +678,8 @@ declare "cluster_metrics" {
       action = "keep"
     }
     forward_to = argument.metrics_destinations.value
-  }
-}
+  } // prometheus.relabel "kube_state_metrics"
+} // declare "cluster_metrics"
 cluster_metrics "feature" {
   metrics_destinations = [
     prometheus.remote_write.prometheus.receiver,
@@ -703,7 +703,7 @@ declare "host_metrics" {
       names = ["default"]
     }
 
-  }
+  } // discovery.kubernetes "node_exporter"
 
   discovery.relabel "node_exporter" {
     targets = discovery.kubernetes.node_exporter.targets
@@ -795,7 +795,7 @@ declare "host_metrics" {
       target_label = "source"
     }
 
-  }
+  } // discovery.relabel "node_exporter"
 
   prometheus.scrape "node_exporter" {
     targets = discovery.relabel.node_exporter.output
@@ -814,7 +814,7 @@ declare "host_metrics" {
       enabled = true
     }
     forward_to = [prometheus.relabel.node_exporter.receiver]
-  }
+  } // prometheus.scrape "node_exporter"
 
   prometheus.relabel "node_exporter" {
     max_cache_size = 100000
@@ -831,8 +831,8 @@ declare "host_metrics" {
       action = "drop"
     }
     forward_to = argument.metrics_destinations.value
-  }
-}
+  } // prometheus.relabel "node_exporter"
+} // declare "host_metrics"
 host_metrics "feature" {
   metrics_destinations = [
     prometheus.remote_write.prometheus.receiver,
@@ -859,7 +859,7 @@ declare "prometheus_operator_objects" {
       action = "drop"
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "podmonitors"
 
   // Prometheus Operator Probe objects
   prometheus.operator.probes "probes" {
@@ -876,7 +876,7 @@ declare "prometheus_operator_objects" {
       action = "drop"
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "probes"
 
   // Prometheus Operator ServiceMonitor objects
   prometheus.operator.servicemonitors "service_monitors" {
@@ -894,8 +894,8 @@ declare "prometheus_operator_objects" {
       action = "drop"
     }
     forward_to = argument.metrics_destinations.value
-  }
-}
+  } // prometheus.relabel "servicemonitors"
+} // declare "prometheus_operator_objects"
 prometheus_operator_objects "feature" {
   metrics_destinations = [
     prometheus.remote_write.prometheus.receiver,

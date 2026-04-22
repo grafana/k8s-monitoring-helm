@@ -15,7 +15,7 @@ should render the default configuration:
           namespaces {
             names = ["NAMESPACE"]
           }
-        }
+        } // discovery.kubernetes "opencost"
 
         discovery.relabel "opencost" {
           targets = discovery.kubernetes.opencost.targets
@@ -24,7 +24,7 @@ should render the default configuration:
             action = "replace"
             target_label = "instance"
           }
-        }
+        } // discovery.relabel "opencost"
 
         prometheus.scrape "opencost" {
           targets      = discovery.relabel.opencost.output
@@ -39,7 +39,7 @@ should render the default configuration:
             enabled = true
           }
           forward_to = [prometheus.relabel.opencost.receiver]
-        }
+        } // prometheus.scrape "opencost"
 
         prometheus.relabel "opencost" {
           max_cache_size = 100000
@@ -49,5 +49,5 @@ should render the default configuration:
             action = "keep"
           }
           forward_to = argument.metrics_destinations.value
-        }
-      }
+        } // prometheus.relabel "opencost"
+      } // declare "cost_metrics"

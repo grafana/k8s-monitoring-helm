@@ -48,7 +48,7 @@ data:
           enabled = true
         }
         forward_to = [loki.relabel.pod_logs_objects.receiver]
-      }
+      } // loki.source.podlogs "default"
     
     
       loki.relabel "pod_logs_objects" {
@@ -70,7 +70,7 @@ data:
         }
     
         forward_to = [loki.process.pod_logs_objects.receiver]
-      }
+      } // loki.relabel "pod_logs_objects"
     
       loki.process "pod_logs_objects" {
         stage.match {
@@ -119,8 +119,8 @@ data:
     
     
         forward_to = argument.logs_destinations.value
-      }
-    }
+      } // loki.secretfilter "pod_logs_objects"
+    } // declare "pod_logs_objects"
     pod_logs_objects "feature" {
       logs_destinations = [
         loki.write.loki.receiver,
@@ -167,7 +167,7 @@ data:
     remote.kubernetes.secret "loki" {
       name      = "loki-k8smon-k8s-monitoring"
       namespace = "default"
-    }
+    } // remote.kubernetes.secret "loki"
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1

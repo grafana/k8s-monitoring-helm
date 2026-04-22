@@ -38,7 +38,7 @@ declare "loki_integration" {
         names = coalesce(argument.namespaces.value, [])
       }
 
-    }
+    } // discovery.kubernetes "loki_pods"
 
     // loki relabelings (pre-scrape)
     discovery.relabel "loki_pods" {
@@ -143,7 +143,7 @@ declare "loki_integration" {
         target_label = "source"
       }
 
-    }
+    } // discovery.relabel "loki_pods"
 
     export "output" {
       value = discovery.relabel.loki_pods.output
@@ -222,7 +222,7 @@ declare "loki_integration" {
       clustering {
         enabled = coalesce(argument.clustering.value, false)
       }
-    }
+    } // prometheus.scrape "loki"
 
     // loki metric relabelings (post-scrape)
     prometheus.relabel "loki" {
@@ -262,7 +262,7 @@ declare "loki_integration" {
         target_label = "container"
         replacement = "memcached"
       }
-    }
+    } // prometheus.relabel "loki"
   }
 
   loki_integration_discovery "loki" {
@@ -296,7 +296,7 @@ prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   textfile {
     directory = "/etc/release-info"
   }
-}
+} // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
 
 discovery.relabel "kubernetes_monitoring_telemetry" {
   targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -310,7 +310,7 @@ discovery.relabel "kubernetes_monitoring_telemetry" {
     action = "replace"
     replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
   }
-}
+} // discovery.relabel "kubernetes_monitoring_telemetry"
 
 prometheus.scrape "kubernetes_monitoring_telemetry" {
   job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -320,7 +320,7 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
     enabled = true
   }
   forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-}
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
 
 prometheus.relabel "kubernetes_monitoring_telemetry" {
   rule {
@@ -331,7 +331,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
   forward_to = [
     prometheus.remote_write.prometheus.receiver,
   ]
-}
+} // prometheus.relabel "kubernetes_monitoring_telemetry"
 
 
 

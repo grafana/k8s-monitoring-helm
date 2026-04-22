@@ -9,7 +9,7 @@ declare "mysql_integration" {
   remote.kubernetes.secret "test_db" {
     name      = "test-database-mysql"
     namespace = "mysql"
-  }
+  } // remote.kubernetes.secret "test_db"
 
   prometheus.exporter.mysql "test_db" {
     data_source_name = string.format("%s:%s@(%s:%d)/",
@@ -105,7 +105,7 @@ prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   textfile {
     directory = "/etc/release-info"
   }
-}
+} // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
 
 discovery.relabel "kubernetes_monitoring_telemetry" {
   targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -119,7 +119,7 @@ discovery.relabel "kubernetes_monitoring_telemetry" {
     action = "replace"
     replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
   }
-}
+} // discovery.relabel "kubernetes_monitoring_telemetry"
 
 prometheus.scrape "kubernetes_monitoring_telemetry" {
   job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -129,7 +129,7 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
     enabled = true
   }
   forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-}
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
 
 prometheus.relabel "kubernetes_monitoring_telemetry" {
   rule {
@@ -140,7 +140,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
   forward_to = [
     prometheus.remote_write.prometheus.receiver,
   ]
-}
+} // prometheus.relabel "kubernetes_monitoring_telemetry"
 
 
 
@@ -175,7 +175,7 @@ loki.write "loki" {
 remote.kubernetes.secret "loki" {
   name      = "loki-k8smon-k8s-monitoring"
   namespace = "default"
-}
+} // remote.kubernetes.secret "loki"
 
 
 // Destination: prometheus (prometheus)

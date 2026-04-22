@@ -33,7 +33,7 @@ declare "application_observability" {
       metrics = [otelcol.processor.resourcedetection.default.input]
       traces = [otelcol.processor.resourcedetection.default.input]
     }
-  }
+  } // otelcol.receiver.otlp "receiver"
 
   // Resource Detection Processor
   otelcol.processor.resourcedetection "default" {
@@ -116,7 +116,7 @@ declare "application_observability" {
       traces = argument.traces_destinations.value
     }
   }
-}
+} // declare "application_observability"
 application_observability "feature" {
   metrics_destinations = [
     otelcol.exporter.prometheus.localprometheus.input,
@@ -162,7 +162,7 @@ loki.write "localloki" {
 remote.kubernetes.secret "localloki" {
   name      = "localloki-k8smon-k8s-monitoring"
   namespace = "default"
-}
+} // remote.kubernetes.secret "localloki"
 
 
 // Destination: localPrometheus (prometheus)
@@ -222,7 +222,7 @@ prometheus.remote_write "localprometheus" {
 remote.kubernetes.secret "localprometheus" {
   name      = "localprometheus-k8smon-k8s-monitoring"
   namespace = "default"
-}
+} // remote.kubernetes.secret "localprometheus"
 
 
 // Destination: localTempo (otlp)

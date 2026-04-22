@@ -12,7 +12,7 @@ will only discover pods:
             role = "pod"
             label = "app=myapp"
           }
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "annotation_autodiscovery_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -174,7 +174,7 @@ will only discover pods:
             target_label = "temp_source"
             replacement = "pod"
           }
-        }
+        } // discovery.relabel "annotation_autodiscovery_pods"
 
         discovery.relabel "annotation_autodiscovery_http" {
           targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output)
@@ -183,7 +183,7 @@ will only discover pods:
             regex = "https"
             action = "drop"
           }
-        }
+        } // discovery.relabel "annotation_autodiscovery_http"
 
         discovery.relabel "annotation_autodiscovery_https" {
           targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output)
@@ -192,7 +192,7 @@ will only discover pods:
             regex = "https"
             action = "keep"
           }
-        }
+        } // discovery.relabel "annotation_autodiscovery_https"
 
         prometheus.scrape "annotation_autodiscovery_http" {
           targets = discovery.relabel.annotation_autodiscovery_http.output
@@ -206,7 +206,7 @@ will only discover pods:
           }
 
           forward_to = [prometheus.relabel.annotation_autodiscovery.receiver]
-        }
+        } // prometheus.scrape "annotation_autodiscovery_http"
 
         prometheus.scrape "annotation_autodiscovery_https" {
           targets = discovery.relabel.annotation_autodiscovery_https.output
@@ -223,7 +223,7 @@ will only discover pods:
           }
 
           forward_to = [prometheus.relabel.annotation_autodiscovery.receiver]
-        }
+        } // prometheus.scrape "annotation_autodiscovery_https"
 
         prometheus.relabel "annotation_autodiscovery" {
           max_cache_size = 100000
@@ -238,5 +238,5 @@ will only discover pods:
             regex = "temp_source"
           }
           forward_to = argument.metrics_destinations.value
-        }
-      }
+        } // prometheus.relabel "annotation_autodiscovery"
+      } // declare "annotation_autodiscovery"

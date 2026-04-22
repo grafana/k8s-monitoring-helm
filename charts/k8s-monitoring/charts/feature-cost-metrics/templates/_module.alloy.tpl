@@ -5,5 +5,5 @@ declare "cost_metrics" {
   }
 
   {{- include "feature.costMetrics.opencost.alloy" . | indent 2 }}
-}
+} // declare "cost_metrics"
 {{- end -}}

@@ -22,7 +22,7 @@ loki.relabel "pod_logs_objects" {
 {{- end }}
 
   forward_to = [loki.process.pod_logs_objects.receiver]
-}
+} // loki.relabel "pod_logs_objects"
 
 loki.process "pod_logs_objects" {
   stage.match {
@@ -96,7 +96,7 @@ loki.process "pod_logs_objects" {
 {{ if .Values.secretFilter.enabled }}
 {{- if .Values.secretFilter.inclusionSelector }}
   forward_to = [loki.process.secret_filter_prefilter.receiver]
-}
+} // loki.process "pod_logs_objects"
 
 loki.process "secret_filter_prefilter" {
   stage.static_labels {
@@ -117,7 +117,7 @@ loki.process "secret_filter_prefilter" {
     loki.process.secret_filter_inclusion.receiver,
     loki.process.secret_filter_exclusion.receiver,
   ]
-}
+} // loki.process "secret_filter_prefilter"
 
 loki.process "secret_filter_exclusion" {
   stage.match {
@@ -126,7 +126,7 @@ loki.process "secret_filter_exclusion" {
   }
 
   forward_to = argument.logs_destinations.value
-}
+} // loki.process "secret_filter_exclusion"
 
 loki.process "secret_filter_inclusion" {
   stage.match {
@@ -136,7 +136,7 @@ loki.process "secret_filter_inclusion" {
 
 {{- end }}
   forward_to = [loki.secretfilter.pod_logs_objects.receiver]
-}
+} // loki.process "secret_filter_inclusion"
 
 loki.secretfilter "pod_logs_objects" {
 {{- if .Values.secretFilter.gitleaksConfigPathFrom }}
@@ -158,6 +158,6 @@ loki.secretfilter "pod_logs_objects" {
 {{- end }}
 {{- end }}
   forward_to = argument.logs_destinations.value
-}
+} // loki.secretfilter "pod_logs_objects"
 
 {{- end }}

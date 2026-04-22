@@ -49,3 +49,83 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: 'component prometheus\.relabel "nonexistent" not found'
+
+  - it: scopes replacement to a specific module when module is set
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: custom
+          ecosystem: otlp
+          logs: {enabled: true, target: "noop.input"}
+          config: |
+            declare "my_module" {
+              prometheus.relabel "shared" {
+                original_in_module = "yes"
+              } // prometheus.relabel "shared"
+            } // declare "my_module"
+
+            prometheus.relabel "shared" {
+              original_outside = "yes"
+            } // prometheus.relabel "shared"
+      replaceComponent:
+        - type: prometheus.relabel
+          name: shared
+          module: my_module
+          content: |-
+            replaced_in_module = "yes"
+    asserts:
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'replaced_in_module = "yes"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'original_outside = "yes"'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'original_in_module = "yes"'
+
+  - it: fails when module-scoped component is not inside the module
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: custom
+          ecosystem: otlp
+          logs: {enabled: true, target: "noop.input"}
+          config: |
+            declare "my_module" {
+              prometheus.relabel "other" {
+                original = "yes"
+              } // prometheus.relabel "other"
+            } // declare "my_module"
+      replaceComponent:
+        - type: prometheus.relabel
+          name: missing
+          module: my_module
+          content: "forward_to = []"
+    asserts:
+      - failedTemplate:
+          errorPattern: 'component prometheus\.relabel "missing" not found in module "my_module"'
+
+  - it: skips module-scoped replacement when module is not rendered
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: prometheus
+          url: https://prometheus.example.com
+      replaceComponent:
+        - type: prometheus.relabel
+          name: anything
+          module: nonexistent_module
+          content: "forward_to = []"
+    asserts:
+      - isKind:
+          of: ConfigMap

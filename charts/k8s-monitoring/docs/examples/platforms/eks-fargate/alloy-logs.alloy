@@ -6,7 +6,7 @@ declare "pod_logs_via_kubernetes_api" {
 
   discovery.kubernetes "pods" {
     role = "pod"
-  }
+  } // discovery.kubernetes "pods"
 
   discovery.relabel "filtered_pods" {
     targets = discovery.kubernetes.pods.targets
@@ -105,7 +105,7 @@ declare "pod_logs_via_kubernetes_api" {
       regex = "(.+)"
       target_label = "app_kubernetes_io_name"
     }
-  }
+  } // discovery.relabel "filtered_pods"
 
   loki.source.kubernetes "pod_logs" {
     targets = discovery.relabel.filtered_pods.output
@@ -113,7 +113,7 @@ declare "pod_logs_via_kubernetes_api" {
       enabled = true
     }
     forward_to = [loki.process.pod_logs.receiver]
-  }
+  } // loki.source.kubernetes "pod_logs"
 
   loki.process "pod_logs" {
     stage.match {
@@ -163,8 +163,8 @@ declare "pod_logs_via_kubernetes_api" {
     }
 
     forward_to = argument.logs_destinations.value
-  }
-}
+  } // loki.secretfilter "pod_logs"
+} // declare "pod_logs_via_kubernetes_api"
 pod_logs_via_kubernetes_api "feature" {
   logs_destinations = [
     loki.write.loki.receiver,

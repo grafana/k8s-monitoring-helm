@@ -46,7 +46,7 @@ prometheus.operator.servicemonitors "service_monitors" {
 {{- end }}
 {{- if or $metricAllowList $metricDenyList .Values.serviceMonitors.extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.servicemonitors.receiver]
-}
+} // prometheus.operator.servicemonitors "service_monitors"
 
 prometheus.relabel "servicemonitors" {
   max_cache_size = {{ .Values.serviceMonitors.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -69,6 +69,6 @@ prometheus.relabel "servicemonitors" {
 {{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "servicemonitors"
 {{- end }}
 {{- end }}

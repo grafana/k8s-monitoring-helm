@@ -64,7 +64,7 @@ data:
           role = "pod"
           label = "app.kubernetes.io/name=beyla"
         }
-      }
+      } // discovery.kubernetes "beyla_pods"
     
       discovery.relabel "beyla_pods" {
         targets = discovery.kubernetes.beyla_pods.targets
@@ -73,7 +73,7 @@ data:
           action = "replace"
           target_label = "instance"
         }
-      }
+      } // discovery.relabel "beyla_pods"
     
       prometheus.scrape "beyla_applications" {
         targets         = discovery.relabel.beyla_pods.output
@@ -86,7 +86,7 @@ data:
           enabled = true
         }
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.scrape "beyla_applications"
     
       prometheus.scrape "beyla_internal" {
         targets         = discovery.relabel.beyla_pods.output
@@ -101,8 +101,8 @@ data:
           enabled = true
         }
         forward_to = argument.metrics_destinations.value
-      }
-    }
+      } // prometheus.relabel "beyla"
+    } // declare "auto_instrumentation"
     auto_instrumentation "feature" {
       metrics_destinations = [
         prometheus.remote_write.localprometheus.receiver,
@@ -201,7 +201,7 @@ data:
           logs = [otelcol.processor.resourcedetection.default.input]
           traces = [otelcol.processor.resourcedetection.default.input]
         }
-      }
+      } // otelcol.receiver.otlp "receiver"
     
       // Resource Detection Processor
       otelcol.processor.resourcedetection "default" {
@@ -296,7 +296,7 @@ data:
           traces = argument.traces_destinations.value
         }
       }
-    }
+    } // declare "application_observability"
     application_observability "feature" {
       metrics_destinations = [
         otelcol.exporter.prometheus.localprometheus.input,
@@ -314,7 +314,7 @@ data:
       textfile {
         directory = "/etc/release-info"
       }
-    }
+    } // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
     
     discovery.relabel "kubernetes_monitoring_telemetry" {
       targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -328,7 +328,7 @@ data:
         action = "replace"
         replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
       }
-    }
+    } // discovery.relabel "kubernetes_monitoring_telemetry"
     
     prometheus.scrape "kubernetes_monitoring_telemetry" {
       job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -338,7 +338,7 @@ data:
         enabled = true
       }
       forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-    }
+    } // prometheus.scrape "kubernetes_monitoring_telemetry"
     
     prometheus.relabel "kubernetes_monitoring_telemetry" {
       rule {
@@ -349,7 +349,7 @@ data:
       forward_to = [
         prometheus.remote_write.localprometheus.receiver,
       ]
-    }
+    } // prometheus.relabel "kubernetes_monitoring_telemetry"
     
     
     
@@ -384,7 +384,7 @@ data:
     remote.kubernetes.secret "localloki" {
       name      = "localloki-k8smon-k8s-monitoring"
       namespace = "default"
-    }
+    } // remote.kubernetes.secret "localloki"
     
     
     // Destination: localPrometheus (prometheus)

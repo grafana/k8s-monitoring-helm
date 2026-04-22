@@ -25,7 +25,7 @@ declare "annotation_autodiscovery" {
       regex = "https"
       action = "drop"
     }
-  }
+  } // discovery.relabel "annotation_autodiscovery_http"
 
   discovery.relabel "annotation_autodiscovery_https" {
     targets = array.concat({{ $targets | join ", " }})
@@ -34,7 +34,7 @@ declare "annotation_autodiscovery" {
       regex = "https"
       action = "keep"
     }
-  }
+  } // discovery.relabel "annotation_autodiscovery_https"
 
   prometheus.scrape "annotation_autodiscovery_http" {
     targets = discovery.relabel.annotation_autodiscovery_http.output
@@ -56,7 +56,7 @@ declare "annotation_autodiscovery" {
 {{- else }}
     forward_to = argument.metrics_destinations.value
 {{- end }}
-  }
+  } // prometheus.scrape "annotation_autodiscovery_http"
 
   prometheus.scrape "annotation_autodiscovery_https" {
     targets = discovery.relabel.annotation_autodiscovery_https.output
@@ -75,7 +75,7 @@ declare "annotation_autodiscovery" {
     }
 {{ if $metricRelabelRulesNeeded }}
     forward_to = [prometheus.relabel.annotation_autodiscovery.receiver]
-  }
+  } // prometheus.scrape "annotation_autodiscovery_https"
 
   prometheus.relabel "annotation_autodiscovery" {
     max_cache_size = {{ .Values.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -138,6 +138,6 @@ declare "annotation_autodiscovery" {
 {{- end }}
 {{- end }}
     forward_to = argument.metrics_destinations.value
-  }
-}
+  } // prometheus.relabel "annotation_autodiscovery"
+} // declare "annotation_autodiscovery"
 {{- end -}}

@@ -59,7 +59,7 @@ data:
         output {
           logs = [otelcol.processor.k8sattributes.pod_logs.input]
         }
-      }
+      } // otelcol.receiver.filelog "pod_logs"
     
       otelcol.processor.k8sattributes "pod_logs" {
         pod_association {
@@ -136,8 +136,8 @@ data:
         output {
           logs = argument.logs_destinations.value
         }
-      }
-    }
+      } // otelcol.processor.transform "pod_logs"
+    } // declare "pod_logs_via_opentelemetry"
     pod_logs_via_opentelemetry "feature" {
       logs_destinations = [
         otelcol.processor.attributes.log_storage.input,
@@ -273,7 +273,7 @@ data:
     remote.kubernetes.secret "log_storage" {
       name      = "log-storage-k8smon-k8s-monitoring"
       namespace = "default"
-    }
+    } // remote.kubernetes.secret "log_storage"
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1

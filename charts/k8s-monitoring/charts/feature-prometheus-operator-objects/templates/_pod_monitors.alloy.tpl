@@ -45,7 +45,7 @@ prometheus.operator.podmonitors "pod_monitors" {
 {{- end }}
 {{- if or $metricAllowList $metricDenyList .Values.podMonitors.extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.podmonitors.receiver]
-}
+} // prometheus.operator.podmonitors "pod_monitors"
 
 prometheus.relabel "podmonitors" {
   max_cache_size = {{ .Values.podMonitors.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -68,6 +68,6 @@ prometheus.relabel "podmonitors" {
 {{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "podmonitors"
 {{- end }}
 {{- end }}

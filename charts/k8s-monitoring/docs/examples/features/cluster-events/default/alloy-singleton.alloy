@@ -8,7 +8,7 @@ declare "cluster_events" {
     job_name   = "integrations/kubernetes/eventhandler"
     log_format = "logfmt"
     forward_to = [loki.process.cluster_events.receiver]
-  }
+  } // loki.source.kubernetes_events "cluster_events"
 
   loki.process "cluster_events" {
 
@@ -74,8 +74,8 @@ declare "cluster_events" {
     }
 
     forward_to = argument.logs_destinations.value
-  }
-}
+  } // loki.process "cluster_events"
+} // declare "cluster_events"
 cluster_events "feature" {
   logs_destinations = [
     loki.write.loki.receiver,
@@ -127,5 +127,5 @@ loki.write "loki" {
 remote.kubernetes.secret "loki" {
   name      = "loki-k8smon-k8s-monitoring"
   namespace = "default"
-}
+} // remote.kubernetes.secret "loki"
 
