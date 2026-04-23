@@ -268,8 +268,11 @@ build-features:
 .PHONY: build
 build: build-features values.schema.json templates/destinations/_destination_types.tpl collectors/upstream/alloy-values.yaml build-docs examples integration-test-checks platform-test-checks
 
+docs/Versions.md:
+	scripts/versions-doc.sh > $@
+
 .PHONY: build-docs
-build-docs: README.md AGENTS.md $(COLLECTOR_DOCS_FILES) $(COLLECTOR_PRESET_DOCS_FILES) $(DESTINATION_DOCS_FILES)
+build-docs: README.md AGENTS.md docs/Versions.md $(COLLECTOR_DOCS_FILES) $(COLLECTOR_PRESET_DOCS_FILES) $(DESTINATION_DOCS_FILES)
 
 # Test targets
 .PHONY: test unittest lint-helm lint-configs
