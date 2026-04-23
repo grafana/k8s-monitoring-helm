@@ -111,13 +111,13 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | energyMetrics.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Kepler. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no __meta* labels are present. |
 | energyMetrics.jobLabel | string | `"integrations/kepler"` | The value for the job label. |
 | energyMetrics.labelMatchers | object | `{}` | Label matchers used to select the Kepler pods. If deploying from telemetry services, this will automatically be populated. |
-| energyMetrics.maxCacheSize | string | `100000` | Sets the max_cache_size for the prometheus.relabel component for Kepler. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
+| energyMetrics.maxCacheSize | string | `100000` | Sets the max_cache_size for the prometheus.relabel component for Kepler. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
 | energyMetrics.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | energyMetrics.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | energyMetrics.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Kepler to the minimal set required for Kubernetes Monitoring. |
 | energyMetrics.namespace | string | `""` | Namespace to locate Kepler pods. If deploying from telemetry services, this will automatically be populated. |
-| energyMetrics.scrapeInterval | string | `60s` | How frequently to scrape metrics from Kepler. Overrides global.scrapeInterval. |
-| energyMetrics.scrapeTimeout | string | `10s` | The timeout for scraping Kepler metrics. |
+| energyMetrics.scrapeInterval | string | `60s` | How frequently to scrape metrics from Kepler. Overrides `global.scrapeInterval`. |
+| energyMetrics.scrapeTimeout | string | `10s` | The timeout for scraping Kepler metrics. Overrides `global.scrapeTimeout`. |
 
 ### Global Settings
 
@@ -141,7 +141,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | linuxHosts.extraMetricProcessingRules | string | `""` | Rule blocks to be added for processing Linux host metrics. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
 | linuxHosts.jobLabel | string | `"integrations/node_exporter"` | The value for the job label. |
 | linuxHosts.labelMatchers | object | `{}` | Labels used to select the Node Exporter pods. If deploying from telemetry services, this will automatically be populated. |
-| linuxHosts.maxCacheSize | string | `100000` | Sets the max_cache_size for the Node Exporter prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
+| linuxHosts.maxCacheSize | string | `100000` | Sets the max_cache_size for the Node Exporter prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
 | linuxHosts.metricsTuning.dropMetricsForFilesystem | list | `["ramfs","tmpfs"]` | Drop metrics for the given filesystem types |
 | linuxHosts.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | linuxHosts.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
@@ -149,8 +149,8 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | linuxHosts.metricsTuning.useIntegrationAllowList | bool | `false` | Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring as well as the Node Exporter integration. |
 | linuxHosts.namespace | string | `""` | Namespace to locate Node Exporter pods. If deploying from telemetry services, this will automatically be populated. |
 | linuxHosts.scheme | string | `"http"` | The scrape scheme for Linux host metrics. |
-| linuxHosts.scrapeInterval | string | `60s` | How frequently to scrape Linux host metrics. |
-| linuxHosts.scrapeTimeout | string | `10s` | The timeout for scraping Linux host metrics. |
+| linuxHosts.scrapeInterval | string | `60s` | How frequently to scrape Linux host metrics. Overrides `global.scrapeInterval`. |
+| linuxHosts.scrapeTimeout | string | `10s` | The timeout for scraping Linux host metrics. Overrides `global.scrapeTimeout`. |
 
 ### Node Labels
 
@@ -174,14 +174,14 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | windowsHosts.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Windows Exporter metrics. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
 | windowsHosts.jobLabel | string | `"integrations/windows-exporter"` | The value for the job label. |
 | windowsHosts.labelMatchers | object | `{}` | Labels used to select the Windows Exporter pods. If deploying from telemetry services, this will automatically be  # populated. |
-| windowsHosts.maxCacheSize | string | `100000` | Sets the max_cache_size for the Windows Exporter prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
+| windowsHosts.maxCacheSize | string | `100000` | Sets the max_cache_size for the Windows Exporter prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
 | windowsHosts.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | windowsHosts.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | windowsHosts.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Windows Exporter to the minimal set required for Kubernetes Monitoring. |
 | windowsHosts.namespace | string | `""` | Namespace to locate Windows Exporter pods. If deploying from telemetry services, this will automatically be  # populated. |
 | windowsHosts.scheme | string | `"http"` | The scrape scheme for Windows host metrics. |
-| windowsHosts.scrapeInterval | string | `60s` | How frequently to scrape Windows host metrics. |
-| windowsHosts.scrapeTimeout | string | `10s` | The timeout for scraping Windows host metrics. |
+| windowsHosts.scrapeInterval | string | `60s` | How frequently to scrape Windows host metrics. Overrides `global.scrapeInterval`. |
+| windowsHosts.scrapeTimeout | string | `10s` | The timeout for scraping Windows host metrics. Overrides `global.scrapeTimeout`. |
 <!-- markdownlint-enable no-space-in-emphasis -->
 
 <!--alex enable host-hostess hostesses-hosts-->

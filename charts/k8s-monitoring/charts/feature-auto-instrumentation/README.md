@@ -60,11 +60,11 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | beyla.k8sCache.replicas | int | `1` | Use 1 replica per 50 nodes as a starting point. |
 | beyla.k8sCache.resources.limits | object | `{"cpu":"3.0","memory":"2Gi"}` | Generous limits to allow for startup spike. |
 | beyla.labelMatchers | object | `{"app.kubernetes.io/name":"beyla"}` | Label matchers used to select the Beyla pods for scraping metrics. |
-| beyla.maxCacheSize | string | 100000 | Sets the max_cache_size for the prometheus.relabel component for Beyla. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides metrics.maxCacheSize |
+| beyla.maxCacheSize | string | 100000 | Sets the max_cache_size for the prometheus.relabel component for Beyla. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
 | beyla.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | beyla.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | beyla.preset | string | `"application"` | The configuration preset to use. Valid options are "application" or "network". |
-| beyla.scrapeInterval | string | 60s | How frequently to scrape metrics from Beyla. Overrides metrics.scrapeInterval |
+| beyla.scrapeInterval | string | 60s | How frequently to scrape metrics from Beyla. Overrides `global.scrapeInterval`. |
 | beyla.service | object | `{"targetPort":9090}` | The port number for the Beyla service. |
 
 ### Global Settings

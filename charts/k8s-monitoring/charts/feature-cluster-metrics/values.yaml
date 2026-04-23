@@ -1,4 +1,7 @@
 ---
+# The fields in this global section are populated by the parent k8s-monitoring chart's global settings.
+# To change any of these values, set them at the top level of the parent chart's values.yaml under
+# `global:`, not here under `clusterMetrics.global:`.
 global:
   # -- The specific platform for this cluster. Will enable compatibility for some platforms. Supported options: (empty) or "openshift".
   # @section -- Global Settings
@@ -85,18 +88,20 @@ kubelet:
 
   # -- Sets the max_cache_size for the Kubelet prometheus.relabel component.
   # This should be at least 2x-5x your largest scrape target or samples appended rate.
-  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
-  # Overrides global.maxCacheSize
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.maxCacheSize`.
   # @default -- `100000`
   # @section -- Kubelet
   maxCacheSize:
 
   # -- How frequently to scrape Kubelet metrics.
+  # Overrides `global.scrapeInterval`.
   # @default -- `60s`
   # @section -- Kubelet
   scrapeInterval: ""
 
   # -- The timeout for scraping Kubelet metrics.
+  # Overrides `global.scrapeTimeout`.
   # @default -- `10s`
   # @section -- Kubelet
   scrapeTimeout: ""
@@ -142,18 +147,20 @@ kubeletResource:
 
   # -- Sets the max_cache_size for prometheus.relabel components.
   # This should be at least 2x-5x your largest scrape target or samples appended rate.
-  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
-  # Overrides global.maxCacheSize
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.maxCacheSize`.
   # @default -- `100000`
   # @section -- Kubelet Resources
   maxCacheSize:
 
   # -- How frequently to scrape Kubelet resource metrics.
+  # Overrides `global.scrapeInterval`.
   # @default -- `60s`
   # @section -- Kubelet Resources
   scrapeInterval: ""
 
   # -- The timeout for scraping Kubelet resource metrics.
+  # Overrides `global.scrapeTimeout`.
   # @default -- `10s`
   # @section -- Kubelet Resources
   scrapeTimeout: ""
@@ -199,18 +206,20 @@ kubeletProbes:
 
   # -- Sets the max_cache_size for prometheus.relabel components.
   # This should be at least 2x-5x your largest scrape target or samples appended rate.
-  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
-  # Overrides global.maxCacheSize
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.maxCacheSize`.
   # @default -- `100000`
   # @section -- Kubelet Probes
   maxCacheSize:
 
   # -- How frequently to scrape Kubelet probe metrics.
+  # Overrides `global.scrapeInterval`.
   # @default -- `60s`
   # @section -- Kubelet Probes
   scrapeInterval: ""
 
   # -- The timeout for scraping Kubelet probe metrics.
+  # Overrides `global.scrapeTimeout`.
   # @default -- `10s`
   # @section -- Kubelet Probes
   scrapeTimeout: ""
@@ -279,19 +288,21 @@ cadvisor:
     excludeNamespaces: []
 
   # -- How frequently to scrape cAdvisor metrics.
+  # Overrides `global.scrapeInterval`.
   # @default -- `60s`
   # @section -- cadvisor
   scrapeInterval: ""
 
   # -- The timeout for scraping cAdvisor metrics.
+  # Overrides `global.scrapeTimeout`.
   # @default -- `10s`
   # @section -- cAdvisor
   scrapeTimeout: ""
 
   # -- Sets the max_cache_size for the cAdvisor prometheus.relabel component.
   # This should be at least 2x-5x your largest scrape target or samples appended rate.
-  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
-  # Overrides global.maxCacheSize
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.maxCacheSize`.
   # @default -- `100000`
   # @section -- cAdvisor
   maxCacheSize:
@@ -314,13 +325,14 @@ apiServer:
   # @section -- API Server
   extraDiscoveryRules: ""
 
-  # -- How frequently to scrape metrics from the API Server
-  # Overrides metrics.scrapeInterval
+  # -- How frequently to scrape metrics from the API Server.
+  # Overrides `global.scrapeInterval`.
   # @default -- 60s
   # @section -- API Server
   scrapeInterval: ""
 
   # -- The timeout for scraping API Server metrics.
+  # Overrides `global.scrapeTimeout`.
   # @default -- `10s`
   # @section -- API Server
   scrapeTimeout: ""
@@ -342,8 +354,8 @@ apiServer:
 
   # -- Sets the max_cache_size for the API Server prometheus.relabel component.
   # This should be at least 2x-5x your largest scrape target or samples appended rate.
-  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
-  # Overrides metrics.maxCacheSize
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.maxCacheSize`.
   # @raw
   # @section -- API Server
   maxCacheSize:
@@ -367,10 +379,10 @@ kubeControllerManager:
   # @section -- Kube Controller Manager
   port: 10257
 
-  # -- How frequently to scrape metrics from the Kube Controller Manager
-  # @section -- Kube Controller Manager
-  # Overrides metrics.scrapeInterval
+  # -- How frequently to scrape metrics from the Kube Controller Manager.
+  # Overrides `global.scrapeInterval`.
   # @default -- 60s
+  # @section -- Kube Controller Manager
   scrapeInterval: ""
 
   # -- Rule blocks to be added to the discovery.relabel component for the Kube Controller Manager.
@@ -397,8 +409,8 @@ kubeControllerManager:
 
   # -- Sets the max_cache_size for the Kube Controller Manager prometheus.relabel component.
   # This should be at least 2x-5x your largest scrape target or samples appended rate.
-  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
-  # Overrides metrics.maxCacheSize
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.maxCacheSize`.
   # @raw
   # @section -- Kube Controller Manager
   maxCacheSize:
@@ -414,13 +426,14 @@ kubeDNS:
   # @section -- KubeDNS
   jobLabel: "integrations/kubernetes/kube-dns"
 
-  # -- How frequently to scrape metrics from KubeDNS
-  # Overrides metrics.scrapeInterval
+  # -- How frequently to scrape metrics from KubeDNS.
+  # Overrides `global.scrapeInterval`.
   # @default -- 60s
   # @section -- KubeDNS
   scrapeInterval: ""
 
   # -- The timeout for scraping KubeDNS metrics.
+  # Overrides `global.scrapeTimeout`.
   # @default -- `10s`
   # @section -- KubeDNS
   scrapeTimeout: ""
@@ -449,8 +462,8 @@ kubeDNS:
 
   # -- Sets the max_cache_size for the KubeDNS prometheus.relabel component.
   # This should be at least 2x-5x your largest scrape target or samples appended rate.
-  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
-  # Overrides metrics.maxCacheSize
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.maxCacheSize`.
   # @raw
   # @section -- KubeDNS
   maxCacheSize:
@@ -474,13 +487,14 @@ kubeProxy:
   # @section -- Kube Proxy
   port: 10249
 
-  # -- How frequently to scrape metrics from the Kube Proxy
-  # Overrides metrics.scrapeInterval
+  # -- How frequently to scrape metrics from the Kube Proxy.
+  # Overrides `global.scrapeInterval`.
   # @default -- 60s
   # @section -- Kube Proxy
   scrapeInterval: ""
 
   # -- The timeout for scraping Kube Proxy metrics.
+  # Overrides `global.scrapeTimeout`.
   # @default -- `10s`
   # @section -- Kube Proxy
   scrapeTimeout: ""
@@ -509,8 +523,8 @@ kubeProxy:
 
   # -- Sets the max_cache_size for the Kube Proxy prometheus.relabel component.
   # This should be at least 2x-5x your largest scrape target or samples appended rate.
-  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
-  # Overrides metrics.maxCacheSize
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.maxCacheSize`.
   # @raw
   # @section -- Kube Proxy
   maxCacheSize:
@@ -534,13 +548,14 @@ kubeScheduler:
   # @section -- Kube Scheduler
   port: 10259
 
-  # -- How frequently to scrape metrics from the Kube Scheduler
-  # Overrides metrics.scrapeInterval
+  # -- How frequently to scrape metrics from the Kube Scheduler.
+  # Overrides `global.scrapeInterval`.
   # @default -- 60s
   # @section -- Kube Scheduler
   scrapeInterval: ""
 
   # -- The timeout for scraping Kube Scheduler metrics.
+  # Overrides `global.scrapeTimeout`.
   # @default -- `10s`
   # @section -- Kube Scheduler
   scrapeTimeout: ""
@@ -569,8 +584,8 @@ kubeScheduler:
 
   # -- Sets the max_cache_size for the Kube Scheduler prometheus.relabel component.
   # This should be at least 2x-5x your largest scrape target or samples appended rate.
-  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
-  # Overrides metrics.maxCacheSize
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.maxCacheSize`.
   # @raw
   # @section -- Kube Scheduler
   maxCacheSize:
@@ -645,11 +660,13 @@ kube-state-metrics:
     excludeMetrics: []
 
   # -- How frequently to scrape kube-state-metrics metrics.
+  # Overrides `global.scrapeInterval`.
   # @default -- `60s`
   # @section -- kube-state-metrics
   scrapeInterval: ""
 
   # -- The timeout for scraping kube-state-metrics metrics.
+  # Overrides `global.scrapeTimeout`.
   # @default -- `10s`
   # @section -- kube-state-metrics
   scrapeTimeout: ""
@@ -666,8 +683,8 @@ kube-state-metrics:
 
   # -- Sets the max_cache_size for the kube-state-metrics prometheus.relabel component.
   # This should be at least 2x-5x your largest scrape target or samples appended rate.
-  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
-  # Overrides global.maxCacheSize
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.maxCacheSize`.
   # @default -- `100000`
   # @section -- kube-state-metrics
   maxCacheSize:

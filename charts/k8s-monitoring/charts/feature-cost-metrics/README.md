@@ -130,12 +130,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | opencost.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for OpenCost. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no __meta* labels are present. |
 | opencost.jobLabel | string | `"integrations/opencost"` | The value for the job label. |
 | opencost.labelMatchers | object | `{}` | Labels used to select the OpenCost pods. If deploying from telemetry services, this will automatically be populated. |
-| opencost.maxCacheSize | string | `100000` | Sets the max_cache_size for the prometheus.relabel component for OpenCost. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
+| opencost.maxCacheSize | string | `100000` | Sets the max_cache_size for the prometheus.relabel component for OpenCost. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
 | opencost.metricsSource | string | `""` | The name of the metric destination where OpenCost will query for required metrics. Setting this will enable guided setup for required OpenCost parameters. To skip guided setup, set this to "custom". |
 | opencost.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | opencost.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | opencost.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from OpenCost to the minimal set required for Kubernetes Monitoring. |
 | opencost.namespace | string | `""` | Namespace to locate OpenCost pods. If deploying from telemetry services, this will automatically be populated. |
-| opencost.scrapeInterval | string | `60s` | How frequently to scrape metrics from Kepler. Overrides global.scrapeInterval. |
-| opencost.scrapeTimeout | string | `10s` | The timeout for scraping OpenCost metrics. |
+| opencost.scrapeInterval | string | `60s` | How frequently to scrape metrics from Kepler. Overrides `global.scrapeInterval`. |
+| opencost.scrapeTimeout | string | `10s` | The timeout for scraping OpenCost metrics. Overrides `global.scrapeTimeout`. |
 <!-- markdownlint-enable no-space-in-emphasis -->
