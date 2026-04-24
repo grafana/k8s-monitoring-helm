@@ -14,6 +14,10 @@
 
 {{- define "feature.hostMetrics.windowsHosts.alloy" }}
 {{- if .Values.windowsHosts.enabled }}
+{{- $namespace := .Values.windowsHosts.namespace }}
+{{- if dig "windows-exporter" "deploy" false (.telemetryServices | default dict) }}
+  {{- $namespace = (dig "windows-exporter" "namespaceOverride" false (.telemetryServices | default dict) | default .Release.Namespace) }}
+{{- end }}
 {{- $metricAllowList := include "feature.hostMetrics.windowsHosts.allowList" . | fromYamlArray }}
 {{- $metricDenyList := .Values.windowsHosts.metricsTuning.excludeMetrics }}
 {{- $labelSelectors := list }}
@@ -33,17 +37,11 @@ discovery.kubernetes "windows_exporter_pods" {
     role = "pod"
     label = {{ $labelSelectors | join "," | quote }}
   }
-
-{{- if .Values.windowsHosts.namespace }}
+{{- if $namespace }}
   namespaces {
-    names = [{{ .Values.windowsHosts.namespace | quote }}]
-  }
-{{- else if dig "windows-exporter" "deploy" false (.telemetryServices | default dict) }}
-  namespaces {
-    names = [{{ .Release.Namespace | quote }}]
+    names = [{{ $namespace | quote }}]
   }
 {{- end }}
-
 {{- include "feature.hostMetrics.attachNodeMetadata" . | trim | nindent 2 }}
 } // discovery.kubernetes "windows_exporter_pods"
 

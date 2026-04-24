@@ -71,3 +71,36 @@ tests:
         equal:
           path: "spec.template.spec.containers[0].resources.limits.memory"
           value: 128Mi
+
+  - it: should apply global namespaceOverride to hook resources
+    set:
+      global:
+        namespaceOverride: observability
+      alloy-operator:
+        deploy: true
+        waitForAlloyRemoval:
+          enabled: true
+      alloy-metrics:
+        enabled: true
+        extraConfig: ""
+    asserts:
+      - documentIndex: 0
+        equal:
+          path: "metadata.namespace"
+          value: observability
+      - documentIndex: 1
+        equal:
+          path: "metadata.namespace"
+          value: observability
+      - documentIndex: 2
+        equal:
+          path: "metadata.namespace"
+          value: observability
+      - documentIndex: 3
+        equal:
+          path: "metadata.namespace"
+          value: observability
+      - documentIndex: 3
+        equal:
+          path: "subjects[0].namespace"
+          value: observability

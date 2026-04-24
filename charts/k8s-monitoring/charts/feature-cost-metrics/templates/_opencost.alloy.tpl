@@ -10,6 +10,10 @@
 {{ end }}
 
 {{- define "feature.costMetrics.opencost.alloy" }}
+{{- $namespace := .Values.opencost.namespace }}
+{{- if dig "opencost" "deploy" false (.telemetryServices | default dict) }}
+  {{- $namespace = (dig "opencost" "namespaceOverride" false (.telemetryServices | default dict) | default .Release.Namespace) }}
+{{- end }}
 {{- $metricAllowList := include "feature.costMetrics.opencost.allowList" . | fromYamlArray }}
 {{- $metricDenyList := .Values.opencost.metricsTuning.excludeMetrics }}
 {{- $labelSelectors := list }}
@@ -28,14 +32,9 @@ discovery.kubernetes "opencost" {
     role = "pod"
     label = {{ $labelSelectors | join "," | quote }}
   }
-
-{{- if .Values.opencost.namespace }}
+{{- if $namespace }}
   namespaces {
-    names = [{{ .Values.opencost.namespace | quote }}]
-  }
-{{- else if dig "opencost" "deploy" false (.telemetryServices | default dict) }}
-  namespaces {
-    names = [{{ .Release.Namespace | quote }}]
+    names = [{{ $namespace | quote }}]
   }
 {{- end }}
 } // discovery.kubernetes "opencost"

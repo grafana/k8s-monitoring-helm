@@ -111,7 +111,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
 {{- if eq (include "features.selfReporting.enabled" .) "true" }}
 # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
 # TYPE grafana_kubernetes_monitoring_build_info gauge
-grafana_kubernetes_monitoring_build_info{version="{{ .Chart.Version }}", namespace="{{ .Release.Namespace }}"{{- if .Values.global.platform }}, platform="{{ .Values.global.platform }}"{{ end }}} 1
+grafana_kubernetes_monitoring_build_info{version="{{ .Chart.Version }}", namespace="{{ include "helper.namespace" . }}"{{- if .Values.global.platform }}, platform="{{ .Values.global.platform }}"{{ end }}} 1
 # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
 # TYPE grafana_kubernetes_monitoring_feature_info gauge
 {{- range $feature := include "features.list.enabled" . | fromYamlArray }}

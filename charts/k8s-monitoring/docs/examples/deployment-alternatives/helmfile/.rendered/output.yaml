@@ -6,10 +6,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.5.2
+    helm.sh/chart: alloy-operator-0.5.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.6.2"
+    app.kubernetes.io/version: "1.7.0"
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
@@ -32,7 +32,7 @@ kind: ServiceAccount
 automountServiceAccountToken: true
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-7.2.0
+    helm.sh/chart: kube-state-metrics-7.2.2
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -50,13 +50,13 @@ metadata:
   name: k8smon-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: node-exporter-4.52.0
+    helm.sh/chart: node-exporter-4.53.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
     app.kubernetes.io/name: node-exporter
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.10.2"
+    app.kubernetes.io/version: "1.11.1"
     release: k8smon
 automountServiceAccountToken: false
 ---
@@ -67,10 +67,10 @@ metadata:
   name: k8smon-opencost
   namespace: default
   labels:
-    helm.sh/chart: opencost-2.5.10
+    helm.sh/chart: opencost-2.5.14
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.119.2"
+    app.kubernetes.io/version: "1.120.0"
     app.kubernetes.io/part-of: opencost
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
@@ -82,13 +82,13 @@ metadata:
   name: k8smon-windows-exporter
   namespace: default
   labels:
-    helm.sh/chart: windows-exporter-0.12.3
+    helm.sh/chart: windows-exporter-0.12.6
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "0.31.3"
+    app.kubernetes.io/version: "0.31.6"
     release: k8smon
 ---
 # Source: k8s-monitoring/templates/destination_secret.yaml
@@ -121,13 +121,13 @@ metadata:
   name: k8smon-windows-exporter
   namespace: default
   labels:
-    helm.sh/chart: windows-exporter-0.12.3
+    helm.sh/chart: windows-exporter-0.12.6
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "0.31.3"
+    app.kubernetes.io/version: "0.31.6"
     release: k8smon
 data:
   config.yml: |
@@ -145,10 +145,18 @@ metadata:
   namespace: default
 data:
   config.alloy: |
-    // Feature: Pod Logs
-    declare "pod_logs" {
+    // Feature: Pod Logs (Loki)
+    declare "pod_logs_via_loki" {
       argument "logs_destinations" {
         comment = "Must be a list of log destinations where collected logs should be forwarded to"
+      }
+    
+      discovery.kubernetes "pods" {
+        role = "pod"
+        selectors {
+          role = "pod"
+          field = "spec.nodeName=" + sys.env("HOSTNAME")
+        }
       }
     
       discovery.relabel "filtered_pods" {
@@ -183,20 +191,6 @@ data:
           regex = "^(\\S+):\\/\\/.+$"
           replacement = "$1"
           target_label = "tmp_container_runtime"
-        }
-    
-        // make all labels on the pod available to the pipeline as labels,
-        // they are omitted before write to loki via stage.label_keep unless explicitly set
-        rule {
-          action = "labelmap"
-          regex = "__meta_kubernetes_pod_label_(.+)"
-        }
-    
-        // make all annotations on the pod available to the pipeline as labels,
-        // they are omitted before write to loki via stage.label_keep unless explicitly set
-        rule {
-          action = "labelmap"
-          regex = "__meta_kubernetes_pod_annotation_(.+)"
         }
     
         // explicitly set service_name. if not set, loki will automatically try to populate a default.
@@ -267,19 +261,8 @@ data:
           regex = "(.+)"
           target_label = "app_kubernetes_io_name"
         }
-      }
     
-      discovery.kubernetes "pods" {
-        role = "pod"
-        selectors {
-          role = "pod"
-          field = "spec.nodeName=" + sys.env("HOSTNAME")
-        }
-      }
-    
-      discovery.relabel "filtered_pods_with_paths" {
-        targets = discovery.relabel.filtered_pods.output
-    
+        // Set the pod log path.
         rule {
           source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
           separator = "/"
@@ -301,11 +284,12 @@ data:
       }
     
       local.file_match "pod_logs" {
-        path_targets = discovery.relabel.filtered_pods_with_paths.output
+        path_targets = discovery.relabel.filtered_pods.output
       }
     
       loki.source.file "pod_logs" {
         targets    = local.file_match.pod_logs.targets
+        tail_from_end = true
         forward_to = [loki.process.pod_logs.receiver]
       }
     
@@ -356,15 +340,10 @@ data:
           }
         }
     
-        // Only keep the labels that are defined in the `keepLabels` list.
-        stage.label_keep {
-          values = ["__tenant_id__","app_kubernetes_io_name","container","instance","job","level","namespace","service_name","service_namespace","deployment_environment","deployment_environment_name","k8s_namespace_name","k8s_deployment_name","k8s_statefulset_name","k8s_daemonset_name","k8s_cronjob_name","k8s_job_name","k8s_node_name"]
-        }
-    
         forward_to = argument.logs_destinations.value
       }
     }
-    pod_logs "feature" {
+    pod_logs_via_loki "feature" {
       logs_destinations = [
         loki.write.localloki.receiver,
       ]
@@ -752,7 +731,6 @@ data:
       // Linux hosts via Node Exporter
       discovery.kubernetes "node_exporter" {
         role = "pod"
-    
         selectors {
           role = "pod"
           label = "release=k8smon,app.kubernetes.io/name=node-exporter"
@@ -760,6 +738,7 @@ data:
         namespaces {
           names = ["default"]
         }
+    
       }
     
       discovery.relabel "node_exporter" {
@@ -851,6 +830,7 @@ data:
           replacement = "kubernetes"
           target_label = "source"
         }
+    
       }
     
       prometheus.scrape "node_exporter" {
@@ -899,6 +879,7 @@ data:
         namespaces {
           names = ["default"]
         }
+    
       }
     
       discovery.relabel "windows_exporter" {
@@ -921,6 +902,7 @@ data:
           source_labels = ["__meta_kubernetes_pod_node_name"]
           target_label = "instance"
         }
+    
       }
     
       prometheus.scrape "windows_exporter" {
@@ -955,8 +937,9 @@ data:
           label = "app.kubernetes.io/name=kepler"
         }
         namespaces {
-          names = [""]
+          names = ["default"]
         }
+    
       }
     
       discovery.relabel "kepler" {
@@ -966,6 +949,7 @@ data:
           action = "replace"
           target_label = "instance"
         }
+    
       }
     
       prometheus.scrape "kepler" {
@@ -1106,7 +1090,7 @@ data:
           values = {
             "kind" = "",
             "level" = "",
-            "node" = "node",
+            "service_name" = "job",
             "reason" = "reason",
           }
         }
@@ -1135,6 +1119,7 @@ data:
         stage.structured_metadata {
           values = {
             "name" = "name",
+            "node" = "node",
           }
         }
     
@@ -1142,11 +1127,7 @@ data:
         stage.label_drop {
           values = ["kind"]
         }
-        stage.labels {
-          values = {
-            "service_name" = "job",
-          }
-        }
+    
         forward_to = argument.logs_destinations.value
       }
     }
@@ -1159,7 +1140,7 @@ data:
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
       textfile {
-        directory = "/etc/alloy"
+        directory = "/etc/release-info"
       }
     }
     
@@ -1292,17 +1273,31 @@ data:
       name      = "localprometheus-k8smon-k8s-monitoring"
       namespace = "default"
     }
-  self-reporting-metric.prom: |
+---
+# Source: k8s-monitoring/templates/release-info.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-k8s-monitoring-release-info
+  namespace: default
+data:
+  cluster: "helmfile-test"
+  self-reporting-metric.prom: |+
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="3.8.4", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="4.0.3", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="costMetrics", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="hostMetrics", sources="linuxHosts,windowsHosts,energyMetrics", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="podLogsViaLoki", version="1.0.0"} 1
+    # HELP grafana_kubernetes_monitoring_collector_info A metric to report the collectors of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_collector_info gauge
+    grafana_kubernetes_monitoring_collector_info{kind="daemonset", name="alloy-logs", presets="filesystem-log-reader,daemonset", type="alloy"} 1
+    grafana_kubernetes_monitoring_collector_info{kind="statefulset", name="alloy-metrics", presets="clustered,statefulset", replicas="1", type="alloy"} 1
+    grafana_kubernetes_monitoring_collector_info{kind="deployment", name="alloy-singleton", presets="singleton", replicas="1", type="alloy"} 1
     # EOF
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
@@ -1311,10 +1306,10 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy-operator-alloy-manager
   labels:
-    helm.sh/chart: alloy-operator-0.5.2
+    helm.sh/chart: alloy-operator-0.5.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.6.2"
+    app.kubernetes.io/version: "1.7.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -1385,7 +1380,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-7.2.0
+    helm.sh/chart: kube-state-metrics-7.2.2
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -1544,10 +1539,10 @@ kind: ClusterRole
 metadata:
   name: k8smon-opencost
   labels:
-    helm.sh/chart: opencost-2.5.10
+    helm.sh/chart: opencost-2.5.14
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.119.2"
+    app.kubernetes.io/version: "1.120.0"
     app.kubernetes.io/part-of: opencost
     app.kubernetes.io/managed-by: Helm
 rules:
@@ -1629,10 +1624,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-operator-alloy-manager
   labels:
-    helm.sh/chart: alloy-operator-0.5.2
+    helm.sh/chart: alloy-operator-0.5.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.6.2"
+    app.kubernetes.io/version: "1.7.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -1649,10 +1644,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-operator
   labels:
-    helm.sh/chart: alloy-operator-0.5.2
+    helm.sh/chart: alloy-operator-0.5.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.6.2"
+    app.kubernetes.io/version: "1.7.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -1682,7 +1677,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-7.2.0
+    helm.sh/chart: kube-state-metrics-7.2.2
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -1706,10 +1701,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-opencost
   labels:
-    helm.sh/chart: opencost-2.5.10
+    helm.sh/chart: opencost-2.5.14
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.119.2"
+    app.kubernetes.io/version: "1.120.0"
     app.kubernetes.io/part-of: opencost
     app.kubernetes.io/managed-by: Helm
 roleRef:
@@ -1728,10 +1723,10 @@ metadata:
   name: k8smon-alloy-operator-leader-election-role
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.5.2
+    helm.sh/chart: alloy-operator-0.5.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.6.2"
+    app.kubernetes.io/version: "1.7.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -1773,10 +1768,10 @@ metadata:
   name: k8smon-alloy-operator-leader-election-rolebinding
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.5.2
+    helm.sh/chart: alloy-operator-0.5.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.6.2"
+    app.kubernetes.io/version: "1.7.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -1794,10 +1789,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.5.2
+    helm.sh/chart: alloy-operator-0.5.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.6.2"
+    app.kubernetes.io/version: "1.7.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
@@ -1844,7 +1839,7 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-7.2.0
+    helm.sh/chart: kube-state-metrics-7.2.2
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -1872,13 +1867,13 @@ metadata:
   name: k8smon-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: node-exporter-4.52.0
+    helm.sh/chart: node-exporter-4.53.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
     app.kubernetes.io/name: node-exporter
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.10.2"
+    app.kubernetes.io/version: "1.11.1"
     release: k8smon
   annotations:
     prometheus.io/scrape: "false"
@@ -1900,10 +1895,10 @@ metadata:
   name: k8smon-opencost
   namespace: default
   labels:
-    helm.sh/chart: opencost-2.5.10
+    helm.sh/chart: opencost-2.5.14
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.119.2"
+    app.kubernetes.io/version: "1.120.0"
     app.kubernetes.io/part-of: opencost
     app.kubernetes.io/managed-by: Helm
 spec:
@@ -1923,13 +1918,13 @@ metadata:
   name: k8smon-windows-exporter
   namespace: default
   labels:
-    helm.sh/chart: windows-exporter-0.12.3
+    helm.sh/chart: windows-exporter-0.12.6
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "0.31.3"
+    app.kubernetes.io/version: "0.31.6"
     release: k8smon
 spec:
   type: ClusterIP
@@ -2086,13 +2081,13 @@ metadata:
   name: k8smon-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: node-exporter-4.52.0
+    helm.sh/chart: node-exporter-4.53.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
     app.kubernetes.io/name: node-exporter
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.10.2"
+    app.kubernetes.io/version: "1.11.1"
     release: k8smon
 spec:
   selector:
@@ -2110,13 +2105,13 @@ spec:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
         k8s.grafana.com/logs.job: integrations/node_exporter
       labels:
-        helm.sh/chart: node-exporter-4.52.0
+        helm.sh/chart: node-exporter-4.53.1
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: node-exporter
         app.kubernetes.io/name: node-exporter
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "1.10.2"
+        app.kubernetes.io/version: "1.11.1"
         release: k8smon
     spec:
       automountServiceAccountToken: false
@@ -2128,7 +2123,7 @@ spec:
       serviceAccountName: k8smon-node-exporter
       containers:
         - name: node-exporter
-          image: quay.io/prometheus/node-exporter:v1.10.2
+          image: quay.io/prometheus/node-exporter:v1.11.1
           imagePullPolicy: IfNotPresent
           args:
             - --path.procfs=/host/proc
@@ -2214,13 +2209,13 @@ metadata:
   name: k8smon-windows-exporter
   namespace: default
   labels:
-    helm.sh/chart: windows-exporter-0.12.3
+    helm.sh/chart: windows-exporter-0.12.6
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "0.31.3"
+    app.kubernetes.io/version: "0.31.6"
     release: k8smon
 spec:
   selector:
@@ -2237,13 +2232,13 @@ spec:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
         k8s.grafana.com/logs.job: integrations/windows_exporter
       labels:
-        helm.sh/chart: windows-exporter-0.12.3
+        helm.sh/chart: windows-exporter-0.12.6
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: windows-exporter
         app.kubernetes.io/name: windows-exporter
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "0.31.3"
+        app.kubernetes.io/version: "0.31.6"
         release: k8smon
     spec:
       automountServiceAccountToken: false
@@ -2253,13 +2248,13 @@ spec:
           runAsUserName: NT AUTHORITY\system
       initContainers:
         - name: configure-firewall
-          image: ghcr.io/prometheus-community/windows-exporter:0.31.3
+          image: ghcr.io/prometheus-community/windows-exporter:0.31.6
           command: [ "powershell" ]
           args: [ "New-NetFirewallRule", "-DisplayName", "'windows-exporter'", "-Direction", "inbound", "-Profile", "Any", "-Action", "Allow", "-LocalPort", "9182", "-Protocol", "TCP" ]
       serviceAccountName: k8smon-windows-exporter
       containers:
         - name: windows-exporter
-          image: ghcr.io/prometheus-community/windows-exporter:0.31.3
+          image: ghcr.io/prometheus-community/windows-exporter:0.31.6
           imagePullPolicy: IfNotPresent
           args:
             - --config.file=%CONTAINER_SANDBOX_MOUNT_POINT%/config.yml
@@ -2315,10 +2310,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.5.2
+    helm.sh/chart: alloy-operator-0.5.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.6.2"
+    app.kubernetes.io/version: "1.7.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -2329,10 +2324,10 @@ spec:
   template:
     metadata:
       labels:
-        helm.sh/chart: alloy-operator-0.5.2
+        helm.sh/chart: alloy-operator-0.5.4
         app.kubernetes.io/name: alloy-operator
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "1.6.2"
+        app.kubernetes.io/version: "1.7.0"
         app.kubernetes.io/managed-by: Helm
     spec:
       serviceAccountName: k8smon-alloy-operator
@@ -2340,7 +2335,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: alloy-operator
-          image: "ghcr.io/grafana/alloy-operator:1.6.2"
+          image: "ghcr.io/grafana/alloy-operator:1.7.0"
           imagePullPolicy: IfNotPresent
           args:
             - --health-probe-bind-address=:8081
@@ -2386,7 +2381,7 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-7.2.0
+    helm.sh/chart: kube-state-metrics-7.2.2
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -2406,7 +2401,7 @@ spec:
   template:
     metadata:
       labels:        
-        helm.sh/chart: kube-state-metrics-7.2.0
+        helm.sh/chart: kube-state-metrics-7.2.2
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: kube-state-metrics
@@ -2482,14 +2477,14 @@ metadata:
   name: k8smon-opencost
   namespace: default
   labels:
-    helm.sh/chart: opencost-2.5.10
+    helm.sh/chart: opencost-2.5.14
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.119.2"
+    app.kubernetes.io/version: "1.120.0"
     app.kubernetes.io/part-of: opencost
     app.kubernetes.io/managed-by: Helm
   annotations:
-    checksum/configs: f2310b6f118842bb9d3cf521f584de53f43955de01e24315743e7faff506a450
+    checksum/configs: f9279e14afdda545be005e99bed7e13ad4d3093d838574369d4aeca0a6981ff9
 spec:
   replicas: 1
   selector:
@@ -2519,7 +2514,7 @@ spec:
       initContainers:
       containers:
         - name: k8smon-opencost
-          image: ghcr.io/opencost/opencost:1.119.2@sha256:4b8de6e029b9dc1f7e68bdf1cf02fca7649614c23812e51a63820f113ca97b89
+          image: ghcr.io/opencost/opencost:1.120.0@sha256:c4fbe5f8fad2bc54872350460e705bf9ab43c90efa784a0cdf3a2a39a66b3b82
           imagePullPolicy: IfNotPresent
           args:
           ports:
@@ -2599,26 +2594,13 @@ spec:
               value: "true"
             # Add any additional provided variables
             - name: CLOUD_PROVIDER_API_KEY
-              value: "AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U" # trufflehog:ignore
+              value: "AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U"  # trufflehog:ignore
             - name: CURRENT_CLUSTER_ID_FILTER_ENABLED
               value: "true"
             - name: PROM_CLUSTER_ID_LABEL
               value: "cluster"
             - name: MCP_SERVER_ENABLED
               value: "false"
-          volumeMounts:
-            - mountPath: /var/configs
-              name: configs
-              readOnly: false
-      volumes:
-        - emptyDir: {}
-          name: configs
----
-# Source: k8s-monitoring/charts/telemetryServices/charts/opencost/templates/httproute.yaml
----
----
-# Source: k8s-monitoring/charts/telemetryServices/charts/opencost/templates/ingress.yaml
----
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
@@ -2732,6 +2714,11 @@ spec:
   alloy:
     configMap:
       create: false
+    mounts:
+      extra:
+      - mountPath: /etc/release-info
+        name: release-info
+        readOnly: true
     resources: {}
     securityContext:
       allowPrivilegeEscalation: false
@@ -2762,6 +2749,11 @@ spec:
       k8s.grafana.com/logs.job: integrations/alloy
     replicas: 1
     type: deployment
+    volumes:
+      extra:
+      - configMap:
+          name: k8smon-k8s-monitoring-release-info
+        name: release-info
   crds:
     create: false
   nameOverride: alloy-singleton
@@ -2865,7 +2857,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.8.4
+    helm.sh/chart: k8s-monitoring-4.0.3
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -2918,7 +2910,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.8.4
+    helm.sh/chart: k8s-monitoring-4.0.3
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
@@ -2960,8 +2952,8 @@ spec:
 
               kubectl patch \
                 --namespace=default \
-                --type json \
-                --patch='[{"op": "remove", "path": "/metadata/finalizers"}]' \
+                --type merge \
+                --patch='{"metadata":{"finalizers":null}}' \
                 deployment/k8smon-alloy-operator
           securityContext:
             allowPrivilegeEscalation: false

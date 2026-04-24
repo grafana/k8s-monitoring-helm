@@ -46,6 +46,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 ## Values
 
+### Global Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| global.namespaceOverride | string | `""` | Override the namespace for namespaced resources created by this chart. |
+
 ### Listener Configuration
 
 | Key | Type | Default | Description |

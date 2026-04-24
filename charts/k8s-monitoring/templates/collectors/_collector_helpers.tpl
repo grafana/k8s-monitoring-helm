@@ -205,8 +205,8 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 
 {{/* Lists the names of enabled collectors. Collectors default to enabled unless `enabled: false` is set. Input: . (root) */}}
 {{- define "collectors.list.enabled" }}
-{{- range $collectorName := keys .Values.collectors | sortAlpha }}
-  {{- if dig "enabled" true (get $.Values.collectors $collectorName | default dict) }}
+{{- range $collectorName := keys (.Values.collectors | default dict) | sortAlpha }}
+  {{- if dig "enabled" true (get ($.Values.collectors | default dict) $collectorName | default dict) }}
 - {{ $collectorName }}
   {{- end }}
 {{- end }}

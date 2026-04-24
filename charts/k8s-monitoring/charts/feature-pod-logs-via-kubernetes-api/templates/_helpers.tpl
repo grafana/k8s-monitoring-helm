@@ -9,3 +9,7 @@
 {{- define "pod_annotation" -}}
 {{ printf "__meta_kubernetes_pod_annotation_%s" (include "escape_label" .) }}
 {{- end }}
+
+{{- define "helper.namespace" -}}
+{{- .Values.global.namespaceOverride | default .Release.Namespace -}}
+{{- end -}}
