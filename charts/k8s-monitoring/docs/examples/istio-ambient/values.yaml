@@ -1,0 +1,94 @@
+---
+cluster:
+  name: istio-ambient-test
+
+destinations:
+  localPrometheus:
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+    auth:
+      type: basic
+      username: promuser
+      password: prometheuspassword
+  localLoki:
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+  localTempo:
+    type: otlp
+    url: tempo.tempo.svc:4317
+    tls:
+      insecure: true
+      insecureSkipVerify: true
+    metrics: {enabled: false}
+    logs: {enabled: false}
+    traces: {enabled: true}
+
+clusterMetrics:
+  enabled: true
+  collector: alloy-metrics
+
+hostMetrics:
+  enabled: true
+  collector: alloy-metrics
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
+
+clusterEvents:
+  enabled: true
+  collector: alloy-singleton
+
+podLogsViaLoki:
+  enabled: true
+  collector: alloy-logs
+
+integrations:
+  collector: alloy-metrics
+  istio:
+    instances:
+      - name: istio
+        # Ambient mode has no per-pod sidecars; only istiod metrics are scraped.
+        sidecarMetrics:
+          enabled: false
+        istiodMetrics:
+          enabled: true
+
+applicationObservability:
+  enabled: true
+  collector: alloy-receiver
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+      http:
+        enabled: true
+  connectors:
+    grafanaCloudMetrics:
+      enabled: true
+  logs:
+    enabled: false
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    controller:
+      replicas: 2  # To test that clustering is working
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+  alloy-singleton:
+    presets: [singleton]
+  alloy-receiver: {}
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
