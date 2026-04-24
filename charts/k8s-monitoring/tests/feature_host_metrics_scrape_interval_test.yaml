@@ -1,0 +1,90 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Host Metrics - Scrape Interval Overrides
+templates:
+  - alloy-config.yaml
+tests:
+  - it: uses the top-level global.scrapeInterval for all host metrics scrapes
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      global:
+        scrapeInterval: 15s
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      telemetryServices:
+        node-exporter:
+          deploy: true
+        windows-exporter:
+          deploy: true
+        kepler:
+          deploy: true
+      hostMetrics:
+        enabled: true
+        collector: alloy-metrics
+        linuxHosts:
+          enabled: true
+        windowsHosts:
+          enabled: true
+        energyMetrics:
+          enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: scrape_interval = "60s"
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: scrape_interval = "15s"
+
+  - it: per-section scrapeInterval overrides the global value for each host metrics source
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      global:
+        scrapeInterval: 60s
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      telemetryServices:
+        node-exporter:
+          deploy: true
+        windows-exporter:
+          deploy: true
+        kepler:
+          deploy: true
+      hostMetrics:
+        enabled: true
+        collector: alloy-metrics
+        linuxHosts:
+          enabled: true
+          scrapeInterval: 15s
+        windowsHosts:
+          enabled: true
+          scrapeInterval: 30s
+        energyMetrics:
+          enabled: true
+          scrapeInterval: 45s
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'job_name\s*=\s*"integrations/node_exporter"[^{}]*?scrape_interval = "15s"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'job_name\s*=\s*"integrations/windows-exporter"[^{}]*?scrape_interval = "30s"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'job_name\s*=\s*"integrations/kepler"[^{}]*?scrape_interval = "45s"'

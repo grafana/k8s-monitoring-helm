@@ -81,8 +81,8 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | bearerToken | object | `{"enabled":true,"token":"/var/run/secrets/kubernetes.io/serviceaccount/token"}` | Sets bearer_token_file line in the prometheus.scrape annotation_autodiscovery. |
-| scrapeInterval | string | 60s | How frequently to scrape metrics from discovered pods and services. Only used if the `k8s.grafana.com/metrics.scrapeInterval` annotation is not set. Overrides global.scrapeInterval |
-| scrapeTimeout | string | 10s | The scrape timeout for discovered pods and services. Only used if the `k8s.grafana.com/metrics.scrapeTimeout` annotation is not set. Overrides global.scrapeTimeout |
+| scrapeInterval | string | 60s | How frequently to scrape metrics from discovered pods and services. Only used if the `k8s.grafana.com/metrics.scrapeInterval` annotation is not set. Overrides `global.scrapeInterval`. |
+| scrapeTimeout | string | 10s | The scrape timeout for discovered pods and services. Only used if the `k8s.grafana.com/metrics.scrapeTimeout` annotation is not set. Overrides `global.scrapeTimeout`. |
 
 ### Discovery Settings
 
@@ -98,7 +98,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for discovered pods and services. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
-| maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
+| maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
 | metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 

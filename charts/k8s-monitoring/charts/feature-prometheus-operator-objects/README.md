@@ -67,12 +67,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | podMonitors.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for PodMonitor objects. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
 | podMonitors.labelExpressions | list | `[]` | Complex label selectors to filter which PodMonitor objects to use. Example: `[{key: "app.kubernetes.io/name", operator: "NotIn", values: ["secret-app", "admin-app"]}]` |
 | podMonitors.labelSelectors | object | `{}` | Label selectors to filter which PodMonitor objects to use. Example: `app.kubernetes.io/name: my-app` |
-| podMonitors.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
+| podMonitors.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
 | podMonitors.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | podMonitors.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | podMonitors.namespaces | list | `[]` | Which namespaces to look for PodMonitor objects. |
-| podMonitors.scrapeInterval | string | 60s | The default interval between scraping targets. Used as the default if the target resource doesn’t provide a scrape interval. Overrides global.scrapeInterval |
-| podMonitors.scrapeTimeout | string | 10s | The default timeout for scrape requests. Used as the default if the target resource doesn’t provide a scrape timeout. |
+| podMonitors.scrapeInterval | string | 60s | The default interval between scraping targets. Used as the default if the target resource doesn’t provide a scrape interval. Overrides `global.scrapeInterval`. |
+| podMonitors.scrapeTimeout | string | 10s | The default timeout for scrape requests. Used as the default if the target resource doesn’t provide a scrape timeout. Overrides `global.scrapeTimeout`. |
 
 ### Probes
 
@@ -84,12 +84,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | probes.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Probe objects. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
 | probes.labelExpressions | list | `[]` | Complex label selectors to filter which Probe objects to use. Example: `[{key: "app.kubernetes.io/name", operator: "NotIn", values: ["secret-app", "admin-app"]}]` |
 | probes.labelSelectors | object | `{}` | Label selectors to filter which Probe objects to use. Example: `app.kubernetes.io/name: my-app` |
-| probes.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
+| probes.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
 | probes.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | probes.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | probes.namespaces | list | `[]` | Which namespaces to look for Probe objects. |
-| probes.scrapeInterval | string | 60s | The default interval between scraping targets. Used as the default if the target resource doesn’t provide a scrape interval. Overrides global.scrapeInterval |
-| probes.scrapeTimeout | string | 10s | The default timeout for scrape requests. Used as the default if the target resource doesn’t provide a scrape timeout. |
+| probes.scrapeInterval | string | 60s | The default interval between scraping targets. Used as the default if the target resource doesn’t provide a scrape interval. Overrides `global.scrapeInterval`. |
+| probes.scrapeTimeout | string | 10s | The default timeout for scrape requests. Used as the default if the target resource doesn’t provide a scrape timeout. Overrides `global.scrapeTimeout`. |
 
 ### ScrapeConfigs
 
@@ -101,12 +101,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | scrapeConfigs.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for ScrapeConfig objects. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
 | scrapeConfigs.labelExpressions | list | `[]` | Complex label selectors to filter which ScrapeConfig objects to use. Example: `[{key: "app.kubernetes.io/name", operator: "NotIn", values: ["secret-app", "admin-app"]}]` |
 | scrapeConfigs.labelSelectors | object | `{}` | Label selectors to filter which ScrapeConfig objects to use. Example: `app.kubernetes.io/name: my-app` |
-| scrapeConfigs.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
+| scrapeConfigs.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
 | scrapeConfigs.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | scrapeConfigs.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | scrapeConfigs.namespaces | list | `[]` | Which namespaces to look for ScrapeConfig objects. |
-| scrapeConfigs.scrapeInterval | string | 60s | The default interval between scraping targets. Used as the default if the target resource doesn’t provide a scrape interval. Overrides global.scrapeInterval |
-| scrapeConfigs.scrapeTimeout | string | 10s | The default timeout for scrape requests. Used as the default if the target resource doesn’t provide a scrape timeout. |
+| scrapeConfigs.scrapeInterval | string | 60s | The default interval between scraping targets. Used as the default if the target resource doesn’t provide a scrape interval. Overrides `global.scrapeInterval`. |
+| scrapeConfigs.scrapeTimeout | string | 10s | The default timeout for scrape requests. Used as the default if the target resource doesn’t provide a scrape timeout. Overrides `global.scrapeTimeout`. |
 
 ### ServiceMonitors
 
@@ -118,9 +118,9 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | serviceMonitors.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for ServiceMonitor objects. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
 | serviceMonitors.labelExpressions | list | `[]` | Complex label selectors to filter which ServiceMonitor objects to use. Example: `[{key: "app.kubernetes.io/name", operator: "NotIn", values: ["secret-app", "admin-app"]}]` |
 | serviceMonitors.labelSelectors | object | `{}` | Label selectors to filter which ServiceMonitor objects to use. Example: `app.kubernetes.io/name: my-app` |
-| serviceMonitors.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
+| serviceMonitors.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
 | serviceMonitors.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | serviceMonitors.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | serviceMonitors.namespaces | list | `[]` | Which namespaces to look for ServiceMonitor objects. |
-| serviceMonitors.scrapeInterval | string | 60s | The default interval between scraping targets. Used as the default if the target resource doesn’t provide a scrape interval. Overrides global.scrapeInterval |
-| serviceMonitors.scrapeTimeout | string | 10s | The default timeout for scrape requests. Used as the default if the target resource doesn’t provide a scrape timeout. |
+| serviceMonitors.scrapeInterval | string | 60s | The default interval between scraping targets. Used as the default if the target resource doesn’t provide a scrape interval. Overrides `global.scrapeInterval`. |
+| serviceMonitors.scrapeTimeout | string | 10s | The default timeout for scrape requests. Used as the default if the target resource doesn’t provide a scrape timeout. Overrides `global.scrapeTimeout`. |
