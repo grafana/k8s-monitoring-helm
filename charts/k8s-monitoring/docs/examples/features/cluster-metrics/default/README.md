@@ -25,7 +25,7 @@ clusterMetrics:
 
 collectors:
   alloy-metrics:
-    presets: [clustered, statefulset]
+    presets: [small, clustered, statefulset]
 
 telemetryServices:
   kube-state-metrics:
