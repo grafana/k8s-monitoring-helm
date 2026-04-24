@@ -73,6 +73,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | journal.path | string | `"/var/log/journal"` | The path to the journal logs on the worker node. |
 | journal.units | list | `[]` | The list of systemd units to keep scraped logs from, this can be a valid RE2 regular expression. If empty, all units are scraped. |
 
+### Global Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| global.namespaceOverride | string | `""` | Override the namespace for namespaced resources created by this chart. |
+
 ### Processing settings
 
 | Key | Type | Default | Description |

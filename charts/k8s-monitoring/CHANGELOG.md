@@ -2,6 +2,7 @@
 
 ## 4.1
 
+*   Add `global.namespaceOverride` to deploy namespaced resources into a custom namespace across this chart and its feature subcharts (@petewall)
 *   Add the ability to replace the contents of an Alloy component (@petewall)
 *   Add the ability to set the cluster name using arbitrary sources with `cluster.nameFrom` (@petewall)
 

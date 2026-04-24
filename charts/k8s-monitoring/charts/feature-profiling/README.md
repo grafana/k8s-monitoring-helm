@@ -70,6 +70,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | ebpf.targetingScheme | string | `"annotation"` | How to target pods for collecting profiles with eBPF. Options are `all` and `annotation`. If using `all`, all Kubernetes pods will be targeted for collecting profiles, and you can exclude certain pods by setting the `profiles.grafana.com/cpu.ebpf.enabled="false"` annotation on that pod. If using `annotation`, only pods with the `profiles.grafana.com/cpu.ebpf.enabled="true"` annotation will have profiles collected with eBPF. |
 | ebpf.v8Enabled | bool | `true` | A flag to enable or disable V8 profiling. |
 
+### Global Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| global.namespaceOverride | string | `""` | Override the namespace for namespaced resources created by this chart. |
+
 ### Java
 
 | Key | Type | Default | Description |
