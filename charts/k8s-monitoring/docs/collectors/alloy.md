@@ -39,11 +39,11 @@ Settings for each primary Alloy instance come from several potential sources, in
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| annotations | list | `[]` | Annotations to add to the Alloy Custom Resource. These annotations are not added to the workload or Pod. |
+| annotations | object | `{}` | Annotations to add to the Alloy Custom Resource. These annotations are not added to the workload or Pod. |
 | enabled | bool | `true` | Deploy this collector. Set to `false` to skip creating the collector's resources without removing the collector from the values file. |
 | extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
 | includeDestinations | list | `[]` | Include the configuration components for these destinations. Configuration is already added for destinations used By enabled features on this collector. This is useful when referencing destinations in the extraConfig. |
-| labels | list | `[]` | Labels to add to the Alloy Custom Resource. These labels are not added to the workload or Pod. |
+| labels | object | `{}` | Labels to add to the Alloy Custom Resource. These labels are not added to the workload or Pod. |
 | liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. Requires stability level to be set to "experimental". |
 | presets | list | `[]` | The list of Alloy configuration presets, which sets common Alloy configurations. Multiple presets can be set, with the latter ones overwriting former ones. See https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/docs/collectors/presets/ for the list of available presets. |
 

@@ -1,0 +1,58 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Collectors - Labels and Annotations
+templates:
+  - alloy.yaml
+tests:
+  - it: applies labels and annotations to the Alloy Custom Resource when set as maps
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// Giving this Alloy something to do"
+          labels:
+            team: observability
+            tier: platform
+          annotations:
+            owner: o11y-team
+    asserts:
+      - containsDocument:
+          kind: Alloy
+          apiVersion: collectors.grafana.com/v1alpha1
+          name: RELEASE-NAME-alloy-metrics
+      - equal:
+          path: metadata.labels.team
+          value: observability
+      - equal:
+          path: metadata.labels.tier
+          value: platform
+      - equal:
+          path: metadata.annotations.owner
+          value: o11y-team
+
+  - it: accepts labels and annotations as empty maps
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// Giving this Alloy something to do"
+          labels: {}
+          annotations: {}
+    asserts:
+      - containsDocument:
+          kind: Alloy
+          apiVersion: collectors.grafana.com/v1alpha1
+          name: RELEASE-NAME-alloy-metrics
+
+  - it: accepts labels and annotations as empty arrays for backwards compatibility
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// Giving this Alloy something to do"
+          labels: []
+          annotations: []
+    asserts:
+      - containsDocument:
+          kind: Alloy
+          apiVersion: collectors.grafana.com/v1alpha1
+          name: RELEASE-NAME-alloy-metrics
