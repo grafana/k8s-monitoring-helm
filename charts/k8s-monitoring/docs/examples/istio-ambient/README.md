@@ -8,10 +8,10 @@ This example shows how to deploy within a cluster that has Istio enabled in [amb
 Unlike sidecar mode, ambient uses a per-node ztunnel instead of a per-pod Envoy sidecar, so the two workarounds required
 by the sidecar-mode example are not needed:
 
-* Alloy clustering's headless Service can keep its default `http` port name — ztunnel operates at L4 and does not apply
-  the HTTP inspection that breaks the headless Service in sidecar mode.
-* The Alloy Receiver does not need the `TPROXY` interception mode annotation because there is no sidecar intercepting
-  inbound traffic; the `otelcol.processor.k8sattributes` component sees the originating pod's IP directly.
+*   Alloy clustering's headless Service can keep its default `http` port name — ztunnel operates at L4 and does not apply
+    the HTTP inspection that breaks the headless Service in sidecar mode.
+*   The Alloy Receiver does not need the `TPROXY` interception mode annotation because there is no sidecar intercepting
+    inbound traffic; the `otelcol.processor.k8sattributes` component sees the originating pod's IP directly.
 
 Because ambient mode has no per-pod sidecar, the Istio `sidecarMetrics` are not applicable — only `istiodMetrics` are
 scraped by this example. If you later add a [waypoint proxy](https://istio.io/latest/docs/ambient/usage/waypoint/),
