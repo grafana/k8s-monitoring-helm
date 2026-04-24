@@ -1,4 +1,4 @@
-allows you to set the network protocol:
+allows configuring perf_schema.eventsstatements options:
   1: |
     |-
       declare "mysql_integration" {
@@ -12,13 +12,18 @@ allows you to set the network protocol:
         }
 
         prometheus.exporter.mysql "test_database" {
-          data_source_name = string.format("%s:%s@tcp(%s:%d)/",
+          data_source_name = string.format("%s:%s@(%s:%d)/",
             convert.nonsensitive(remote.kubernetes.secret.test_database.data["username"]),
             convert.nonsensitive(remote.kubernetes.secret.test_database.data["password"]),
             "test-database-mysql.mysql.svc",
             3306,
           )
-          enable_collectors = ["heartbeat","mysql.user"]
+          perf_schema.eventsstatements {
+            limit = 500
+            text_limit = 0
+            time_limit = 43200
+          }
+          enable_collectors = ["heartbeat","mysql.user","perf_schema.eventsstatements"]
         }
         prometheus.scrape "test_database" {
           targets = prometheus.exporter.mysql.test_database.targets
@@ -47,7 +52,7 @@ allows you to set the network protocol:
           forward_to = argument.metrics_destinations.value
         }
       }
-allows configuring perf_schema.eventsstatements options:
+allows you to set the network protocol:
   1: |
     |-
       declare "mysql_integration" {
@@ -61,18 +66,13 @@ allows configuring perf_schema.eventsstatements options:
         }
 
         prometheus.exporter.mysql "test_database" {
-          data_source_name = string.format("%s:%s@(%s:%d)/",
+          data_source_name = string.format("%s:%s@tcp(%s:%d)/",
             convert.nonsensitive(remote.kubernetes.secret.test_database.data["username"]),
             convert.nonsensitive(remote.kubernetes.secret.test_database.data["password"]),
             "test-database-mysql.mysql.svc",
             3306,
           )
-          perf_schema.eventsstatements {
-            limit = 500
-            text_limit = 0
-            time_limit = 43200
-          }
-          enable_collectors = ["heartbeat","mysql.user","perf_schema.eventsstatements"]
+          enable_collectors = ["heartbeat","mysql.user"]
         }
         prometheus.scrape "test_database" {
           targets = prometheus.exporter.mysql.test_database.targets
