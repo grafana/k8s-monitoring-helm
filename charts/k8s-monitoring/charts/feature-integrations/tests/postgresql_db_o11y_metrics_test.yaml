@@ -169,6 +169,50 @@ tests:
         matchSnapshot:
           path: data["metrics.alloy"]
 
+  - it: keeps prometheus.relabel when metrics tuning is set under db o11y
+    set:
+      testing: {enabled: true}
+      postgresql:
+        instances:
+          - name: my-database
+            exporter:
+              dataSource:
+                host: my-db.postgresql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            databaseObservability:
+              enabled: true
+            metrics:
+              tuning:
+                excludeMetrics: ["pg_stat_activity_.*"]
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
+  - it: respects an explicit jobLabel override under db o11y
+    set:
+      testing: {enabled: true}
+      postgresql:
+        instances:
+          - name: my-database
+            jobLabel: my/custom-job
+            exporter:
+              dataSource:
+                host: my-db.postgresql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            databaseObservability:
+              enabled: true
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
   - it: requires metrics
     set:
       testing: {enabled: true}

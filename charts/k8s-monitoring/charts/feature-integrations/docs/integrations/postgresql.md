@@ -34,7 +34,6 @@ integrations:
   postgresql:
     instances:
       - name: test-database
-        jobLabel: integrations/db-o11y
         databaseObservability:
           enabled: true
         exporter:
@@ -56,7 +55,6 @@ integrations:
   postgresql:
     instances:
       - name: test-database
-        jobLabel: integrations/db-o11y
         databaseObservability:
           enabled: true
           cloudProvider:

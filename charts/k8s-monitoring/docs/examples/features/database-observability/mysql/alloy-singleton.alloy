@@ -62,10 +62,42 @@ declare "mysql_integration" {
     }
     enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
 
+    forward_to = [loki.relabel.database_observability_mysql_test_db.receiver]
+  }
+
+  loki.relabel "database_observability_mysql_test_db" {
     forward_to = argument.logs_destinations.value
+    rule {
+      target_label = "job"
+      replacement = "integrations/db-o11y"
+    }
+    rule {
+      source_labels = ["instance"]
+      target_label = "dsn"
+    }
+    rule {
+      target_label = "instance"
+      replacement = "test-db"
+    }
+  }
+
+  discovery.relabel "database_observability_mysql_test_db" {
+    targets = database_observability.mysql.test_db.targets
+    rule {
+      target_label = "job"
+      replacement = "integrations/db-o11y"
+    }
+    rule {
+      source_labels = ["instance"]
+      target_label = "dsn"
+    }
+    rule {
+      target_label = "instance"
+      replacement = "test-db"
+    }
   }
   prometheus.scrape "test_db" {
-    targets = database_observability.mysql.test_db.targets
+    targets = discovery.relabel.database_observability_mysql_test_db.output
     clustering {
       enabled = true
     }
@@ -75,19 +107,6 @@ declare "mysql_integration" {
     scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
     scrape_classic_histograms = false
     scrape_native_histograms = false
-    forward_to = [prometheus.relabel.test_db.receiver]
-  }
-
-  prometheus.relabel "test_db" {
-    max_cache_size = 100000
-    rule {
-      target_label = "instance"
-      replacement = "test-db"
-    }
-    rule {
-      target_label = "job"
-      replacement = "integrations/db-o11y"
-    }
     forward_to = argument.metrics_destinations.value
   }
 }
