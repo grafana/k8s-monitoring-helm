@@ -14,6 +14,7 @@
 - profilesReceiver
 - profiling
 - prometheusOperatorObjects
+- kubernetesManifests
 - integrations
 - selfReporting
 {{- end }}

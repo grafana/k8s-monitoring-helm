@@ -411,6 +411,7 @@ details:
 |  | costMetrics(feature-cost-metrics) | 1.0.0 |
 |  | hostMetrics(feature-host-metrics) | 1.0.0 |
 |  | integrations(feature-integrations) | 1.0.0 |
+|  | kubernetesManifests(feature-kubernetes-manifests) | 1.0.0 |
 |  | nodeLogs(feature-node-logs) | 1.0.0 |
 |  | podLogsObjects(feature-pod-logs-objects) | 1.0.0 |
 |  | podLogsViaKubernetesApi(feature-pod-logs-via-kubernetes-api) | 1.0.0 |
@@ -536,6 +537,14 @@ details:
 | integrations | object | No integrations enabled | Service Integrations enables gathering telemetry data for common services and applications deployed to Kubernetes. To see the valid options, please see the [Service Integrations documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-integrations). |
 | integrations.destinations | list | `[]` | The destinations where integration metrics will be sent. If empty, all metrics-capable destinations will be used. |
 
+### Features - Kubernetes Manifests
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| kubernetesManifests | object | Disabled | Kubernetes Manifests enables collecting Kubernetes resource manifest changes as logs. Requires a destination that supports logs. To see the valid options, please see the [Kubernetes Manifests feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-kubernetes-manifests). |
+| kubernetesManifests.destinations | list | `[]` | The destinations where logs will be sent. If empty, all log-capable destinations will be used. |
+| kubernetesManifests.enabled | bool | `false` | Enable collecting Kubernetes manifest changes. |
+
 ### Features - Node Logs
 
 | Key | Type | Default | Description |
@@ -618,6 +627,7 @@ details:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| telemetryServices.k8s-manifest-tail.deploy | bool | `false` | Deploy k8s-manifest-tail to watch and log Kubernetes manifest changes. |
 | telemetryServices.kepler.deploy | bool | `false` | Deploy [Kepler](https://sustainable-computing.io/) to gather energy usage metrics from the Kubernetes Cluster nodes. |
 | telemetryServices.kube-state-metrics.deploy | bool | `false` | Deploy kube-state-metrics to expose Kubernetes object metadata as Prometheus metrics. |
 | telemetryServices.node-exporter.deploy | bool | `false` | Deploy Node Exporter to gather Linux node hardware and OS metrics. |
