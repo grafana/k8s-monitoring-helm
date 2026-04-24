@@ -271,8 +271,11 @@ build: build-features values.schema.json templates/destinations/_destination_typ
 docs/Versions.md: Chart.yaml
 	scripts/versions-doc.sh > $@
 
+docs/collectors/presets/README.md: $(COLLECTOR_PRESET_FILES)
+	scripts/presets-readme.sh > $@
+
 .PHONY: build-docs
-build-docs: README.md AGENTS.md docs/Versions.md $(COLLECTOR_DOCS_FILES) $(COLLECTOR_PRESET_DOCS_FILES) $(DESTINATION_DOCS_FILES)
+build-docs: README.md AGENTS.md docs/Versions.md docs/collectors/presets/README.md $(COLLECTOR_DOCS_FILES) $(COLLECTOR_PRESET_DOCS_FILES) $(DESTINATION_DOCS_FILES)
 
 # Test targets
 .PHONY: test unittest lint-helm lint-configs
