@@ -116,6 +116,7 @@ charts/feature-{name}/
 -   `feature-cost-metrics` - Gathers Kubernetes Cost metrics
 -   `feature-host-metrics` - Gathers Kubernetes Host metrics
 -   `feature-integrations` - Service integrations
+-   `feature-kubernetes-manifests` - Kubernetes Observability feature for collecting Kubernetes manifest changes.
 -   `feature-node-logs` - Kubernetes Observability feature for gathering Cluster Node logs.
 -   `feature-pod-logs-objects` - Kubernetes Observability feature for gathering logs using PodLogs objects.
 -   `feature-pod-logs-via-kubernetes-api` - Kubernetes Observability feature for gathering Pod logs by streaming them from the Kubernetes API.

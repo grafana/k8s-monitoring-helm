@@ -35,6 +35,7 @@ telemetryServices:
 
 | Repository | Name | Version |
 |------------|------|---------|
+| https://grafana.github.io/helm-charts | k8s-manifest-tail(k8s-manifest-tail) | 0.1.0 |
 | https://opencost.github.io/opencost-helm-chart | opencost | 2.5.14 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 7.2.2 |
 | https://prometheus-community.github.io/helm-charts | node-exporter(prometheus-node-exporter) | 4.53.1 |
@@ -48,6 +49,12 @@ telemetryServices:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | global.platform | string | `""` | The specific platform for this cluster. Will enable compatibility for some platforms. Supported options: (empty) or "openshift". |
+
+### k8s-manifest-tail
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| k8s-manifest-tail.deploy | bool | `false` | Deploy k8s-manifest-tail to watch and log Kubernetes manifest changes. |
 
 ### Kepler
 
