@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 4.0.4
 
 *   Update Alloy Operator to 0.5.5 (@petewall)
 *   Change Alloy collector `labels` and `annotations` defaults from arrays to maps, and accept either type in the schema for backwards compatibility (@petewall)

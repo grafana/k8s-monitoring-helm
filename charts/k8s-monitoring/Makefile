@@ -268,7 +268,7 @@ build-features:
 .PHONY: build
 build: build-features values.schema.json templates/destinations/_destination_types.tpl collectors/upstream/alloy-values.yaml build-docs examples integration-test-checks platform-test-checks
 
-docs/Versions.md:
+docs/Versions.md: Chart.yaml
 	scripts/versions-doc.sh > $@
 
 .PHONY: build-docs
