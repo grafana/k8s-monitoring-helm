@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Set `appProtocol` on the OTLP, Zipkin, and Jaeger HTTP/gRPC ports registered by the Application Observability feature, and pass `appProtocol` from `collectors.<name>.alloy.extraPorts` through to the optional receiver Service, so Istio sidecars reliably pick the right L7 filter instead of falling back to protocol sniffing (@petewall)
 *   Update Alloy Operator to 0.5.5 (@petewall)
 *   Change Alloy collector `labels` and `annotations` defaults from arrays to maps, and accept either type in the schema for backwards compatibility (@petewall)
 *   Warn in NOTES.txt when installing into an Istio-enabled namespace with Alloy clustering using the default "http" port name, which breaks clustering peer discovery and causes duplicate metrics (@petewall)

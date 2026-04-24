@@ -947,10 +947,12 @@ spec:
       port: 4317
       targetPort: 4317
       protocol: TCP
+      appProtocol: grpc
     - name: otlp-http
       port: 4318
       targetPort: 4318
       protocol: TCP
+      appProtocol: http
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/deployment.yaml
 apiVersion: apps/v1
@@ -1039,11 +1041,13 @@ spec:
     configMap:
       create: false
     extraPorts:
-    - name: otlp-grpc
+    - appProtocol: grpc
+      name: otlp-grpc
       port: 4317
       protocol: TCP
       targetPort: 4317
-    - name: otlp-http
+    - appProtocol: http
+      name: otlp-http
       port: 4318
       protocol: TCP
       targetPort: 4318
