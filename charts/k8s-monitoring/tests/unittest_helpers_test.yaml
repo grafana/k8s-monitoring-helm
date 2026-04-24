@@ -10,6 +10,7 @@ tests:
       - {equal: {path: "data.regular",                   value: "valid-kubernetes-name" }, documentIndex: 0 }
       - {equal: {path: "data.nameWithSpacesAndCapitals", value: "this-is-my-name"       }, documentIndex: 0 }
       - {equal: {path: "data.nameWithUnderscores",       value: "i-am-a-snake"          }, documentIndex: 0 }
+      - {equal: {path: "data.namespace",                 value: "NAMESPACE"             }, documentIndex: 0 }
 
   - it: collectors.set_extra_env inserts a new entry when name is not found
     set:
@@ -34,3 +35,11 @@ tests:
       testing: true
     asserts:
       - {equal: {path: "data.insertIntoEmpty", value: '[{"name":"PORT","value":"8080"}]'}, documentIndex: 1}
+
+  - it: helper.namespace uses global namespaceOverride
+    set:
+      testing: true
+      global:
+        namespaceOverride: observability
+    asserts:
+      - {equal: {path: "data.namespace", value: "observability" }, documentIndex: 0 }

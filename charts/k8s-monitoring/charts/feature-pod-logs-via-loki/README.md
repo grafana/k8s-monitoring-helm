@@ -70,6 +70,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | extraLogProcessingStages | string | `""` | Stage blocks to be added to the loki.process component for pod logs. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
 | structuredMetadata | object | `{"k8s.pod.name":"k8s.pod.name","pod":"pod","service.instance.id":"service.instance.id"}` | The structured metadata mappings to set. Format: `<key>: <extracted_key>`. Example: structuredMetadata:   component: component   kind: kind   name: name |
 
+### Global Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| global.namespaceOverride | string | `""` | Override the namespace for namespaced resources created by this chart. |
+
 ### Node Labels
 
 | Key | Type | Default | Description |
