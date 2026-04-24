@@ -11,6 +11,10 @@
 
 {{- define "feature.hostMetrics.energyMetrics.alloy" }}
 {{- if .Values.energyMetrics.enabled }}
+{{- $namespace := .Values.energyMetrics.namespace }}
+{{- if dig "kepler" "deploy" false (.telemetryServices | default dict) }}
+  {{- $namespace = .Release.Namespace }}
+{{- end }}
 {{- $metricAllowList := include "feature.hostMetrics.energyMetrics.allowList" . | fromYamlArray }}
 {{- $metricDenyList := .Values.energyMetrics.metricsTuning.excludeMetrics }}
 {{- $labelSelectors := list }}
@@ -29,17 +33,11 @@ discovery.kubernetes "kepler" {
     role = "pod"
     label = {{ $labelSelectors | join "," | quote }}
   }
-
-{{- if .Values.energyMetrics.namespace }}
+{{- if $namespace }}
   namespaces {
-    names = [{{ .Release.Namespace | quote }}]
-  }
-{{- else if dig "kepler" "deploy" false (.telemetryServices | default dict) }}
-  namespaces {
-    names = [{{ .Values.energyMetrics.namespace | quote }}]
+    names = [{{ $namespace | quote }}]
   }
 {{- end }}
-
 {{- include "feature.hostMetrics.attachNodeMetadata" . | trim | nindent 2 }}
 } // discovery.kubernetes "kepler"
 
