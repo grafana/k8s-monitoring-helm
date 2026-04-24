@@ -1,0 +1,26 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: namespace-override-test
+
+subject:
+  releaseName: k8smon
+  path: ../../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - namespace: observability
+
+tests:
+  - type: kubernetes-objects-test
+    values:
+      checks:
+        - kind: ConfigMap
+          name: k8smon-alloy-logs
+          namespace: observability
+        - kind: DaemonSet
+          name: k8smon-alloy-logs
+          namespace: observability

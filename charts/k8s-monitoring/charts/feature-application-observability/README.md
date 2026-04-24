@@ -90,6 +90,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | connectors.spanMetrics.skipInternal | bool | `true` | Skip span if span kind is internal. |
 | connectors.spanMetrics.transforms | object | `{"datapoint":[],"metric":[],"resource":[]}` | Apply transformations to span metrics after they are generated. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.transform/)) |
 
+### Global Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| global.namespaceOverride | string | `""` | Override the namespace for namespaced resources created by this chart. |
+
 ### Logs
 
 | Key | Type | Default | Description |

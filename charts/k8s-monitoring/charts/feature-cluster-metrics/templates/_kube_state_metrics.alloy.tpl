@@ -11,6 +11,10 @@
 
 {{- define "feature.clusterMetrics.kube_state_metrics.alloy" }}
 {{- if (index .Values "kube-state-metrics").enabled }}
+{{- $namespace := (index .Values "kube-state-metrics").namespace }}
+{{- if dig "kube-state-metrics" "deploy" false (.telemetryServices | default dict) }}
+  {{- $namespace = (dig "kube-state-metrics" "namespaceOverride" false (.telemetryServices | default dict) | default .Release.Namespace) }}
+{{- end }}
 {{- $metricAllowList := include "feature.clusterMetrics.kube_state_metrics.allowList" . | fromYamlArray }}
 {{- $metricDenyList := (index .Values "kube-state-metrics").metricsTuning.excludeMetrics }}
 {{- $labelSelectors := list }}
@@ -28,13 +32,9 @@ discovery.kubernetes "kube_state_metrics" {
     role = "{{ (index .Values "kube-state-metrics").discoveryType }}"
     label = {{ $labelSelectors | join "," | quote }}
   }
-{{- if dig "kube-state-metrics" "deploy" false (.telemetryServices | default dict) }}
+{{- if $namespace }}
   namespaces {
-    names = [{{ .Release.Namespace | quote }}]
-  }
-{{- else if (index .Values "kube-state-metrics").namespace }}
-  namespaces {
-    names = [{{ (index .Values "kube-state-metrics").namespace | quote }}]
+    names = [{{ $namespace | quote }}]
   }
 {{- end }}
 } // discovery.kubernetes "kube_state_metrics"

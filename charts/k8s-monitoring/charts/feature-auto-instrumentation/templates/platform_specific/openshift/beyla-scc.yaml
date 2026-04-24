@@ -31,7 +31,7 @@ seccompProfiles:
 supplementalGroups:
   type: RunAsAny
 users:
-  - system:serviceaccount:{{ .Release.Namespace }}:{{ include "beyla.fullname" .Subcharts.beyla }}
+  - system:serviceaccount:{{ include "helper.namespace" . }}:{{ include "beyla.fullname" .Subcharts.beyla }}
 volumes:
   - configMap
   - hostPath
@@ -62,5 +62,5 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: {{ include "beyla.fullname" .Subcharts.beyla }}
-    namespace: {{ .Release.Namespace }}
+    namespace: {{ include "helper.namespace" . }}
 {{- end -}}
