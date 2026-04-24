@@ -65,10 +65,154 @@ defaults text_limit to 0 for perf_schema.eventsstatements when db o11y is enable
           }
           enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
 
+          forward_to = [loki.relabel.database_observability_mysql_my_database.receiver]
+        }
+
+        loki.relabel "database_observability_mysql_my_database" {
           forward_to = argument.logs_destinations.value
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "my-database"
+          }
+        }
+
+        discovery.relabel "database_observability_mysql_my_database" {
+          targets = database_observability.mysql.my_database.targets
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "my-database"
+          }
         }
         prometheus.scrape "my_database" {
+          targets = discovery.relabel.database_observability_mysql_my_database.output
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = argument.metrics_destinations.value
+        }
+      }
+keeps prometheus.relabel when metrics tuning is set under db o11y:
+  1: |
+    |-
+      declare "mysql_integration" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        remote.kubernetes.secret "my_database" {
+          name      = "my-database-release-name-feature-integrations"
+          namespace = "NAMESPACE"
+        }
+
+        prometheus.exporter.mysql "my_database" {
+          data_source_name = string.format("%s:%s@(%s:%d)/",
+            convert.nonsensitive(remote.kubernetes.secret.my_database.data["username"]),
+            convert.nonsensitive(remote.kubernetes.secret.my_database.data["password"]),
+            "my-db.mysql.svc",
+            3306,
+          )
+          enable_collectors = ["heartbeat","mysql.user"]
+        }
+
+        database_observability.mysql "my_database" {
+          targets = prometheus.exporter.mysql.my_database.targets
+          data_source_name = string.format("%s:%s@(%s:%d)/",
+            convert.nonsensitive(remote.kubernetes.secret.my_database.data["username"]),
+            convert.nonsensitive(remote.kubernetes.secret.my_database.data["password"]),
+            "my-db.mysql.svc",
+            3306,
+          )
+          allow_update_performance_schema_settings = false
+          explain_plans {
+            collect_interval = "1m"
+            initial_lookback = "24h"
+            per_collect_ratio = "1"
+          }
+          query_details {
+            collect_interval = "1m"
+          }
+          query_samples {
+            collect_interval = "1m"
+            disable_query_redaction = false
+            auto_enable_setup_consumers = false
+            setup_consumers_check_interval = "1h"
+          }
+          schema_details {
+            collect_interval = "1m"
+            cache_enabled = false
+            cache_size = 256
+            cache_ttl = "10m"
+          }
+          setup_consumers {
+            collect_interval = "1m"
+          }
+          setup_actors {
+            auto_update_setup_actors = false
+            collect_interval = "1h"
+          }
+          enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
+
+          forward_to = [loki.relabel.database_observability_mysql_my_database.receiver]
+        }
+
+        loki.relabel "database_observability_mysql_my_database" {
+          forward_to = argument.logs_destinations.value
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "my-database"
+          }
+        }
+
+        discovery.relabel "database_observability_mysql_my_database" {
           targets = database_observability.mysql.my_database.targets
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "my-database"
+          }
+        }
+        prometheus.scrape "my_database" {
+          targets = discovery.relabel.database_observability_mysql_my_database.output
           clustering {
             enabled = true
           }
@@ -84,12 +228,9 @@ defaults text_limit to 0 for perf_schema.eventsstatements when db o11y is enable
         prometheus.relabel "my_database" {
           max_cache_size = 100000
           rule {
-            target_label = "instance"
-            replacement = "my-database"
-          }
-          rule {
-            target_label = "job"
-            replacement = "integration/mysql"
+            source_labels = ["__name__"]
+            regex = "mysql_slave_.*"
+            action = "drop"
           }
           forward_to = argument.metrics_destinations.value
         }
@@ -167,10 +308,42 @@ renders new db o11y options (azure, setup_actors, statements_limit, exclude_sche
           }
           enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
 
+          forward_to = [loki.relabel.database_observability_mysql_azure_db.receiver]
+        }
+
+        loki.relabel "database_observability_mysql_azure_db" {
           forward_to = argument.logs_destinations.value
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "azure-db"
+          }
+        }
+
+        discovery.relabel "database_observability_mysql_azure_db" {
+          targets = database_observability.mysql.azure_db.targets
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "azure-db"
+          }
         }
         prometheus.scrape "azure_db" {
-          targets = database_observability.mysql.azure_db.targets
+          targets = discovery.relabel.database_observability_mysql_azure_db.output
           clustering {
             enabled = true
           }
@@ -180,19 +353,118 @@ renders new db o11y options (azure, setup_actors, statements_limit, exclude_sche
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
           scrape_classic_histograms = false
           scrape_native_histograms = false
-          forward_to = [prometheus.relabel.azure_db.receiver]
+          forward_to = argument.metrics_destinations.value
+        }
+      }
+respects an explicit jobLabel override under db o11y:
+  1: |
+    |-
+      declare "mysql_integration" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where collected logs should be forwarded to"
         }
 
-        prometheus.relabel "azure_db" {
-          max_cache_size = 100000
-          rule {
-            target_label = "instance"
-            replacement = "azure-db"
+        remote.kubernetes.secret "my_database" {
+          name      = "my-database-release-name-feature-integrations"
+          namespace = "NAMESPACE"
+        }
+
+        prometheus.exporter.mysql "my_database" {
+          data_source_name = string.format("%s:%s@(%s:%d)/",
+            convert.nonsensitive(remote.kubernetes.secret.my_database.data["username"]),
+            convert.nonsensitive(remote.kubernetes.secret.my_database.data["password"]),
+            "my-db.mysql.svc",
+            3306,
+          )
+          enable_collectors = ["heartbeat","mysql.user"]
+        }
+
+        database_observability.mysql "my_database" {
+          targets = prometheus.exporter.mysql.my_database.targets
+          data_source_name = string.format("%s:%s@(%s:%d)/",
+            convert.nonsensitive(remote.kubernetes.secret.my_database.data["username"]),
+            convert.nonsensitive(remote.kubernetes.secret.my_database.data["password"]),
+            "my-db.mysql.svc",
+            3306,
+          )
+          allow_update_performance_schema_settings = false
+          explain_plans {
+            collect_interval = "1m"
+            initial_lookback = "24h"
+            per_collect_ratio = "1"
           }
+          query_details {
+            collect_interval = "1m"
+          }
+          query_samples {
+            collect_interval = "1m"
+            disable_query_redaction = false
+            auto_enable_setup_consumers = false
+            setup_consumers_check_interval = "1h"
+          }
+          schema_details {
+            collect_interval = "1m"
+            cache_enabled = false
+            cache_size = 256
+            cache_ttl = "10m"
+          }
+          setup_consumers {
+            collect_interval = "1m"
+          }
+          setup_actors {
+            auto_update_setup_actors = false
+            collect_interval = "1h"
+          }
+          enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
+
+          forward_to = [loki.relabel.database_observability_mysql_my_database.receiver]
+        }
+
+        loki.relabel "database_observability_mysql_my_database" {
+          forward_to = argument.logs_destinations.value
           rule {
             target_label = "job"
-            replacement = "integration/mysql"
+            replacement = "my/custom-job"
           }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "my-database"
+          }
+        }
+
+        discovery.relabel "database_observability_mysql_my_database" {
+          targets = database_observability.mysql.my_database.targets
+          rule {
+            target_label = "job"
+            replacement = "my/custom-job"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "my-database"
+          }
+        }
+        prometheus.scrape "my_database" {
+          targets = discovery.relabel.database_observability_mysql_my_database.output
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
           forward_to = argument.metrics_destinations.value
         }
       }
@@ -260,10 +532,42 @@ should create the MySQL config:
           }
           enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
 
+          forward_to = [loki.relabel.database_observability_mysql_my_database.receiver]
+        }
+
+        loki.relabel "database_observability_mysql_my_database" {
           forward_to = argument.logs_destinations.value
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "my-database"
+          }
+        }
+
+        discovery.relabel "database_observability_mysql_my_database" {
+          targets = database_observability.mysql.my_database.targets
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "my-database"
+          }
         }
         prometheus.scrape "my_database" {
-          targets = database_observability.mysql.my_database.targets
+          targets = discovery.relabel.database_observability_mysql_my_database.output
           clustering {
             enabled = true
           }
@@ -273,19 +577,6 @@ should create the MySQL config:
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
           scrape_classic_histograms = false
           scrape_native_histograms = false
-          forward_to = [prometheus.relabel.my_database.receiver]
-        }
-
-        prometheus.relabel "my_database" {
-          max_cache_size = 100000
-          rule {
-            target_label = "instance"
-            replacement = "my-database"
-          }
-          rule {
-            target_label = "job"
-            replacement = "integration/mysql"
-          }
           forward_to = argument.metrics_destinations.value
         }
       }
@@ -338,10 +629,42 @@ works with multiple MySQL Instances:
           }
           enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
 
+          forward_to = [loki.relabel.database_observability_mysql_test_db.receiver]
+        }
+
+        loki.relabel "database_observability_mysql_test_db" {
           forward_to = argument.logs_destinations.value
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "test-db"
+          }
+        }
+
+        discovery.relabel "database_observability_mysql_test_db" {
+          targets = database_observability.mysql.test_db.targets
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "test-db"
+          }
         }
         prometheus.scrape "test_db" {
-          targets = database_observability.mysql.test_db.targets
+          targets = discovery.relabel.database_observability_mysql_test_db.output
           clustering {
             enabled = true
           }
@@ -351,19 +674,6 @@ works with multiple MySQL Instances:
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
           scrape_classic_histograms = false
           scrape_native_histograms = false
-          forward_to = [prometheus.relabel.test_db.receiver]
-        }
-
-        prometheus.relabel "test_db" {
-          max_cache_size = 100000
-          rule {
-            target_label = "instance"
-            replacement = "test-db"
-          }
-          rule {
-            target_label = "job"
-            replacement = "integration/mysql"
-          }
           forward_to = argument.metrics_destinations.value
         }
 
@@ -405,10 +715,42 @@ works with multiple MySQL Instances:
           }
           enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
 
+          forward_to = [loki.relabel.database_observability_mysql_staging_db.receiver]
+        }
+
+        loki.relabel "database_observability_mysql_staging_db" {
           forward_to = argument.logs_destinations.value
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "staging-db"
+          }
+        }
+
+        discovery.relabel "database_observability_mysql_staging_db" {
+          targets = database_observability.mysql.staging_db.targets
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "staging-db"
+          }
         }
         prometheus.scrape "staging_db" {
-          targets = database_observability.mysql.staging_db.targets
+          targets = discovery.relabel.database_observability_mysql_staging_db.output
           clustering {
             enabled = true
           }
@@ -418,19 +760,6 @@ works with multiple MySQL Instances:
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
           scrape_classic_histograms = false
           scrape_native_histograms = false
-          forward_to = [prometheus.relabel.staging_db.receiver]
-        }
-
-        prometheus.relabel "staging_db" {
-          max_cache_size = 100000
-          rule {
-            target_label = "instance"
-            replacement = "staging-db"
-          }
-          rule {
-            target_label = "job"
-            replacement = "integration/mysql"
-          }
           forward_to = argument.metrics_destinations.value
         }
 
@@ -487,10 +816,42 @@ works with multiple MySQL Instances:
           }
           enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
 
+          forward_to = [loki.relabel.database_observability_mysql_prod_db.receiver]
+        }
+
+        loki.relabel "database_observability_mysql_prod_db" {
           forward_to = argument.logs_destinations.value
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "prod-db"
+          }
+        }
+
+        discovery.relabel "database_observability_mysql_prod_db" {
+          targets = database_observability.mysql.prod_db.targets
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "prod-db"
+          }
         }
         prometheus.scrape "prod_db" {
-          targets = database_observability.mysql.prod_db.targets
+          targets = discovery.relabel.database_observability_mysql_prod_db.output
           clustering {
             enabled = true
           }
@@ -500,19 +861,6 @@ works with multiple MySQL Instances:
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
           scrape_classic_histograms = false
           scrape_native_histograms = false
-          forward_to = [prometheus.relabel.prod_db.receiver]
-        }
-
-        prometheus.relabel "prod_db" {
-          max_cache_size = 100000
-          rule {
-            target_label = "instance"
-            replacement = "prod-db"
-          }
-          rule {
-            target_label = "job"
-            replacement = "integration/mysql"
-          }
           forward_to = argument.metrics_destinations.value
         }
       }
