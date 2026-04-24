@@ -21,6 +21,31 @@ component which enriches the telemetry data with Kubernetes metadata. This compo
 application pod to look up the metadata. Setting the Istio sidecar's [interception mode](https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/#ProxyConfig-InboundInterceptionMode)
 to `TPROXY` will preserve originating pod's IP and port, allowing the component to work as expected.
 
+## Receiver port `appProtocol`
+
+Istio uses the Service port `appProtocol` (or failing that, the port name) to select the correct L7 filter for a
+connection. The Application Observability feature automatically sets `appProtocol` on the OTLP, Zipkin, and Jaeger
+HTTP/gRPC receiver ports it registers, so Istio sees explicit `http` or `grpc` hints instead of falling back to
+protocol sniffing. If you define receiver ports manually via `collectors.<name>.alloy.extraPorts`, set
+`appProtocol` yourself:
+
+```yaml
+collectors:
+  alloy-receiver:
+    alloy:
+      extraPorts:
+        - name: otlp-http
+          port: 4318
+          targetPort: 4318
+          protocol: TCP
+          appProtocol: http
+        - name: otlp-grpc
+          port: 4317
+          targetPort: 4317
+          protocol: TCP
+          appProtocol: grpc
+```
+
 ## Values
 
 <!-- textlint-disable terminology -->

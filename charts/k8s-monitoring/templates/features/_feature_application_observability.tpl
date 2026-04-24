@@ -49,22 +49,22 @@ application_observability "feature" {
   {{- $extraPorts := deepCopy (dig "alloy" "extraPorts" list $collectorValues) }}
   {{- if $.Values.applicationObservability.receivers.otlp.grpc.enabled }}
     {{- if eq (include "collectors.hasExtraPort" (deepCopy $ | merge (dict "collectorName" $collectorName "portNumber" $.Values.applicationObservability.receivers.otlp.grpc.port))) "false" }}
-      {{- $extraPorts = append $extraPorts (dict "name" "otlp-grpc" "port" $.Values.applicationObservability.receivers.otlp.grpc.port "targetPort" $.Values.applicationObservability.receivers.otlp.grpc.port "protocol" "TCP") }}
+      {{- $extraPorts = append $extraPorts (dict "name" "otlp-grpc" "port" $.Values.applicationObservability.receivers.otlp.grpc.port "targetPort" $.Values.applicationObservability.receivers.otlp.grpc.port "protocol" "TCP" "appProtocol" "grpc") }}
     {{- end -}}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.otlp.http.enabled }}
     {{- if eq (include "collectors.hasExtraPort" (deepCopy $ | merge (dict "collectorName" $collectorName "portNumber" $.Values.applicationObservability.receivers.otlp.http.port))) "false" }}
-      {{- $extraPorts = append $extraPorts (dict "name" "otlp-http" "port" $.Values.applicationObservability.receivers.otlp.http.port "targetPort" $.Values.applicationObservability.receivers.otlp.http.port "protocol" "TCP") }}
+      {{- $extraPorts = append $extraPorts (dict "name" "otlp-http" "port" $.Values.applicationObservability.receivers.otlp.http.port "targetPort" $.Values.applicationObservability.receivers.otlp.http.port "protocol" "TCP" "appProtocol" "http") }}
     {{- end -}}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.zipkin.enabled }}
     {{- if eq (include "collectors.hasExtraPort" (deepCopy $ | merge (dict "collectorName" $collectorName "portNumber" $.Values.applicationObservability.receivers.zipkin.port))) "false" }}
-      {{- $extraPorts = append $extraPorts (dict "name" "zipkin" "port" $.Values.applicationObservability.receivers.zipkin.port "targetPort" $.Values.applicationObservability.receivers.zipkin.port "protocol" "TCP") }}
+      {{- $extraPorts = append $extraPorts (dict "name" "zipkin" "port" $.Values.applicationObservability.receivers.zipkin.port "targetPort" $.Values.applicationObservability.receivers.zipkin.port "protocol" "TCP" "appProtocol" "http") }}
     {{- end -}}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.grpc.enabled }}
     {{- if eq (include "collectors.hasExtraPort" (deepCopy $ | merge (dict "collectorName" $collectorName "portNumber" $.Values.applicationObservability.receivers.jaeger.grpc.port))) "false" }}
-      {{- $extraPorts = append $extraPorts (dict "name" "jaeger-grpc" "port" $.Values.applicationObservability.receivers.jaeger.grpc.port "targetPort" $.Values.applicationObservability.receivers.jaeger.grpc.port "protocol" "TCP") }}
+      {{- $extraPorts = append $extraPorts (dict "name" "jaeger-grpc" "port" $.Values.applicationObservability.receivers.jaeger.grpc.port "targetPort" $.Values.applicationObservability.receivers.jaeger.grpc.port "protocol" "TCP" "appProtocol" "grpc") }}
     {{- end -}}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftBinary.enabled }}
@@ -79,7 +79,7 @@ application_observability "feature" {
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftHttp.enabled }}
     {{- if eq (include "collectors.hasExtraPort" (deepCopy $ | merge (dict "collectorName" $collectorName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port))) "false" }}
-      {{- $extraPorts = append $extraPorts (dict "name" "jaeger-http" "port" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port "targetPort" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port "protocol" "TCP") }}
+      {{- $extraPorts = append $extraPorts (dict "name" "jaeger-http" "port" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port "targetPort" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port "protocol" "TCP" "appProtocol" "http") }}
     {{- end -}}
   {{- end -}}
 
