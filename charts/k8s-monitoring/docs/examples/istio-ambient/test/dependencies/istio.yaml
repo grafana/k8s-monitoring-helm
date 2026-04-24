@@ -1,0 +1,97 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: istio-system
+  labels:
+    istio.io/dataplane-mode: ambient
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: istio
+  namespace: istio-system
+spec:
+  interval: 1m
+  url: https://istio-release.storage.googleapis.com/charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: istio-base
+  namespace: istio-system
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: base
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+        namespace: istio-system
+      interval: 1m
+  values:
+    defaultRevision: default
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: istio-cni
+  namespace: istio-system
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: cni
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+        namespace: istio-system
+      interval: 1m
+  dependsOn:
+    - name: istio-base
+      namespace: istio-system
+  values:
+    profile: ambient
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: istiod
+  namespace: istio-system
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: istiod
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+        namespace: istio-system
+      interval: 1m
+  dependsOn:
+    - name: istio-base
+      namespace: istio-system
+    - name: istio-cni
+      namespace: istio-system
+  values:
+    profile: ambient
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: ztunnel
+  namespace: istio-system
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: ztunnel
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+        namespace: istio-system
+      interval: 1m
+  dependsOn:
+    - name: istiod
+      namespace: istio-system
