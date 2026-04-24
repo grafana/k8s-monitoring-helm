@@ -31,7 +31,7 @@ hostMetrics:
 
 collectors:
   alloy-metrics:
-    presets: [clustered, statefulset]
+    presets: [medium, clustered, statefulset]
 
 telemetryServices:
   node-exporter:
