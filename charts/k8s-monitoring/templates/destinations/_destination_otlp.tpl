@@ -440,7 +440,7 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" $.destinationName | quo
 {{- if .urlFrom }}
     endpoint = {{ .urlFrom }}
 {{- else }}
-    endpoint = {{ .url | quote }}
+    endpoint = {{ tpl (toString .url) .tplRoot | quote }}
 {{- end }}
 {{- if .proxyURL }}
     proxy_url = {{ .proxyURL | quote }}
@@ -455,12 +455,13 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" $.destinationName | quo
     auth = otelcol.auth.sigv4.{{ include "helper.alloy_name" $.destinationName }}.handler
 {{- end }}
 {{- if or (eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "tenantId")) "true") .extraHeaders .extraHeadersFrom }}
+  {{- $tplRoot := .tplRoot }}
     headers = {
 {{- if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "tenantId")) "true" }}
       "X-Scope-OrgID" = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "tenantId" "nonsensitive" true) }},
 {{- end }}
 {{- range $key, $value := .extraHeaders }}
-      {{ $key | quote }} = {{ $value | quote }},
+      {{ $key | quote }} = {{ tpl (toString $value) $tplRoot | quote }},
 {{- end }}
 {{- range $key, $value := .extraHeadersFrom }}
       {{ $key | quote }} = {{ $value }},

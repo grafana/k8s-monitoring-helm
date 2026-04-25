@@ -75,8 +75,8 @@ This defines the options for defining a destination for logs that use the Loki p
 | batchSize | string | `""` | Maximum batch size of logs to accumulate before sending. |
 | batchWait | string | `""` | Maximum amount of time to wait before sending a batch. |
 | clusterLabels | list | `["cluster","k8s.cluster.name"]` | Labels to be set with the cluster name as the value. |
-| extraHeaders | object | `{}` | Extra headers to be set when sending data. All values are treated as strings and automatically quoted. |
-| extraHeadersFrom | object | `{}` | Extra headers to be set when sending data through a dynamic reference. All values are treated as raw strings and not quoted. |
+| extraHeaders | object | `{}` | Extra headers to be set when sending data. All values are treated as strings, support Helm templating, and are automatically quoted. |
+| extraHeadersFrom | object | `{}` | Extra headers to be set when sending data through a dynamic reference. All values are treated as raw Alloy expressions and not quoted. |
 | extraLabels | object | `{}` | Custom labels to be added to all logs and events. All values are treated as strings and automatically quoted. |
 | extraLabelsFrom | object | `{}` | Custom labels to be added to all logs and events through a dynamic reference. All values are treated as raw strings and not quoted. |
 | logProcessingStages | string | `""` | Stage blocks to be evaluated before delivering to the Loki destination. See ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks)) for more information. |
@@ -93,8 +93,8 @@ This defines the options for defining a destination for logs that use the Loki p
 | tenantIdFrom | string | `""` | Raw config for accessing the tenant ID. |
 | tenantIdKey | string | `"tenantId"` | The key for storing the tenant ID in the secret. |
 | timeout | string | `10s` | Timeout for requests made to the URL. |
-| url | string | `""` | The URL for the Loki destination. |
-| urlFrom | string | `""` | Raw config for accessing the URL. |
+| url | string | `""` | The URL for the Loki destination. Supports Helm templating and is rendered as a quoted string in the generated Alloy config. |
+| urlFrom | string | `""` | Raw config for accessing the URL. Use this when you need to insert a raw Alloy expression instead of a quoted string. |
 
 ### Secret
 

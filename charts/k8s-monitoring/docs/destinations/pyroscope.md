@@ -72,8 +72,8 @@ This defines the options for defining a destination for profiles that use the Py
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | clusterLabels | list | `["cluster","k8s.cluster.name"]` | Labels to be set with the cluster name as the value. |
-| extraHeaders | object | `{}` | Extra headers to be set when sending data. All values are treated as strings and automatically quoted. |
-| extraHeadersFrom | object | `{}` | Extra headers to be set when sending data through a dynamic reference. All values are treated as raw strings and not quoted. |
+| extraHeaders | object | `{}` | Extra headers to be set when sending data. All values are treated as strings, support Helm templating, and are automatically quoted. |
+| extraHeadersFrom | object | `{}` | Extra headers to be set when sending data through a dynamic reference. All values are treated as raw Alloy expressions and not quoted. |
 | extraLabels | object | `{}` | Extra labels to be added to all profiles before delivering to the destination. All values are treated as strings and automatically quoted. |
 | extraLabelsFrom | object | `{}` | Extra labels to be added to all profiles using a dynamic reference before delivering to the destination. All values are treated as raw strings and not quoted. |
 | maxBackoffPeriod | string | `"5m"` | The maximum backoff period for the Pyroscope destination. |
@@ -87,8 +87,8 @@ This defines the options for defining a destination for profiles that use the Py
 | tenantId | string | `""` | The tenant ID for the Pyroscope destination. |
 | tenantIdFrom | string | `""` | Raw config for accessing the tenant ID. |
 | tenantIdKey | string | `"tenantId"` | The key for storing the tenant ID in the secret. |
-| url | string | `""` | The URL for the Pyroscope destination. |
-| urlFrom | string | `""` | Raw config for accessing the URL. |
+| url | string | `""` | The URL for the Pyroscope destination. Supports Helm templating and is rendered as a quoted string in the generated Alloy config. |
+| urlFrom | string | `""` | Raw config for accessing the URL. Use this when you need to insert a raw Alloy expression instead of a quoted string. |
 
 ### Secret
 

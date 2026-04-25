@@ -9,6 +9,10 @@ the appropriate backend databases for storage. In this Helm chart, the
 [OTLP Destination](https://grafana.com/docs/grafana-cloud/send-data/otlp/send-data-otlp/) makes this possible. This
 means that you can define a single destination for all of your telemetry data.
 
+This example also shows how standard destination fields such as `url` and `extraHeaders`
+can be templated from other Helm values without switching to the raw `urlFrom` or
+`extraHeadersFrom` forms.
+
 ## Values
 
 <!-- textlint-disable terminology -->
@@ -20,8 +24,10 @@ cluster:
 destinations:
   otlp-gateway:
     type: otlp
-    url: https://otlp-gateway-my-region.grafana.net/otlp
+    url: https://{{ .Values.cluster.name }}.otlp-gateway-my-region.grafana.net/otlp
     protocol: http
+    extraHeaders:
+      x-cluster: "{{ .Values.cluster.name }}"
     auth:
       type: basic
       username: my-gateway-username
