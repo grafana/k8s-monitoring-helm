@@ -40,7 +40,7 @@ declare "pod_logs_via_kubernetes_api" {
     }
 {{- end }}
   {{- include "feature.podLogsViaKubernetesApi.attachNodeMetadata" . | indent 4 }}
-  }
+  } // discovery.kubernetes "pods"
 
   {{- include "feature.podLogsViaKubernetesApi.discovery.alloy" . | nindent 2 }}
 
@@ -50,8 +50,8 @@ declare "pod_logs_via_kubernetes_api" {
       enabled = true
     }
     forward_to = [loki.process.pod_logs.receiver]
-  }
+  } // loki.source.kubernetes "pod_logs"
 
   {{- include "feature.podLogsViaKubernetesApi.processing.alloy" . | nindent 2 }}
-}
+} // declare "pod_logs_via_kubernetes_api"
 {{- end -}}

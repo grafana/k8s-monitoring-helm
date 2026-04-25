@@ -5,10 +5,19 @@ cluster:
   # @section -- Cluster
   name: ""
 
+  # -- A raw Alloy expression for the cluster name. Use this to dynamically set the cluster name, e.g.
+  # `sys.env("CLUSTER_NAME")`. If set, this takes precedence over `cluster.name`.
+  # @section -- Cluster
+  nameFrom: ""
+
 #
 # Global settings
 #
 global:
+  # -- Override the namespace for namespaced resources created by this chart and its feature subcharts.
+  # @section -- Global Settings
+  namespaceOverride: ""
+
   # -- The specific platform for this cluster. Will enable compatibility for some platforms. Supported options: (empty) or "openshift".
   # @section -- Global Settings
   platform: ""
@@ -528,6 +537,22 @@ alloy-operator:
     # @section -- Alloy Operator
     nodeSelector:
       kubernetes.io/os: linux
+
+# -- *Experimental*: Replace the body of a generated Alloy component with custom content. Each entry must match the
+# `type` and `name` of a component that the chart would otherwise render (e.g. `prometheus.relabel "metricsService"`).
+# The templated component must end with a `} // <type> "<name>"` close tag for replacement to find it, otherwise the
+# render fails. Set `module: <name>` to scope the replacement to a component inside a `declare "<module>" { ... }` block.
+# @section -- Configuration Management
+replaceComponent: []
+# - type: prometheus.relabel
+#   name: metrics_service
+#   content: |
+#     // replacement content for `prometheus.relabel "metrics_service" { ... }`
+# - type: discovery.relabel
+#   name: default
+#   module: cluster_metrics
+#   content: |
+#     // replacement content for `discovery.relabel "default" { ... }` inside of `declare "cluster_metrics" { ... }`
 
 # -- Deploy additional manifest objects
 # @section -- Extra Objects

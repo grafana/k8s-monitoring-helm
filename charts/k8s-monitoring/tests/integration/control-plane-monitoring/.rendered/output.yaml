@@ -79,7 +79,7 @@ data:
           role = "pod"
           field = "spec.nodeName=" + sys.env("HOSTNAME")
         }
-      }
+      } // discovery.kubernetes "pods"
     
       discovery.relabel "filtered_pods" {
         targets = discovery.kubernetes.pods.targets
@@ -203,17 +203,17 @@ data:
           replacement = "/var/log/pods/*$1/*.log"
           target_label = "__path__"
         }
-      }
+      } // discovery.relabel "filtered_pods"
     
       local.file_match "pod_logs" {
         path_targets = discovery.relabel.filtered_pods.output
-      }
+      } // local.file_match "pod_logs"
     
       loki.source.file "pod_logs" {
         targets    = local.file_match.pod_logs.targets
         tail_from_end = true
         forward_to = [loki.process.pod_logs.receiver]
-      }
+      } // loki.source.file "pod_logs"
     
       loki.process "pod_logs" {
         stage.match {
@@ -263,8 +263,8 @@ data:
         }
     
         forward_to = argument.logs_destinations.value
-      }
-    }
+      } // loki.secretfilter "pod_logs"
+    } // declare "pod_logs_via_loki"
     pod_logs_via_loki "feature" {
       logs_destinations = [
         loki.write.loki.receiver,
@@ -277,7 +277,7 @@ data:
     // Destination: loki (loki)
     otelcol.exporter.loki "loki" {
       forward_to = [loki.write.loki.receiver]
-    }
+    } // otelcol.exporter.loki "loki"
     
     loki.write "loki" {
       endpoint {
@@ -299,12 +299,12 @@ data:
         "cluster" = "control-plane-monitoring-test",
         "k8s_cluster_name" = "control-plane-monitoring-test",
       }
-    }
+    } // loki.write "loki"
     
     remote.kubernetes.secret "loki" {
       name      = "loki-k8smon-k8s-monitoring"
       namespace = "default"
-    }
+    } // remote.kubernetes.secret "loki"
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -321,7 +321,7 @@ data:
       }
       discovery.kubernetes "nodes" {
         role = "node"
-      }
+      } // discovery.kubernetes "nodes"
     
       discovery.relabel "nodes" {
         targets = discovery.kubernetes.nodes.targets
@@ -334,12 +334,12 @@ data:
           replacement = "kubernetes"
           target_label = "source"
         }
-      }
+      } // discovery.relabel "nodes"
     
       // Kubelet
       discovery.relabel "kubelet" {
         targets = discovery.relabel.nodes.output
-      }
+      } // discovery.relabel "kubelet"
     
       prometheus.scrape "kubelet" {
         targets  = discovery.relabel.kubelet.output
@@ -363,7 +363,7 @@ data:
         }
     
         forward_to = [prometheus.relabel.kubelet.receiver]
-      }
+      } // prometheus.scrape "kubelet"
     
       prometheus.relabel "kubelet" {
         max_cache_size = 100000
@@ -374,7 +374,7 @@ data:
         }
     
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.relabel "kubelet"
     
       // Kubelet Resources
       discovery.relabel "kubelet_resources" {
@@ -383,7 +383,7 @@ data:
           replacement   = "/metrics/resource"
           target_label  = "__metrics_path__"
         }
-      }
+      } // discovery.relabel "kubelet_resources"
     
       prometheus.scrape "kubelet_resources" {
         targets = discovery.relabel.kubelet_resources.output
@@ -407,7 +407,7 @@ data:
         }
     
         forward_to = [prometheus.relabel.kubelet_resources.receiver]
-      }
+      } // prometheus.scrape "kubelet_resources"
     
       prometheus.relabel "kubelet_resources" {
         max_cache_size = 100000
@@ -418,7 +418,7 @@ data:
         }
     
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.relabel "kubelet_resources"
     
       // Kubelet Probes
       discovery.relabel "kubelet_probes" {
@@ -427,7 +427,7 @@ data:
           replacement   = "/metrics/probes"
           target_label  = "__metrics_path__"
         }
-      }
+      } // discovery.relabel "kubelet_probes"
     
       prometheus.scrape "kubelet_probes" {
         targets  = discovery.relabel.kubelet_probes.output
@@ -451,7 +451,7 @@ data:
         }
     
         forward_to = [prometheus.relabel.kubelet_probes.receiver]
-      }
+      } // prometheus.scrape "kubelet_probes"
     
       prometheus.relabel "kubelet_probes" {
         max_cache_size = 100000
@@ -462,7 +462,7 @@ data:
         }
     
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.relabel "kubelet_probes"
     
       // cAdvisor
       discovery.relabel "cadvisor" {
@@ -471,7 +471,7 @@ data:
           replacement   = "/metrics/cadvisor"
           target_label  = "__metrics_path__"
         }
-      }
+      } // discovery.relabel "cadvisor"
     
       prometheus.scrape "cadvisor" {
         targets = discovery.relabel.cadvisor.output
@@ -495,7 +495,7 @@ data:
         }
     
         forward_to = [prometheus.relabel.cadvisor.receiver]
-      }
+      } // prometheus.scrape "cadvisor"
     
       prometheus.relabel "cadvisor" {
         max_cache_size = 100000
@@ -573,7 +573,7 @@ data:
           replacement = ""
         }
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.relabel "cadvisor"
     
       discovery.kubernetes "apiserver" {
         role = "endpointslice"
@@ -586,7 +586,7 @@ data:
         namespaces {
           names = ["default"]
         }
-      }
+      } // discovery.kubernetes "apiserver"
     
       discovery.relabel "apiserver" {
         targets = discovery.kubernetes.apiserver.targets
@@ -611,7 +611,7 @@ data:
           replacement = "kubernetes"
           target_label = "source"
         }
-      }
+      } // discovery.relabel "apiserver"
     
       prometheus.scrape "apiserver" {
         targets = discovery.relabel.apiserver.output
@@ -634,7 +634,7 @@ data:
           enabled = true
         }
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.relabel "apiserver"
     
       discovery.kubernetes "kube_controller_manager" {
         role = "pod"
@@ -645,7 +645,7 @@ data:
           role = "pod"
           label = "component=kube-controller-manager"
         }
-      }
+      } // discovery.kubernetes "kube_controller_manager"
     
       discovery.relabel "kube_controller_manager" {
         targets = discovery.kubernetes.kube_controller_manager.targets
@@ -654,7 +654,7 @@ data:
           replacement = "$1:10257"
           target_label = "__address__"
         }
-      }
+      } // discovery.relabel "kube_controller_manager"
     
       prometheus.scrape "kube_controller_manager" {
         targets           = discovery.relabel.kube_controller_manager.output
@@ -673,7 +673,7 @@ data:
           enabled = true
         }
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.relabel "kube_controller_manager"
     
       // KubeDNS
       discovery.kubernetes "kube_dns" {
@@ -685,7 +685,7 @@ data:
           role = "endpointslice"
           label = "kubernetes.io/service-name=kube-dns"
         }
-      }
+      } // discovery.kubernetes "kube_dns"
     
       discovery.relabel "kube_dns" {
         targets = discovery.kubernetes.kube_dns.targets
@@ -769,7 +769,7 @@ data:
           replacement = "kubernetes"
           target_label = "source"
         }
-      }
+      } // discovery.relabel "kube_dns"
     
       prometheus.scrape "kube_dns" {
         targets = discovery.relabel.kube_dns.output
@@ -784,7 +784,7 @@ data:
           enabled = true
         }
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.relabel "kube_dns"
     
       discovery.kubernetes "kube_proxy" {
         role = "pod"
@@ -795,7 +795,7 @@ data:
           role = "pod"
           label = "k8s-app=kube-proxy"
         }
-      }
+      } // discovery.kubernetes "kube_proxy"
     
       discovery.relabel "kube_proxy" {
         targets = discovery.kubernetes.kube_proxy.targets
@@ -804,7 +804,7 @@ data:
           replacement = "$1:10249"
           target_label = "__address__"
         }
-      }
+      } // discovery.relabel "kube_proxy"
     
       prometheus.scrape "kube_proxy" {
         targets           = discovery.relabel.kube_proxy.output
@@ -819,7 +819,7 @@ data:
           enabled = true
         }
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.relabel "kube_proxy"
     
       discovery.kubernetes "kube_scheduler" {
         role = "pod"
@@ -830,7 +830,7 @@ data:
           role = "pod"
           label = "component=kube-scheduler"
         }
-      }
+      } // discovery.kubernetes "kube_scheduler"
     
       discovery.relabel "kube_scheduler" {
         targets = discovery.kubernetes.kube_scheduler.targets
@@ -839,7 +839,7 @@ data:
           replacement = "$1:10259"
           target_label = "__address__"
         }
-      }
+      } // discovery.relabel "kube_scheduler"
     
       prometheus.scrape "kube_scheduler" {
         targets           = discovery.relabel.kube_scheduler.output
@@ -858,7 +858,7 @@ data:
           enabled = true
         }
         forward_to = argument.metrics_destinations.value
-      }
+      } // prometheus.relabel "kube_scheduler"
       discovery.kubernetes "kube_state_metrics" {
         role = "endpoints"
     
@@ -869,7 +869,7 @@ data:
         namespaces {
           names = ["default"]
         }
-      }
+      } // discovery.kubernetes "kube_state_metrics"
     
       discovery.relabel "kube_state_metrics" {
         targets = discovery.kubernetes.kube_state_metrics.targets
@@ -880,7 +880,7 @@ data:
           target_label = "source"
         }
     
-      }
+      } // discovery.relabel "kube_state_metrics"
     
       prometheus.scrape "kube_state_metrics" {
         targets = discovery.relabel.kube_state_metrics.output
@@ -900,7 +900,7 @@ data:
           enabled = true
         }
         forward_to = [prometheus.relabel.kube_state_metrics.receiver]
-      }
+      } // prometheus.scrape "kube_state_metrics"
     
       prometheus.relabel "kube_state_metrics" {
         max_cache_size = 100000
@@ -910,8 +910,8 @@ data:
           action = "keep"
         }
         forward_to = argument.metrics_destinations.value
-      }
-    }
+      } // prometheus.relabel "kube_state_metrics"
+    } // declare "cluster_metrics"
     cluster_metrics "feature" {
       metrics_destinations = [
         prometheus.remote_write.prometheus.receiver,
@@ -926,7 +926,6 @@ data:
       // Linux hosts via Node Exporter
       discovery.kubernetes "node_exporter" {
         role = "pod"
-    
         selectors {
           role = "pod"
           label = "release=k8smon,app.kubernetes.io/name=node-exporter"
@@ -935,7 +934,7 @@ data:
           names = ["default"]
         }
     
-      }
+      } // discovery.kubernetes "node_exporter"
     
       discovery.relabel "node_exporter" {
         targets = discovery.kubernetes.node_exporter.targets
@@ -1027,7 +1026,7 @@ data:
           target_label = "source"
         }
     
-      }
+      } // discovery.relabel "node_exporter"
     
       prometheus.scrape "node_exporter" {
         targets = discovery.relabel.node_exporter.output
@@ -1046,7 +1045,7 @@ data:
           enabled = true
         }
         forward_to = [prometheus.relabel.node_exporter.receiver]
-      }
+      } // prometheus.scrape "node_exporter"
     
       prometheus.relabel "node_exporter" {
         max_cache_size = 100000
@@ -1063,8 +1062,8 @@ data:
           action = "drop"
         }
         forward_to = argument.metrics_destinations.value
-      }
-    }
+      } // prometheus.relabel "node_exporter"
+    } // declare "host_metrics"
     host_metrics "feature" {
       metrics_destinations = [
         prometheus.remote_write.prometheus.receiver,
@@ -1079,7 +1078,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.prometheus.receiver]
-    }
+    } // otelcol.exporter.prometheus "prometheus"
     
     prometheus.remote_write "prometheus" {
       endpoint {
@@ -1122,7 +1121,7 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "prometheus"
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -1142,7 +1141,7 @@ data:
         job_name   = "integrations/kubernetes/eventhandler"
         log_format = "logfmt"
         forward_to = [loki.process.cluster_events.receiver]
-      }
+      } // loki.source.kubernetes_events "cluster_events"
     
       loki.process "cluster_events" {
     
@@ -1208,8 +1207,8 @@ data:
         }
     
         forward_to = argument.logs_destinations.value
-      }
-    }
+      } // loki.process "cluster_events"
+    } // declare "cluster_events"
     cluster_events "feature" {
       logs_destinations = [
         loki.write.loki.receiver,
@@ -1221,7 +1220,7 @@ data:
       textfile {
         directory = "/etc/release-info"
       }
-    }
+    } // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
     
     discovery.relabel "kubernetes_monitoring_telemetry" {
       targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -1235,7 +1234,7 @@ data:
         action = "replace"
         replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
       }
-    }
+    } // discovery.relabel "kubernetes_monitoring_telemetry"
     
     prometheus.scrape "kubernetes_monitoring_telemetry" {
       job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -1245,7 +1244,7 @@ data:
         enabled = true
       }
       forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-    }
+    } // prometheus.scrape "kubernetes_monitoring_telemetry"
     
     prometheus.relabel "kubernetes_monitoring_telemetry" {
       rule {
@@ -1256,7 +1255,7 @@ data:
       forward_to = [
         prometheus.remote_write.prometheus.receiver,
       ]
-    }
+    } // prometheus.relabel "kubernetes_monitoring_telemetry"
     
     
     
@@ -1264,7 +1263,7 @@ data:
     // Destination: loki (loki)
     otelcol.exporter.loki "loki" {
       forward_to = [loki.write.loki.receiver]
-    }
+    } // otelcol.exporter.loki "loki"
     
     loki.write "loki" {
       endpoint {
@@ -1286,12 +1285,12 @@ data:
         "cluster" = "control-plane-monitoring-test",
         "k8s_cluster_name" = "control-plane-monitoring-test",
       }
-    }
+    } // loki.write "loki"
     
     remote.kubernetes.secret "loki" {
       name      = "loki-k8smon-k8s-monitoring"
       namespace = "default"
-    }
+    } // remote.kubernetes.secret "loki"
     
     
     // Destination: prometheus (prometheus)
@@ -1299,7 +1298,7 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       forward_to = [prometheus.remote_write.prometheus.receiver]
-    }
+    } // otelcol.exporter.prometheus "prometheus"
     
     prometheus.remote_write "prometheus" {
       endpoint {
@@ -1342,7 +1341,7 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
+    } // prometheus.remote_write "prometheus"
 ---
 # Source: k8s-monitoring/templates/release-info.yaml
 apiVersion: v1

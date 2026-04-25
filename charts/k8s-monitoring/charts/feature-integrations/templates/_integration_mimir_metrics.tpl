@@ -67,7 +67,7 @@ declare "mimir_integration" {
         names = coalesce(argument.namespaces.value, [])
       }
       {{- include "feature.integrations.attachNodeMetadata" . | nindent 6 }}
-    }
+    } // discovery.kubernetes "mimir_pods"
 
     // mimir relabelings (pre-scrape)
     discovery.relabel "mimir_pods" {
@@ -99,7 +99,7 @@ declare "mimir_integration" {
       }
 
       {{- include "feature.integrations.commonDiscoveryRules" . | nindent 6 }}
-    }
+    } // discovery.relabel "mimir_pods"
 
     export "output" {
       value = discovery.relabel.mimir_pods.output
@@ -178,7 +178,7 @@ declare "mimir_integration" {
       clustering {
         enabled = coalesce(argument.clustering.value, false)
       }
-    }
+    } // prometheus.scrape "mimir"
 
     // mimir metric relabelings (post-scrape)
     prometheus.relabel "mimir" {
@@ -218,7 +218,7 @@ declare "mimir_integration" {
         target_label = "container"
         replacement = "memcached"
       }
-    }
+    } // prometheus.relabel "mimir"
   }
   {{- range $instance := $.Values.mimir.instances }}
     {{- include "integrations.mimir.include.metrics" (deepCopy $ | merge (dict "instance" $instance)) | nindent 2 }}

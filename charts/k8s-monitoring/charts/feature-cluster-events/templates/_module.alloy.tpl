@@ -11,7 +11,7 @@ declare "cluster_events" {
     namespaces = {{ .Values.namespaces | toJson }}
   {{- end }}
     forward_to = [loki.process.cluster_events.receiver]
-  }
+  } // loki.source.kubernetes_events "cluster_events"
 
   loki.process "cluster_events" {
     {{- if .Values.excludeNamespaces }}
@@ -171,6 +171,6 @@ declare "cluster_events" {
     {{ end }}
 
     forward_to = argument.logs_destinations.value
-  }
-}
+  } // loki.process "cluster_events"
+} // declare "cluster_events"
 {{- end -}}

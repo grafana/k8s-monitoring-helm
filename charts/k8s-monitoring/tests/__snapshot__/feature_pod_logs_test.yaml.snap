@@ -13,7 +13,7 @@ renders the config to gather Kubernetes Pod logs:
             role = "pod"
             field = "spec.nodeName=" + sys.env("HOSTNAME")
           }
-        }
+        } // discovery.kubernetes "pods"
 
         discovery.relabel "filtered_pods" {
           targets = discovery.kubernetes.pods.targets
@@ -137,17 +137,17 @@ renders the config to gather Kubernetes Pod logs:
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
-        }
+        } // discovery.relabel "filtered_pods"
 
         local.file_match "pod_logs" {
           path_targets = discovery.relabel.filtered_pods.output
-        }
+        } // local.file_match "pod_logs"
 
         loki.source.file "pod_logs" {
           targets    = local.file_match.pod_logs.targets
           tail_from_end = true
           forward_to = [loki.process.pod_logs.receiver]
-        }
+        } // loki.source.file "pod_logs"
 
         loki.process "pod_logs" {
           stage.match {
@@ -197,8 +197,8 @@ renders the config to gather Kubernetes Pod logs:
           }
 
           forward_to = argument.logs_destinations.value
-        }
-      }
+        } // loki.secretfilter "pod_logs"
+      } // declare "pod_logs_via_loki"
       pod_logs_via_loki "feature" {
         logs_destinations = [
           loki.write.loki.receiver,
@@ -219,7 +219,7 @@ renders the config to gather Kubernetes Pod logs:
       // Destination: loki (loki)
       otelcol.exporter.loki "loki" {
         forward_to = [loki.write.loki.receiver]
-      }
+      } // otelcol.exporter.loki "loki"
 
       loki.write "loki" {
         endpoint {
@@ -236,4 +236,4 @@ renders the config to gather Kubernetes Pod logs:
           "cluster" = "ci-test-cluster",
           "k8s_cluster_name" = "ci-test-cluster",
         }
-      }
+      } // loki.write "loki"

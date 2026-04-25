@@ -470,6 +470,7 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | cluster.name | string | `""` | The name for this cluster. |
+| cluster.nameFrom | string | `""` | A raw Alloy expression for the cluster name. Use this to dynamically set the cluster name, e.g. `sys.env("CLUSTER_NAME")`. If set, this takes precedence over `cluster.name`. |
 
 ### Features - Cluster Events
 
@@ -513,6 +514,7 @@ details:
 |-----|------|---------|-------------|
 | global.kubernetesAPIService | string | `""` | The Kubernetes service. Change this if your cluster DNS is configured differently than the default. |
 | global.maxCacheSize | int | `100000` | Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) This should be at least 2x-5x your largest scrape target or samples appended rate. |
+| global.namespaceOverride | string | `""` | Override the namespace for namespaced resources created by this chart and its feature subcharts. |
 | global.platform | string | `""` | The specific platform for this cluster. Will enable compatibility for some platforms. Supported options: (empty) or "openshift". |
 | global.scrapeClassicHistograms | bool | `false` | Whether to scrape a classic histogram that’s also exposed as a native histogram. |
 | global.scrapeInterval | string | `"60s"` | How frequently to scrape metrics. |
@@ -598,6 +600,12 @@ details:
 | prometheusOperatorObjects | object | Disabled | Prometheus Operator Objects enables the gathering of metrics from objects like Probes, PodMonitors, and ServiceMonitors. Requires a destination that supports metrics. To see the valid options, please see the [Prometheus Operator Objects feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-prometheus-operator-objects). |
 | prometheusOperatorObjects.destinations | list | `[]` | The destinations where metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | prometheusOperatorObjects.enabled | bool | `false` | Enable gathering metrics from Prometheus Operator Objects. |
+
+### Configuration Management
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| replaceComponent | list | `[]` | *Experimental*: Replace the body of a generated Alloy component with custom content. Each entry must match the `type` and `name` of a component that the chart would otherwise render (e.g. `prometheus.relabel "metricsService"`). The templated component must end with a `} // <type> "<name>"` close tag for replacement to find it, otherwise the render fails. Set `module: <name>` to scope the replacement to a component inside a `declare "<module>" { ... }` block. |
 
 ### Features - Self-reporting
 

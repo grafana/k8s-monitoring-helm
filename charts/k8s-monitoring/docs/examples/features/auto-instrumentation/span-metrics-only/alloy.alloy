@@ -29,7 +29,7 @@ declare "application_observability" {
       logs = [otelcol.processor.resourcedetection.default.input]
       traces = [otelcol.processor.resourcedetection.default.input]
     }
-  }
+  } // otelcol.receiver.otlp "receiver"
 
   // Resource Detection Processor
   otelcol.processor.resourcedetection "default" {
@@ -124,7 +124,7 @@ declare "application_observability" {
       traces = argument.traces_destinations.value
     }
   }
-}
+} // declare "application_observability"
 application_observability "feature" {
   metrics_destinations = [
     otelcol.exporter.prometheus.prometheus.input,
@@ -151,7 +151,7 @@ declare "auto_instrumentation" {
       role = "pod"
       label = "app.kubernetes.io/name=beyla"
     }
-  }
+  } // discovery.kubernetes "beyla_pods"
 
   discovery.relabel "beyla_pods" {
     targets = discovery.kubernetes.beyla_pods.targets
@@ -160,7 +160,7 @@ declare "auto_instrumentation" {
       action = "replace"
       target_label = "instance"
     }
-  }
+  } // discovery.relabel "beyla_pods"
 
   prometheus.scrape "beyla_applications" {
     targets         = discovery.relabel.beyla_pods.output
@@ -173,7 +173,7 @@ declare "auto_instrumentation" {
       enabled = true
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.scrape "beyla_applications"
 
   prometheus.scrape "beyla_internal" {
     targets         = discovery.relabel.beyla_pods.output
@@ -188,8 +188,8 @@ declare "auto_instrumentation" {
       enabled = true
     }
     forward_to = argument.metrics_destinations.value
-  }
-}
+  } // prometheus.relabel "beyla"
+} // declare "auto_instrumentation"
 auto_instrumentation "feature" {
   metrics_destinations = [
     prometheus.remote_write.prometheus.receiver,
@@ -214,7 +214,7 @@ prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   textfile {
     directory = "/etc/release-info"
   }
-}
+} // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
 
 discovery.relabel "kubernetes_monitoring_telemetry" {
   targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -228,7 +228,7 @@ discovery.relabel "kubernetes_monitoring_telemetry" {
     action = "replace"
     replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
   }
-}
+} // discovery.relabel "kubernetes_monitoring_telemetry"
 
 prometheus.scrape "kubernetes_monitoring_telemetry" {
   job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -238,7 +238,7 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
     enabled = true
   }
   forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-}
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
 
 prometheus.relabel "kubernetes_monitoring_telemetry" {
   rule {
@@ -249,7 +249,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
   forward_to = [
     prometheus.remote_write.prometheus.receiver,
   ]
-}
+} // prometheus.relabel "kubernetes_monitoring_telemetry"
 
 
 
@@ -257,7 +257,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
 // Destination: loki (loki)
 otelcol.exporter.loki "loki" {
   forward_to = [loki.write.loki.receiver]
-}
+} // otelcol.exporter.loki "loki"
 
 loki.write "loki" {
   endpoint {
@@ -274,14 +274,14 @@ loki.write "loki" {
     "cluster" = "span-metrics-only-cluster",
     "k8s_cluster_name" = "span-metrics-only-cluster",
   }
-}
+} // loki.write "loki"
 
 // Destination: prometheus (prometheus)
 otelcol.exporter.prometheus "prometheus" {
   add_metric_suffixes = true
   resource_to_telemetry_conversion = false
   forward_to = [prometheus.remote_write.prometheus.receiver]
-}
+} // otelcol.exporter.prometheus "prometheus"
 
 prometheus.remote_write "prometheus" {
   endpoint {
@@ -324,14 +324,14 @@ prometheus.remote_write "prometheus" {
     min_keepalive_time = "5m"
     max_keepalive_time = "8h"
   }
-}
+} // prometheus.remote_write "prometheus"
 
 // Destination: tempo (otlp)
 otelcol.processor.attributes "tempo" {
   output {
     traces = [otelcol.processor.transform.tempo.input]
   }
-}
+} // otelcol.processor.attributes "tempo"
 
 otelcol.processor.transform "tempo" {
   error_mode = "ignore"
@@ -363,7 +363,7 @@ otelcol.processor.transform "tempo" {
   output {
     traces = [otelcol.processor.batch.tempo.input]
   }
-}
+} // otelcol.processor.transform "tempo"
 
 otelcol.processor.batch "tempo" {
   timeout = "2s"
@@ -373,7 +373,7 @@ otelcol.processor.batch "tempo" {
   output {
     traces = [otelcol.exporter.otlp.tempo.input]
   }
-}
+} // otelcol.processor.batch "tempo"
 otelcol.exporter.otlp "tempo" {
   client {
     endpoint = "http://tempo.tracing.svc:4317"
@@ -393,5 +393,5 @@ otelcol.exporter.otlp "tempo" {
   sending_queue {
     enabled = true
   }
-}
+} // otelcol.exporter.otlp "tempo"
 

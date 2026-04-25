@@ -31,7 +31,7 @@ data:
         job_name   = "integrations/kubernetes/eventhandler"
         log_format = "logfmt"
         forward_to = [loki.process.cluster_events.receiver]
-      }
+      } // loki.source.kubernetes_events "cluster_events"
     
       loki.process "cluster_events" {
     
@@ -97,8 +97,8 @@ data:
         }
     
         forward_to = argument.logs_destinations.value
-      }
-    }
+      } // loki.process "cluster_events"
+    } // declare "cluster_events"
     cluster_events "feature" {
       logs_destinations = [
         otelcol.receiver.loki.kafka.receiver,
@@ -127,7 +127,7 @@ data:
       output {
         logs = [otelcol.processor.batch.kafka.input]
       }
-    }
+    } // otelcol.receiver.loki "kafka"
     
     otelcol.processor.batch "kafka" {
       output {

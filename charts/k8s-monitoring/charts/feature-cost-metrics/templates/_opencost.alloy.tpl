@@ -10,6 +10,10 @@
 {{ end }}
 
 {{- define "feature.costMetrics.opencost.alloy" }}
+{{- $namespace := .Values.opencost.namespace }}
+{{- if dig "opencost" "deploy" false (.telemetryServices | default dict) }}
+  {{- $namespace = (dig "opencost" "namespaceOverride" false (.telemetryServices | default dict) | default .Release.Namespace) }}
+{{- end }}
 {{- $metricAllowList := include "feature.costMetrics.opencost.allowList" . | fromYamlArray }}
 {{- $metricDenyList := .Values.opencost.metricsTuning.excludeMetrics }}
 {{- $labelSelectors := list }}
@@ -28,17 +32,12 @@ discovery.kubernetes "opencost" {
     role = "pod"
     label = {{ $labelSelectors | join "," | quote }}
   }
-
-{{- if .Values.opencost.namespace }}
+{{- if $namespace }}
   namespaces {
-    names = [{{ .Values.opencost.namespace | quote }}]
-  }
-{{- else if dig "opencost" "deploy" false (.telemetryServices | default dict) }}
-  namespaces {
-    names = [{{ .Release.Namespace | quote }}]
+    names = [{{ $namespace | quote }}]
   }
 {{- end }}
-}
+} // discovery.kubernetes "opencost"
 
 discovery.relabel "opencost" {
   targets = discovery.kubernetes.opencost.targets
@@ -50,7 +49,7 @@ discovery.relabel "opencost" {
 {{- if .Values.opencost.extraDiscoveryRules }}
 {{ .Values.opencost.extraDiscoveryRules | indent 2 }}
 {{- end }}
-}
+} // discovery.relabel "opencost"
 
 prometheus.scrape "opencost" {
   targets      = discovery.relabel.opencost.output
@@ -66,7 +65,7 @@ prometheus.scrape "opencost" {
   }
 {{- if or $metricAllowList $metricDenyList .Values.opencost.extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.opencost.receiver]
-}
+} // prometheus.scrape "opencost"
 
 prometheus.relabel "opencost" {
   max_cache_size = {{ .Values.opencost.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -89,5 +88,5 @@ prometheus.relabel "opencost" {
 {{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "opencost"
 {{- end }}

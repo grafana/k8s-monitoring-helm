@@ -65,6 +65,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | labelSelectors | object | `{}` | Filter the list of discovered pods by labels. Example: `labelSelectors: { 'app': 'myapp' }` will only discover pods and services with the label `app=myapp`. Example: `labelSelectors: { 'app': ['myapp', 'myotherapp'] }` will only discover pods and services with the label `app=myapp` or `app=myotherapp`. |
 | namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
 
+### Global Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| global.namespaceOverride | string | `""` | Override the namespace for namespaced resources created by this chart. |
+
 ### Node Labels
 
 | Key | Type | Default | Description |

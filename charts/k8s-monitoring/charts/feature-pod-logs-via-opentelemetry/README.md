@@ -63,6 +63,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | excludeNamespaces | list | `[]` | Do not capture logs from any pods in these namespaces. |
 | namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
 
+### Global Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| global.namespaceOverride | string | `""` | Override the namespace for namespaced resources created by this chart. |
+
 ### Volume Log Gathering
 
 | Key | Type | Default | Description |

@@ -4,13 +4,13 @@
 {{- with .destination }}
 otelcol.exporter.loki {{ include "helper.alloy_name" $.destinationName | quote }} {
   forward_to = [{{ include "destinations.loki.alloy.loki.logs.target" (dict "destination" . "destinationName" $.destinationName) }}]
-}
+} // otelcol.exporter.loki "{{ include "helper.alloy_name" $.destinationName }}"
 {{- if .logProcessingStages }}
 
 loki.process {{ include "helper.alloy_name" $.destinationName | quote }} {
 {{ .logProcessingStages | indent 2 }}
   forward_to = [loki.write.{{ include "helper.alloy_name" $.destinationName }}.receiver]
-}
+} // loki.process "{{ include "helper.alloy_name" $.destinationName }}"
 {{- end }}
 
 loki.write {{ include "helper.alloy_name" $.destinationName | quote }} {
@@ -155,7 +155,7 @@ loki.write {{ include "helper.alloy_name" $.destinationName | quote }} {
   }
   external_labels = {
 {{- range $label := .clusterLabels }}
-    {{ include "escape_label" $label | quote }} = {{ $.Values.cluster.name | quote }},
+    {{ include "escape_label" $label | quote }} = {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }},
 {{- end }}
 {{- if .extraLabels }}
   {{- range $k, $v := .extraLabels }}
@@ -168,7 +168,7 @@ loki.write {{ include "helper.alloy_name" $.destinationName | quote }} {
   {{- end }}
 {{- end }}
   }
-}
+} // loki.write "{{ include "helper.alloy_name" $.destinationName }}"
 {{- end }}
 {{- end }}
 

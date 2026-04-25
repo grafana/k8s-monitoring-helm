@@ -23,6 +23,8 @@
 {{- $alloyConfig = cat $alloyConfig (include "collectors.extraConfig.alloy" $values | trim | nindent 0) }}
 {{- $alloyConfig = cat $alloyConfig (include "destinations.alloy.config" (deepCopy $ | merge (dict "destinationNames" ($destinationNames | uniq | sortAlpha))) | trim | nindent 0) }}
 
+{{- $alloyConfig = include "replaceComponent.apply" (dict "config" $alloyConfig "replacements" $.Values.replaceComponent "collectorName" $collectorName) }}
+
 {{/* Remove all trailing whitespace */}}
 {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" }}
 ---
@@ -30,7 +32,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ include "collector.alloy.fullname" $values }}
-  namespace: {{ $.Release.Namespace }}
+  namespace: {{ include "helper.namespace" $ }}
 data:
   config.alloy: |{{ $alloyConfig | trim | nindent 4 }}
 {{- end }}

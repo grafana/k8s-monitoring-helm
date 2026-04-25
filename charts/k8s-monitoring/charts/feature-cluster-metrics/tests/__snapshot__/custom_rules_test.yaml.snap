@@ -7,7 +7,7 @@ should render the default configuration:
         }
         discovery.kubernetes "nodes" {
           role = "node"
-        }
+        } // discovery.kubernetes "nodes"
 
         discovery.relabel "nodes" {
           targets = discovery.kubernetes.nodes.targets
@@ -20,7 +20,7 @@ should render the default configuration:
             replacement = "kubernetes"
             target_label = "source"
           }
-        }
+        } // discovery.relabel "nodes"
 
         // Kubelet
         discovery.relabel "kubelet" {
@@ -29,7 +29,7 @@ should render the default configuration:
             target_label = "color"
             replacement = "red"
           }
-        }
+        } // discovery.relabel "kubelet"
 
         prometheus.scrape "kubelet" {
           targets  = discovery.relabel.kubelet.output
@@ -53,7 +53,7 @@ should render the default configuration:
           }
 
           forward_to = [prometheus.relabel.kubelet.receiver]
-        }
+        } // prometheus.scrape "kubelet"
 
         prometheus.relabel "kubelet" {
           max_cache_size = 100000
@@ -64,7 +64,7 @@ should render the default configuration:
           }
 
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.relabel "kubelet"
 
         // Kubelet Resources
         discovery.relabel "kubelet_resources" {
@@ -73,7 +73,7 @@ should render the default configuration:
             replacement   = "/metrics/resource"
             target_label  = "__metrics_path__"
           }
-        }
+        } // discovery.relabel "kubelet_resources"
 
         prometheus.scrape "kubelet_resources" {
           targets = discovery.relabel.kubelet_resources.output
@@ -97,7 +97,7 @@ should render the default configuration:
           }
 
           forward_to = [prometheus.relabel.kubelet_resources.receiver]
-        }
+        } // prometheus.scrape "kubelet_resources"
 
         prometheus.relabel "kubelet_resources" {
           max_cache_size = 100000
@@ -108,7 +108,7 @@ should render the default configuration:
           }
 
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.relabel "kubelet_resources"
 
         // cAdvisor
         discovery.relabel "cadvisor" {
@@ -117,7 +117,7 @@ should render the default configuration:
             replacement   = "/metrics/cadvisor"
             target_label  = "__metrics_path__"
           }
-        }
+        } // discovery.relabel "cadvisor"
 
         prometheus.scrape "cadvisor" {
           targets = discovery.relabel.cadvisor.output
@@ -141,7 +141,7 @@ should render the default configuration:
           }
 
           forward_to = [prometheus.relabel.cadvisor.receiver]
-        }
+        } // prometheus.scrape "cadvisor"
 
         prometheus.relabel "cadvisor" {
           max_cache_size = 100000
@@ -219,7 +219,7 @@ should render the default configuration:
             replacement = ""
           }
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.relabel "cadvisor"
         discovery.kubernetes "kube_state_metrics" {
           role = "endpoints"
 
@@ -230,7 +230,7 @@ should render the default configuration:
           namespaces {
             names = ["NAMESPACE"]
           }
-        }
+        } // discovery.kubernetes "kube_state_metrics"
 
         discovery.relabel "kube_state_metrics" {
           targets = discovery.kubernetes.kube_state_metrics.targets
@@ -244,7 +244,7 @@ should render the default configuration:
             action = "labeldrop"
             regex = "source"
           }
-        }
+        } // discovery.relabel "kube_state_metrics"
 
         prometheus.scrape "kube_state_metrics" {
           targets = discovery.relabel.kube_state_metrics.output
@@ -264,7 +264,7 @@ should render the default configuration:
             enabled = true
           }
           forward_to = [prometheus.relabel.kube_state_metrics.receiver]
-        }
+        } // prometheus.scrape "kube_state_metrics"
 
         prometheus.relabel "kube_state_metrics" {
           max_cache_size = 100000
@@ -280,5 +280,5 @@ should render the default configuration:
             action = "drop"
           }
           forward_to = argument.metrics_destinations.value
-        }
-      }
+        } // prometheus.relabel "kube_state_metrics"
+      } // declare "cluster_metrics"

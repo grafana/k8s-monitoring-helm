@@ -9,7 +9,6 @@ should render with modified metrics tuning settings:
         // Linux hosts via Node Exporter
         discovery.kubernetes "node_exporter" {
           role = "pod"
-
           selectors {
             role = "pod"
             label = "release=RELEASE-NAME,app.kubernetes.io/name=node-exporter"
@@ -18,7 +17,7 @@ should render with modified metrics tuning settings:
             names = ["NAMESPACE"]
           }
 
-        }
+        } // discovery.kubernetes "node_exporter"
 
         discovery.relabel "node_exporter" {
           targets = discovery.kubernetes.node_exporter.targets
@@ -110,7 +109,7 @@ should render with modified metrics tuning settings:
             target_label = "source"
           }
 
-        }
+        } // discovery.relabel "node_exporter"
 
         prometheus.scrape "node_exporter" {
           targets = discovery.relabel.node_exporter.output
@@ -129,7 +128,7 @@ should render with modified metrics tuning settings:
             enabled = true
           }
           forward_to = [prometheus.relabel.node_exporter.receiver]
-        }
+        } // prometheus.scrape "node_exporter"
 
         prometheus.relabel "node_exporter" {
           max_cache_size = 100000
@@ -151,5 +150,5 @@ should render with modified metrics tuning settings:
             action = "drop"
           }
           forward_to = argument.metrics_destinations.value
-        }
-      }
+        } // prometheus.relabel "node_exporter"
+      } // declare "host_metrics"

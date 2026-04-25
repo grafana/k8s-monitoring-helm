@@ -66,3 +66,9 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | excludeNamespaces | list | `[]` | List of namespaces to ignore events for. |
 | logFormat | string | `"logfmt"` | Log format used to forward cluster events. Allowed values: `logfmt` (default), `json`. |
 | namespaces | list | `[]` | List of namespaces to watch for events (`[]` means all namespaces) |
+
+### Global Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| global.namespaceOverride | string | `""` | Override the namespace for namespaced resources created by this chart. |

@@ -11,6 +11,10 @@
 
 {{- define "feature.clusterMetrics.kube_state_metrics.alloy" }}
 {{- if (index .Values "kube-state-metrics").enabled }}
+{{- $namespace := (index .Values "kube-state-metrics").namespace }}
+{{- if dig "kube-state-metrics" "deploy" false (.telemetryServices | default dict) }}
+  {{- $namespace = (dig "kube-state-metrics" "namespaceOverride" false (.telemetryServices | default dict) | default .Release.Namespace) }}
+{{- end }}
 {{- $metricAllowList := include "feature.clusterMetrics.kube_state_metrics.allowList" . | fromYamlArray }}
 {{- $metricDenyList := (index .Values "kube-state-metrics").metricsTuning.excludeMetrics }}
 {{- $labelSelectors := list }}
@@ -28,16 +32,12 @@ discovery.kubernetes "kube_state_metrics" {
     role = "{{ (index .Values "kube-state-metrics").discoveryType }}"
     label = {{ $labelSelectors | join "," | quote }}
   }
-{{- if dig "kube-state-metrics" "deploy" false (.telemetryServices | default dict) }}
+{{- if $namespace }}
   namespaces {
-    names = [{{ .Release.Namespace | quote }}]
-  }
-{{- else if (index .Values "kube-state-metrics").namespace }}
-  namespaces {
-    names = [{{ (index .Values "kube-state-metrics").namespace | quote }}]
+    names = [{{ $namespace | quote }}]
   }
 {{- end }}
-}
+} // discovery.kubernetes "kube_state_metrics"
 
 discovery.relabel "kube_state_metrics" {
   targets = discovery.kubernetes.kube_state_metrics.targets
@@ -48,7 +48,7 @@ discovery.relabel "kube_state_metrics" {
     target_label = "source"
   }
   {{- (index .Values "kube-state-metrics").extraDiscoveryRules | nindent 2 }}
-}
+} // discovery.relabel "kube_state_metrics"
 
 prometheus.scrape "kube_state_metrics" {
   targets = discovery.relabel.kube_state_metrics.output
@@ -70,7 +70,7 @@ prometheus.scrape "kube_state_metrics" {
 
 {{- if or $metricAllowList $metricDenyList (index .Values "kube-state-metrics").extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.kube_state_metrics.receiver]
-}
+} // prometheus.scrape "kube_state_metrics"
 
 prometheus.relabel "kube_state_metrics" {
   max_cache_size = {{ (index .Values "kube-state-metrics").maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -95,6 +95,6 @@ prometheus.relabel "kube_state_metrics" {
 {{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "kube_state_metrics"
 {{- end }}
 {{- end }}

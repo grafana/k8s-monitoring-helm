@@ -61,6 +61,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | staticLabels | object | `{}` | Log labels to set with static values. |
 | staticLabelsFrom | object | `{}` | Log labels to set with static values, not quoted so it can reference config components. |
 
+### Global Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| global.namespaceOverride | string | `""` | Override the namespace for namespaced resources created by this chart. |
+
 ### Secret Filtering
 
 | Key | Type | Default | Description |

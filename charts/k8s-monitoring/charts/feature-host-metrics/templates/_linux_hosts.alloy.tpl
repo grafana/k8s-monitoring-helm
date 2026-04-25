@@ -14,6 +14,10 @@
 
 {{- define "feature.hostMetrics.linuxHosts.alloy" }}
 {{- if .Values.linuxHosts.enabled }}
+{{- $namespace := .Values.linuxHosts.namespace }}
+{{- if dig "node-exporter" "deploy" false (.telemetryServices | default dict) }}
+  {{- $namespace = (dig "node-exporter" "namespaceOverride" false (.telemetryServices | default dict) | default .Release.Namespace) }}
+{{- end }}
 {{- $metricAllowList := include "feature.hostMetrics.linuxHosts.allowList" . | fromYamlArray }}
 {{- $metricDenyList := .Values.linuxHosts.metricsTuning.excludeMetrics }}
 {{- $labelSelectors := list }}
@@ -29,24 +33,17 @@
 // Linux hosts via Node Exporter
 discovery.kubernetes "node_exporter" {
   role = "pod"
-
   selectors {
     role = "pod"
     label = {{ $labelSelectors | join "," | quote }}
   }
-
-{{- if .Values.linuxHosts.namespace }}
+{{- if $namespace }}
   namespaces {
-    names = [{{ .Values.linuxHosts.namespace | quote }}]
-  }
-{{- else if dig "node-exporter" "deploy" false (.telemetryServices | default dict) }}
-  namespaces {
-    names = [{{ .Release.Namespace | quote }}]
+    names = [{{ $namespace | quote }}]
   }
 {{- end }}
-
 {{- include "feature.hostMetrics.attachNodeMetadata" . | trim | nindent 2 }}
-}
+} // discovery.kubernetes "node_exporter"
 
 discovery.relabel "node_exporter" {
   targets = discovery.kubernetes.node_exporter.targets
@@ -142,7 +139,7 @@ discovery.relabel "node_exporter" {
 {{- if .Values.linuxHosts.extraDiscoveryRules }}
   {{- .Values.linuxHosts.extraDiscoveryRules | nindent 2 }}
 {{- end }}
-}
+} // discovery.relabel "node_exporter"
 
 prometheus.scrape "node_exporter" {
   targets = discovery.relabel.node_exporter.output
@@ -166,7 +163,7 @@ prometheus.scrape "node_exporter" {
 
 {{- if or $metricAllowList $metricDenyList .Values.linuxHosts.metricsTuning.dropMetricsForFilesystem .Values.linuxHosts.extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.node_exporter.receiver]
-}
+} // prometheus.scrape "node_exporter"
 
 prometheus.relabel "node_exporter" {
   max_cache_size = {{ .Values.linuxHosts.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -200,6 +197,6 @@ prometheus.relabel "node_exporter" {
 {{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "node_exporter"
 {{- end }}
 {{- end }}

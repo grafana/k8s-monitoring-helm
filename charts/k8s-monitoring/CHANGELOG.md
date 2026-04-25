@@ -1,5 +1,12 @@
 # Changelog
 
+## 4.1
+
+*   Add `small`, `medium`, `large`, and `xlarge` collector presets that set Alloy resource requests and limits for common cluster sizes (@petewall)
+*   Add `global.namespaceOverride` to deploy namespaced resources into a custom namespace across this chart and its feature subcharts (@petewall)
+*   Add the ability to replace the contents of an Alloy component (@petewall)
+*   Add the ability to set the cluster name using arbitrary sources with `cluster.nameFrom` (@petewall)
+
 ## 4.0.4
 
 *   Set `appProtocol` on the OTLP, Zipkin, and Jaeger HTTP/gRPC ports registered by the Application Observability feature, and pass `appProtocol` from `collectors.<name>.alloy.extraPorts` through to the optional receiver Service, so Istio sidecars reliably pick the right L7 filter instead of falling back to protocol sniffing (@petewall)

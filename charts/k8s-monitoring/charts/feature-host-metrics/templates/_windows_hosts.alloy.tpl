@@ -14,6 +14,10 @@
 
 {{- define "feature.hostMetrics.windowsHosts.alloy" }}
 {{- if .Values.windowsHosts.enabled }}
+{{- $namespace := .Values.windowsHosts.namespace }}
+{{- if dig "windows-exporter" "deploy" false (.telemetryServices | default dict) }}
+  {{- $namespace = (dig "windows-exporter" "namespaceOverride" false (.telemetryServices | default dict) | default .Release.Namespace) }}
+{{- end }}
 {{- $metricAllowList := include "feature.hostMetrics.windowsHosts.allowList" . | fromYamlArray }}
 {{- $metricDenyList := .Values.windowsHosts.metricsTuning.excludeMetrics }}
 {{- $labelSelectors := list }}
@@ -33,19 +37,13 @@ discovery.kubernetes "windows_exporter_pods" {
     role = "pod"
     label = {{ $labelSelectors | join "," | quote }}
   }
-
-{{- if .Values.windowsHosts.namespace }}
+{{- if $namespace }}
   namespaces {
-    names = [{{ .Values.windowsHosts.namespace | quote }}]
-  }
-{{- else if dig "windows-exporter" "deploy" false (.telemetryServices | default dict) }}
-  namespaces {
-    names = [{{ .Release.Namespace | quote }}]
+    names = [{{ $namespace | quote }}]
   }
 {{- end }}
-
 {{- include "feature.hostMetrics.attachNodeMetadata" . | trim | nindent 2 }}
-}
+} // discovery.kubernetes "windows_exporter_pods"
 
 discovery.relabel "windows_exporter" {
   targets = discovery.kubernetes.windows_exporter_pods.targets
@@ -72,7 +70,7 @@ discovery.relabel "windows_exporter" {
 {{- if .Values.windowsHosts.extraDiscoveryRules }}
   {{- .Values.windowsHosts.extraDiscoveryRules | nindent 2 }}
 {{- end }}
-}
+} // discovery.relabel "windows_exporter"
 
 prometheus.scrape "windows_exporter" {
   targets  = discovery.relabel.windows_exporter.output
@@ -87,7 +85,7 @@ prometheus.scrape "windows_exporter" {
   }
 {{- if or $metricAllowList $metricDenyList .Values.windowsHosts.extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.windows_exporter.receiver]
-}
+} // prometheus.scrape "windows_exporter"
 
 prometheus.relabel "windows_exporter" {
   max_cache_size = {{ .Values.windowsHosts.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -110,6 +108,6 @@ prometheus.relabel "windows_exporter" {
 {{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "windows_exporter"
 {{- end }}
 {{- end }}

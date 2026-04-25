@@ -45,7 +45,7 @@ prometheus.operator.probes "probes" {
 {{- end }}
 {{- if or $metricAllowList $metricDenyList .Values.probes.extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.probes.receiver]
-}
+} // prometheus.operator.probes "probes"
 
 prometheus.relabel "probes" {
   max_cache_size = {{ .Values.probes.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -68,6 +68,6 @@ prometheus.relabel "probes" {
 {{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "probes"
 {{- end }}
 {{- end }}

@@ -69,10 +69,10 @@ data:
     remote.kubernetes.secret "my_collector_remote_cfg" {
       name      = "my-collector-remote-cfg-k8smon-k8s-monitoring"
       namespace = "default"
-    }
+    } // remote.kubernetes.secret "my_collector_remote_cfg"
     
     remotecfg {
-      id = sys.env("GCLOUD_FM_COLLECTOR_ID")
+      id = string.format("k8smon-%s-%s-%s-%s", "instrumentation-hub-test-cluster", "default", "my-collector", sys.env("K8S_NODE_NAME"))
       url = "https://remote-config.example.com/alloy"
       basic_auth {
         username = convert.nonsensitive(remote.kubernetes.secret.my_collector_remote_cfg.data["username"])
@@ -828,18 +828,14 @@ spec:
     configMap:
       create: false
     extraEnv:
-    - name: CLUSTER_NAME
-      value: instrumentation-hub-test-cluster
     - name: NAMESPACE
       valueFrom:
         fieldRef:
           fieldPath: metadata.namespace
-    - name: NODE_NAME
+    - name: POD_NAME
       valueFrom:
         fieldRef:
-          fieldPath: spec.nodeName
-    - name: GCLOUD_FM_COLLECTOR_ID
-      value: k8smon-$(CLUSTER_NAME)-$(NAMESPACE)-my-collector-$(NODE_NAME)
+          fieldPath: metadata.name
     - name: GCLOUD_RW_API_KEY
       valueFrom:
         secretKeyRef:

@@ -7,7 +7,7 @@ can discover kube-state-metrics via pods:
         }
         discovery.kubernetes "nodes" {
           role = "node"
-        }
+        } // discovery.kubernetes "nodes"
 
         discovery.relabel "nodes" {
           targets = discovery.kubernetes.nodes.targets
@@ -20,12 +20,12 @@ can discover kube-state-metrics via pods:
             replacement = "kubernetes"
             target_label = "source"
           }
-        }
+        } // discovery.relabel "nodes"
 
         // Kubelet
         discovery.relabel "kubelet" {
           targets = discovery.relabel.nodes.output
-        }
+        } // discovery.relabel "kubelet"
 
         prometheus.scrape "kubelet" {
           targets  = discovery.relabel.kubelet.output
@@ -49,7 +49,7 @@ can discover kube-state-metrics via pods:
           }
 
           forward_to = [prometheus.relabel.kubelet.receiver]
-        }
+        } // prometheus.scrape "kubelet"
 
         prometheus.relabel "kubelet" {
           max_cache_size = 100000
@@ -60,7 +60,7 @@ can discover kube-state-metrics via pods:
           }
 
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.relabel "kubelet"
 
         // Kubelet Resources
         discovery.relabel "kubelet_resources" {
@@ -69,7 +69,7 @@ can discover kube-state-metrics via pods:
             replacement   = "/metrics/resource"
             target_label  = "__metrics_path__"
           }
-        }
+        } // discovery.relabel "kubelet_resources"
 
         prometheus.scrape "kubelet_resources" {
           targets = discovery.relabel.kubelet_resources.output
@@ -93,7 +93,7 @@ can discover kube-state-metrics via pods:
           }
 
           forward_to = [prometheus.relabel.kubelet_resources.receiver]
-        }
+        } // prometheus.scrape "kubelet_resources"
 
         prometheus.relabel "kubelet_resources" {
           max_cache_size = 100000
@@ -104,7 +104,7 @@ can discover kube-state-metrics via pods:
           }
 
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.relabel "kubelet_resources"
 
         // cAdvisor
         discovery.relabel "cadvisor" {
@@ -113,7 +113,7 @@ can discover kube-state-metrics via pods:
             replacement   = "/metrics/cadvisor"
             target_label  = "__metrics_path__"
           }
-        }
+        } // discovery.relabel "cadvisor"
 
         prometheus.scrape "cadvisor" {
           targets = discovery.relabel.cadvisor.output
@@ -137,7 +137,7 @@ can discover kube-state-metrics via pods:
           }
 
           forward_to = [prometheus.relabel.cadvisor.receiver]
-        }
+        } // prometheus.scrape "cadvisor"
 
         prometheus.relabel "cadvisor" {
           max_cache_size = 100000
@@ -215,7 +215,7 @@ can discover kube-state-metrics via pods:
             replacement = ""
           }
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.relabel "cadvisor"
         discovery.kubernetes "kube_state_metrics" {
           role = "pod"
 
@@ -226,7 +226,7 @@ can discover kube-state-metrics via pods:
           namespaces {
             names = ["NAMESPACE"]
           }
-        }
+        } // discovery.kubernetes "kube_state_metrics"
 
         discovery.relabel "kube_state_metrics" {
           targets = discovery.kubernetes.kube_state_metrics.targets
@@ -237,7 +237,7 @@ can discover kube-state-metrics via pods:
             target_label = "source"
           }
 
-        }
+        } // discovery.relabel "kube_state_metrics"
 
         prometheus.scrape "kube_state_metrics" {
           targets = discovery.relabel.kube_state_metrics.output
@@ -257,7 +257,7 @@ can discover kube-state-metrics via pods:
             enabled = true
           }
           forward_to = [prometheus.relabel.kube_state_metrics.receiver]
-        }
+        } // prometheus.scrape "kube_state_metrics"
 
         prometheus.relabel "kube_state_metrics" {
           max_cache_size = 100000
@@ -267,8 +267,8 @@ can discover kube-state-metrics via pods:
             action = "keep"
           }
           forward_to = argument.metrics_destinations.value
-        }
-      }
+        } // prometheus.relabel "kube_state_metrics"
+      } // declare "cluster_metrics"
 can discover kube-state-metrics via service:
   1: |
     |-
@@ -278,7 +278,7 @@ can discover kube-state-metrics via service:
         }
         discovery.kubernetes "nodes" {
           role = "node"
-        }
+        } // discovery.kubernetes "nodes"
 
         discovery.relabel "nodes" {
           targets = discovery.kubernetes.nodes.targets
@@ -291,12 +291,12 @@ can discover kube-state-metrics via service:
             replacement = "kubernetes"
             target_label = "source"
           }
-        }
+        } // discovery.relabel "nodes"
 
         // Kubelet
         discovery.relabel "kubelet" {
           targets = discovery.relabel.nodes.output
-        }
+        } // discovery.relabel "kubelet"
 
         prometheus.scrape "kubelet" {
           targets  = discovery.relabel.kubelet.output
@@ -320,7 +320,7 @@ can discover kube-state-metrics via service:
           }
 
           forward_to = [prometheus.relabel.kubelet.receiver]
-        }
+        } // prometheus.scrape "kubelet"
 
         prometheus.relabel "kubelet" {
           max_cache_size = 100000
@@ -331,7 +331,7 @@ can discover kube-state-metrics via service:
           }
 
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.relabel "kubelet"
 
         // Kubelet Resources
         discovery.relabel "kubelet_resources" {
@@ -340,7 +340,7 @@ can discover kube-state-metrics via service:
             replacement   = "/metrics/resource"
             target_label  = "__metrics_path__"
           }
-        }
+        } // discovery.relabel "kubelet_resources"
 
         prometheus.scrape "kubelet_resources" {
           targets = discovery.relabel.kubelet_resources.output
@@ -364,7 +364,7 @@ can discover kube-state-metrics via service:
           }
 
           forward_to = [prometheus.relabel.kubelet_resources.receiver]
-        }
+        } // prometheus.scrape "kubelet_resources"
 
         prometheus.relabel "kubelet_resources" {
           max_cache_size = 100000
@@ -375,7 +375,7 @@ can discover kube-state-metrics via service:
           }
 
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.relabel "kubelet_resources"
 
         // cAdvisor
         discovery.relabel "cadvisor" {
@@ -384,7 +384,7 @@ can discover kube-state-metrics via service:
             replacement   = "/metrics/cadvisor"
             target_label  = "__metrics_path__"
           }
-        }
+        } // discovery.relabel "cadvisor"
 
         prometheus.scrape "cadvisor" {
           targets = discovery.relabel.cadvisor.output
@@ -408,7 +408,7 @@ can discover kube-state-metrics via service:
           }
 
           forward_to = [prometheus.relabel.cadvisor.receiver]
-        }
+        } // prometheus.scrape "cadvisor"
 
         prometheus.relabel "cadvisor" {
           max_cache_size = 100000
@@ -486,7 +486,7 @@ can discover kube-state-metrics via service:
             replacement = ""
           }
           forward_to = argument.metrics_destinations.value
-        }
+        } // prometheus.relabel "cadvisor"
         discovery.kubernetes "kube_state_metrics" {
           role = "service"
 
@@ -497,7 +497,7 @@ can discover kube-state-metrics via service:
           namespaces {
             names = ["NAMESPACE"]
           }
-        }
+        } // discovery.kubernetes "kube_state_metrics"
 
         discovery.relabel "kube_state_metrics" {
           targets = discovery.kubernetes.kube_state_metrics.targets
@@ -508,7 +508,7 @@ can discover kube-state-metrics via service:
             target_label = "source"
           }
 
-        }
+        } // discovery.relabel "kube_state_metrics"
 
         prometheus.scrape "kube_state_metrics" {
           targets = discovery.relabel.kube_state_metrics.output
@@ -528,7 +528,7 @@ can discover kube-state-metrics via service:
             enabled = true
           }
           forward_to = [prometheus.relabel.kube_state_metrics.receiver]
-        }
+        } // prometheus.scrape "kube_state_metrics"
 
         prometheus.relabel "kube_state_metrics" {
           max_cache_size = 100000
@@ -538,5 +538,5 @@ can discover kube-state-metrics via service:
             action = "keep"
           }
           forward_to = argument.metrics_destinations.value
-        }
-      }
+        } // prometheus.relabel "kube_state_metrics"
+      } // declare "cluster_metrics"

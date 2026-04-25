@@ -6,7 +6,7 @@ declare "annotation_autodiscovery" {
 
   discovery.kubernetes "pods" {
     role = "pod"
-  }
+  } // discovery.kubernetes "pods"
 
   discovery.relabel "annotation_autodiscovery_pods" {
     targets = discovery.kubernetes.pods.targets
@@ -160,11 +160,11 @@ declare "annotation_autodiscovery" {
       replacement = "10s"
       target_label = "__scrape_timeout__"
     }
-  }
+  } // discovery.relabel "annotation_autodiscovery_pods"
 
   discovery.kubernetes "services" {
     role = "service"
-  }
+  } // discovery.kubernetes "services"
 
   discovery.relabel "annotation_autodiscovery_services" {
     targets = discovery.kubernetes.services.targets
@@ -281,7 +281,7 @@ declare "annotation_autodiscovery" {
       replacement = "10s"
       target_label = "__scrape_timeout__"
     }
-  }
+  } // discovery.relabel "annotation_autodiscovery_services"
 
   discovery.relabel "annotation_autodiscovery_http" {
     targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
@@ -290,7 +290,7 @@ declare "annotation_autodiscovery" {
       regex = "https"
       action = "drop"
     }
-  }
+  } // discovery.relabel "annotation_autodiscovery_http"
 
   discovery.relabel "annotation_autodiscovery_https" {
     targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
@@ -299,7 +299,7 @@ declare "annotation_autodiscovery" {
       regex = "https"
       action = "keep"
     }
-  }
+  } // discovery.relabel "annotation_autodiscovery_https"
 
   prometheus.scrape "annotation_autodiscovery_http" {
     targets = discovery.relabel.annotation_autodiscovery_http.output
@@ -313,7 +313,7 @@ declare "annotation_autodiscovery" {
     }
 
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.scrape "annotation_autodiscovery_http"
 
   prometheus.scrape "annotation_autodiscovery_https" {
     targets = discovery.relabel.annotation_autodiscovery_https.output
@@ -330,8 +330,8 @@ declare "annotation_autodiscovery" {
     }
 
     forward_to = argument.metrics_destinations.value
-  }
-}
+  } // prometheus.relabel "annotation_autodiscovery"
+} // declare "annotation_autodiscovery"
 annotation_autodiscovery "feature" {
   metrics_destinations = [
     otelcol.receiver.prometheus.otel_endpoint.receiver,
@@ -344,7 +344,7 @@ declare "cluster_metrics" {
   }
   discovery.kubernetes "nodes" {
     role = "node"
-  }
+  } // discovery.kubernetes "nodes"
 
   discovery.relabel "nodes" {
     targets = discovery.kubernetes.nodes.targets
@@ -357,12 +357,12 @@ declare "cluster_metrics" {
       replacement = "kubernetes"
       target_label = "source"
     }
-  }
+  } // discovery.relabel "nodes"
 
   // Kubelet
   discovery.relabel "kubelet" {
     targets = discovery.relabel.nodes.output
-  }
+  } // discovery.relabel "kubelet"
 
   prometheus.scrape "kubelet" {
     targets  = discovery.relabel.kubelet.output
@@ -386,7 +386,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = [prometheus.relabel.kubelet.receiver]
-  }
+  } // prometheus.scrape "kubelet"
 
   prometheus.relabel "kubelet" {
     max_cache_size = 100000
@@ -397,7 +397,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "kubelet"
 
   // Kubelet Resources
   discovery.relabel "kubelet_resources" {
@@ -406,7 +406,7 @@ declare "cluster_metrics" {
       replacement   = "/metrics/resource"
       target_label  = "__metrics_path__"
     }
-  }
+  } // discovery.relabel "kubelet_resources"
 
   prometheus.scrape "kubelet_resources" {
     targets = discovery.relabel.kubelet_resources.output
@@ -430,7 +430,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = [prometheus.relabel.kubelet_resources.receiver]
-  }
+  } // prometheus.scrape "kubelet_resources"
 
   prometheus.relabel "kubelet_resources" {
     max_cache_size = 100000
@@ -441,7 +441,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "kubelet_resources"
 
   // cAdvisor
   discovery.relabel "cadvisor" {
@@ -450,7 +450,7 @@ declare "cluster_metrics" {
       replacement   = "/metrics/cadvisor"
       target_label  = "__metrics_path__"
     }
-  }
+  } // discovery.relabel "cadvisor"
 
   prometheus.scrape "cadvisor" {
     targets = discovery.relabel.cadvisor.output
@@ -474,7 +474,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = [prometheus.relabel.cadvisor.receiver]
-  }
+  } // prometheus.scrape "cadvisor"
 
   prometheus.relabel "cadvisor" {
     max_cache_size = 100000
@@ -552,7 +552,7 @@ declare "cluster_metrics" {
       replacement = ""
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "cadvisor"
   discovery.kubernetes "kube_state_metrics" {
     role = "endpoints"
 
@@ -563,7 +563,7 @@ declare "cluster_metrics" {
     namespaces {
       names = ["default"]
     }
-  }
+  } // discovery.kubernetes "kube_state_metrics"
 
   discovery.relabel "kube_state_metrics" {
     targets = discovery.kubernetes.kube_state_metrics.targets
@@ -574,7 +574,7 @@ declare "cluster_metrics" {
       target_label = "source"
     }
 
-  }
+  } // discovery.relabel "kube_state_metrics"
 
   prometheus.scrape "kube_state_metrics" {
     targets = discovery.relabel.kube_state_metrics.output
@@ -594,7 +594,7 @@ declare "cluster_metrics" {
       enabled = true
     }
     forward_to = [prometheus.relabel.kube_state_metrics.receiver]
-  }
+  } // prometheus.scrape "kube_state_metrics"
 
   prometheus.relabel "kube_state_metrics" {
     max_cache_size = 100000
@@ -604,8 +604,8 @@ declare "cluster_metrics" {
       action = "keep"
     }
     forward_to = argument.metrics_destinations.value
-  }
-}
+  } // prometheus.relabel "kube_state_metrics"
+} // declare "cluster_metrics"
 cluster_metrics "feature" {
   metrics_destinations = [
     otelcol.receiver.prometheus.otel_endpoint.receiver,
@@ -620,7 +620,6 @@ declare "host_metrics" {
   // Linux hosts via Node Exporter
   discovery.kubernetes "node_exporter" {
     role = "pod"
-
     selectors {
       role = "pod"
       label = "release=k8smon,app.kubernetes.io/name=node-exporter"
@@ -629,7 +628,7 @@ declare "host_metrics" {
       names = ["default"]
     }
 
-  }
+  } // discovery.kubernetes "node_exporter"
 
   discovery.relabel "node_exporter" {
     targets = discovery.kubernetes.node_exporter.targets
@@ -721,7 +720,7 @@ declare "host_metrics" {
       target_label = "source"
     }
 
-  }
+  } // discovery.relabel "node_exporter"
 
   prometheus.scrape "node_exporter" {
     targets = discovery.relabel.node_exporter.output
@@ -740,7 +739,7 @@ declare "host_metrics" {
       enabled = true
     }
     forward_to = [prometheus.relabel.node_exporter.receiver]
-  }
+  } // prometheus.scrape "node_exporter"
 
   prometheus.relabel "node_exporter" {
     max_cache_size = 100000
@@ -757,7 +756,7 @@ declare "host_metrics" {
       action = "drop"
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "node_exporter"
 
   // Windows hosts via Windows Exporter
   discovery.kubernetes "windows_exporter_pods" {
@@ -770,7 +769,7 @@ declare "host_metrics" {
       names = ["default"]
     }
 
-  }
+  } // discovery.kubernetes "windows_exporter_pods"
 
   discovery.relabel "windows_exporter" {
     targets = discovery.kubernetes.windows_exporter_pods.targets
@@ -793,7 +792,7 @@ declare "host_metrics" {
       target_label = "instance"
     }
 
-  }
+  } // discovery.relabel "windows_exporter"
 
   prometheus.scrape "windows_exporter" {
     targets  = discovery.relabel.windows_exporter.output
@@ -807,7 +806,7 @@ declare "host_metrics" {
       enabled = true
     }
     forward_to = [prometheus.relabel.windows_exporter.receiver]
-  }
+  } // prometheus.scrape "windows_exporter"
 
   prometheus.relabel "windows_exporter" {
     max_cache_size = 100000
@@ -817,8 +816,8 @@ declare "host_metrics" {
       action = "keep"
     }
     forward_to = argument.metrics_destinations.value
-  }
-}
+  } // prometheus.relabel "windows_exporter"
+} // declare "host_metrics"
 host_metrics "feature" {
   metrics_destinations = [
     otelcol.receiver.prometheus.otel_endpoint.receiver,
@@ -840,7 +839,7 @@ declare "prometheus_operator_objects" {
       default_scrape_timeout = "10s"
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "podmonitors"
 
   // Prometheus Operator Probe objects
   prometheus.operator.probes "probes" {
@@ -852,7 +851,7 @@ declare "prometheus_operator_objects" {
       default_scrape_timeout = "10s"
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "probes"
 
   // Prometheus Operator ServiceMonitor objects
   prometheus.operator.servicemonitors "service_monitors" {
@@ -865,8 +864,8 @@ declare "prometheus_operator_objects" {
       default_scrape_timeout = "10s"
     }
     forward_to = argument.metrics_destinations.value
-  }
-}
+  } // prometheus.relabel "servicemonitors"
+} // declare "prometheus_operator_objects"
 prometheus_operator_objects "feature" {
   metrics_destinations = [
     otelcol.receiver.prometheus.otel_endpoint.receiver,
@@ -881,19 +880,19 @@ otelcol.receiver.prometheus "otel_endpoint" {
   output {
     metrics = [otelcol.processor.attributes.otel_endpoint.input]
   }
-}
+} // otelcol.receiver.prometheus "otel_endpoint"
 otelcol.receiver.loki "otel_endpoint" {
   output {
     logs = [otelcol.processor.attributes.otel_endpoint.input]
   }
-}
+} // otelcol.receiver.loki "otel_endpoint"
 otelcol.processor.attributes "otel_endpoint" {
   output {
     metrics = [otelcol.processor.transform.otel_endpoint.input]
     logs = [otelcol.processor.transform.otel_endpoint.input]
     traces = [otelcol.processor.transform.otel_endpoint.input]
   }
-}
+} // otelcol.processor.attributes "otel_endpoint"
 
 otelcol.processor.transform "otel_endpoint" {
   error_mode = "ignore"
@@ -1023,7 +1022,7 @@ otelcol.processor.transform "otel_endpoint" {
     logs = [otelcol.processor.batch.otel_endpoint.input]
     traces = [otelcol.processor.batch.otel_endpoint.input]
   }
-}
+} // otelcol.processor.transform "otel_endpoint"
 
 otelcol.processor.batch "otel_endpoint" {
   timeout = "2s"
@@ -1035,7 +1034,7 @@ otelcol.processor.batch "otel_endpoint" {
     logs = [otelcol.exporter.otlp.otel_endpoint.input]
     traces = [otelcol.exporter.otlp.otel_endpoint.input]
   }
-}
+} // otelcol.processor.batch "otel_endpoint"
 otelcol.exporter.otlp "otel_endpoint" {
   client {
     endpoint = "grpc.my.otel.endpoint:443"
@@ -1056,7 +1055,7 @@ otelcol.exporter.otlp "otel_endpoint" {
   sending_queue {
     enabled = true
   }
-}
+} // otelcol.exporter.otlp "otel_endpoint"
 
 otelcol.auth.oauth2 "otel_endpoint" {
   client_id = convert.nonsensitive(remote.kubernetes.secret.otel_endpoint.data["clientId"])
@@ -1069,10 +1068,10 @@ otelcol.auth.oauth2 "otel_endpoint" {
   tls {
     insecure_skip_verify = false
   }
-}
+} // otelcol.auth.oauth2 "otel_endpoint"
 
 remote.kubernetes.secret "otel_endpoint" {
   name      = "otel-endpoint-k8smon-k8s-monitoring"
   namespace = "default"
-}
+} // remote.kubernetes.secret "otel_endpoint"
 

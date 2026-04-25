@@ -11,6 +11,10 @@
 
 {{- define "feature.hostMetrics.energyMetrics.alloy" }}
 {{- if .Values.energyMetrics.enabled }}
+{{- $namespace := .Values.energyMetrics.namespace }}
+{{- if dig "kepler" "deploy" false (.telemetryServices | default dict) }}
+  {{- $namespace = .Release.Namespace }}
+{{- end }}
 {{- $metricAllowList := include "feature.hostMetrics.energyMetrics.allowList" . | fromYamlArray }}
 {{- $metricDenyList := .Values.energyMetrics.metricsTuning.excludeMetrics }}
 {{- $labelSelectors := list }}
@@ -29,19 +33,13 @@ discovery.kubernetes "kepler" {
     role = "pod"
     label = {{ $labelSelectors | join "," | quote }}
   }
-
-{{- if .Values.energyMetrics.namespace }}
+{{- if $namespace }}
   namespaces {
-    names = [{{ .Release.Namespace | quote }}]
-  }
-{{- else if dig "kepler" "deploy" false (.telemetryServices | default dict) }}
-  namespaces {
-    names = [{{ .Values.energyMetrics.namespace | quote }}]
+    names = [{{ $namespace | quote }}]
   }
 {{- end }}
-
 {{- include "feature.hostMetrics.attachNodeMetadata" . | trim | nindent 2 }}
-}
+} // discovery.kubernetes "kepler"
 
 discovery.relabel "kepler" {
   targets = discovery.kubernetes.kepler.targets
@@ -55,7 +53,7 @@ discovery.relabel "kepler" {
 {{- if .Values.energyMetrics.extraDiscoveryRules }}
   {{- .Values.energyMetrics.extraDiscoveryRules | nindent 2 }}
 {{- end }}
-}
+} // discovery.relabel "kepler"
 
 prometheus.scrape "kepler" {
   targets      = discovery.relabel.kepler.output
@@ -71,7 +69,7 @@ prometheus.scrape "kepler" {
   }
 {{- if or $metricAllowList $metricDenyList .Values.energyMetrics.extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.kepler.receiver]
-}
+} // prometheus.scrape "kepler"
 
 prometheus.relabel "kepler" {
   max_cache_size = {{ .Values.energyMetrics.maxCacheSize | default .Values.global.maxCacheSize | int }}
@@ -94,6 +92,6 @@ prometheus.relabel "kepler" {
 {{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
-}
+} // prometheus.relabel "kepler"
 {{- end }}
 {{- end }}

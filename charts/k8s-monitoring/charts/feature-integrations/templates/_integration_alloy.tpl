@@ -58,7 +58,7 @@ declare "alloy_integration" {
         names = coalesce(argument.namespaces.value, [])
       }
       {{- include "feature.integrations.attachNodeMetadata" . | nindent 6 }}
-    }
+    } // discovery.kubernetes "alloy_pods"
 
     // alloy relabelings (pre-scrape)
     discovery.relabel "alloy_pods" {
@@ -78,7 +78,7 @@ declare "alloy_integration" {
       }
 
       {{- include "feature.integrations.commonDiscoveryRules" . | nindent 6 }}
-    }
+    } // discovery.relabel "alloy_pods"
 
     export "output" {
       value = discovery.relabel.alloy_pods.output
@@ -157,7 +157,7 @@ declare "alloy_integration" {
       clustering {
         enabled = coalesce(argument.clustering.value, false)
       }
-    }
+    } // prometheus.scrape "alloy"
 
     // alloy metric relabelings (post-scrape)
     prometheus.relabel "alloy" {
@@ -242,7 +242,7 @@ declare "alloy_integration" {
         action = "labeldrop"
         regex = "exported_(namespace|pod|container|job|instance)"
       }
-    }
+    } // prometheus.relabel "alloy"
   }
   {{- range $instance := $.Values.alloy.instances }}
     {{- include "integrations.alloy.include.metrics" (dict "Chart" $.Chart "Files" $.Files "Release" $.Release "Values" $.Values "instance" $instance) | nindent 2 }}
