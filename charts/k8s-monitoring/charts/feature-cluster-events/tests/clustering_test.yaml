@@ -1,0 +1,14 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Cluster Events - Clustering
+templates:
+  - test/configmap.yaml
+tests:
+  - it: renders a clustering block when clustering is enabled
+    set:
+      testing: {enabled: true}
+      clustering: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
