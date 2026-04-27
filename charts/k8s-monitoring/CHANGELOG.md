@@ -1,12 +1,15 @@
 # Changelog
 
-## Unreleased
+## 4.0.4
 
-*   Database Observability: emit proper relabeling for MySQL and PostgreSQL so both metrics and logs carry `job=integrations/db-o11y`, the configured `instance` name, and a `dsn` label for Knowledge Graph integration. Breaking change for users on `databaseObservability.enabled: true`: the default `job` label is now `integrations/db-o11y` (was `integration/mysql` for MySQL and `integration/postgresql` for PostgreSQL), and the `instance` label on db o11y logs is the instance name (was the raw DSN, which now lives on the `dsn` label) (@cristiangreco)
+*   Set `appProtocol` on the OTLP, Zipkin, and Jaeger HTTP/gRPC ports registered by the Application Observability feature, and pass `appProtocol` from `collectors.<name>.alloy.extraPorts` through to the optional receiver Service, so Istio sidecars reliably pick the right L7 filter instead of falling back to protocol sniffing (@petewall)
+*   Update Alloy Operator to 0.5.5 (@petewall)
 *   Change Alloy collector `labels` and `annotations` defaults from arrays to maps, and accept either type in the schema for backwards compatibility (@petewall)
 *   Warn in NOTES.txt when installing into an Istio-enabled namespace with Alloy clustering using the default "http" port name, which breaks clustering peer discovery and causes duplicate metrics (@petewall)
 *   PostgreSQL: Add `statementsLimit` option to the Database Observability `queryDetails` collector (@petewall)
 *   Normalize collector and destination names to DNS-1123 resource names so mixed-case or underscore-containing keys (e.g. `alloyMetrics`, `my_dest`) render valid Kubernetes resources, and fail when two keys collapse to the same normalized name (@petewall)
+*   Database Observability: fix relabeling for MySQL and PostgreSQL so both metrics and logs carry `job=integrations/db-o11y`, the configured `instance` name, and a `dsn` label for Knowledge Graph integration. Breaking change for users on `databaseObservability.enabled: true`: the default `job` label is now `integrations/db-o11y` (was `integration/mysql` for MySQL and `integration/postgresql` for PostgreSQL), and the `instance` label on db o11y logs is the instance name (was the raw DSN, which now lives on the `dsn` label) (@cristiangreco)
+
 
 ## 4.0.3
 

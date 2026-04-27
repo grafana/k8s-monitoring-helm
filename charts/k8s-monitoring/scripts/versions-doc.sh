@@ -37,6 +37,22 @@ This document lists the component versions bundled with each release of the k8s-
 |----------------|---------------|-------------|--------------|
 HEADER
 
+emit_row() {
+    local chart_version="$1"
+    local ao_version="$2"
+
+    local alloy_chart_version
+    alloy_chart_version=$(tar -xzOf "${TGZ_FILE}" alloy-operator/Chart.yaml 2>/dev/null \
+        | yq '.appVersion')
+
+    local alloy_binary
+    alloy_binary=$(lookup_binary "${alloy_chart_version}")
+
+    echo "| ${chart_version} | ${ao_version} | ${alloy_chart_version} | ${alloy_binary} |"
+}
+
+seen_versions=()
+
 # Iterate over all 3.x and 4.x release tags (sorted by version, excluding RCs)
 while IFS= read -r tag; do
     chart_version="${tag#k8s-monitoring-}"
@@ -51,15 +67,23 @@ while IFS= read -r tag; do
     git -C "${REPO_ROOT}" show "${tag}:${CHART_PATH}/charts/alloy-operator-${ao_version}.tgz" \
         > "${TGZ_FILE}" 2>/dev/null
 
-    alloy_chart_version=$(tar -xzOf "${TGZ_FILE}" alloy-operator/Chart.yaml 2>/dev/null \
-        | yq '.appVersion')
-
-    alloy_binary=$(lookup_binary "${alloy_chart_version}")
-
-    echo "| ${chart_version} | ${ao_version} | ${alloy_chart_version} | ${alloy_binary} |"
+    emit_row "${chart_version}" "${ao_version}"
+    seen_versions+=("${chart_version}")
 done < <(
     git -C "${REPO_ROOT}" tag --list 'k8s-monitoring-[34]*' \
         | sed 's/\x1b\[[0-9;]*m//g; s/\x1b\[K//g' \
         | grep -v '\-rc\.' \
         | sort -V
 )
+
+# Include the current chart version from Chart.yaml if it hasn't been tagged yet
+current_chart_version=$(yq '.version' "${CHART_DIR}/Chart.yaml")
+if ! printf '%s\n' "${seen_versions[@]}" | grep -qxF "${current_chart_version}"; then
+    current_ao_version=$(yq '.dependencies[] | select(.name == "alloy-operator") | .version' \
+        "${CHART_DIR}/Chart.yaml")
+    current_tgz="${CHART_DIR}/charts/alloy-operator-${current_ao_version}.tgz"
+    if [[ -n "${current_ao_version}" && -f "${current_tgz}" ]]; then
+        cp "${current_tgz}" "${TGZ_FILE}"
+        emit_row "${current_chart_version}" "${current_ao_version}"
+    fi
+fi

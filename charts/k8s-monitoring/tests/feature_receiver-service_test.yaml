@@ -106,6 +106,49 @@ tests:
               targetPort: 4317
               protocol: TCP
 
+  - it: propagates appProtocol from extraPorts to the Service
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-receiver:
+          extraConfig: " "
+          extraService:
+            enabled: true
+          alloy:
+            extraPorts:
+              - name: otlp-http
+                port: 4318
+                targetPort: 4318
+                protocol: TCP
+                appProtocol: http
+              - name: otlp-grpc
+                port: 4317
+                targetPort: 4317
+                protocol: TCP
+                appProtocol: grpc
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Service
+      - equal:
+          path: spec.ports
+          value:
+            - name: http-metrics
+              port: 12345
+              targetPort: 12345
+              protocol: TCP
+            - name: otlp-http
+              port: 4318
+              targetPort: 4318
+              protocol: TCP
+              appProtocol: http
+            - name: otlp-grpc
+              port: 4317
+              targetPort: 4317
+              protocol: TCP
+              appProtocol: grpc
+
   - it: has the right selectors
     set:
       cluster: {name: test-cluster}
