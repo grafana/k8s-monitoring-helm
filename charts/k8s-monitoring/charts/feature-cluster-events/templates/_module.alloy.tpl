@@ -10,6 +10,11 @@ declare "cluster_events" {
   {{- if .Values.namespaces }}
     namespaces = {{ .Values.namespaces | toJson }}
   {{- end }}
+  {{- if .Values.clustering }}
+    clustering {
+      enabled = true
+    }
+  {{- end }}
     forward_to = [loki.process.cluster_events.receiver]
   } // loki.source.kubernetes_events "cluster_events"
 

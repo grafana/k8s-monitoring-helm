@@ -163,3 +163,57 @@ tests:
       - matchRegex:
           path: data["config.alloy"]
           pattern: otelcol.receiver.loki.otlp.receiver
+
+  - it: requires clustering on the assigned collector when clustering is enabled
+    template: validations.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.loki.svc:3100/api/push
+      clusterEvents:
+        enabled: true
+        clustering: true
+      collectors:
+        alloy-events:
+          controller: {type: deployment, replicas: 3}
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Kubernetes Cluster events feature requires clustering to be enabled on the alloy-events collector.
+            Please set:
+            collectors:
+              alloy-events:
+                presets: [clustered]
+            OR
+              alloy-events:
+                alloy:
+                  clustering:
+                    enabled: true
+
+  - it: passes when clustering is enabled on a clustered collector
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.loki.svc:3100/api/push
+      clusterEvents:
+        enabled: true
+        clustering: true
+      collectors:
+        alloy-events:
+          presets: [clustered]
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: |-
+            \s*clustering \{
+            \s*  enabled = true
+            \s*\}
