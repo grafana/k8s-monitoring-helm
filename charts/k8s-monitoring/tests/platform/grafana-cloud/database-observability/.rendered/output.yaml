@@ -410,10 +410,42 @@ data:
         }
         enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
     
+        forward_to = [loki.relabel.database_observability_mysql_test_mysql_db.receiver]
+      }
+    
+      loki.relabel "database_observability_mysql_test_mysql_db" {
         forward_to = argument.logs_destinations.value
+        rule {
+          target_label = "job"
+          replacement = "integrations/db-o11y"
+        }
+        rule {
+          source_labels = ["instance"]
+          target_label = "dsn"
+        }
+        rule {
+          target_label = "instance"
+          replacement = "test-mysql-db"
+        }
+      }
+    
+      discovery.relabel "database_observability_mysql_test_mysql_db" {
+        targets = database_observability.mysql.test_mysql_db.targets
+        rule {
+          target_label = "job"
+          replacement = "integrations/db-o11y"
+        }
+        rule {
+          source_labels = ["instance"]
+          target_label = "dsn"
+        }
+        rule {
+          target_label = "instance"
+          replacement = "test-mysql-db"
+        }
       }
       prometheus.scrape "test_mysql_db" {
-        targets = database_observability.mysql.test_mysql_db.targets
+        targets = discovery.relabel.database_observability_mysql_test_mysql_db.output
         clustering {
           enabled = true
         }
@@ -423,19 +455,6 @@ data:
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         scrape_native_histograms = false
-        forward_to = [prometheus.relabel.test_mysql_db.receiver]
-      }
-    
-      prometheus.relabel "test_mysql_db" {
-        max_cache_size = 100000
-        rule {
-          target_label = "instance"
-          replacement = "test-mysql-db"
-        }
-        rule {
-          target_label = "job"
-          replacement = "integrations/db-o11y"
-        }
         forward_to = argument.metrics_destinations.value
       }
     }
@@ -503,10 +522,42 @@ data:
         }
         enable_collectors = ["explain_plans","query_details","query_samples","schema_details"]
     
+        forward_to = [loki.relabel.database_observability_postgres_test_pg_db.receiver]
+      }
+    
+      loki.relabel "database_observability_postgres_test_pg_db" {
         forward_to = argument.logs_destinations.value
+        rule {
+          target_label = "job"
+          replacement = "integrations/db-o11y"
+        }
+        rule {
+          source_labels = ["instance"]
+          target_label = "dsn"
+        }
+        rule {
+          target_label = "instance"
+          replacement = "test-pg-db"
+        }
+      }
+    
+      discovery.relabel "database_observability_postgres_test_pg_db" {
+        targets = database_observability.postgres.test_pg_db.targets
+        rule {
+          target_label = "job"
+          replacement = "integrations/db-o11y"
+        }
+        rule {
+          source_labels = ["instance"]
+          target_label = "dsn"
+        }
+        rule {
+          target_label = "instance"
+          replacement = "test-pg-db"
+        }
       }
       prometheus.scrape "test_pg_db" {
-        targets = database_observability.postgres.test_pg_db.targets
+        targets = discovery.relabel.database_observability_postgres_test_pg_db.output
         clustering {
           enabled = true
         }
@@ -516,19 +567,6 @@ data:
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         scrape_native_histograms = false
-        forward_to = [prometheus.relabel.test_pg_db.receiver]
-      }
-    
-      prometheus.relabel "test_pg_db" {
-        max_cache_size = 100000
-        rule {
-          target_label = "instance"
-          replacement = "test-pg-db"
-        }
-        rule {
-          target_label = "job"
-          replacement = "integrations/db-o11y"
-        }
         forward_to = argument.metrics_destinations.value
       }
     }

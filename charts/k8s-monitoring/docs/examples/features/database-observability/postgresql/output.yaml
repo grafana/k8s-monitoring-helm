@@ -364,10 +364,42 @@ data:
         }
         enable_collectors = ["explain_plans","query_details","query_samples","schema_details"]
     
+        forward_to = [loki.relabel.database_observability_postgres_test_database.receiver]
+      }
+    
+      loki.relabel "database_observability_postgres_test_database" {
         forward_to = argument.logs_destinations.value
+        rule {
+          target_label = "job"
+          replacement = "integrations/db-o11y"
+        }
+        rule {
+          source_labels = ["instance"]
+          target_label = "dsn"
+        }
+        rule {
+          target_label = "instance"
+          replacement = "test-database"
+        }
+      }
+    
+      discovery.relabel "database_observability_postgres_test_database" {
+        targets = database_observability.postgres.test_database.targets
+        rule {
+          target_label = "job"
+          replacement = "integrations/db-o11y"
+        }
+        rule {
+          source_labels = ["instance"]
+          target_label = "dsn"
+        }
+        rule {
+          target_label = "instance"
+          replacement = "test-database"
+        }
       }
       prometheus.scrape "test_database" {
-        targets = database_observability.postgres.test_database.targets
+        targets = discovery.relabel.database_observability_postgres_test_database.output
         clustering {
           enabled = true
         }
@@ -377,19 +409,6 @@ data:
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         scrape_native_histograms = false
-        forward_to = [prometheus.relabel.test_database.receiver]
-      }
-    
-      prometheus.relabel "test_database" {
-        max_cache_size = 100000
-        rule {
-          target_label = "instance"
-          replacement = "test-database"
-        }
-        rule {
-          target_label = "job"
-          replacement = "integrations/db-o11y"
-        }
         forward_to = argument.metrics_destinations.value
       }
     }

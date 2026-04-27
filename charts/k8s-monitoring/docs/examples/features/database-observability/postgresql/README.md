@@ -30,7 +30,6 @@ integrations:
   postgresql:
     instances:
       - name: test-database
-        jobLabel: integrations/db-o11y
         exporter:
           dataSource:
             host: test-database-postgresql.postgresql.svc

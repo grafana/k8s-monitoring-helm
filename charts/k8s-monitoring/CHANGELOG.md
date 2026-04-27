@@ -8,6 +8,8 @@
 *   Warn in NOTES.txt when installing into an Istio-enabled namespace with Alloy clustering using the default "http" port name, which breaks clustering peer discovery and causes duplicate metrics (@petewall)
 *   PostgreSQL: Add `statementsLimit` option to the Database Observability `queryDetails` collector (@petewall)
 *   Normalize collector and destination names to DNS-1123 resource names so mixed-case or underscore-containing keys (e.g. `alloyMetrics`, `my_dest`) render valid Kubernetes resources, and fail when two keys collapse to the same normalized name (@petewall)
+*   Database Observability: fix relabeling for MySQL and PostgreSQL so both metrics and logs carry `job=integrations/db-o11y`, the configured `instance` name, and a `dsn` label for Knowledge Graph integration. Breaking change for users on `databaseObservability.enabled: true`: the default `job` label is now `integrations/db-o11y` (was `integration/mysql` for MySQL and `integration/postgresql` for PostgreSQL), and the `instance` label on db o11y logs is the instance name (was the raw DSN, which now lives on the `dsn` label) (@cristiangreco)
+
 
 ## 4.0.3
 
