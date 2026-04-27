@@ -152,6 +152,21 @@ tests:
             \s+  drop_counter_reason = "loki-drop-log-level"
             \s+}
 
+  - it: should gate the logfmt parser on a line filter to avoid spam from non-logfmt components (issue 1726)
+    set:
+      testing: {enabled: true}
+      loki:
+        instances:
+          - name: loki
+            labelSelectors:
+              app.kubernetes.io/name: loki
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["logs.alloy"]
+          pattern: 'selector = `\{integration="loki",instance="loki"\} \|~ "\^ts="`'
+
   - it: should allow you to exclude log lines
     set:
       deployAsConfigMap: true

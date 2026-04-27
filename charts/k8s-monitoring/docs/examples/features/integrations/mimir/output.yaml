@@ -661,35 +661,42 @@ data:
         stage.match {
           selector = "{integration=\"mimir\",instance=\"mimir\"}"
     
-          // extract some of the fields from the log line
-          stage.logfmt {
-            mapping = {
-              "ts" = "",
-              "level" = "",
-            }
-          }
+          // Only run the logfmt parser on lines that look like Mimir's logfmt format (start with "ts=").
+          // Components like the gateway (nginx) emit non-logfmt lines and would otherwise produce
+          // a flood of "failed to decode logfmt" errors. See https://github.com/grafana/k8s-monitoring-helm/issues/1726
+          stage.match {
+            selector = `{integration="mimir",instance="mimir"} |~ "^ts="`
     
-          // set the level as a label
-          stage.labels {
-            values = {
-              level = "level",
+            // extract some of the fields from the log line
+            stage.logfmt {
+              mapping = {
+                "ts" = "",
+                "level" = "",
+              }
             }
-          }
-          // reset the timestamp to the extracted value
-          stage.timestamp {
-            source = "ts"
-            format = "RFC3339Nano"
-          }
-          // remove the timestamp from the log line
-          stage.replace {
-            expression = `(?:^|\s+)(ts=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+[^ ]*\s+)`
-            replace = ""
-          }
-          // drop certain log levels
-          stage.drop {
-            source = "level"
-            expression = "(?i)(debug)"
-            drop_counter_reason = "mimir-drop-log-level"
+    
+            // set the level as a label
+            stage.labels {
+              values = {
+                level = "level",
+              }
+            }
+            // reset the timestamp to the extracted value
+            stage.timestamp {
+              source = "ts"
+              format = "RFC3339Nano"
+            }
+            // remove the timestamp from the log line
+            stage.replace {
+              expression = `(?:^|\s+)(ts=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+[^ ]*\s+)`
+              replace = ""
+            }
+            // drop certain log levels
+            stage.drop {
+              source = "level"
+              expression = "(?i)(debug)"
+              drop_counter_reason = "mimir-drop-log-level"
+            }
           }
     
         }
