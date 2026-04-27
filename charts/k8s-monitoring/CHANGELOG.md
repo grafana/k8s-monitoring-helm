@@ -31,7 +31,7 @@
 *   Update Alloy Operator, Beyla, Node Exporter, and Windows Exporter (@petewall)
 *   Fix serviceGraphMetrics routing metrics to the wrong OTLP destination when multiple destinations are defined (@petewall)
 *   Fix pre-delete hook failing when the finalizer is not present (@petewall)
-*   Remove /var/configs cvolume from OpenCost which could cause problems (@petewall)
+*   Remove /var/configs volume from OpenCost which could cause problems (@petewall)
 
 ## 4.0.0
 
