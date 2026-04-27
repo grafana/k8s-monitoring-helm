@@ -56,7 +56,9 @@ tests:
 
             # Issue 1726: alloy must not spam "failed to decode logfmt" errors when scraping
             # non-logfmt lines from the Grafana pod (e.g. early init output, crash dumps).
-            - query: count_over_time({cluster="$CLUSTER"} |= `failed to decode logfmt`[10m])
+            # Scoped to the alloy collector container so it doesn't match incidental occurrences
+            # of the phrase in the Loki backend's own logs or in the query-test pod's command output.
+            - query: count_over_time({cluster="$CLUSTER", container="alloy"} |= `failed to decode logfmt`[10m])
               type: logql
               expect:
                 count: 0

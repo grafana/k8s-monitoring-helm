@@ -137,15 +137,17 @@ tests:
               type: logql
 
             # Issue 1726: alloy must not spam "failed to decode logfmt" errors when scraping
-            # the Loki gateway (nginx) and other non-logfmt components.
-            - query: count_over_time({cluster="$CLUSTER"} |= `failed to decode logfmt`[10m])
+            # the Loki gateway (nginx) and other non-logfmt components. Scoped to the alloy
+            # collector container so it doesn't match incidental occurrences of the phrase
+            # in the Loki backend's own logs or in the query-test pod's command output.
+            - query: count_over_time({cluster="$CLUSTER", container="alloy"} |= `failed to decode logfmt`[10m])
               type: logql
               expect:
                 count: 0
 
-            # Issue 1726: gateway pod logs (nginx access logs, non-logfmt) must still reach
-            # Loki under the integration="loki" label after the line-filter fix.
-            - query: count_over_time({cluster="$CLUSTER", integration="loki", job="loki/gateway"}[10m])
+            # Issue 1726: gateway pod logs (the nginx container, emitting non-logfmt access logs)
+            # must still reach Loki under the integration="loki" label after the line-filter fix.
+            - query: count_over_time({cluster="$CLUSTER", integration="loki", container="nginx"}[10m])
               type: logql
 
             # Issue 1726: real Loki backend logs (logfmt) must still get the level label,
