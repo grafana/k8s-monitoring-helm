@@ -154,6 +154,21 @@ tests:
             \s+  drop_counter_reason = "grafana-drop-log-level"
             \s+}
 
+  - it: should gate the logfmt parser on a line filter to avoid spam from non-logfmt lines (issue 1726)
+    set:
+      testing: {enabled: true}
+      grafana:
+        instances:
+          - name: grafana
+            labelSelectors:
+              app.kubernetes.io/name: grafana
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["logs.alloy"]
+          pattern: 'selector = `\{job="integrations/grafana",instance="grafana"\} \|~ "\^t="`'
+
   - it: should allow you to exclude log lines
     set:
       testing: {enabled: true}

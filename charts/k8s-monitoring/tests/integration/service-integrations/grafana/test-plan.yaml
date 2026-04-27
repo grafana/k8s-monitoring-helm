@@ -54,6 +54,18 @@ tests:
             - query: count_over_time({cluster="$CLUSTER", job="integrations/grafana"}[1h])
               type: logql
 
+            # Issue 1726: alloy must not spam "failed to decode logfmt" errors when scraping
+            # non-logfmt lines from the Grafana pod (e.g. early init output, crash dumps).
+            - query: count_over_time({cluster="$CLUSTER"} |= `failed to decode logfmt`[10m])
+              type: logql
+              expect:
+                count: 0
+
+            # Issue 1726: real Grafana logs (logfmt) must still get the level label,
+            # proving the inner stage.match still parses them.
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/grafana", level=~"info|warn|error"}[10m])
+              type: logql
+
             # DPM check
             - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
               type: promql
