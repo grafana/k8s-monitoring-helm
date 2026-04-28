@@ -87,5 +87,18 @@
     {{- if (eq $destination.type "otlp") }}
       {{- include "destinations.otlp.validate" (dict "Values" . "Destination" $destination "DestinationName" $destinationName) -}}
     {{- end }}
+
+    {{/* Validate the rules.collector reference for destinations that opt into rule sync. */}}
+    {{- if and (dig "rules" "enabled" false $destination) (dig "rules" "collector" "" $destination) }}
+      {{- $rulesCollector := $destination.rules.collector }}
+      {{- $enabledCollectors := include "collectors.list.enabled" $ | fromYamlArray }}
+      {{- if not (has $rulesCollector $enabledCollectors) }}
+        {{- $msg := list "" (printf "Destination \"%s\" has rules.enabled=true, but rules.collector \"%s\" is not an enabled collector." $destinationName $rulesCollector) }}
+        {{- $msg = append $msg "Set rules.collector to one of the enabled collectors:" }}
+        {{- range $c := $enabledCollectors }}{{- $msg = append $msg (printf "  %s" $c) }}{{- end }}
+        {{- $msg = append $msg "or leave rules.collector unset to use the first enabled collector." }}
+        {{- fail (join "\n" $msg) }}
+      {{- end }}
+    {{- end }}
   {{- end }}
 {{- end }}

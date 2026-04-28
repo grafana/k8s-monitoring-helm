@@ -1,0 +1,21 @@
+---
+cluster:
+  name: prom-rules-cluster
+
+destinations:
+  mimir:
+    type: prometheus
+    url: http://mimir.mimir.svc:9009/api/v1/push
+    rules:
+      enabled: true
+      address: http://mimir.mimir.svc:9009/
+      collector: alloy-singleton
+      syncInterval: 15s
+      mimirNamespacePrefix: integration-test
+
+# selfReporting is on by default and pushes `grafana_kubernetes_monitoring_build_info`,
+# which feeds the recording rules so they have data to evaluate against.
+
+collectors:
+  alloy:
+    enabled: true

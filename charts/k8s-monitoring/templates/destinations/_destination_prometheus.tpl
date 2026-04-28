@@ -321,3 +321,154 @@ prometheus.remote_write.{{ include "helper.alloy_name" $.destinationName }}.rece
 {{- define "destinations.prometheus.supports_traces" }}false{{ end -}}
 {{- define "destinations.prometheus.supports_profiles" }}false{{ end -}}
 {{- define "destinations.prometheus.ecosystem" }}prometheus{{ end -}}
+
+{{/* Renders a mimir.rules.kubernetes block for one prometheus destination, gated to a single collector. */}}
+{{/* Inputs: . (root context with Values), destination (merged destination config), destinationName (string), collectorName (string) */}}
+{{- define "destinations.prometheus.rules.alloy" }}
+{{- with .destination }}
+{{- if and .rules .rules.enabled }}
+{{- $rulesCollector := .rules.collector }}
+{{- if not $rulesCollector }}
+  {{- $enabledCollectors := include "collectors.list.enabled" $ | fromYamlArray }}
+  {{- if $enabledCollectors }}{{ $rulesCollector = index $enabledCollectors 0 }}{{- end }}
+{{- end }}
+{{- if eq $rulesCollector $.collectorName }}
+mimir.rules.kubernetes {{ include "helper.alloy_name" $.destinationName | quote }} {
+{{- if .rules.addressFrom }}
+  address = {{ .rules.addressFrom }}
+{{- else if .rules.address }}
+  address = {{ .rules.address | quote }}
+{{- else if .urlFrom }}
+  address = {{ .urlFrom }}
+{{- else }}
+  address = {{ .url | quote }}
+{{- end }}
+{{- if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "tenantId")) "true" }}
+  tenant_id = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "tenantId" "nonsensitive" true) }}
+{{- end }}
+  sync_interval = {{ .rules.syncInterval | quote }}
+  mimir_namespace_prefix = {{ .rules.mimirNamespacePrefix | quote }}
+{{- if .rules.useLegacyRoutes }}
+  use_legacy_routes = true
+{{- end }}
+{{- if ne .rules.prometheusHttpPrefix "/prometheus" }}
+  prometheus_http_prefix = {{ .rules.prometheusHttpPrefix | quote }}
+{{- end }}
+
+{{- if eq (include "secrets.authType" .) "basic" }}
+  basic_auth {
+    username = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.username" "nonsensitive" true) }}
+    password = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.password") }}
+  }
+{{- else if eq (include "secrets.authType" .) "bearerToken" }}
+  authorization {
+    type = "Bearer"
+{{- if .auth.bearerTokenFile }}
+    credentials_file = {{ .auth.bearerTokenFile | quote }}
+{{- else }}
+    credentials = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.bearerToken") }}
+{{- end }}
+  }
+{{- else if eq (include "secrets.authType" .) "oauth2" }}
+  oauth2 {
+    client_id = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.oauth2.clientId" "nonsensitive" true) }}
+{{- if eq .auth.oauth2.clientSecretFile "" }}
+    client_secret = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.oauth2.clientSecret") }}
+{{- else }}
+    client_secret_file = {{ .auth.oauth2.clientSecretFile | quote }}
+{{- end }}
+{{- if .auth.oauth2.scopes }}
+    scopes = {{ .auth.oauth2.scopes | toJson }}
+{{- end }}
+{{- if .auth.oauth2.tokenURL }}
+    token_url = {{ .auth.oauth2.tokenURL | quote }}
+{{- end }}
+  }
+{{- end }}
+
+{{- if .tls }}
+{{- $hasTLS := false }}
+{{- if .tls.insecureSkipVerify }}{{ $hasTLS = true }}{{- end }}
+{{- if .tls.caFile }}{{ $hasTLS = true }}{{- end }}
+{{- if .tls.certFile }}{{ $hasTLS = true }}{{- end }}
+{{- if .tls.keyFile }}{{ $hasTLS = true }}{{- end }}
+{{- if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "tls.ca")) "true" }}{{ $hasTLS = true }}{{- end }}
+{{- if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "tls.cert")) "true" }}{{ $hasTLS = true }}{{- end }}
+{{- if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "tls.key")) "true" }}{{ $hasTLS = true }}{{- end }}
+{{- if $hasTLS }}
+  tls_config {
+    insecure_skip_verify = {{ .tls.insecureSkipVerify | default false }}
+{{- if .tls.caFile }}
+    ca_file = {{ .tls.caFile | quote }}
+{{- else if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "tls.ca")) "true" }}
+    ca_pem = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "tls.ca" "nonsensitive" true) }}
+{{- end }}
+{{- if .tls.certFile }}
+    cert_file = {{ .tls.certFile | quote }}
+{{- else if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "tls.cert")) "true" }}
+    cert_pem = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "tls.cert" "nonsensitive" true) }}
+{{- end }}
+{{- if .tls.keyFile }}
+    key_file = {{ .tls.keyFile | quote }}
+{{- else if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "tls.key")) "true" }}
+    key_pem = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "tls.key") }}
+{{- end }}
+  }
+{{- end }}
+{{- end }}
+
+{{- if .proxyURL }}
+  proxy_url = {{ .proxyURL | quote }}
+{{- end }}
+
+{{- range $namespace := .rules.namespaces }}
+  rule_namespace {
+    name = {{ $namespace | quote }}
+  }
+{{- end }}
+
+{{- if or .rules.namespaceLabelSelectors .rules.namespaceLabelExpressions }}
+  rule_namespace_selector {
+{{- if .rules.namespaceLabelSelectors }}
+    match_labels = {
+{{- range $key, $value := .rules.namespaceLabelSelectors }}
+      {{ $key | quote }} = {{ $value | quote }},
+{{- end }}
+    }
+{{- end }}
+{{- range $expression := .rules.namespaceLabelExpressions }}
+    match_expression {
+      key = {{ $expression.key | quote }}
+      operator = {{ $expression.operator | quote }}
+      {{ if $expression.values }}values = {{ $expression.values | toJson }}{{ end }}
+    }
+{{- end }}
+  }
+{{- end }}
+
+{{- if or .rules.labelSelectors .rules.labelExpressions }}
+  rule_selector {
+{{- if .rules.labelSelectors }}
+    match_labels = {
+{{- range $key, $value := .rules.labelSelectors }}
+      {{ $key | quote }} = {{ $value | quote }},
+{{- end }}
+    }
+{{- end }}
+{{- range $expression := .rules.labelExpressions }}
+    match_expression {
+      key = {{ $expression.key | quote }}
+      operator = {{ $expression.operator | quote }}
+      {{ if $expression.values }}values = {{ $expression.values | toJson }}{{ end }}
+    }
+{{- end }}
+  }
+{{- end }}
+{{- if .rules.extraArguments }}
+{{ .rules.extraArguments | indent 2 }}
+{{- end }}
+} // mimir.rules.kubernetes "{{ include "helper.alloy_name" $.destinationName }}"
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end -}}

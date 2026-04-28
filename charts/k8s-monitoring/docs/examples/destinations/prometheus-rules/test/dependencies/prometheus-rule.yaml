@@ -1,0 +1,32 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: integration-test-rules
+  namespace: default
+  labels:
+    app.kubernetes.io/name: integration-test
+spec:
+  groups:
+    - name: integration-test-recording
+      interval: 15s
+      rules:
+        # Recording rule based on a chart-emitted metric. The chart's selfReporting feature
+        # pushes `grafana_kubernetes_monitoring_build_info` to Mimir, so this rule will
+        # produce a non-zero result once Alloy syncs the rule to the Mimir Ruler.
+        - record: integration_test_chart_present
+          expr: count(grafana_kubernetes_monitoring_build_info)
+          labels:
+            integration_test: "true"
+    - name: integration-test-alerting
+      interval: 15s
+      rules:
+        # Always-firing alert proves the alerting rule was synced to the Ruler.
+        - alert: IntegrationTestAlwaysFiring
+          expr: vector(1)
+          for: 0s
+          labels:
+            severity: info
+            integration_test: "true"
+          annotations:
+            summary: "Always-firing alert used to verify rule sync"

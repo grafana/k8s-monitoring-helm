@@ -32,3 +32,19 @@
   {{- end }}
 {{- end }}
 {{- end }}
+
+{{/* Renders mimir.rules.kubernetes blocks for any prometheus destination with rules.enabled.
+     Each block is gated to the destination's chosen collector, so exactly one Alloy instance
+     owns rule synchronization with the Mimir Ruler API. */}}
+{{/* Inputs: . (root object), collectorName (string) */}}
+{{- define "destinations.alloy.rules" }}
+{{- range $destinationName, $destination := $.Values.destinations }}
+  {{- if eq $destination.type "prometheus" }}
+    {{- $defaultValues := (printf "destinations/%s-values.yaml" $destination.type) | $.Files.Get | fromYaml }}
+    {{- $destinationWithDefaults := mergeOverwrite $defaultValues $destination }}
+    {{- if and $destinationWithDefaults.rules $destinationWithDefaults.rules.enabled }}
+      {{- include "destinations.prometheus.rules.alloy" (deepCopy $ | merge (dict "destination" $destinationWithDefaults "destinationName" $destinationName "collectorName" $.collectorName)) | nindent 0 }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- end }}
