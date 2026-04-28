@@ -3,9 +3,11 @@
 ## 3.8.8
 
 *   Fix the pre-delete and post-install Alloy-finalizer hook templates failing to render when `alloy-operator.waitForAlloyRemoval.securityContext` is set to `null` (#2569) (@petewall)
+*   Set Prometheus destination cluster labels via `external_labels` instead of `write_relabel_config` blocks, matching the Loki destination pattern (@petewall)
 *   Fix Loki, Mimir, and Grafana integrations spamming `failed to decode logfmt` errors for non-logfmt components like the Loki/Mimir gateway (nginx) and canary, by gating the logfmt parser on lines that look like logfmt (#1726) (@petewall)
 *   Set `appProtocol` on the OTLP, Zipkin, and Jaeger HTTP/gRPC ports registered by the Application Observability feature, and pass `appProtocol` from `collectors.<name>.alloy.extraPorts` through to the optional receiver Service, so Istio sidecars reliably pick the right L7 filter instead of falling back to protocol sniffing (@petewall)
 *   Change Alloy collector `labels` and `annotations` defaults from arrays to maps, and accept either type in the schema for backwards compatibility (@petewall)
+*   Update Alloy Operator, Beyla, KSM, OpenCost, Node Exporter, and Prom Operator CRDs (@petewall)
 
 ## 3.8.7
 

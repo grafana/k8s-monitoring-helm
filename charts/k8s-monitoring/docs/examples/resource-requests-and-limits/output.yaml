@@ -784,25 +784,16 @@ data:
           retry_on_http_429 = true
           sample_age_limit = "0s"
         }
-    
-        write_relabel_config {
-          source_labels = ["cluster"]
-          regex = ""
-          replacement = "resources-example-cluster"
-          target_label = "cluster"
-        }
-        write_relabel_config {
-          source_labels = ["k8s_cluster_name"]
-          regex = ""
-          replacement = "resources-example-cluster"
-          target_label = "k8s_cluster_name"
-        }
       }
     
       wal {
         truncate_frequency = "2h"
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
+      }
+      external_labels = {
+        "cluster" = "resources-example-cluster",
+        "k8s_cluster_name" = "resources-example-cluster",
       }
     }
   self-reporting-metric.prom: |
