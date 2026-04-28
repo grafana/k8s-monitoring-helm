@@ -1,0 +1,55 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: keda-autoscaling
+
+subject:
+  releaseName: k8smon
+  path: ../../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: dependencies/keda.yaml
+  - preset: prometheus
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: keda-autoscaling-example-cluster
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+          queries:
+            # Alloy is exposing its own metrics
+            - query: alloy_build_info{cluster="$CLUSTER", job="integrations/alloy"}
+              type: promql
+            # The custom metric KEDA scales on is being collected
+            - query: prometheus_remote_write_wal_storage_active_series{cluster="$CLUSTER", job="integrations/alloy"}
+              type: promql
+
+            # KEDA created an HPA from the ScaledObject (named keda-hpa-<scaledobject>)
+            - query: kube_horizontalpodautoscaler_spec_max_replicas{cluster="$CLUSTER", horizontalpodautoscaler="keda-hpa-alloy-metrics"}
+              type: promql
+              expect:
+                value: 10
+                operator: ==
+            - query: kube_horizontalpodautoscaler_spec_min_replicas{cluster="$CLUSTER", horizontalpodautoscaler="keda-hpa-alloy-metrics"}
+              type: promql
+              expect:
+                value: 1
+                operator: ==
+            - query: kube_horizontalpodautoscaler_status_current_replicas{cluster="$CLUSTER", horizontalpodautoscaler="keda-hpa-alloy-metrics"}
+              type: promql
