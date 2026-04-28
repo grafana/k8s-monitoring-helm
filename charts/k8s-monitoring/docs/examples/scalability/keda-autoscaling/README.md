@@ -5,9 +5,9 @@
 # KEDA Autoscaling Example
 
 This example shows how to use [KEDA](https://keda.sh/) to autoscale the Alloy collector based on Alloy's own
-custom metric `alloy_wal_storage_active_series`. This metric tracks the number of active series the Alloy
-instance is buffering in its write-ahead log, and is a better signal of telemetry workload than CPU or memory
-alone.
+custom metric `prometheus_remote_write_wal_storage_active_series`. This metric tracks the number of active
+series Alloy is buffering in its write-ahead log on the way to the Prometheus destination, and is a better
+signal of telemetry workload than CPU or memory alone.
 
 The Alloy integration is enabled so Alloy scrapes its own metrics and ships them to Prometheus, where KEDA
 queries them through a Prometheus trigger on a `ScaledObject`. The native Alloy autoscaling is left disabled
@@ -53,7 +53,7 @@ collectors:
           cpu: "1m"
           memory: "500Mi"
     # Native HPA is intentionally disabled. KEDA's ScaledObject below creates and manages an HPA
-    # that scales on Alloy's own custom metric `alloy_wal_storage_active_series`.
+    # that scales on Alloy's own custom metric (active series in the Prometheus remote_write WAL).
     controller:
       autoscaling:
         enabled: false
@@ -86,6 +86,6 @@ extraObjects:
             serverAddress: http://prometheus-server.prometheus.svc:9090
             threshold: "100000"
             query: |
-              avg(alloy_wal_storage_active_series{cluster="keda-autoscaling-example-cluster", job="integrations/alloy"})
+              avg(prometheus_remote_write_wal_storage_active_series{cluster="keda-autoscaling-example-cluster", job="integrations/alloy"})
 ```
 <!-- textlint-enable terminology -->
