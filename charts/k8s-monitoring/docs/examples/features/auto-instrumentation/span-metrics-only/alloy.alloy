@@ -14,10 +14,12 @@ declare "application_observability" {
 
   // OTLP Receiver
   otelcol.receiver.otlp "receiver" {
-    http {
-      endpoint = "0.0.0.0:4318"
+    grpc {
+      endpoint = "0.0.0.0:4317"
       include_metadata = false
-      max_request_body_size = "20MiB"
+      max_recv_msg_size = "4MiB"
+      read_buffer_size = "512KiB"
+      write_buffer_size = "32KiB"
     }
     debug_metrics {
       disable_high_cardinality_metrics = true
@@ -50,16 +52,6 @@ declare "application_observability" {
     passthrough = false
     extract {
       metadata = ["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time"]
-      label {
-        from = "namespace"
-        key = "example.com/team"
-        tag_name = "team"
-      }
-      annotation {
-        from = "namespace"
-        key = "example.com/product"
-        tag_name = "product"
-      }
     }
     pod_association {
       source {
@@ -98,13 +90,6 @@ declare "application_observability" {
   // Transform Processor
   otelcol.processor.transform "default" {
     error_mode = "ignore"
-    metric_statements {
-      context = "datapoint"
-      statements = [
-        "set(attributes[\"product\"], resource.attributes[\"product\"])",
-        "set(attributes[\"team\"], resource.attributes[\"team\"])",
-      ]
-    }
     log_statements {
       context = "resource"
       statements = [
@@ -151,9 +136,145 @@ application_observability "feature" {
     otelcol.processor.attributes.tempo.input,
   ]
 }
+// Feature: Auto-Instrumentation
+declare "auto_instrumentation" {
+  argument "metrics_destinations" {
+    comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+  }
+
+  discovery.kubernetes "beyla_pods" {
+    role = "pod"
+    namespaces {
+      own_namespace = true
+    }
+    selectors {
+      role = "pod"
+      label = "app.kubernetes.io/name=beyla"
+    }
+  }
+
+  discovery.relabel "beyla_pods" {
+    targets = discovery.kubernetes.beyla_pods.targets
+    rule {
+      source_labels = ["__meta_kubernetes_pod_node_name"]
+      action = "replace"
+      target_label = "instance"
+    }
+  }
+
+  prometheus.scrape "beyla_applications" {
+    targets         = discovery.relabel.beyla_pods.output
+    honor_labels    = true
+    scrape_interval = "60s"
+    scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+    scrape_classic_histograms = false
+    scrape_native_histograms = false
+    clustering {
+      enabled = true
+    }
+    forward_to = argument.metrics_destinations.value
+  }
+
+  prometheus.scrape "beyla_internal" {
+    targets         = discovery.relabel.beyla_pods.output
+    metrics_path    = "/internal/metrics"
+    job_name        = "integrations/beyla"
+    honor_labels    = true
+    scrape_interval = "60s"
+    scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+    scrape_classic_histograms = false
+    scrape_native_histograms = false
+    clustering {
+      enabled = true
+    }
+    forward_to = argument.metrics_destinations.value
+  }
+}
+auto_instrumentation "feature" {
+  metrics_destinations = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+}
 
 
 
+
+
+
+
+
+
+
+
+
+
+// Self Reporting
+prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
+  set_collectors = ["textfile"]
+  textfile {
+    directory = "/etc/release-info"
+  }
+}
+
+discovery.relabel "kubernetes_monitoring_telemetry" {
+  targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
+  rule {
+    target_label = "instance"
+    action = "replace"
+    replacement = "k8smon"
+  }
+  rule {
+    target_label = "job"
+    action = "replace"
+    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  }
+}
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+  scrape_interval = "60s"
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+}
+
+prometheus.relabel "kubernetes_monitoring_telemetry" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "grafana_kubernetes_monitoring_.*"
+    action = "keep"
+  }
+  forward_to = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+}
+
+
+
+
+// Destination: loki (loki)
+otelcol.exporter.loki "loki" {
+  forward_to = [loki.write.loki.receiver]
+}
+
+loki.write "loki" {
+  endpoint {
+    url = "http://loki.logging.svc:3100/loki/api/v1/push"
+    retry_on_http_429 = true
+    tls_config {
+      insecure_skip_verify = false
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+  external_labels = {
+    "cluster" = "span-metrics-only-cluster",
+    "k8s_cluster_name" = "span-metrics-only-cluster",
+  }
+}
 
 // Destination: prometheus (prometheus)
 otelcol.exporter.prometheus "prometheus" {
@@ -164,7 +285,7 @@ otelcol.exporter.prometheus "prometheus" {
 
 prometheus.remote_write "prometheus" {
   endpoint {
-    url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+    url = "http://prometheus.monitoring.svc:9090/api/v1/write"
     headers = {
     }
     tls_config {
@@ -191,33 +312,12 @@ prometheus.remote_write "prometheus" {
     max_keepalive_time = "8h"
   }
   external_labels = {
-    "cluster" = "pod-labels-and-annotations",
-    "k8s_cluster_name" = "pod-labels-and-annotations",
+    "cluster" = "span-metrics-only-cluster",
+    "k8s_cluster_name" = "span-metrics-only-cluster",
   }
-}
-// Destination: loki (loki)
-otelcol.exporter.loki "loki" {
-  forward_to = [loki.write.loki.receiver]
 }
 
-loki.write "loki" {
-  endpoint {
-    url = "http://loki.loki.svc:3100/api/push"
-    retry_on_http_429 = true
-    tls_config {
-      insecure_skip_verify = false
-    }
-    min_backoff_period = "500ms"
-    max_backoff_period = "5m"
-    max_backoff_retries = "10"
-  }
-  external_labels = {
-    "cluster" = "pod-labels-and-annotations",
-    "k8s_cluster_name" = "pod-labels-and-annotations",
-  }
-}
 // Destination: tempo (otlp)
-
 otelcol.processor.attributes "tempo" {
   output {
     traces = [otelcol.processor.transform.tempo.input]
@@ -230,8 +330,8 @@ otelcol.processor.transform "tempo" {
   trace_statements {
     context = "resource"
     statements = [
-      `set(attributes["cluster"], "pod-labels-and-annotations")`,
-      `set(attributes["k8s.cluster.name"], "pod-labels-and-annotations")`,
+      `set(attributes["cluster"], "span-metrics-only-cluster")`,
+      `set(attributes["k8s.cluster.name"], "span-metrics-only-cluster")`,
       `delete_key(attributes, "process.pid")`,
       `delete_key(attributes, "process.parent_pid")`,
       `delete_key(attributes, "process.executable.path")`,
@@ -267,9 +367,9 @@ otelcol.processor.batch "tempo" {
 }
 otelcol.exporter.otlp "tempo" {
   client {
-    endpoint = "http://tempo.tempo.svc"
+    endpoint = "http://tempo.tracing.svc:4317"
     tls {
-      insecure = false
+      insecure = true
       insecure_skip_verify = false
     }
   }

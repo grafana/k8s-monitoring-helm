@@ -1,56 +1,80 @@
-// Feature: Prometheus Operator Objects
-declare "prometheus_operator_objects" {
+// Feature: Auto-Instrumentation
+declare "auto_instrumentation" {
   argument "metrics_destinations" {
     comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
   }
 
-  // Prometheus Operator PodMonitor objects
-  prometheus.operator.podmonitors "pod_monitors" {
+  discovery.kubernetes "beyla_pods" {
+    role = "pod"
+    namespaces {
+      own_namespace = true
+    }
+    selectors {
+      role = "pod"
+      label = "app.kubernetes.io/name=beyla"
+    }
+  }
+
+  discovery.relabel "beyla_pods" {
+    targets = discovery.kubernetes.beyla_pods.targets
+    rule {
+      source_labels = ["__meta_kubernetes_pod_node_name"]
+      action = "replace"
+      target_label = "instance"
+    }
+  }
+
+  prometheus.scrape "beyla_applications" {
+    targets         = discovery.relabel.beyla_pods.output
+    honor_labels    = true
+    scrape_interval = "60s"
+    scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+    scrape_classic_histograms = false
+    scrape_native_histograms = false
     clustering {
       enabled = true
-    }
-    scrape {
-      default_scrape_interval = "60s"
-      default_scrape_timeout = "10s"
     }
     forward_to = argument.metrics_destinations.value
   }
 
-  // Prometheus Operator Probe objects
-  prometheus.operator.probes "probes" {
+  prometheus.scrape "beyla_internal" {
+    targets         = discovery.relabel.beyla_pods.output
+    metrics_path    = "/internal/metrics"
+    job_name        = "integrations/beyla"
+    honor_labels    = true
+    scrape_interval = "60s"
+    scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+    scrape_classic_histograms = false
+    scrape_native_histograms = false
     clustering {
       enabled = true
-    }
-    scrape {
-      default_scrape_interval = "60s"
-      default_scrape_timeout = "10s"
-    }
-    forward_to = argument.metrics_destinations.value
-  }
-
-  // Prometheus Operator ServiceMonitor objects
-  prometheus.operator.servicemonitors "service_monitors" {
-    kubernetes_role = "endpointslice"
-    clustering {
-      enabled = true
-    }
-    scrape {
-      default_scrape_interval = "60s"
-      default_scrape_timeout = "10s"
     }
     forward_to = argument.metrics_destinations.value
   }
 }
-prometheus_operator_objects "feature" {
+auto_instrumentation "feature" {
   metrics_destinations = [
     prometheus.remote_write.prometheus.receiver,
   ]
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Self Reporting
 prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   set_collectors = ["textfile"]
   textfile {
-    directory = "/etc/alloy"
+    directory = "/etc/release-info"
   }
 }
 
@@ -104,11 +128,6 @@ prometheus.remote_write "prometheus" {
     url = "http://prometheus.prometheus.svc:9090/api/v1/write"
     headers = {
     }
-    sigv4 {
-      access_key = "my-access-key"
-      region = "ap-southeast-2"
-      secret_key = "my-secret-key"
-    }
     tls_config {
       insecure_skip_verify = false
     }
@@ -133,8 +152,8 @@ prometheus.remote_write "prometheus" {
     max_keepalive_time = "8h"
   }
   external_labels = {
-    "cluster" = "embedded-secrets-example-cluster",
-    "k8s_cluster_name" = "embedded-secrets-example-cluster",
+    "cluster" = "auto-instrumentation-with-rules-cluster",
+    "k8s_cluster_name" = "auto-instrumentation-with-rules-cluster",
   }
 }
 

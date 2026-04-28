@@ -247,14 +247,6 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
       retry_on_http_429 = {{ .queueConfig.retryOnHttp429 }}
       sample_age_limit = {{ .queueConfig.sampleAgeLimit | default "0s" | quote }}
     }
-{{ range $label := .clusterLabels }}
-    write_relabel_config {
-      source_labels = [{{ include "escape_label" $label | quote }}]
-      regex = ""
-      replacement = {{ $.Values.cluster.name | quote }}
-      target_label = {{ include "escape_label" $label | quote }}
-    }
-{{- end }}
 {{- if .metricEnrichment.podLabels }}
     write_relabel_config {
       regex = "__meta_kubernetes_namespace_pod"
@@ -271,8 +263,11 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
     min_keepalive_time = {{ .writeAheadLog.minKeepaliveTime | quote }}
     max_keepalive_time = {{ .writeAheadLog.maxKeepaliveTime | quote }}
   }
-{{- if or .extraLabels .extraLabelsFrom }}
+{{- if or .clusterLabels .extraLabels .extraLabelsFrom }}
   external_labels = {
+  {{- range $label := .clusterLabels }}
+    {{ include "escape_label" $label | quote }} = {{ $.Values.cluster.name | quote }},
+  {{- end }}
   {{- range $key, $value := .extraLabels }}
     {{ $key }} = {{ $value | quote }},
   {{- end }}
