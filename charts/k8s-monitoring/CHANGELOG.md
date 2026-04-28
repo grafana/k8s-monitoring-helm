@@ -3,6 +3,7 @@
 ## 4.0.4
 
 *   Set Prometheus destination cluster labels via `external_labels` instead of `write_relabel_config` blocks, matching the Loki destination pattern (@petewall)
+*   Fix Loki, Mimir, and Grafana integrations spamming `failed to decode logfmt` errors for non-logfmt components like the Loki/Mimir gateway (nginx) and canary, by gating the logfmt parser on lines that look like logfmt (#1726) (@petewall)
 *   Set `appProtocol` on the OTLP, Zipkin, and Jaeger HTTP/gRPC ports registered by the Application Observability feature, and pass `appProtocol` from `collectors.<name>.alloy.extraPorts` through to the optional receiver Service, so Istio sidecars reliably pick the right L7 filter instead of falling back to protocol sniffing (@petewall)
 *   Update Alloy Operator to 0.5.5 (@petewall)
 *   Change Alloy collector `labels` and `annotations` defaults from arrays to maps, and accept either type in the schema for backwards compatibility (@petewall)
@@ -31,7 +32,7 @@
 *   Update Alloy Operator, Beyla, Node Exporter, and Windows Exporter (@petewall)
 *   Fix serviceGraphMetrics routing metrics to the wrong OTLP destination when multiple destinations are defined (@petewall)
 *   Fix pre-delete hook failing when the finalizer is not present (@petewall)
-*   Remove /var/configs cvolume from OpenCost which could cause problems (@petewall)
+*   Remove /var/configs volume from OpenCost which could cause problems (@petewall)
 
 ## 4.0.0
 
