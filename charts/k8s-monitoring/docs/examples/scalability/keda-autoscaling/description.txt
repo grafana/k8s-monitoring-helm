@@ -1,0 +1,15 @@
+# KEDA Autoscaling Example
+
+This example shows how to use [KEDA](https://keda.sh/) to autoscale the Alloy collector based on Alloy's own
+custom metric `alloy_wal_storage_active_series`. This metric tracks the number of active series the Alloy
+instance is buffering in its write-ahead log, and is a better signal of telemetry workload than CPU or memory
+alone.
+
+The Alloy integration is enabled so Alloy scrapes its own metrics and ships them to Prometheus, where KEDA
+queries them through a Prometheus trigger on a `ScaledObject`. The native Alloy autoscaling is left disabled
+because KEDA creates and manages its own HorizontalPodAutoscaler.
+
+## Prerequisites
+
+KEDA must be installed in the cluster. See the
+[KEDA installation guide](https://keda.sh/docs/latest/deploy/).

@@ -1,0 +1,65 @@
+---
+cluster:
+  name: keda-autoscaling-example-cluster
+
+destinations:
+  prometheus:
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+
+clusterMetrics:
+  enabled: true
+  collector: alloy-metrics
+
+# Scrape Alloy's own metrics so they are available in Prometheus for KEDA to query.
+integrations:
+  collector: alloy-metrics
+  alloy:
+    instances:
+      - name: alloy-metrics
+        labelSelectors:
+          app.kubernetes.io/name: alloy-metrics
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    alloy:
+      resources:
+        requests:
+          cpu: "1m"
+          memory: "500Mi"
+    # Native HPA is intentionally disabled. KEDA's ScaledObject below creates and manages an HPA
+    # that scales on Alloy's own custom metric `alloy_wal_storage_active_series`.
+    controller:
+      autoscaling:
+        enabled: false
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+
+# KEDA must be installed in the cluster for the ScaledObject below to take effect.
+# See https://keda.sh/docs/latest/deploy/ for installation instructions.
+extraObjects:
+  - apiVersion: keda.sh/v1alpha1
+    kind: ScaledObject
+    metadata:
+      name: alloy-metrics
+      namespace: default
+    spec:
+      scaleTargetRef:
+        kind: StatefulSet
+        name: k8smon-alloy-metrics
+      minReplicaCount: 1
+      maxReplicaCount: 10
+      pollingInterval: 30
+      cooldownPeriod: 300
+      triggers:
+        - type: prometheus
+          metadata:
+            serverAddress: http://prometheus-server.prometheus.svc:9090
+            threshold: "100000"
+            query: |
+              avg(alloy_wal_storage_active_series{cluster="keda-autoscaling-example-cluster", job="integrations/alloy"})
