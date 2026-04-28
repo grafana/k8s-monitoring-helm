@@ -10,7 +10,7 @@ series Alloy is buffering in its write-ahead log on the way to the Prometheus de
 signal of telemetry workload than CPU or memory alone.
 
 The Alloy integration is enabled so Alloy scrapes its own metrics and ships them to Prometheus, where KEDA
-queries them through a Prometheus trigger on a `ScaledObject`. The native Alloy autoscaling is left disabled
+queries them through a Prometheus trigger on a `ScaledObject`. The native Alloy autoscaling is not used
 because KEDA creates and manages its own HorizontalPodAutoscaler.
 
 ## Prerequisites
