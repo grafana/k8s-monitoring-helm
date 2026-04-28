@@ -2,6 +2,7 @@
 
 ## 4.0.4
 
+*   Set Prometheus destination cluster labels via `external_labels` instead of `write_relabel_config` blocks, matching the Loki destination pattern (@petewall)
 *   Fix Loki, Mimir, and Grafana integrations spamming `failed to decode logfmt` errors for non-logfmt components like the Loki/Mimir gateway (nginx) and canary, by gating the logfmt parser on lines that look like logfmt (#1726) (@petewall)
 *   Set `appProtocol` on the OTLP, Zipkin, and Jaeger HTTP/gRPC ports registered by the Application Observability feature, and pass `appProtocol` from `collectors.<name>.alloy.extraPorts` through to the optional receiver Service, so Istio sidecars reliably pick the right L7 filter instead of falling back to protocol sniffing (@petewall)
 *   Update Alloy Operator to 0.5.5 (@petewall)

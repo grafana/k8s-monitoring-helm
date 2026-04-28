@@ -251,25 +251,16 @@ prometheus.remote_write "metrics_service" {
       retry_on_http_429 = true
       sample_age_limit = "0s"
     }
-
-    write_relabel_config {
-      source_labels = ["cluster"]
-      regex = ""
-      replacement = "external-secrets-example-cluster"
-      target_label = "cluster"
-    }
-    write_relabel_config {
-      source_labels = ["k8s_cluster_name"]
-      regex = ""
-      replacement = "external-secrets-example-cluster"
-      target_label = "k8s_cluster_name"
-    }
   }
 
   wal {
     truncate_frequency = "2h"
     min_keepalive_time = "5m"
     max_keepalive_time = "8h"
+  }
+  external_labels = {
+    "cluster" = "external-secrets-example-cluster",
+    "k8s_cluster_name" = "external-secrets-example-cluster",
   }
 }
 

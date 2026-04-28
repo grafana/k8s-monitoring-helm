@@ -557,25 +557,16 @@ data:
           retry_on_http_429 = true
           sample_age_limit = "0s"
         }
-    
-        write_relabel_config {
-          source_labels = ["cluster"]
-          regex = ""
-          replacement = "service-graph-metrics-test"
-          target_label = "cluster"
-        }
-        write_relabel_config {
-          source_labels = ["k8s_cluster_name"]
-          regex = ""
-          replacement = "service-graph-metrics-test"
-          target_label = "k8s_cluster_name"
-        }
       }
     
       wal {
         truncate_frequency = "2h"
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
+      }
+      external_labels = {
+        "cluster" = "service-graph-metrics-test",
+        "k8s_cluster_name" = "service-graph-metrics-test",
       }
     }
 ---
@@ -839,25 +830,16 @@ data:
           retry_on_http_429 = true
           sample_age_limit = "0s"
         }
-    
-        write_relabel_config {
-          source_labels = ["cluster"]
-          regex = ""
-          replacement = "service-graph-metrics-test"
-          target_label = "cluster"
-        }
-        write_relabel_config {
-          source_labels = ["k8s_cluster_name"]
-          regex = ""
-          replacement = "service-graph-metrics-test"
-          target_label = "k8s_cluster_name"
-        }
       }
     
       wal {
         truncate_frequency = "2h"
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
+      }
+      external_labels = {
+        "cluster" = "service-graph-metrics-test",
+        "k8s_cluster_name" = "service-graph-metrics-test",
       }
     }
     
@@ -1334,19 +1316,6 @@ spec:
               retry_on_http_429 = true
               sample_age_limit = "0s"
             }
-  
-            write_relabel_config {
-              source_labels = ["cluster"]
-              regex = ""
-              replacement = "service-graph-metrics-test"
-              target_label = "cluster"
-            }
-            write_relabel_config {
-              source_labels = ["k8s_cluster_name"]
-              regex = ""
-              replacement = "service-graph-metrics-test"
-              target_label = "k8s_cluster_name"
-            }
           }
   
           wal {
@@ -1355,6 +1324,8 @@ spec:
             max_keepalive_time = "8h"
           }
           external_labels = {
+            "cluster" = "service-graph-metrics-test",
+            "k8s_cluster_name" = "service-graph-metrics-test",
             collector_id = env("POD_NAME"),
           }
         }

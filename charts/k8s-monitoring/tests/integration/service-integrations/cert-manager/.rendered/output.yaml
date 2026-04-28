@@ -229,25 +229,16 @@ data:
           retry_on_http_429 = true
           sample_age_limit = "0s"
         }
-    
-        write_relabel_config {
-          source_labels = ["cluster"]
-          regex = ""
-          replacement = "cert-manager-integration-test"
-          target_label = "cluster"
-        }
-        write_relabel_config {
-          source_labels = ["k8s_cluster_name"]
-          regex = ""
-          replacement = "cert-manager-integration-test"
-          target_label = "k8s_cluster_name"
-        }
       }
     
       wal {
         truncate_frequency = "2h"
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
+      }
+      external_labels = {
+        "cluster" = "cert-manager-integration-test",
+        "k8s_cluster_name" = "cert-manager-integration-test",
       }
     }
 ---
