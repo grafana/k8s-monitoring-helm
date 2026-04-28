@@ -103,6 +103,9 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{- if dig "image" "pullSecrets" "" .Values.global }}
   {{- $globalValues = mergeOverwrite $globalValues (dict "global" (dict "image" (dict "pullSecrets" .Values.global.image.pullSecrets))) }}
 {{- end }}
+{{- if dig "image" "pullPolicy" "" .Values.global }}
+  {{- $globalValues = mergeOverwrite $globalValues (dict "global" (dict "image" (dict "pullPolicy" .Values.global.image.pullPolicy))) }}
+{{- end }}
 {{- if dig "podSecurityContext" "" .Values.global }}
   {{- $globalValues = mergeOverwrite $globalValues (dict "global" (dict "podSecurityContext" .Values.global.podSecurityContext)) }}
 {{- end }}

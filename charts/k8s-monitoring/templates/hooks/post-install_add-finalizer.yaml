@@ -11,6 +11,10 @@
 {{- if ((index .Values.global "image") | default dict).pullSecrets }}
   {{- $imagePullSecrets = (index .Values.global "image").pullSecrets }}
 {{- end }}
+{{- $imagePullPolicy := $jobSettings.image.pullPolicy }}
+{{- if ((index .Values.global "image") | default dict).pullPolicy }}
+  {{- $imagePullPolicy = (index .Values.global "image").pullPolicy }}
+{{- end }}
 ---
 apiVersion: batch/v1
 kind: Job
@@ -62,7 +66,7 @@ spec:
           image: "{{ dig "image" "registry" .registry $.Values.global }}/{{ .repository }}:{{ .tag }}"
             {{- end }}
           {{- end }}
-          imagePullPolicy: {{ $jobSettings.image.pullPolicy }}
+          imagePullPolicy: {{ $imagePullPolicy }}
           command:
             - /bin/bash
             - -ce
