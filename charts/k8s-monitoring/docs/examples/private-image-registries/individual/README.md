@@ -65,12 +65,14 @@ autoInstrumentation:
     image:
       registry: my.registry.com
       repository: grafana/beyla
+      pullPolicy: Always
       pullSecrets:
         - name: my-registry-creds
     k8sCache:
       image:
         registry: my.registry.com
         repository: grafana/beyla-k8s-cache
+        pullPolicy: Always
         pullSecrets:
           - name: my-registry-creds
 
@@ -87,12 +89,14 @@ alloy-operator:
   image:
     registry: my.registry.com
     repository: grafana/alloy-operator
+    pullPolicy: Always
     pullSecrets:
       - name: my-registry-creds
   waitForAlloyRemoval:
     image:
       registry: my.registry.com
       repository: grafana/grafana/helm-chart-toolbox-kubectl
+      pullPolicy: Always
       pullSecrets:
         - name: my-registry-creds
 
@@ -107,12 +111,14 @@ collectorCommon:
     image:
       registry: my.registry.com
       repository: grafana/alloy
+      pullPolicy: Always
       pullSecrets:
         - name: my-registry-creds
     configReloader:
       image:
         registry: my.registry.com
         repository: prometheus-operator/prometheus-config-reloader
+        pullPolicy: Always
 
 telemetryServices:
   kube-state-metrics:
@@ -120,6 +126,7 @@ telemetryServices:
     image:
       registry: my.registry.com
       repository: kube-state-metrics/kube-state-metrics
+      pullPolicy: Always
     imagePullSecrets:
       - name: my-registry-creds
 
@@ -128,6 +135,7 @@ telemetryServices:
     image:
       registry: my.registry.com
       repository: prometheus/node-exporter
+      pullPolicy: Always
     imagePullSecrets:
       - name: my-registry-creds
 
@@ -136,6 +144,7 @@ telemetryServices:
     image:
       registry: my.registry.com
       repository: prometheus-community/windows-exporter
+      pullPolicy: Always
     imagePullSecrets:
       - name: my-registry-creds
 
@@ -150,6 +159,7 @@ telemetryServices:
         image:
           registry: my.registry.com
           repository: opencost/opencost
+          pullPolicy: Always
       prometheus:
         external:
           url: http://prometheus.prometheus.svc:9090/api/v1/query
@@ -158,6 +168,7 @@ telemetryServices:
     deploy: true
     image:
       repository: my.registry.com/sustainable_computing_io/kepler
+      pullPolicy: Always
     imagePullSecrets:
       - name: my-registry-creds
 ```
