@@ -21,6 +21,7 @@
 {{- $alloyConfig = cat $alloyConfig (include "collectors.liveDebugging.alloy" $collectorValues | trim | nindent 0) }}
 {{- $alloyConfig = cat $alloyConfig (include "collectors.remoteConfig.alloy" $values | trim | nindent 0) }}
 {{- $alloyConfig = cat $alloyConfig (include "collectors.extraConfig.alloy" $values | trim | nindent 0) }}
+{{- $alloyConfig = cat $alloyConfig (include "destinations.alloy.rules" (deepCopy $ | merge (dict "collectorName" $collectorName)) | trim | nindent 0) }}
 {{- $alloyConfig = cat $alloyConfig (include "destinations.alloy.config" (deepCopy $ | merge (dict "destinationNames" ($destinationNames | uniq | sortAlpha))) | trim | nindent 0) }}
 
 {{- $alloyConfig = include "replaceComponent.apply" (dict "config" $alloyConfig "replacements" $.Values.replaceComponent "collectorName" $collectorName) }}

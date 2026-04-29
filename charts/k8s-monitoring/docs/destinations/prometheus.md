@@ -139,6 +139,25 @@ This defines the options for defining a destination for metrics that use the Pro
 | queueConfig.retryOnHttp429 | bool | `true` | Retry when an HTTP 429 status code is received. |
 | queueConfig.sampleAgeLimit | string | `"0s"` | Maximum age of samples to send. |
 
+### Rules
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| rules.address | string | `""` | The base URL of the Ruler API. If empty, falls back to the destination's `url`. Set this when `url` is the remote-write push URL (e.g. ends in `/api/prom/push` or `/api/v1/push`): `mimir.rules.kubernetes` expects the Mimir base URL, not the push path. |
+| rules.addressFrom | string | `""` | Raw config for accessing the Ruler API base URL. Equivalent to `urlFrom` but for rule synchronization. |
+| rules.collector | string | `""` | Which collector hosts rule synchronization. Exactly one collector must own this; otherwise multiple Alloy instances will race when writing to the Ruler API. If empty, the first enabled collector is used. |
+| rules.enabled | bool | `false` | Enable discovery and synchronization of PrometheusRule objects with this destination's Ruler API. |
+| rules.extraArguments | string | `""` | Extra arguments to add to the mimir.rules.kubernetes component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/mimir/mimir.rules.kubernetes/)) Use this to set arguments not exposed elsewhere in this block. |
+| rules.labelExpressions | list | `[]` | Complex label selectors for filtering which PrometheusRule objects to use. Example: `[{key: "app.kubernetes.io/name", operator: "NotIn", values: ["secret-app", "admin-app"]}]` |
+| rules.labelSelectors | object | `{}` | Label selectors for filtering which PrometheusRule objects to use. Example: `app.kubernetes.io/name: my-app` |
+| rules.mimirNamespacePrefix | string | `"agent"` | Prefix added to the namespace of each PrometheusRule when sent to the Ruler API. Distinguishes rules created by this Alloy instance from rules created by other tools. |
+| rules.namespaceLabelExpressions | list | `[]` | Complex label selectors for filtering which Kubernetes namespaces to look for PrometheusRule objects in. |
+| rules.namespaceLabelSelectors | object | `{}` | Label selectors for filtering which Kubernetes namespaces to look for PrometheusRule objects in. |
+| rules.namespaces | list | `[]` | Which namespaces to look for PrometheusRule objects in. An empty list means all namespaces. |
+| rules.prometheusHttpPrefix | string | `"/prometheus"` | The HTTP path prefix for the Prometheus HTTP API on the Ruler endpoint. |
+| rules.syncInterval | string | `"5m"` | How often to sync the discovered PrometheusRule objects with the Ruler API. |
+| rules.useLegacyRoutes | bool | `false` | Use the legacy `/api/v1/rules` Ruler endpoints instead of the newer `/config/v1/rules` endpoints. |
+
 ### Secret
 
 | Key | Type | Default | Description |
