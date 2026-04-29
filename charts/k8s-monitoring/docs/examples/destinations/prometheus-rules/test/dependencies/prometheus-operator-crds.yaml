@@ -1,0 +1,39 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: prometheus-community
+  namespace: flux-system
+spec:
+  interval: 1m
+  url: https://prometheus-community.github.io/helm-charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: prometheus-operator-crds
+  namespace: flux-system
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: prometheus-operator-crds
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus-community
+        namespace: flux-system
+      interval: 1m
+  values:
+    crds:
+      # Only the PrometheusRule CRD is needed for this example.
+      prometheusrules: {enabled: true}
+
+      alertmanagerconfigs: {enabled: false}
+      alertmanagers: {enabled: false}
+      podmonitors: {enabled: false}
+      probes: {enabled: false}
+      prometheusagents: {enabled: false}
+      prometheuses: {enabled: false}
+      scrapeconfigs: {enabled: false}
+      servicemonitors: {enabled: false}
+      thanosrulers: {enabled: false}
