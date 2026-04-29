@@ -12,18 +12,11 @@ metadata:
 data:
   mimir.yaml: |
     multitenancy_enabled: false
-    target: all,alertmanager,overrides-exporter
 
     server:
       http_listen_port: 9009
       grpc_listen_port: 9095
       log_level: info
-
-    common:
-      storage:
-        backend: filesystem
-        filesystem:
-          dir: /data/blocks
 
     blocks_storage:
       backend: filesystem
@@ -33,29 +26,6 @@ data:
         dir: /data/blocks
       tsdb:
         dir: /data/tsdb
-
-    ruler:
-      rule_path: /data/rules
-      alertmanager_url: http://localhost:9009/alertmanager
-      ring:
-        replication_factor: 1
-      enable_api: true
-
-    ruler_storage:
-      backend: filesystem
-      filesystem:
-        dir: /data/ruler
-
-    alertmanager_storage:
-      backend: filesystem
-      filesystem:
-        dir: /data/alertmanager
-
-    alertmanager:
-      data_dir: /data/alertmanager
-      external_url: /alertmanager
-      sharding_ring:
-        replication_factor: 1
 
     compactor:
       data_dir: /data/compactor
@@ -75,7 +45,15 @@ data:
         kvstore:
           store: memberlist
         replication_factor: 1
-        final_sleep: 0s
+
+    ruler:
+      rule_path: /data/rules
+      enable_api: true
+
+    ruler_storage:
+      backend: filesystem
+      filesystem:
+        dir: /data/ruler
 
     store_gateway:
       sharding_ring:
@@ -85,10 +63,10 @@ data:
       bind_addr: ["127.0.0.1"]
 
     limits:
-      ruler_max_rules_per_rule_group: 50
-      ruler_max_rule_groups_per_tenant: 100
       ingestion_rate: 100000
       ingestion_burst_size: 1000000
+      ruler_max_rules_per_rule_group: 50
+      ruler_max_rule_groups_per_tenant: 100
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -108,6 +86,8 @@ spec:
           image: grafana/mimir:2.13.0
           args:
             - -config.file=/etc/mimir/mimir.yaml
+            # The default `-target=all` runs the monolithic config (ingester, distributor,
+            # querier, query-frontend, store-gateway, compactor, ruler).
           ports:
             - {name: http, containerPort: 9009}
             - {name: grpc, containerPort: 9095}

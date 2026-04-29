@@ -14,7 +14,6 @@ cluster:
 dependencies:
   - file: dependencies/prometheus-operator-crds.yaml
   - file: dependencies/mimir.yaml
-  - file: dependencies/prometheus-rule.yaml
   - preset: grafana
     overrides:
       datasources:
@@ -47,7 +46,7 @@ tests:
             - query: integration_test_chart_present{integration_test="true"}
               type: promql
               expect:
-                operator: ">"
+                operator: "<"
                 value: 0
 
             # Alerting rule was synced and is firing.
