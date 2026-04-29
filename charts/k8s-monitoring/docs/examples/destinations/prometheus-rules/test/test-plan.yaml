@@ -1,0 +1,54 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: destination-prometheus-rules
+
+subject:
+  releaseName: k8smon
+  path: ../../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: dependencies/prometheus-operator-crds.yaml
+  - file: dependencies/mimir.yaml
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Mimir
+              type: prometheus
+              url: http://mimir.mimir.svc:9009/prometheus
+              isDefault: true
+
+tests:
+  - type: query-test
+    values:
+      # Rules need a few sync+evaluation cycles before the produced series shows up,
+      # so give the test a longer initial wait.
+      initialDelay: 60
+      attempts: 15
+      delay: 30
+      tests:
+        - env:
+            CLUSTER: prom-rules-cluster
+            PROMETHEUS_URL: http://mimir.mimir.svc:9009/prometheus/api/v1/query
+          queries:
+            # The chart is running and pushing to Mimir.
+            - query: grafana_kubernetes_monitoring_build_info{cluster="$CLUSTER"}
+              type: promql
+
+            # Recording rule evaluated → rule was synced to the Mimir Ruler AND ran.
+            - query: integration_test_chart_present{integration_test="true"}
+              type: promql
+              expect:
+                operator: "<"
+                value: 0
+
+            # Alerting rule was synced and is firing.
+            - query: ALERTS{alertname="IntegrationTestAlwaysFiring", alertstate="firing", integration_test="true"}
+              type: promql

@@ -361,3 +361,70 @@ openTelemetryConversion:
   # -- Whether to convert OTel resource attributes to Prometheus labels.
   # @section -- OpenTelemetry Conversion
   resourceToTelemetryConversion: false
+
+# Discover PrometheusRule objects in the cluster and synchronize them with this destination's Ruler API. Uses the
+# Alloy [`mimir.rules.kubernetes`](https://grafana.com/docs/alloy/latest/reference/components/mimir/mimir.rules.kubernetes/)
+# component. Authentication, tenant ID, and TLS are reused from the destination's other settings.
+rules:
+  # -- Enable discovery and synchronization of PrometheusRule objects with this destination's Ruler API.
+  # @section -- Rules
+  enabled: false
+
+  # -- Which collector hosts rule synchronization. Exactly one collector must own this; otherwise multiple Alloy
+  # instances will race when writing to the Ruler API. If empty, the first enabled collector is used.
+  # @section -- Rules
+  collector: ""
+
+  # -- The base URL of the Ruler API. If empty, falls back to the destination's `url`.
+  # Set this when `url` is the remote-write push URL (e.g. ends in `/api/prom/push` or `/api/v1/push`):
+  # `mimir.rules.kubernetes` expects the Mimir base URL, not the push path.
+  # @section -- Rules
+  address: ""
+
+  # -- Raw config for accessing the Ruler API base URL. Equivalent to `urlFrom` but for rule synchronization.
+  # @section -- Rules
+  addressFrom: ""
+
+  # -- Which namespaces to look for PrometheusRule objects in. An empty list means all namespaces.
+  # @section -- Rules
+  namespaces: []
+
+  # -- Label selectors for filtering which PrometheusRule objects to use.
+  # Example: `app.kubernetes.io/name: my-app`
+  # @section -- Rules
+  labelSelectors: {}
+
+  # -- Complex label selectors for filtering which PrometheusRule objects to use.
+  # Example: `[{key: "app.kubernetes.io/name", operator: "NotIn", values: ["secret-app", "admin-app"]}]`
+  # @section -- Rules
+  labelExpressions: []
+
+  # -- Label selectors for filtering which Kubernetes namespaces to look for PrometheusRule objects in.
+  # @section -- Rules
+  namespaceLabelSelectors: {}
+
+  # -- Complex label selectors for filtering which Kubernetes namespaces to look for PrometheusRule objects in.
+  # @section -- Rules
+  namespaceLabelExpressions: []
+
+  # -- How often to sync the discovered PrometheusRule objects with the Ruler API.
+  # @section -- Rules
+  syncInterval: 5m
+
+  # -- Prefix added to the namespace of each PrometheusRule when sent to the Ruler API. Distinguishes rules created
+  # by this Alloy instance from rules created by other tools.
+  # @section -- Rules
+  mimirNamespacePrefix: agent
+
+  # -- Use the legacy `/api/v1/rules` Ruler endpoints instead of the newer `/config/v1/rules` endpoints.
+  # @section -- Rules
+  useLegacyRoutes: false
+
+  # -- The HTTP path prefix for the Prometheus HTTP API on the Ruler endpoint.
+  # @section -- Rules
+  prometheusHttpPrefix: /prometheus
+
+  # -- Extra arguments to add to the mimir.rules.kubernetes component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/mimir/mimir.rules.kubernetes/))
+  # Use this to set arguments not exposed elsewhere in this block.
+  # @section -- Rules
+  extraArguments: ""

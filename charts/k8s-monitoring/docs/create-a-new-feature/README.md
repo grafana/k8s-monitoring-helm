@@ -40,7 +40,7 @@ Replace any of the following from the template files:
       # @section -- Features - REPLACE_WITH_Feature Name
       destinations: []
     
-      # -- Which collector to assign this feature to. Do not change this unless you are sure of what you are doing.
+      # -- Which collector to assign this feature to.
       # @section -- Features - REPLACE_WITH_Feature Name
       # @ignored
       collector: ""
