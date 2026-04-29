@@ -36,7 +36,6 @@ integrations:
   mysql:
     instances:
       - name: test-db
-        jobLabel: integrations/db-o11y
         databaseObservability:
           enabled: true
         exporter:
@@ -63,7 +62,6 @@ integrations:
   mysql:
     instances:
       - name: test-db
-        jobLabel: integrations/db-o11y
         databaseObservability:
           enabled: true
           cloudProvider:

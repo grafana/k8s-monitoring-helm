@@ -7,6 +7,9 @@
 *   Add the ability to replace the contents of an Alloy component (@petewall)
 *   Add the ability to set the cluster name using arbitrary sources with `cluster.nameFrom` (@petewall)
 *   Add `clusterEvents.clustering` to allow Cluster Events to run on a clustered collector with multiple replicas, sharding event collection across peers (@petewall)
+*   Database Observability: emit proper relabeling for MySQL and PostgreSQL so both metrics and logs carry `job=integrations/db-o11y`, the configured `instance` name,
+    and a `dsn` label for Knowledge Graph integration. Breaking change for users on `databaseObservability.enabled: true`: the default `job` label is now `integrations/db-o11y`
+    (was `integration/mysql` for MySQL and `integration/postgresql` for PostgreSQL), and the `instance` label on db o11y logs is the instance name (was the raw DSN, which now lives on the `dsn` label) (@cristiangreco)
 
 ## 4.0.4
 

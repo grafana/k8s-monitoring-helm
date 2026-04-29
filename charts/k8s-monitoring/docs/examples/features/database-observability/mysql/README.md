@@ -30,7 +30,6 @@ integrations:
   mysql:
     instances:
       - name: test-db
-        jobLabel: integrations/db-o11y
         exporter:
           enabled: true
           collectors:

@@ -68,7 +68,16 @@ declare "mysql_integration" {
 {{/* Inputs: . (Values), instance (this MySQL instance) */}}
 {{- define "integrations.mysql.include.metrics" }}
 {{- $defaultValues := "integrations/mysql-values.yaml" | .Files.Get | fromYaml }}
+{{- $userSetJobLabel := hasKey $.instance "jobLabel" }}
 {{- with mergeOverwrite $defaultValues .instance (dict "type" "integration.mysql") }}
+{{- $alloyName := include "helper.alloy_name" .name }}
+{{- $dbRelabelName := printf "database_observability_mysql_%s" $alloyName }}
+{{- $jobLabel := .jobLabel }}
+{{- if and .databaseObservability.enabled (not $userSetJobLabel) }}
+  {{- $jobLabel = "integrations/db-o11y" }}
+{{- end }}
+{{- $hasTuning := or .metrics.tuning.includeMetrics .metrics.tuning.excludeMetrics .metrics.extraMetricProcessingRules }}
+{{- $emitPromRelabel := or (not .databaseObservability.enabled) $hasTuning }}
 {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
   {{- include "secret.alloy" (deepCopy $ | merge (dict "object" .)) | indent 0 }}
 {{- end }}
@@ -228,16 +237,48 @@ database_observability.mysql {{ include "helper.alloy_name" .name | quote }} {
   {{- end }}
   enable_collectors = {{ $enabledCollectors | toJson }}
 
+  forward_to = [loki.relabel.{{ $dbRelabelName }}.receiver]
+}
+
+loki.relabel {{ $dbRelabelName | quote }} {
   forward_to = argument.logs_destinations.value
+  rule {
+    target_label = "job"
+    replacement = {{ $jobLabel | quote }}
+  }
+  rule {
+    source_labels = ["instance"]
+    target_label = "dsn"
+  }
+  rule {
+    target_label = "instance"
+    replacement = {{ .name | quote }}
+  }
+}
+
+discovery.relabel {{ $dbRelabelName | quote }} {
+  targets = database_observability.mysql.{{ $alloyName }}.targets
+  rule {
+    target_label = "job"
+    replacement = {{ $jobLabel | quote }}
+  }
+  rule {
+    source_labels = ["instance"]
+    target_label = "dsn"
+  }
+  rule {
+    target_label = "instance"
+    replacement = {{ .name | quote }}
+  }
 }
 {{- end }}
 
 {{- if .metrics.enabled }}
-prometheus.scrape {{ include "helper.alloy_name" .name | quote }} {
+prometheus.scrape {{ $alloyName | quote }} {
   {{- if .databaseObservability.enabled }}
-  targets = database_observability.mysql.{{ include "helper.alloy_name" .name }}.targets
+  targets = discovery.relabel.{{ $dbRelabelName }}.output
   {{- else }}
-  targets = prometheus.exporter.mysql.{{ include "helper.alloy_name" .name }}.targets
+  targets = prometheus.exporter.mysql.{{ $alloyName }}.targets
   {{- end }}
   clustering {
     enabled = true
@@ -248,19 +289,27 @@ prometheus.scrape {{ include "helper.alloy_name" .name | quote }} {
   scrape_protocols = {{ $.Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ $.Values.global.scrapeClassicHistograms }}
   scrape_native_histograms = {{ $.Values.global.scrapeNativeHistograms }}
-  forward_to = [prometheus.relabel.{{ include "helper.alloy_name" .name }}.receiver]
+  {{- if $emitPromRelabel }}
+  forward_to = [prometheus.relabel.{{ $alloyName }}.receiver]
+  {{- else }}
+  forward_to = argument.metrics_destinations.value
+  {{- end }}
 }
 
-prometheus.relabel {{ include "helper.alloy_name" .name | quote }} {
+{{- if $emitPromRelabel }}
+
+prometheus.relabel {{ $alloyName | quote }} {
   max_cache_size = {{ .metrics.maxCacheSize | default $.Values.global.maxCacheSize | int }}
+{{- if not .databaseObservability.enabled }}
   rule {
     target_label = "instance"
     replacement = {{ .name | quote }}
   }
   rule {
     target_label = "job"
-    replacement = {{ .jobLabel | quote }}
+    replacement = {{ $jobLabel | quote }}
   }
+{{- end }}
 {{- if .metrics.tuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
@@ -280,6 +329,7 @@ prometheus.relabel {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
   forward_to = argument.metrics_destinations.value
 }
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
