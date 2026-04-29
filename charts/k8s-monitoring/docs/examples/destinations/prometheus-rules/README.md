@@ -12,7 +12,7 @@ component on the chosen collector. Discovered recording and alerting rules are p
 Mimir/Cortex/Prometheus-compatible Ruler, reusing the destination's existing URL, tenant ID, and authentication
 settings.
 
-`rules.collector` selects which collector hosts the synchronization loop — exactly one collector should own this so
+`rules.collector` selects which collector runs the synchronization loop — exactly one collector should own this so
 multiple Alloy replicas don't race when writing to the Ruler API.
 
 `rules.address` is the base URL of the Ruler API. Set it when `url` is the remote-write push URL (for example,
@@ -34,7 +34,7 @@ destinations:
     rules:
       enabled: true
       address: http://mimir.mimir.svc:9009/
-      collector: alloy-singleton
+      collector: alloy
       syncInterval: 15s
       mimirNamespacePrefix: integration-test
 
@@ -43,6 +43,39 @@ destinations:
 
 collectors:
   alloy:
-    enabled: true
+    presets: [clustered, deployment]
+
+extraObjects:
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      name: integration-test-rules
+      namespace: default
+      labels:
+        app.kubernetes.io/name: integration-test
+    spec:
+      groups:
+        - name: integration-test-recording
+          interval: 15s
+          rules:
+            # Recording rule based on a chart-emitted metric. The chart's selfReporting feature
+            # pushes `grafana_kubernetes_monitoring_build_info` to Mimir, so this rule will
+            # produce a non-zero result once Alloy syncs the rule to the Mimir Ruler.
+            - record: integration_test_chart_present
+              expr: count(grafana_kubernetes_monitoring_build_info)
+              labels:
+                integration_test: "true"
+        - name: integration-test-alerting
+          interval: 15s
+          rules:
+            # Always-firing alert proves the alerting rule was synced to the Ruler.
+            - alert: IntegrationTestAlwaysFiring
+              expr: vector(1)
+              for: 0s
+              labels:
+                severity: info
+                integration_test: "true"
+              annotations:
+                summary: "Always-firing alert used to verify rule sync"
 ```
 <!-- textlint-enable terminology -->
