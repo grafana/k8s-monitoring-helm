@@ -82,6 +82,7 @@ integrations:
 | databaseObservability.cloudProvider.azure.resourceGroup | string | `""` | The Resource Group that holds the database resource. |
 | databaseObservability.cloudProvider.azure.serverName | string | `""` | The database server name. |
 | databaseObservability.cloudProvider.azure.subscriptionId | string | `""` | The Subscription ID for your Azure account. |
+| databaseObservability.cloudProvider.gcp.connectionName | string | `""` | The Cloud SQL instance connection name in the format `project:region:instance`, for example `my-project:us-central1:my-db`. |
 
 ### Database Observability - Collectors
 
@@ -89,12 +90,11 @@ integrations:
 |-----|------|---------|-------------|
 | databaseObservability.collectors.explainPlans.collectInterval | string | `"1m"` | How frequently to collect explain plans information from the database. |
 | databaseObservability.collectors.explainPlans.enabled | bool | `true` | Enable collection of explain plans information. |
-| databaseObservability.collectors.explainPlans.excludeSchemas | list | `[]` | List of schemas to exclude from explain plan collection. |
 | databaseObservability.collectors.explainPlans.perCollectRatio | float | `1` | Ratio of explain plan queries to collect per collect interval. |
 | databaseObservability.collectors.queryDetails.collectInterval | string | `"1m"` | How frequently to collect query information from the database. |
 | databaseObservability.collectors.queryDetails.enabled | bool | `true` | Enable collection of query information. |
 | databaseObservability.collectors.queryDetails.statementsLimit | number | `100` | Max number of recent queries to collect details for. |
-| databaseObservability.collectors.querySamples.collectInterval | string | `"1m"` | How frequently to collect query samples from the database. |
+| databaseObservability.collectors.querySamples.collectInterval | string | `"15s"` | How frequently to collect query samples from the database. |
 | databaseObservability.collectors.querySamples.disableQueryRedaction | bool | `false` | Collect unredacted SQL query text including parameters. |
 | databaseObservability.collectors.querySamples.enabled | bool | `true` | Enable collection of query samples. |
 | databaseObservability.collectors.querySamples.excludeCurrentUser | bool | `true` | Do not collect query samples for the current database user. |

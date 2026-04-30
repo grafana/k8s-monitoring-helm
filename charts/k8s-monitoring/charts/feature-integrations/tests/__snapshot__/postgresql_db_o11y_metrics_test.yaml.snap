@@ -42,7 +42,7 @@ keeps prometheus.relabel when metrics tuning is set under db o11y:
             collect_interval = "1m"
           }
           query_samples {
-            collect_interval = "1m"
+            collect_interval = "15s"
             disable_query_redaction = false
             exclude_current_user = true
           }
@@ -109,6 +109,106 @@ keeps prometheus.relabel when metrics tuning is set under db o11y:
             regex = "pg_stat_activity_.*"
             action = "drop"
           }
+          forward_to = argument.metrics_destinations.value
+        }
+      }
+renders gcp cloud_provider and disable_collectors:
+  1: |
+    |-
+      declare "postgresql_integration" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        remote.kubernetes.secret "gcp_db" {
+          name      = "gcp-db-release-name-feature-integrations"
+          namespace = "NAMESPACE"
+        } // remote.kubernetes.secret "gcp_db"
+
+        prometheus.exporter.postgres "gcp_db" {
+          data_source_names = [string.format("postgresql://%s:%s@%s:%d/",
+            encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.gcp_db.data["username"])),
+            encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.gcp_db.data["password"])),
+            "gcp-db.postgresql.svc",
+            5432,
+          )]
+          enabled_collectors = ["database","locks","replication","replication_slot","stat_bgwriter","stat_database","stat_progress_vacuum","stat_user_tables","statio_user_tables","wal"]
+          disable_default_metrics = false
+          disable_settings_metrics = false
+        }
+
+        database_observability.postgres "gcp_db" {
+          targets = prometheus.exporter.postgres.gcp_db.targets
+          data_source_name = string.format("postgresql://%s:%s@%s:%d/",
+            encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.gcp_db.data["username"])),
+            encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.gcp_db.data["password"])),
+            "gcp-db.postgresql.svc",
+            5432,
+          )
+          cloud_provider {
+            gcp {
+              connection_name = "my-project:us-central1:my-db"
+            }
+          }
+          query_details {
+            collect_interval = "1m"
+          }
+          query_samples {
+            collect_interval = "15s"
+            disable_query_redaction = false
+            exclude_current_user = true
+          }
+          enable_collectors = ["query_details","query_samples"]
+          disable_collectors = ["explain_plans","schema_details"]
+
+          forward_to = [loki.relabel.database_observability_postgres_gcp_db.receiver]
+        }
+
+        loki.relabel "database_observability_postgres_gcp_db" {
+          forward_to = argument.logs_destinations.value
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "gcp-db"
+          }
+        }
+
+        discovery.relabel "database_observability_postgres_gcp_db" {
+          targets = database_observability.postgres.gcp_db.targets
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "gcp-db"
+          }
+        }
+        prometheus.scrape "gcp_db" {
+          targets = discovery.relabel.database_observability_postgres_gcp_db.output
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
           forward_to = argument.metrics_destinations.value
         }
       }
@@ -269,7 +369,7 @@ renders new db o11y options (exclude_users):
             collect_interval = "1m"
           }
           query_samples {
-            collect_interval = "1m"
+            collect_interval = "15s"
             disable_query_redaction = false
             exclude_current_user = true
           }
@@ -374,7 +474,7 @@ renders new db o11y options (statements_limit):
             statements_limit = 50
           }
           query_samples {
-            collect_interval = "1m"
+            collect_interval = "15s"
             disable_query_redaction = false
             exclude_current_user = true
           }
@@ -478,7 +578,7 @@ respects an explicit jobLabel override under db o11y:
             collect_interval = "1m"
           }
           query_samples {
-            collect_interval = "1m"
+            collect_interval = "15s"
             disable_query_redaction = false
             exclude_current_user = true
           }
@@ -582,7 +682,7 @@ should create the PostgreSQL config:
             collect_interval = "1m"
           }
           query_samples {
-            collect_interval = "1m"
+            collect_interval = "15s"
             disable_query_redaction = false
             exclude_current_user = true
           }
@@ -671,7 +771,7 @@ works with multiple PostgreSQL Instances:
             collect_interval = "1m"
           }
           query_samples {
-            collect_interval = "1m"
+            collect_interval = "15s"
             disable_query_redaction = false
             exclude_current_user = true
           }
@@ -749,7 +849,7 @@ works with multiple PostgreSQL Instances:
             collect_interval = "1m"
           }
           query_samples {
-            collect_interval = "1m"
+            collect_interval = "15s"
             disable_query_redaction = false
             exclude_current_user = true
           }
@@ -842,7 +942,7 @@ works with multiple PostgreSQL Instances:
             collect_interval = "1m"
           }
           query_samples {
-            collect_interval = "1m"
+            collect_interval = "15s"
             disable_query_redaction = false
             exclude_current_user = true
           }

@@ -145,7 +145,8 @@ database_observability.mysql {{ include "helper.alloy_name" .name | quote }} {
   {{- with .databaseObservability.cloudProvider }}
   {{- $hasAws := and .aws .aws.arn }}
   {{- $hasAzure := and .azure .azure.subscriptionId .azure.resourceGroup }}
-  {{- if or $hasAws $hasAzure }}
+  {{- $hasGcp := and .gcp .gcp.connectionName }}
+  {{- if or $hasAws $hasAzure $hasGcp }}
   cloud_provider {
     {{- if $hasAws }}
     aws {
@@ -161,11 +162,17 @@ database_observability.mysql {{ include "helper.alloy_name" .name | quote }} {
       {{- end }}
     }
     {{- end }}
+    {{- if $hasGcp }}
+    gcp {
+      connection_name = {{ .gcp.connectionName | quote }}
+    }
+    {{- end }}
   }
   {{- end }}
   {{- end }}
 
   {{- $enabledCollectors := list }}
+  {{- $disabledCollectors := list }}
   {{- if .databaseObservability.collectors.explainPlans.enabled }}
     {{- $enabledCollectors = append $enabledCollectors "explain_plans" }}
     {{- with .databaseObservability.collectors.explainPlans }}
@@ -175,6 +182,8 @@ database_observability.mysql {{ include "helper.alloy_name" .name | quote }} {
     per_collect_ratio = {{ .perCollectRatio | quote }}
   }
     {{- end }}
+  {{- else }}
+    {{- $disabledCollectors = append $disabledCollectors "explain_plans" }}
   {{- end }}
   {{- if .databaseObservability.collectors.locks.enabled }}
     {{- $enabledCollectors = append $enabledCollectors "locks" }}
@@ -184,6 +193,8 @@ database_observability.mysql {{ include "helper.alloy_name" .name | quote }} {
     threshold = {{ .threshold | quote }}
   }
     {{- end }}
+  {{- else }}
+    {{- $disabledCollectors = append $disabledCollectors "locks" }}
   {{- end }}
   {{- if .databaseObservability.collectors.queryDetails.enabled }}
     {{- $enabledCollectors = append $enabledCollectors "query_details" }}
@@ -195,6 +206,8 @@ database_observability.mysql {{ include "helper.alloy_name" .name | quote }} {
     {{- end }}
   }
     {{- end }}
+  {{- else }}
+    {{- $disabledCollectors = append $disabledCollectors "query_details" }}
   {{- end }}
   {{- if .databaseObservability.collectors.querySamples.enabled }}
     {{- $enabledCollectors = append $enabledCollectors "query_samples" }}
@@ -204,8 +217,12 @@ database_observability.mysql {{ include "helper.alloy_name" .name | quote }} {
     disable_query_redaction = {{ .disableQueryRedaction }}
     auto_enable_setup_consumers = {{ .autoEnableSetupConsumers }}
     setup_consumers_check_interval = {{ .setupConsumersCheckInterval | quote }}
+    sample_min_duration = {{ .sampleMinDuration | quote }}
+    wait_event_min_duration = {{ .waitEventMinDuration | quote }}
   }
     {{- end }}
+  {{- else }}
+    {{- $disabledCollectors = append $disabledCollectors "query_samples" }}
   {{- end }}
   {{- if .databaseObservability.collectors.schemaDetails.enabled }}
     {{- $enabledCollectors = append $enabledCollectors "schema_details" }}
@@ -217,6 +234,8 @@ database_observability.mysql {{ include "helper.alloy_name" .name | quote }} {
     cache_ttl = {{ .cacheTTL | quote }}
   }
     {{- end }}
+  {{- else }}
+    {{- $disabledCollectors = append $disabledCollectors "schema_details" }}
   {{- end }}
   {{- if .databaseObservability.collectors.setupConsumers.enabled }}
     {{- $enabledCollectors = append $enabledCollectors "setup_consumers" }}
@@ -225,6 +244,8 @@ database_observability.mysql {{ include "helper.alloy_name" .name | quote }} {
     collect_interval = {{ .collectInterval | quote }}
   }
     {{- end }}
+  {{- else }}
+    {{- $disabledCollectors = append $disabledCollectors "setup_consumers" }}
   {{- end }}
   {{- if .databaseObservability.collectors.setupActors.enabled }}
     {{- $enabledCollectors = append $enabledCollectors "setup_actors" }}
@@ -234,8 +255,13 @@ database_observability.mysql {{ include "helper.alloy_name" .name | quote }} {
     collect_interval = {{ .collectInterval | quote }}
   }
     {{- end }}
+  {{- else }}
+    {{- $disabledCollectors = append $disabledCollectors "setup_actors" }}
   {{- end }}
   enable_collectors = {{ $enabledCollectors | toJson }}
+  {{- if $disabledCollectors }}
+  disable_collectors = {{ $disabledCollectors | toJson }}
+  {{- end }}
 
   forward_to = [loki.relabel.{{ $dbRelabelName }}.receiver]
 }
