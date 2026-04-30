@@ -45,25 +45,28 @@ defaults text_limit to 0 for perf_schema.eventsstatements when db o11y is enable
             collect_interval = "1m"
           }
           query_samples {
-            collect_interval = "1m"
+            collect_interval = "10s"
             disable_query_redaction = false
             auto_enable_setup_consumers = false
             setup_consumers_check_interval = "1h"
+            sample_min_duration = "0s"
+            wait_event_min_duration = "1us"
           }
           schema_details {
             collect_interval = "1m"
-            cache_enabled = false
+            cache_enabled = true
             cache_size = 256
             cache_ttl = "10m"
           }
           setup_consumers {
-            collect_interval = "1m"
+            collect_interval = "1h"
           }
           setup_actors {
             auto_update_setup_actors = false
             collect_interval = "1h"
           }
           enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
+          disable_collectors = ["locks"]
 
           forward_to = [loki.relabel.database_observability_mysql_my_database.receiver]
         }
@@ -157,25 +160,28 @@ keeps prometheus.relabel when metrics tuning is set under db o11y:
             collect_interval = "1m"
           }
           query_samples {
-            collect_interval = "1m"
+            collect_interval = "10s"
             disable_query_redaction = false
             auto_enable_setup_consumers = false
             setup_consumers_check_interval = "1h"
+            sample_min_duration = "0s"
+            wait_event_min_duration = "1us"
           }
           schema_details {
             collect_interval = "1m"
-            cache_enabled = false
+            cache_enabled = true
             cache_size = 256
             cache_ttl = "10m"
           }
           setup_consumers {
-            collect_interval = "1m"
+            collect_interval = "1h"
           }
           setup_actors {
             auto_update_setup_actors = false
             collect_interval = "1h"
           }
           enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
+          disable_collectors = ["locks"]
 
           forward_to = [loki.relabel.database_observability_mysql_my_database.receiver]
         }
@@ -235,6 +241,113 @@ keeps prometheus.relabel when metrics tuning is set under db o11y:
           forward_to = argument.metrics_destinations.value
         }
       }
+renders gcp cloud_provider, query_samples min durations, and disable_collectors:
+  1: |
+    |-
+      declare "mysql_integration" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        remote.kubernetes.secret "gcp_db" {
+          name      = "gcp-db-release-name-feature-integrations"
+          namespace = "NAMESPACE"
+        } // remote.kubernetes.secret "gcp_db"
+
+        prometheus.exporter.mysql "gcp_db" {
+          data_source_name = string.format("%s:%s@(%s:%d)/",
+            convert.nonsensitive(remote.kubernetes.secret.gcp_db.data["username"]),
+            convert.nonsensitive(remote.kubernetes.secret.gcp_db.data["password"]),
+            "gcp-db.mysql.svc",
+            3306,
+          )
+          enable_collectors = ["heartbeat","mysql.user"]
+        }
+
+        database_observability.mysql "gcp_db" {
+          targets = prometheus.exporter.mysql.gcp_db.targets
+          data_source_name = string.format("%s:%s@(%s:%d)/",
+            convert.nonsensitive(remote.kubernetes.secret.gcp_db.data["username"]),
+            convert.nonsensitive(remote.kubernetes.secret.gcp_db.data["password"]),
+            "gcp-db.mysql.svc",
+            3306,
+          )
+          allow_update_performance_schema_settings = false
+          cloud_provider {
+            gcp {
+              connection_name = "my-project:us-central1:my-db"
+            }
+          }
+          explain_plans {
+            collect_interval = "1m"
+            initial_lookback = "24h"
+            per_collect_ratio = "1"
+          }
+          query_details {
+            collect_interval = "1m"
+          }
+          query_samples {
+            collect_interval = "10s"
+            disable_query_redaction = false
+            auto_enable_setup_consumers = false
+            setup_consumers_check_interval = "1h"
+            sample_min_duration = "100ms"
+            wait_event_min_duration = "5ms"
+          }
+          enable_collectors = ["explain_plans","query_details","query_samples"]
+          disable_collectors = ["locks","schema_details","setup_consumers","setup_actors"]
+
+          forward_to = [loki.relabel.database_observability_mysql_gcp_db.receiver]
+        }
+
+        loki.relabel "database_observability_mysql_gcp_db" {
+          forward_to = argument.logs_destinations.value
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "gcp-db"
+          }
+        }
+
+        discovery.relabel "database_observability_mysql_gcp_db" {
+          targets = database_observability.mysql.gcp_db.targets
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "gcp-db"
+          }
+        }
+        prometheus.scrape "gcp_db" {
+          targets = discovery.relabel.database_observability_mysql_gcp_db.output
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = argument.metrics_destinations.value
+        }
+      }
 renders new db o11y options (azure, setup_actors, statements_limit, exclude_schemas):
   1: |
     |-
@@ -288,25 +401,28 @@ renders new db o11y options (azure, setup_actors, statements_limit, exclude_sche
             statements_limit = 500
           }
           query_samples {
-            collect_interval = "1m"
+            collect_interval = "10s"
             disable_query_redaction = false
             auto_enable_setup_consumers = false
             setup_consumers_check_interval = "1h"
+            sample_min_duration = "0s"
+            wait_event_min_duration = "1us"
           }
           schema_details {
             collect_interval = "1m"
-            cache_enabled = false
+            cache_enabled = true
             cache_size = 256
             cache_ttl = "10m"
           }
           setup_consumers {
-            collect_interval = "1m"
+            collect_interval = "1h"
           }
           setup_actors {
             auto_update_setup_actors = true
             collect_interval = "30m"
           }
           enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
+          disable_collectors = ["locks"]
 
           forward_to = [loki.relabel.database_observability_mysql_azure_db.receiver]
         }
@@ -400,25 +516,28 @@ respects an explicit jobLabel override under db o11y:
             collect_interval = "1m"
           }
           query_samples {
-            collect_interval = "1m"
+            collect_interval = "10s"
             disable_query_redaction = false
             auto_enable_setup_consumers = false
             setup_consumers_check_interval = "1h"
+            sample_min_duration = "0s"
+            wait_event_min_duration = "1us"
           }
           schema_details {
             collect_interval = "1m"
-            cache_enabled = false
+            cache_enabled = true
             cache_size = 256
             cache_ttl = "10m"
           }
           setup_consumers {
-            collect_interval = "1m"
+            collect_interval = "1h"
           }
           setup_actors {
             auto_update_setup_actors = false
             collect_interval = "1h"
           }
           enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
+          disable_collectors = ["locks"]
 
           forward_to = [loki.relabel.database_observability_mysql_my_database.receiver]
         }
@@ -512,25 +631,28 @@ should create the MySQL config:
             collect_interval = "1m"
           }
           query_samples {
-            collect_interval = "1m"
+            collect_interval = "10s"
             disable_query_redaction = false
             auto_enable_setup_consumers = false
             setup_consumers_check_interval = "1h"
+            sample_min_duration = "0s"
+            wait_event_min_duration = "1us"
           }
           schema_details {
             collect_interval = "1m"
-            cache_enabled = false
+            cache_enabled = true
             cache_size = 256
             cache_ttl = "10m"
           }
           setup_consumers {
-            collect_interval = "1m"
+            collect_interval = "1h"
           }
           setup_actors {
             auto_update_setup_actors = false
             collect_interval = "1h"
           }
           enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
+          disable_collectors = ["locks"]
 
           forward_to = [loki.relabel.database_observability_mysql_my_database.receiver]
         }
@@ -609,25 +731,28 @@ works with multiple MySQL Instances:
             collect_interval = "1m"
           }
           query_samples {
-            collect_interval = "1m"
+            collect_interval = "10s"
             disable_query_redaction = false
             auto_enable_setup_consumers = false
             setup_consumers_check_interval = "1h"
+            sample_min_duration = "0s"
+            wait_event_min_duration = "1us"
           }
           schema_details {
             collect_interval = "1m"
-            cache_enabled = false
+            cache_enabled = true
             cache_size = 256
             cache_ttl = "10m"
           }
           setup_consumers {
-            collect_interval = "1m"
+            collect_interval = "1h"
           }
           setup_actors {
             auto_update_setup_actors = false
             collect_interval = "1h"
           }
           enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
+          disable_collectors = ["locks"]
 
           forward_to = [loki.relabel.database_observability_mysql_test_db.receiver]
         }
@@ -695,25 +820,28 @@ works with multiple MySQL Instances:
             collect_interval = "1m"
           }
           query_samples {
-            collect_interval = "1m"
+            collect_interval = "10s"
             disable_query_redaction = false
             auto_enable_setup_consumers = false
             setup_consumers_check_interval = "1h"
+            sample_min_duration = "0s"
+            wait_event_min_duration = "1us"
           }
           schema_details {
             collect_interval = "1m"
-            cache_enabled = false
+            cache_enabled = true
             cache_size = 256
             cache_ttl = "10m"
           }
           setup_consumers {
-            collect_interval = "1m"
+            collect_interval = "1h"
           }
           setup_actors {
             auto_update_setup_actors = false
             collect_interval = "1h"
           }
           enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
+          disable_collectors = ["locks"]
 
           forward_to = [loki.relabel.database_observability_mysql_staging_db.receiver]
         }
@@ -796,25 +924,28 @@ works with multiple MySQL Instances:
             collect_interval = "1m"
           }
           query_samples {
-            collect_interval = "1m"
+            collect_interval = "10s"
             disable_query_redaction = false
             auto_enable_setup_consumers = false
             setup_consumers_check_interval = "1h"
+            sample_min_duration = "0s"
+            wait_event_min_duration = "1us"
           }
           schema_details {
             collect_interval = "1m"
-            cache_enabled = false
+            cache_enabled = true
             cache_size = 256
             cache_ttl = "10m"
           }
           setup_consumers {
-            collect_interval = "1m"
+            collect_interval = "1h"
           }
           setup_actors {
             auto_update_setup_actors = false
             collect_interval = "1h"
           }
           enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
+          disable_collectors = ["locks"]
 
           forward_to = [loki.relabel.database_observability_mysql_prod_db.receiver]
         }

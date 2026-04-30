@@ -196,6 +196,12 @@ databaseObservability:
       # -- The database server name.
       # @section -- Database Observability - Cloud Provider
       serverName: ""
+    # GCP configuration.
+    gcp:
+      # -- The Cloud SQL instance connection name in the format `project:region:instance`,
+      # for example `my-project:us-central1:my-db`.
+      # @section -- Database Observability - Cloud Provider
+      connectionName: ""
 
   collectors:
     # Collect explain plans information.
@@ -243,7 +249,7 @@ databaseObservability:
       enabled: true
       # -- How frequently to collect query samples from the database.
       # @section -- Database Observability - Collectors
-      collectInterval: 1m
+      collectInterval: 10s
       # -- Collect unredacted SQL query text including parameters.
       # @section -- Database Observability - Collectors
       disableQueryRedaction: false
@@ -253,6 +259,14 @@ databaseObservability:
       # -- How frequently to check if setup_consumers are correctly enabled.
       # @section -- Database Observability - Collectors
       setupConsumersCheckInterval: 1h
+      # -- Minimum duration for query samples to be collected. Set to "0s" to disable
+      # filtering and collect all samples regardless of their duration.
+      # @section -- Database Observability - Collectors
+      sampleMinDuration: 0s
+      # -- Minimum duration for a wait event to be collected. Set to "0s" to disable
+      # filtering and collect all wait events regardless of their duration.
+      # @section -- Database Observability - Collectors
+      waitEventMinDuration: 1us
 
     # Collect schemas and tables from information_schema.
     schemaDetails:
@@ -264,7 +278,7 @@ databaseObservability:
       collectInterval: 1m
       # -- Whether to enable caching of table definitions.
       # @section -- Database Observability - Collectors
-      cacheEnabled: false
+      cacheEnabled: true
       # -- Table definitions cache size.
       # @section -- Database Observability - Collectors
       cacheSize: 256
@@ -279,7 +293,7 @@ databaseObservability:
       enabled: true
       # -- How frequently to collect performance_schema.setup_consumers information from the database.
       # @section -- Database Observability - Collectors
-      collectInterval: 1m
+      collectInterval: 1h
 
     # Check and update performance_schema.setup_actors settings.
     setupActors:

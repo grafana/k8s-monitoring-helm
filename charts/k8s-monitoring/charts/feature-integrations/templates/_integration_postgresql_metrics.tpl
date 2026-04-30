@@ -156,7 +156,8 @@ database_observability.postgres {{ include "helper.alloy_name" .name | quote }} 
   {{- with .databaseObservability.cloudProvider }}
   {{- $hasAws := and .aws .aws.arn }}
   {{- $hasAzure := and .azure .azure.subscriptionId .azure.resourceGroup }}
-  {{- if or $hasAws $hasAzure }}
+  {{- $hasGcp := and .gcp .gcp.connectionName }}
+  {{- if or $hasAws $hasAzure $hasGcp }}
   cloud_provider {
     {{- if $hasAws }}
     aws {
@@ -172,6 +173,11 @@ database_observability.postgres {{ include "helper.alloy_name" .name | quote }} 
       {{- end }}
     }
     {{- end }}
+    {{- if $hasGcp }}
+    gcp {
+      connection_name = {{ .gcp.connectionName | quote }}
+    }
+    {{- end }}
   }
   {{- end }}
   {{- end }}
@@ -183,17 +189,17 @@ database_observability.postgres {{ include "helper.alloy_name" .name | quote }} 
   {{- end }}
 
   {{- $enabledCollectors := list }}
+  {{- $disabledCollectors := list }}
   {{- if .databaseObservability.collectors.explainPlans.enabled }}
     {{- $enabledCollectors = append $enabledCollectors "explain_plans" }}
     {{- with .databaseObservability.collectors.explainPlans }}
   explain_plans {
     collect_interval = {{ .collectInterval | quote }}
-    {{- if .excludeSchemas }}
-    exclude_schemas = {{ .excludeSchemas | toJson }}
-    {{- end }}
     per_collect_ratio = {{ .perCollectRatio | quote }}
   }
     {{- end }}
+  {{- else }}
+    {{- $disabledCollectors = append $disabledCollectors "explain_plans" }}
   {{- end }}
   {{- if .databaseObservability.collectors.queryDetails.enabled }}
     {{- $enabledCollectors = append $enabledCollectors "query_details" }}
@@ -205,6 +211,8 @@ database_observability.postgres {{ include "helper.alloy_name" .name | quote }} 
     {{- end }}
   }
     {{- end }}
+  {{- else }}
+    {{- $disabledCollectors = append $disabledCollectors "query_details" }}
   {{- end }}
   {{- if .databaseObservability.collectors.querySamples.enabled }}
     {{- $enabledCollectors = append $enabledCollectors "query_samples" }}
@@ -215,6 +223,8 @@ database_observability.postgres {{ include "helper.alloy_name" .name | quote }} 
     exclude_current_user = {{ .excludeCurrentUser }}
   }
     {{- end }}
+  {{- else }}
+    {{- $disabledCollectors = append $disabledCollectors "query_samples" }}
   {{- end }}
   {{- if .databaseObservability.collectors.schemaDetails.enabled }}
     {{- $enabledCollectors = append $enabledCollectors "schema_details" }}
@@ -226,8 +236,13 @@ database_observability.postgres {{ include "helper.alloy_name" .name | quote }} 
     cache_ttl = {{ .cacheTTL | quote }}
   }
     {{- end }}
+  {{- else }}
+    {{- $disabledCollectors = append $disabledCollectors "schema_details" }}
   {{- end }}
   enable_collectors = {{ $enabledCollectors | toJson }}
+  {{- if $disabledCollectors }}
+  disable_collectors = {{ $disabledCollectors | toJson }}
+  {{- end }}
 
   forward_to = [loki.relabel.{{ $dbRelabelName }}.receiver]
 }

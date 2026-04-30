@@ -10,6 +10,11 @@
 *   Database Observability: emit proper relabeling for MySQL and PostgreSQL so both metrics and logs carry `job=integrations/db-o11y`, the configured `instance` name,
     and a `dsn` label for Knowledge Graph integration. Breaking change for users on `databaseObservability.enabled: true`: the default `job` label is now `integrations/db-o11y`
     (was `integration/mysql` for MySQL and `integration/postgresql` for PostgreSQL), and the `instance` label on db o11y logs is the instance name (was the raw DSN, which now lives on the `dsn` label) (@cristiangreco)
+*   Database Observability: add `databaseObservability.cloudProvider.gcp` for MySQL and PostgreSQL to label metrics with GCP Cloud SQL instance metadata (@cristiangreco)
+*   Database Observability: add `databaseObservability.collectors.querySamples.sampleMinDuration` and `waitEventMinDuration` for MySQL (@cristiangreco)
+*   Database Observability: emit `disable_collectors` for any MySQL or PostgreSQL collector explicitly turned off via `databaseObservability.collectors.<name>.enabled: false` (@cristiangreco)
+*   Database Observability: realign some default `databaseObservability.collectors` values with Alloy upstream defaults (@cristiangreco)
+*   Database Observability: remove the unused `databaseObservability.collectors.explainPlans.excludeSchemas` value from the PostgreSQL settings (@cristiangreco)
 
 ## 4.0.5
 
