@@ -169,6 +169,34 @@ tests:
         matchSnapshot:
           path: data["metrics.alloy"]
 
+  - it: renders gcp cloud_provider and disable_collectors
+    set:
+      testing: {enabled: true}
+      postgresql:
+        instances:
+          - name: gcp-db
+            exporter:
+              dataSource:
+                host: gcp-db.postgresql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            databaseObservability:
+              enabled: true
+              cloudProvider:
+                gcp:
+                  connectionName: "my-project:us-central1:my-db"
+              collectors:
+                explainPlans:
+                  enabled: false
+                schemaDetails:
+                  enabled: false
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
   - it: keeps prometheus.relabel when metrics tuning is set under db o11y
     set:
       testing: {enabled: true}

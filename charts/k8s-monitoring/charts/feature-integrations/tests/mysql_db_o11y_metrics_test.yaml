@@ -149,6 +149,40 @@ tests:
         matchSnapshot:
           path: data["metrics.alloy"]
 
+  - it: renders gcp cloud_provider, query_samples min durations, and disable_collectors
+    set:
+      testing: {enabled: true}
+      mysql:
+        instances:
+          - name: gcp-db
+            exporter:
+              dataSource:
+                host: gcp-db.mysql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            databaseObservability:
+              enabled: true
+              cloudProvider:
+                gcp:
+                  connectionName: "my-project:us-central1:my-db"
+              collectors:
+                querySamples:
+                  enabled: true
+                  sampleMinDuration: 100ms
+                  waitEventMinDuration: 5ms
+                schemaDetails:
+                  enabled: false
+                setupActors:
+                  enabled: false
+                setupConsumers:
+                  enabled: false
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
   - it: keeps prometheus.relabel when metrics tuning is set under db o11y
     set:
       testing: {enabled: true}
