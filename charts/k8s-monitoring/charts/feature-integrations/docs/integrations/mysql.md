@@ -102,6 +102,7 @@ integrations:
 | databaseObservability.cloudProvider.azure.resourceGroup | string | `""` | The Resource Group that holds the database resource. |
 | databaseObservability.cloudProvider.azure.serverName | string | `""` | The database server name. |
 | databaseObservability.cloudProvider.azure.subscriptionId | string | `""` | The Subscription ID for your Azure account. |
+| databaseObservability.cloudProvider.gcp.connectionName | string | `""` | The Cloud SQL instance connection name in the format `project:region:instance`, for example `my-project:us-central1:my-db`. |
 
 ### Database Observability - Collectors
 
@@ -118,11 +119,13 @@ integrations:
 | databaseObservability.collectors.queryDetails.enabled | bool | `true` | Enable collection of query information. |
 | databaseObservability.collectors.queryDetails.statementsLimit | number | `250` | Max number of recent queries to collect details for. |
 | databaseObservability.collectors.querySamples.autoEnableSetupConsumers | bool | `false` | Whether to enable some specific performance_schema.setup_consumers settings. |
-| databaseObservability.collectors.querySamples.collectInterval | string | `"1m"` | How frequently to collect query samples from the database. |
+| databaseObservability.collectors.querySamples.collectInterval | string | `"10s"` | How frequently to collect query samples from the database. |
 | databaseObservability.collectors.querySamples.disableQueryRedaction | bool | `false` | Collect unredacted SQL query text including parameters. |
 | databaseObservability.collectors.querySamples.enabled | bool | `true` | Enable collection of query samples. |
+| databaseObservability.collectors.querySamples.sampleMinDuration | string | `"0s"` | Minimum duration for query samples to be collected. Set to "0s" to disable filtering and collect all samples regardless of their duration. |
 | databaseObservability.collectors.querySamples.setupConsumersCheckInterval | string | `"1h"` | How frequently to check if setup_consumers are correctly enabled. |
-| databaseObservability.collectors.schemaDetails.cacheEnabled | bool | `false` | Whether to enable caching of table definitions. |
+| databaseObservability.collectors.querySamples.waitEventMinDuration | string | `"1us"` | Minimum duration for a wait event to be collected. Set to "0s" to disable filtering and collect all wait events regardless of their duration. |
+| databaseObservability.collectors.schemaDetails.cacheEnabled | bool | `true` | Whether to enable caching of table definitions. |
 | databaseObservability.collectors.schemaDetails.cacheSize | int | `256` | Table definitions cache size. |
 | databaseObservability.collectors.schemaDetails.cacheTTL | string | `"10m"` | Table definitions cache TTL. |
 | databaseObservability.collectors.schemaDetails.collectInterval | string | `"1m"` | How frequently to collect schemas and tables from information_schema. |
@@ -130,7 +133,7 @@ integrations:
 | databaseObservability.collectors.setupActors.autoUpdateSetupActors | bool | `false` | Whether to enable updates to performance_schema.setup_actors settings. Requires allowUpdatePerformanceSchemaSettings to also be enabled. |
 | databaseObservability.collectors.setupActors.collectInterval | string | `"1h"` | How frequently to check if setup_actors are configured correctly. |
 | databaseObservability.collectors.setupActors.enabled | bool | `true` | Enable the setup_actors collector. |
-| databaseObservability.collectors.setupConsumers.collectInterval | string | `"1m"` | How frequently to collect performance_schema.setup_consumers information from the database. |
+| databaseObservability.collectors.setupConsumers.collectInterval | string | `"1h"` | How frequently to collect performance_schema.setup_consumers information from the database. |
 | databaseObservability.collectors.setupConsumers.enabled | bool | `true` | Enable collection of performance_schema.setup_consumers information. |
 
 ### Exporter Settings
