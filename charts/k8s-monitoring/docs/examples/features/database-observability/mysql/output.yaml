@@ -370,25 +370,28 @@ data:
           collect_interval = "1m"
         }
         query_samples {
-          collect_interval = "1m"
+          collect_interval = "10s"
           disable_query_redaction = false
           auto_enable_setup_consumers = false
           setup_consumers_check_interval = "1h"
+          sample_min_duration = "0s"
+          wait_event_min_duration = "1us"
         }
         schema_details {
           collect_interval = "1m"
-          cache_enabled = false
+          cache_enabled = true
           cache_size = 256
           cache_ttl = "10m"
         }
         setup_consumers {
-          collect_interval = "1m"
+          collect_interval = "1h"
         }
         setup_actors {
           auto_update_setup_actors = false
           collect_interval = "1h"
         }
         enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
+        disable_collectors = ["locks"]
     
         forward_to = [loki.relabel.database_observability_mysql_test_db.receiver]
       }
