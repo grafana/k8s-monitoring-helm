@@ -30,6 +30,27 @@ spec:
             - -c
             - "while true; do echo 'running'; sleep 60; done"
 ---
+# A CronJob that runs every minute, generating Pod created/modified/deleted events.
+# successfulJobsHistoryLimit: 1 causes old completed pods to be deleted when new ones arrive.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ephemeral-pods
+  namespace: manifest-sources
+spec:
+  schedule: "* * * * *"
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: busybox
+              image: busybox
+              args: ["echo", "done"]
+---
 # A StatefulSet that k8s-manifest-tail will watch and log manifest changes for
 apiVersion: apps/v1
 kind: StatefulSet
