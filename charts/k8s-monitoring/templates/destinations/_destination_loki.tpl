@@ -18,7 +18,7 @@ loki.write {{ include "helper.alloy_name" $.destinationName | quote }} {
 {{- if .urlFrom }} 
     url = {{ .urlFrom }}
 {{- else }}
-    url = {{ .url | quote }} 
+    url = {{ tpl (toString .url) .tplRoot | quote }} 
 {{- end }}
 {{- if .timeout }}
     remote_timeout = {{ .timeout | quote }}
@@ -34,9 +34,10 @@ loki.write {{ include "helper.alloy_name" $.destinationName | quote }} {
     tenant_id = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "tenantId" "nonsensitive" true) }}
 {{- end }}
 {{- if or .extraHeaders .extraHeadersFrom }}
+  {{- $tplRoot := .tplRoot }}
     headers = {
 {{- range $key, $value := .extraHeaders }}
-      {{ $key | quote }} = {{ $value | quote }},
+      {{ $key | quote }} = {{ tpl (toString $value) $tplRoot | quote }},
 {{- end }}
 {{- range $key, $value := .extraHeadersFrom }}
       {{ $key | quote }} = {{ $value }},

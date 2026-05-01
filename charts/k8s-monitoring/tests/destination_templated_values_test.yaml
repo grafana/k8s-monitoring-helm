@@ -1,0 +1,80 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Destinations - Templated Values
+templates:
+  - alloy-config.yaml
+tests:
+  - it: evaluates templated OTLP destination URLs and headers
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: otlp
+          url: https://{{ .Values.cluster.name }}.example.com
+          extraHeaders:
+            x-test-cluster: "{{ .Values.cluster.name }}"
+    asserts:
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'endpoint = "https://test-cluster\.example\.com"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '"x-test-cluster" = "test-cluster"'
+
+  - it: evaluates templated Prometheus destination URLs and headers
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: prometheus
+          url: https://{{ .Values.cluster.name }}.example.com/api/v1/write
+          extraHeaders:
+            x-test-cluster: "{{ .Values.cluster.name }}"
+    asserts:
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'url = "https://test-cluster\.example\.com/api/v1/write"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '"x-test-cluster" = "test-cluster"'
+
+  - it: evaluates templated Loki destination URLs and headers
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: loki
+          url: https://{{ .Values.cluster.name }}.example.com/loki/api/v1/push
+          extraHeaders:
+            x-test-cluster: "{{ .Values.cluster.name }}"
+    asserts:
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'url = "https://test-cluster\.example\.com/loki/api/v1/push"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '"x-test-cluster" = "test-cluster"'
+
+  - it: evaluates templated Pyroscope destination URLs and headers
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: pyroscope
+          url: https://{{ .Values.cluster.name }}.example.com
+          extraHeaders:
+            x-test-cluster: "{{ .Values.cluster.name }}"
+    asserts:
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'url = "https://test-cluster\.example\.com"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '"x-test-cluster" = "test-cluster"'

@@ -5,8 +5,10 @@ cluster:
 destinations:
   otlp-gateway:
     type: otlp
-    url: https://otlp-gateway-my-region.grafana.net/otlp
+    url: https://{{ .Values.cluster.name }}.otlp-gateway-my-region.grafana.net/otlp
     protocol: http
+    extraHeaders:
+      x-cluster: "{{ .Values.cluster.name }}"
     auth:
       type: basic
       username: my-gateway-username

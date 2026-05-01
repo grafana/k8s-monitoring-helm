@@ -92,8 +92,8 @@ This defines the options for defining a destination for metrics that use the Pro
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | clusterLabels | list | `["cluster","k8s.cluster.name"]` | Labels to be set with the cluster name as the value. |
-| extraHeaders | object | `{}` | Extra headers to be set when sending data. All values are treated as strings and automatically quoted. |
-| extraHeadersFrom | object | `{}` | Extra headers to be set when sending data using a dynamic reference. All values are treated as raw strings and not quoted. |
+| extraHeaders | object | `{}` | Extra headers to be set when sending data. All values are treated as strings, support Helm templating, and are automatically quoted. |
+| extraHeadersFrom | object | `{}` | Extra headers to be set when sending data using a dynamic reference. All values are treated as raw Alloy expressions and not quoted. |
 | extraLabels | object | `{}` | Extra labels to be added to all metrics before delivering to the destination. All values are treated as strings and automatically quoted. |
 | extraLabelsFrom | object | `{}` | Extra labels to be added to all metrics using a dynamic reference before delivering to the destination. All values are treated as raw strings and not quoted. |
 | metricProcessingRules | string | `""` | Rule blocks to apply to all metrics. Uses the [write_relabel_config block](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.remote_write/#write_relabel_config-block) of the prometheus.remote_write component. Format: write_relabel_config {   source_labels = ["..."]   action = "..."   ... } |
@@ -108,8 +108,8 @@ This defines the options for defining a destination for metrics that use the Pro
 | tenantId | string | `""` | The tenant ID for the Prometheus destination. |
 | tenantIdFrom | string | `""` | Raw config for accessing the tenant ID. |
 | tenantIdKey | string | `"tenantId"` | The key for storing the tenant ID in the secret. |
-| url | string | `""` | The URL for the Prometheus destination. |
-| urlFrom | string | `""` | Raw config for accessing the URL. Lets you insert raw Alloy references so you can load the URL from any number of places, such as loading values from config maps to HTTP calls. For example: `urlFrom: sys.env("PROMETHEUS_URL")` |
+| url | string | `""` | The URL for the Prometheus destination. Supports Helm templating and is rendered as a quoted string in the generated Alloy config. |
+| urlFrom | string | `""` | Raw config for accessing the URL. Lets you insert raw Alloy references so you can load the URL from any number of places, such as loading values from config maps to HTTP calls. Use this when you need a raw Alloy expression instead of a quoted string. For example: `urlFrom: sys.env("PROMETHEUS_URL")` |
 
 ### Metric Enrichment
 

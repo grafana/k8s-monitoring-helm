@@ -7,14 +7,15 @@ pyroscope.write {{ include "helper.alloy_name" $.destinationName | quote }} {
 {{- if .urlFrom }} 
     url = {{ .urlFrom }}
 {{- else }}
-    url = {{ .url | quote }} 
+    url = {{ tpl (toString .url) .tplRoot | quote }} 
 {{- end }}
     headers = {
+{{- $tplRoot := .tplRoot }}
 {{- if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "tenantId")) "true" }}
       "X-Scope-OrgID" = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "tenantId" "nonsensitive" true) }},
 {{- end }}
 {{- range $key, $value := .extraHeaders }}
-      {{ $key | quote }} = {{ $value | quote }},
+      {{ $key | quote }} = {{ tpl (toString $value) $tplRoot | quote }},
 {{- end }}
 {{- range $key, $value := .extraHeadersFrom }}
       {{ $key | quote }} = {{ $value }},

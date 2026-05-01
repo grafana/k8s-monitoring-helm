@@ -73,8 +73,8 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | clusterLabels | list | `["cluster","k8s.cluster.name"]` | Labels to be set with the cluster name as the value. |
-| extraHeaders | object | `{}` | Extra headers to be set when sending data. All values are treated as strings and automatically quoted. |
-| extraHeadersFrom | object | `{}` | Extra headers to be set when sending data through a dynamic reference. All values are treated as raw strings and not quoted. |
+| extraHeaders | object | `{}` | Extra headers to be set when sending data. All values are treated as strings, support Helm templating, and are automatically quoted. |
+| extraHeadersFrom | object | `{}` | Extra headers to be set when sending data through a dynamic reference. All values are treated as raw Alloy expressions and not quoted. |
 | name | string | `""` | The name for this OTLP destination. |
 | protocol | string | `"grpc"` | The protocol for the OTLP destination. Options are "grpc" (default), "http". |
 | protocolValidation | bool | `true` | Validate that the protocol matches known OTLP destinations, like Grafana Cloud's OTLP Gateway or Tempo endpoints. |
@@ -87,8 +87,8 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | tenantId | string | `""` | The tenant ID for the OTLP destination. |
 | tenantIdFrom | string | `""` | Raw config for accessing the tenant ID. |
 | tenantIdKey | string | `"tenantId"` | The key for storing the tenant ID in the secret. |
-| url | string | `""` | The URL for the OTLP destination. |
-| urlFrom | string | `""` | Raw config for accessing the URL. |
+| url | string | `""` | The URL for the OTLP destination. Supports Helm templating and is rendered as a quoted string in the generated Alloy config. |
+| urlFrom | string | `""` | Raw config for accessing the URL. Use this when you need to insert a raw Alloy expression instead of a quoted string. |
 | writeBufferSize | string | `""` | Size of the write buffer the gRPC client to use for writing requests. |
 
 ### Telemetry
