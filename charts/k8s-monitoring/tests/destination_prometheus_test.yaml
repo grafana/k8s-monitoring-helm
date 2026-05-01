@@ -72,3 +72,62 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["config.alloy"]
+
+  - it: supports metric enrichment with simple labels
+    set:
+      cluster: {name: test-cluster}
+      alloy-singleton: {enabled: true, extraConfig: " ", includeDestinations: ["test"]}
+      selfReporting: {enabled: false}
+      destinations:
+        - name: test
+          type: prometheus
+          url: https://prometheus.example.com
+          metricEnrichment:
+            namespaceLabels: [team]
+            podLabels: [color]
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]
+
+  - it: supports metric enrichment with labels containing special characters
+    set:
+      cluster: {name: test-cluster}
+      alloy-singleton: {enabled: true, extraConfig: " ", includeDestinations: ["test"]}
+      selfReporting: {enabled: false}
+      destinations:
+        - name: test
+          type: prometheus
+          url: https://prometheus.example.com
+          metricEnrichment:
+            namespaceLabels:
+              - field.cattle.io/projectId
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]
+
+  - it: supports metric enrichment with explicit label renaming
+    set:
+      cluster: {name: test-cluster}
+      alloy-singleton: {enabled: true, extraConfig: " ", includeDestinations: ["test"]}
+      selfReporting: {enabled: false}
+      destinations:
+        - name: test
+          type: prometheus
+          url: https://prometheus.example.com
+          metricEnrichment:
+            namespaceLabels:
+              - team
+              - name: field.cattle.io/projectId
+                as: project_id
+            podLabels:
+              - name: app.kubernetes.io/name
+                as: app_name
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]
