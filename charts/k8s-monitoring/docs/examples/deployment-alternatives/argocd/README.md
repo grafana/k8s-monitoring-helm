@@ -20,7 +20,10 @@ Three variants are provided:
 - [`k8s-monitoring-applicationset.yaml`](./k8s-monitoring-applicationset.yaml): an `ApplicationSet` using the
   [cluster generator](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Cluster/) to
   fan the same configuration out to every Argo CD cluster carrying the `kubernetes-monitoring: enabled` label.
-  Combine with the external-secrets variant when each managed cluster has its own credentials Secret.
+  Combine with the external-secrets variant when each managed cluster has its own credentials Secret. The template
+  uses `{{ .nameNormalized }}` for the generated `Application.metadata.name`; ensure your Argo CD cluster names are
+  unique after normalization (lowercase + non-DNS characters replaced with `-`), since names like `prod_us` and
+  `prod-us` both normalize to `prod-us` and would generate colliding Applications.
 
 ## Setting `null` values
 
