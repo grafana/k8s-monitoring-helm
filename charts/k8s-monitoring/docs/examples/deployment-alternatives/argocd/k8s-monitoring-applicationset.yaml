@@ -1,0 +1,141 @@
+---
+# Multi-cluster fan-out using Argo CD's cluster generator. The generator iterates
+# over every Argo CD `Cluster` secret carrying the label below and produces one
+# Application per cluster from the template. {{ .name }} and {{ .nameNormalized }}
+# are substituted by Argo CD itself, not by Helm or the chart.
+#
+# Each managed cluster must already have a `grafana-cloud-credentials` Secret
+# (see k8s-monitoring-application-external-secrets.yaml) in the destination
+# namespace before the generated Applications sync. Endpoint URLs stay inline
+# below; only credentials live in the Secret.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: k8s-monitoring
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            kubernetes-monitoring: enabled
+  template:
+    metadata:
+      name: 'k8s-monitoring-{{ .nameNormalized }}'
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: default
+      syncPolicy:
+        automated:
+          selfHeal: true
+        syncOptions:
+          - Retry=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 1m
+      destination:
+        name: '{{ .name }}'
+        namespace: default
+      source:
+        repoURL: https://github.com/grafana/k8s-monitoring-helm.git
+        path: charts/k8s-monitoring
+        targetRevision: "main"
+        helm:
+          releaseName: k8smon
+          valuesObject:
+            cluster:
+              name: '{{ .name }}'
+            destinations:
+              localPrometheus:
+                type: prometheus
+                url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+                auth:
+                  type: basic
+                  usernameKey: prometheus-username
+                  passwordKey: access-token
+                secret:
+                  create: false
+                  name: grafana-cloud-credentials
+                  namespace: default
+              localLoki:
+                type: loki
+                url: http://loki.loki.svc:3100/loki/api/v1/push
+                tenantId: "1"
+                auth:
+                  type: basic
+                  usernameKey: loki-username
+                  passwordKey: access-token
+                secret:
+                  create: false
+                  name: grafana-cloud-credentials
+                  namespace: default
+            clusterMetrics:
+              enabled: true
+              collector: alloy-metrics
+
+            costMetrics:
+              enabled: true
+              collector: alloy-metrics
+
+            hostMetrics:
+              enabled: true
+              collector: alloy-metrics
+              linuxHosts:
+                enabled: true
+              windowsHosts:
+                enabled: true
+              energyMetrics:
+                enabled: true
+
+            clusterEvents:
+              enabled: true
+              collector: alloy-singleton
+
+            podLogsViaLoki:
+              enabled: true
+              collector: alloy-logs
+              structuredMetadata:
+                pod: ""
+
+            collectors:
+              alloy-metrics:
+                presets: [clustered, statefulset]
+              alloy-logs:
+                presets: [filesystem-log-reader, daemonset]
+              alloy-singleton:
+                presets: [singleton]
+
+            collectorCommon:
+              alloy:
+                annotations:
+                  argocd.argoproj.io/sync-wave: "1"
+
+            telemetryServices:
+              kube-state-metrics:
+                deploy: true
+              node-exporter:
+                deploy: true
+              windows-exporter:
+                deploy: true
+              kepler:
+                deploy: true
+              opencost:
+                deploy: true
+                metricsSource: localPrometheus
+                annotations:
+                  argocd.argoproj.io/sync-wave: "1"
+                opencost:
+                  exporter:
+                    defaultClusterId: '{{ .name }}'
+                  prometheus:
+                    existingSecretName: grafana-cloud-credentials
+                    username_key: prometheus-username
+                    password_key: access-token
+                    external:
+                      url: http://prometheus-server.prometheus.svc:9090
