@@ -66,6 +66,7 @@ tests:
               type: logql
 
             # k8s-manifest-tail logs are NOT collected by regular pod logs (pod has logs.grafana.com/pods.enabled: "false")
-            # No way to check if there are zero results for logql queries
-            # - query: count_over_time({cluster="$CLUSTER", job!="integrations/kubernetes/manifests", container="k8s-manifest-tail"}[1h])
-            #   type: logql
+            - query: count_over_time({cluster="$CLUSTER", job!="integrations/kubernetes/manifests", container="k8s-manifest-tail"}[1h])
+              type: logql
+              expect:
+                count: 0
