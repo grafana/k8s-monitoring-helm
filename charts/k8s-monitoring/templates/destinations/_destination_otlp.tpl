@@ -435,6 +435,30 @@ otelcol.processor.memory_limiter {{ include "helper.alloy_name" $.destinationNam
 otelcol.exporter.otlp {{ include "helper.alloy_name" $.destinationName | quote }} {
 {{- else if eq .protocol "http" }}
 otelcol.exporter.otlphttp {{ include "helper.alloy_name" $.destinationName | quote }} {
+{{- if and (ne .metrics.enabled false) .metrics.path }}
+{{- $path := .metrics.path | trimPrefix "/" }}
+{{- if .urlFrom }}
+  metrics_endpoint = {{ .urlFrom }} + {{ printf "/%s" $path | quote }}
+{{- else }}
+  metrics_endpoint = {{ printf "%s/%s" (.url | trimSuffix "/") $path | quote }}
+{{- end }}
+{{- end }}
+{{- if and (ne .logs.enabled false) .logs.path }}
+{{- $path := .logs.path | trimPrefix "/" }}
+{{- if .urlFrom }}
+  logs_endpoint = {{ .urlFrom }} + {{ printf "/%s" $path | quote }}
+{{- else }}
+  logs_endpoint = {{ printf "%s/%s" (.url | trimSuffix "/") $path | quote }}
+{{- end }}
+{{- end }}
+{{- if and (ne .traces.enabled false) .traces.path }}
+{{- $path := .traces.path | trimPrefix "/" }}
+{{- if .urlFrom }}
+  traces_endpoint = {{ .urlFrom }} + {{ printf "/%s" $path | quote }}
+{{- else }}
+  traces_endpoint = {{ printf "%s/%s" (.url | trimSuffix "/") $path | quote }}
+{{- end }}
+{{- end }}
 {{- end }}
   client {
 {{- if .urlFrom }}

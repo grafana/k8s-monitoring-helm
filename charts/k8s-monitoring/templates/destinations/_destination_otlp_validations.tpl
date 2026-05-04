@@ -13,6 +13,22 @@
     {{ fail (join "\n" $msg) }}
   {{- end }}
 
+  {{- /* Per-signal paths are only supported for the http protocol */}}
+  {{- if eq (.Destination.protocol | default "grpc") "grpc" }}
+    {{- range $signal := list "metrics" "logs" "traces" }}
+      {{- $signalConfig := index $.Destination $signal }}
+      {{- if and $signalConfig $signalConfig.path }}
+        {{- $msg := list "" (printf "Destination \"%s\" sets a custom path for %s, which is only supported when protocol is \"http\"." $.DestinationName $signal) }}
+        {{- $msg = append $msg "Please set:" }}
+        {{- $msg = append $msg "destinations:" }}
+        {{- $msg = append $msg (printf "  %s:" $.DestinationName) }}
+        {{- $msg = append $msg "    type: otlp" }}
+        {{- $msg = append $msg "    protocol: http" }}
+        {{ fail (join "\n" $msg) }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+
   {{- if and .Destination.proxyURL (eq (.Destination.protocol | default "grpc") "grpc") }}
     {{- $msg := list "" (printf "Destination \"%s\" does not support proxyURL." .DestinationName) }}
     {{- $msg = append $msg "When using the gPRC protocol, the proxyURL option is not supported." }}

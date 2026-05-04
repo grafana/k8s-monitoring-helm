@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Add the ability to set per-signal paths for OTLP/http destinations (@petewall)
 *   Update Node Exporter to 4.55.0 (@petewall)
 
 ## 4.0.4

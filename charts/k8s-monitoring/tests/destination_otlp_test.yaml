@@ -72,3 +72,29 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["config.alloy"]
+
+  - it: allows you to set per-signal paths when using http
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: otlp
+          protocol: http
+          url: http://custom-backend.monitoring.svc.cluster.local:4318
+          metrics:
+            path: v2/metric/otlp
+          logs:
+            path: v2/log/otlp
+          traces:
+            path: v2/trace/otlp
+          tls:
+            insecure: true
+            insecureSkipVerify: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]
+

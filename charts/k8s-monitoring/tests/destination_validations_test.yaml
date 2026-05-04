@@ -289,5 +289,26 @@ tests:
                 traces:
                   enabled: true
 
+  - it: rejects per-signal paths when using grpc
+    set:
+      cluster:
+        name: test-cluster
+      destinations:
+        test:
+          type: otlp
+          protocol: grpc
+          url: https://otlp.example.com
+          traces:
+            path: v2/trace/otlp
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "test" sets a custom path for traces, which is only supported when protocol is "http".
+            Please set:
+            destinations:
+              test:
+                type: otlp
+                protocol: http
+
 #  - it: detects if traces are disabled and tail sampling is enabled
 # TODO
