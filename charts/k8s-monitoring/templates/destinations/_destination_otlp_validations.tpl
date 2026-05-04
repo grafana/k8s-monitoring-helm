@@ -17,7 +17,7 @@
   {{- if eq (.Destination.protocol | default "grpc") "grpc" }}
     {{- range $signal := list "metrics" "logs" "traces" }}
       {{- $signalConfig := index $.Destination $signal }}
-      {{- if and $signalConfig $signalConfig.path }}
+      {{- if and $signalConfig $signalConfig.path (ne $signalConfig.enabled false) }}
         {{- $msg := list "" (printf "Destination \"%s\" sets a custom path for %s, which is only supported when protocol is \"http\"." $.DestinationName $signal) }}
         {{- $msg = append $msg "Please set:" }}
         {{- $msg = append $msg "destinations:" }}

@@ -74,3 +74,22 @@ tests:
     asserts:
       - matchSnapshot:
           path: spec.alloy.configMap.content
+
+  - it: applies per-signal paths to the servicegraph collector exporter
+    set:
+      destinations:
+        otlpGateway:
+          type: otlp
+          protocol: http
+          url: http://custom-backend.monitoring.svc.cluster.local:4318
+          metrics:
+            path: v2/metric/otlp
+          traces:
+            path: v2/trace/otlp
+          tls: {insecure: true, insecureSkipVerify: true}
+          processors:
+            serviceGraphMetrics:
+              enabled: true
+    asserts:
+      - matchSnapshot:
+          path: spec.alloy.configMap.content

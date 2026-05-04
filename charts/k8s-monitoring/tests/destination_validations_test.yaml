@@ -289,6 +289,25 @@ tests:
                 traces:
                   enabled: true
 
+  - it: ignores a custom path on a disabled signal when using grpc
+    set:
+      cluster:
+        name: test-cluster
+      collectors:
+        alloy-singleton:
+          extraConfig: " "
+          includeDestinations: ["test"]
+      destinations:
+        test:
+          type: otlp
+          protocol: grpc
+          url: https://otlp.example.com
+          traces:
+            enabled: false
+            path: v2/trace/otlp
+    asserts:
+      - notFailedTemplate: {}
+
   - it: rejects per-signal paths when using grpc
     set:
       cluster:

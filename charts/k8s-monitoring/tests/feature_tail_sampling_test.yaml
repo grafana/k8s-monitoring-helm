@@ -319,3 +319,25 @@ tests:
           of: Alloy
       - matchSnapshot:
           path: spec.alloy.configMap.content
+
+  - it: applies per-signal paths to the sampler collector exporter
+    set:
+      destinations:
+        otlp:
+          type: otlp
+          protocol: http
+          url: http://custom-backend.monitoring.svc.cluster.local:4318
+          traces:
+            path: v2/trace/otlp
+          tls: {insecure: true, insecureSkipVerify: true}
+          processors:
+            tailSampling:
+              enabled: true
+              policies:
+                - name: always_sample-policy
+                  type: always_sample
+    asserts:
+      - isKind:
+          of: Alloy
+      - matchSnapshot:
+          path: spec.alloy.configMap.content
