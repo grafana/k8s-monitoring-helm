@@ -18,6 +18,11 @@ declare "pod_logs_via_kubernetes_api" {
       action = "replace"
       target_label = "namespace"
     }
+    rule {  // Drop anything with a "falsy" annotation value
+      source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
+      regex = "(false|no|skip)"
+      action = "drop"
+    }
     rule {
       source_labels = ["__meta_kubernetes_pod_name"]
       target_label = "pod"
@@ -173,7 +178,6 @@ pod_logs_via_kubernetes_api "feature" {
     loki.write.loki.receiver,
   ]
 }
-
 
 
 

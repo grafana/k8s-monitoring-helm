@@ -24,27 +24,28 @@ should add the attach_metadata block to the discovery.kubernetes:
             action = "replace"
             target_label = "namespace"
           }
+          rule {  // Drop anything with a "falsy" annotation value
+            source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
+            regex = "(false|no|skip)"
+            action = "drop"
+          }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
             replacement = "$1"
@@ -59,7 +60,6 @@ should add the attach_metadata block to the discovery.kubernetes:
           // - pod.label[app.kubernetes.io/name]
           // - k8s.container.name
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
@@ -77,7 +77,6 @@ should add the attach_metadata block to the discovery.kubernetes:
           // - pod.annotation[resource.opentelemetry.io/service.namespace]
           // - pod.namespace
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
               "namespace",
@@ -124,7 +123,6 @@ should add the attach_metadata block to the discovery.kubernetes:
           rule {
             source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -135,7 +133,6 @@ should add the attach_metadata block to the discovery.kubernetes:
             source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
             separator = "/"
             regex = "(.+/.+)"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -239,27 +236,28 @@ should add the node architecture label rules to the discovery relabel:
             action = "replace"
             target_label = "namespace"
           }
+          rule {  // Drop anything with a "falsy" annotation value
+            source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
+            regex = "(false|no|skip)"
+            action = "drop"
+          }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
             replacement = "$1"
@@ -274,7 +272,6 @@ should add the node architecture label rules to the discovery relabel:
           // - pod.label[app.kubernetes.io/name]
           // - k8s.container.name
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
@@ -292,7 +289,6 @@ should add the node architecture label rules to the discovery relabel:
           // - pod.annotation[resource.opentelemetry.io/service.namespace]
           // - pod.namespace
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
               "namespace",
@@ -339,7 +335,6 @@ should add the node architecture label rules to the discovery relabel:
           rule {
             source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -350,7 +345,6 @@ should add the node architecture label rules to the discovery relabel:
             source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
             separator = "/"
             regex = "(.+/.+)"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -452,27 +446,28 @@ should add the node availability zone label rules to the discovery relabel:
             action = "replace"
             target_label = "namespace"
           }
+          rule {  // Drop anything with a "falsy" annotation value
+            source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
+            regex = "(false|no|skip)"
+            action = "drop"
+          }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
             replacement = "$1"
@@ -487,7 +482,6 @@ should add the node availability zone label rules to the discovery relabel:
           // - pod.label[app.kubernetes.io/name]
           // - k8s.container.name
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
@@ -505,7 +499,6 @@ should add the node availability zone label rules to the discovery relabel:
           // - pod.annotation[resource.opentelemetry.io/service.namespace]
           // - pod.namespace
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
               "namespace",
@@ -552,7 +545,6 @@ should add the node availability zone label rules to the discovery relabel:
           rule {
             source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -563,7 +555,6 @@ should add the node availability zone label rules to the discovery relabel:
             source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
             separator = "/"
             regex = "(.+/.+)"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -666,27 +657,28 @@ should add the node instance type label rules to the discovery relabel:
             action = "replace"
             target_label = "namespace"
           }
+          rule {  // Drop anything with a "falsy" annotation value
+            source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
+            regex = "(false|no|skip)"
+            action = "drop"
+          }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
             replacement = "$1"
@@ -701,7 +693,6 @@ should add the node instance type label rules to the discovery relabel:
           // - pod.label[app.kubernetes.io/name]
           // - k8s.container.name
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
@@ -719,7 +710,6 @@ should add the node instance type label rules to the discovery relabel:
           // - pod.annotation[resource.opentelemetry.io/service.namespace]
           // - pod.namespace
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
               "namespace",
@@ -766,7 +756,6 @@ should add the node instance type label rules to the discovery relabel:
           rule {
             source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -777,7 +766,6 @@ should add the node instance type label rules to the discovery relabel:
             source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
             separator = "/"
             regex = "(.+/.+)"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -879,27 +867,28 @@ should add the node os label rules to the discovery relabel:
             action = "replace"
             target_label = "namespace"
           }
+          rule {  // Drop anything with a "falsy" annotation value
+            source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
+            regex = "(false|no|skip)"
+            action = "drop"
+          }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
             replacement = "$1"
@@ -914,7 +903,6 @@ should add the node os label rules to the discovery relabel:
           // - pod.label[app.kubernetes.io/name]
           // - k8s.container.name
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
@@ -932,7 +920,6 @@ should add the node os label rules to the discovery relabel:
           // - pod.annotation[resource.opentelemetry.io/service.namespace]
           // - pod.namespace
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
               "namespace",
@@ -979,7 +966,6 @@ should add the node os label rules to the discovery relabel:
           rule {
             source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -990,7 +976,6 @@ should add the node os label rules to the discovery relabel:
             source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
             separator = "/"
             regex = "(.+/.+)"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -1093,27 +1078,28 @@ should add the node pool label rules to the discovery relabel:
             action = "replace"
             target_label = "namespace"
           }
+          rule {  // Drop anything with a "falsy" annotation value
+            source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
+            regex = "(false|no|skip)"
+            action = "drop"
+          }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
             replacement = "$1"
@@ -1128,7 +1114,6 @@ should add the node pool label rules to the discovery relabel:
           // - pod.label[app.kubernetes.io/name]
           // - k8s.container.name
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
@@ -1146,7 +1131,6 @@ should add the node pool label rules to the discovery relabel:
           // - pod.annotation[resource.opentelemetry.io/service.namespace]
           // - pod.namespace
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
               "namespace",
@@ -1193,7 +1177,6 @@ should add the node pool label rules to the discovery relabel:
           rule {
             source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -1204,7 +1187,6 @@ should add the node pool label rules to the discovery relabel:
             source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
             separator = "/"
             regex = "(.+/.+)"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -1309,27 +1291,28 @@ should add the node region label rules to the discovery relabel:
             action = "replace"
             target_label = "namespace"
           }
+          rule {  // Drop anything with a "falsy" annotation value
+            source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
+            regex = "(false|no|skip)"
+            action = "drop"
+          }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
             replacement = "$1"
@@ -1344,7 +1327,6 @@ should add the node region label rules to the discovery relabel:
           // - pod.label[app.kubernetes.io/name]
           // - k8s.container.name
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
@@ -1362,7 +1344,6 @@ should add the node region label rules to the discovery relabel:
           // - pod.annotation[resource.opentelemetry.io/service.namespace]
           // - pod.namespace
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
               "namespace",
@@ -1409,7 +1390,6 @@ should add the node region label rules to the discovery relabel:
           rule {
             source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -1420,7 +1400,6 @@ should add the node region label rules to the discovery relabel:
             source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
             separator = "/"
             regex = "(.+/.+)"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -1522,27 +1501,28 @@ should add the node role label rules to the discovery relabel:
             action = "replace"
             target_label = "namespace"
           }
+          rule {  // Drop anything with a "falsy" annotation value
+            source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
+            regex = "(false|no|skip)"
+            action = "drop"
+          }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
             replacement = "$1"
@@ -1557,7 +1537,6 @@ should add the node role label rules to the discovery relabel:
           // - pod.label[app.kubernetes.io/name]
           // - k8s.container.name
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
@@ -1575,7 +1554,6 @@ should add the node role label rules to the discovery relabel:
           // - pod.annotation[resource.opentelemetry.io/service.namespace]
           // - pod.namespace
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
               "namespace",
@@ -1622,7 +1600,6 @@ should add the node role label rules to the discovery relabel:
           rule {
             source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -1633,7 +1610,6 @@ should add the node role label rules to the discovery relabel:
             source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
             separator = "/"
             regex = "(.+/.+)"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
