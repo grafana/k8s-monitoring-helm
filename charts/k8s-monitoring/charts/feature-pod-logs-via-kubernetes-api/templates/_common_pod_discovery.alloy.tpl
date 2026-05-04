@@ -13,6 +13,18 @@ discovery.relabel "filtered_pods" {
     action = "drop"
   }
 {{- end }}
+{{- if eq .Values.discoveryMethod "annotation" }}
+  rule {  // Keep pods with non-empty annotation values
+    source_labels = [{{ include "pod_annotation" .Values.annotationSelector | quote }}]
+    regex = ".+"
+    action = "keep"
+  }
+{{- end }}
+  rule {  // Drop anything with a "falsy" annotation value
+    source_labels = [{{ include "pod_annotation" .Values.annotationSelector | quote }}]
+    regex = "(false|no|skip)"
+    action = "drop"
+  }
   rule {
     source_labels = ["__meta_kubernetes_pod_name"]
     target_label = "pod"

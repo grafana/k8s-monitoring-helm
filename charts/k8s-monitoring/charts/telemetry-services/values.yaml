@@ -198,3 +198,21 @@ opencost:
         operator: Equal
         value: arm64
         effect: NoSchedule
+
+# k8s-manifest-tail watches and logs Kubernetes manifest changes.
+k8s-manifest-tail:
+  # -- Deploy k8s-manifest-tail to watch and log Kubernetes manifest changes.
+  # @section -- k8s-manifest-tail
+  deploy: false
+
+  # @ignored
+  podAnnotations:
+    logs.grafana.com/pods.enabled: "false"
+
+  # -- Extra environment variables, required for setting the OTLP destination for the manifests.
+  # @secton -- k8s-manifest-tail
+  extraEnv: []
+  #  - name: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
+  #    value: http://k8smon-alloy-receiver.default.svc:4317
+  #  - name: OTEL_EXPORTER_OTLP_LOGS_PROTOCOL
+  #    value: grpc

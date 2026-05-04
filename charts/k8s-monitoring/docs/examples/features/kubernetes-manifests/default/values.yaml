@@ -1,0 +1,44 @@
+---
+cluster:
+  name: kubernetes-manifests-cluster
+
+destinations:
+  loki:
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+
+kubernetesManifests:
+  enabled: true
+  collector: alloy-singleton
+
+podLogsViaLoki:
+  enabled: true
+  collector: alloy-logs
+
+collectors:
+  alloy-singleton:
+    presets: [singleton]
+    liveDebugging:
+      enabled: true
+
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+
+telemetryServices:
+  k8s-manifest-tail:
+    deploy: true
+    config:
+      objects:
+        - apiVersion: v1
+          kind: Pod
+        - apiVersion: apps/v1
+          kind: Deployment
+        - apiVersion: apps/v1
+          kind: StatefulSet
+        - apiVersion: apps/v1
+          kind: DaemonSet

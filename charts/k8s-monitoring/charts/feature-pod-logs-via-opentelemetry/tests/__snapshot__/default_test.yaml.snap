@@ -48,6 +48,11 @@ can utilize the otel annotations flag:
               tag_name  = "$1"
               from      = "pod"
             }
+            annotation {
+              tag_name = "logs.grafana.com/pods.enabled"
+              key      = "logs.grafana.com/pods.enabled"
+              from     = "pod"
+            }
             label {
               tag_name = "app_kubernetes_io_name"
               key      = "app.kubernetes.io/name"
@@ -56,9 +61,23 @@ can utilize the otel annotations flag:
           }
 
           output {
+            logs = [otelcol.processor.filter.pod_logs.input]
+          }
+        } // otelcol.processor.k8sattributes "pod_logs"
+
+        otelcol.processor.filter "pod_logs" {
+          error_mode = "ignore"
+          logs {
+            log_record = [
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "false"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "no"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "skip"`,
+            ]
+          }
+          output {
             logs = [otelcol.processor.transform.pod_logs.input]
           }
-        }
+        } // otelcol.processor.filter "pod_logs"
 
         otelcol.processor.transform "pod_logs" {
           error_mode = "ignore"
@@ -66,6 +85,7 @@ can utilize the otel annotations flag:
             context = "resource"
             statements = [
               `delete_key(attributes, "k8s.container.restart_count")`,
+              `delete_key(attributes, "logs.grafana.com/pods.enabled")`,
 
               `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil`,
               `set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil`,
@@ -147,6 +167,11 @@ should allow setting log attributes:
               tag_name  = "$1"
               from      = "pod"
             }
+            annotation {
+              tag_name = "logs.grafana.com/pods.enabled"
+              key      = "logs.grafana.com/pods.enabled"
+              from     = "pod"
+            }
             label {
               tag_name = "app_kubernetes_io_name"
               key      = "app.kubernetes.io/name"
@@ -155,9 +180,23 @@ should allow setting log attributes:
           }
 
           output {
+            logs = [otelcol.processor.filter.pod_logs.input]
+          }
+        } // otelcol.processor.k8sattributes "pod_logs"
+
+        otelcol.processor.filter "pod_logs" {
+          error_mode = "ignore"
+          logs {
+            log_record = [
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "false"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "no"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "skip"`,
+            ]
+          }
+          output {
             logs = [otelcol.processor.transform.pod_logs.input]
           }
-        }
+        } // otelcol.processor.filter "pod_logs"
 
         otelcol.processor.transform "pod_logs" {
           error_mode = "ignore"
@@ -165,6 +204,7 @@ should allow setting log attributes:
             context = "resource"
             statements = [
               `delete_key(attributes, "k8s.container.restart_count")`,
+              `delete_key(attributes, "logs.grafana.com/pods.enabled")`,
 
               `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil`,
               `set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil`,
@@ -246,6 +286,11 @@ should allow setting resource attributes:
               tag_name  = "$1"
               from      = "pod"
             }
+            annotation {
+              tag_name = "logs.grafana.com/pods.enabled"
+              key      = "logs.grafana.com/pods.enabled"
+              from     = "pod"
+            }
             label {
               tag_name = "app_kubernetes_io_name"
               key      = "app.kubernetes.io/name"
@@ -254,9 +299,23 @@ should allow setting resource attributes:
           }
 
           output {
+            logs = [otelcol.processor.filter.pod_logs.input]
+          }
+        } // otelcol.processor.k8sattributes "pod_logs"
+
+        otelcol.processor.filter "pod_logs" {
+          error_mode = "ignore"
+          logs {
+            log_record = [
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "false"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "no"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "skip"`,
+            ]
+          }
+          output {
             logs = [otelcol.processor.transform.pod_logs.input]
           }
-        }
+        } // otelcol.processor.filter "pod_logs"
 
         otelcol.processor.transform "pod_logs" {
           error_mode = "ignore"
@@ -264,6 +323,7 @@ should allow setting resource attributes:
             context = "resource"
             statements = [
               `delete_key(attributes, "k8s.container.restart_count")`,
+              `delete_key(attributes, "logs.grafana.com/pods.enabled")`,
 
               `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil`,
               `set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil`,
@@ -345,6 +405,11 @@ should allow using label selectors:
               tag_name  = "$1"
               from      = "pod"
             }
+            annotation {
+              tag_name = "logs.grafana.com/pods.enabled"
+              key      = "logs.grafana.com/pods.enabled"
+              from     = "pod"
+            }
             label {
               tag_name = "app_kubernetes_io_name"
               key      = "app.kubernetes.io/name"
@@ -353,9 +418,23 @@ should allow using label selectors:
           }
 
           output {
+            logs = [otelcol.processor.filter.pod_logs.input]
+          }
+        } // otelcol.processor.k8sattributes "pod_logs"
+
+        otelcol.processor.filter "pod_logs" {
+          error_mode = "ignore"
+          logs {
+            log_record = [
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "false"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "no"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "skip"`,
+            ]
+          }
+          output {
             logs = [otelcol.processor.transform.pod_logs.input]
           }
-        }
+        } // otelcol.processor.filter "pod_logs"
 
         otelcol.processor.transform "pod_logs" {
           error_mode = "ignore"
@@ -363,6 +442,7 @@ should allow using label selectors:
             context = "resource"
             statements = [
               `delete_key(attributes, "k8s.container.restart_count")`,
+              `delete_key(attributes, "logs.grafana.com/pods.enabled")`,
 
               `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil`,
               `set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil`,
@@ -444,6 +524,11 @@ should allow using label selectors with multiple values:
               tag_name  = "$1"
               from      = "pod"
             }
+            annotation {
+              tag_name = "logs.grafana.com/pods.enabled"
+              key      = "logs.grafana.com/pods.enabled"
+              from     = "pod"
+            }
             label {
               tag_name = "app_kubernetes_io_name"
               key      = "app.kubernetes.io/name"
@@ -452,9 +537,23 @@ should allow using label selectors with multiple values:
           }
 
           output {
+            logs = [otelcol.processor.filter.pod_logs.input]
+          }
+        } // otelcol.processor.k8sattributes "pod_logs"
+
+        otelcol.processor.filter "pod_logs" {
+          error_mode = "ignore"
+          logs {
+            log_record = [
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "false"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "no"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "skip"`,
+            ]
+          }
+          output {
             logs = [otelcol.processor.transform.pod_logs.input]
           }
-        }
+        } // otelcol.processor.filter "pod_logs"
 
         otelcol.processor.transform "pod_logs" {
           error_mode = "ignore"
@@ -462,6 +561,7 @@ should allow using label selectors with multiple values:
             context = "resource"
             statements = [
               `delete_key(attributes, "k8s.container.restart_count")`,
+              `delete_key(attributes, "logs.grafana.com/pods.enabled")`,
 
               `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil`,
               `set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil`,
@@ -543,6 +643,11 @@ should render the default configuration:
               tag_name  = "$1"
               from      = "pod"
             }
+            annotation {
+              tag_name = "logs.grafana.com/pods.enabled"
+              key      = "logs.grafana.com/pods.enabled"
+              from     = "pod"
+            }
             label {
               tag_name = "app_kubernetes_io_name"
               key      = "app.kubernetes.io/name"
@@ -551,9 +656,23 @@ should render the default configuration:
           }
 
           output {
+            logs = [otelcol.processor.filter.pod_logs.input]
+          }
+        } // otelcol.processor.k8sattributes "pod_logs"
+
+        otelcol.processor.filter "pod_logs" {
+          error_mode = "ignore"
+          logs {
+            log_record = [
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "false"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "no"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "skip"`,
+            ]
+          }
+          output {
             logs = [otelcol.processor.transform.pod_logs.input]
           }
-        }
+        } // otelcol.processor.filter "pod_logs"
 
         otelcol.processor.transform "pod_logs" {
           error_mode = "ignore"
@@ -561,6 +680,7 @@ should render the default configuration:
             context = "resource"
             statements = [
               `delete_key(attributes, "k8s.container.restart_count")`,
+              `delete_key(attributes, "logs.grafana.com/pods.enabled")`,
 
               `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil`,
               `set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil`,

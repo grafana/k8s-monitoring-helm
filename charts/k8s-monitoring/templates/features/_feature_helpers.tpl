@@ -6,6 +6,8 @@
 - clusterEvents
 - costMetrics
 - hostMetrics
+- integrations
+- kubernetesManifests
 - nodeLogs
 - podLogsViaLoki
 - podLogsViaOpenTelemetry
@@ -14,7 +16,6 @@
 - profilesReceiver
 - profiling
 - prometheusOperatorObjects
-- integrations
 - selfReporting
 {{- end }}
 

@@ -23,6 +23,19 @@ nodeSelectors: {}
 # @section -- Pod Discovery
 labelSelectors: {}
 
+# -- Controls the behavior of discovering pods for logs. Possible values: `all`, `annotation`.
+# When set to "all", every pod (filtered by the namespace and label selectors) will have their logs gathered.
+# When set to "annotation", only pods with the annotation selector set to something other than "false", "no" or "skip"
+# will have their logs gathered.
+# @section -- Discovery Settings
+discoveryMethod: "all"
+
+# The annotation to control the behavior of gathering logs from this pod.
+# -- Pod annotation to use for controlling log discovery. If a pod has this annotation, it will either enable or disable
+# gathering of logs, depending on the value of the discoveryMethod.
+# @section -- Discovery Settings
+annotationSelector: "logs.grafana.com/pods.enabled"
+
 # -- Rules to filter pods for log gathering. Only used for "volumes" or "kubernetesApi" gather methods.
 # @section -- Pod Discovery
 extraDiscoveryRules: ""

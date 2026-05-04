@@ -22,27 +22,28 @@ works when a logs-only integration is enabled:
             action = "replace"
             target_label = "namespace"
           }
+          rule {  // Drop anything with a "falsy" annotation value
+            source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
+            regex = "(false|no|skip)"
+            action = "drop"
+          }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
             replacement = "$1"
@@ -57,7 +58,6 @@ works when a logs-only integration is enabled:
           // - pod.label[app.kubernetes.io/name]
           // - k8s.container.name
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
@@ -75,7 +75,6 @@ works when a logs-only integration is enabled:
           // - pod.annotation[resource.opentelemetry.io/service.namespace]
           // - pod.namespace
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
               "namespace",
@@ -122,7 +121,6 @@ works when a logs-only integration is enabled:
           rule {
             source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -133,7 +131,6 @@ works when a logs-only integration is enabled:
             source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
             separator = "/"
             regex = "(.+/.+)"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -282,7 +279,6 @@ works when a logs-only integration is enabled:
 
 
 
-
       // Destination: loki (loki)
       otelcol.exporter.loki "loki" {
         forward_to = [loki.write.loki.receiver]
@@ -418,27 +414,28 @@ works with multiple logs-only integrations:
             action = "replace"
             target_label = "namespace"
           }
+          rule {  // Drop anything with a "falsy" annotation value
+            source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
+            regex = "(false|no|skip)"
+            action = "drop"
+          }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
             replacement = "$1"
@@ -453,7 +450,6 @@ works with multiple logs-only integrations:
           // - pod.label[app.kubernetes.io/name]
           // - k8s.container.name
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
@@ -471,7 +467,6 @@ works with multiple logs-only integrations:
           // - pod.annotation[resource.opentelemetry.io/service.namespace]
           // - pod.namespace
           rule {
-            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
               "namespace",
@@ -518,7 +513,6 @@ works with multiple logs-only integrations:
           rule {
             source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -529,7 +523,6 @@ works with multiple logs-only integrations:
             source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
             separator = "/"
             regex = "(.+/.+)"
-            action = "replace"
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
@@ -793,7 +786,6 @@ works with multiple logs-only integrations:
           loki.write.loki.receiver,
         ]
       }
-
 
 
 
