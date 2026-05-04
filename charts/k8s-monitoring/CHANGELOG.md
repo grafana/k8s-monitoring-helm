@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Update Node Exporter to 4.55.0 (@petewall)
+
 ## 4.0.4
 
 *   Set Prometheus destination cluster labels via `external_labels` instead of `write_relabel_config` blocks, matching the Loki destination pattern (@petewall)
