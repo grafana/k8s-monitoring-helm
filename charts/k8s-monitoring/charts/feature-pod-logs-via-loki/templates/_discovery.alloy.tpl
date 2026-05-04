@@ -55,27 +55,35 @@ discovery.relabel "filtered_pods" {
     action = "drop"
   }
 {{- end }}
+{{- if eq .Values.discoveryMethod "annotation" }}
+  rule {  // Keep pods with non-empty annotation values
+    source_labels = [{{ include "pod_annotation" .Values.annotationSelector | quote }}]
+    regex = ".+"
+    action = "keep"
+  }
+{{- end }}
+  rule {  // Drop anything with a "falsy" annotation value
+    source_labels = [{{ include "pod_annotation" .Values.annotationSelector | quote }}]
+    regex = "(false|no|skip)"
+    action = "drop"
+  }
   rule {
     source_labels = ["__meta_kubernetes_pod_name"]
-    action = "replace"
     target_label = "pod"
   }
   rule {
     source_labels = ["__meta_kubernetes_pod_container_name"]
-    action = "replace"
     target_label = "container"
   }
   rule {
     source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
     separator = "/"
-    action = "replace"
     replacement = "$1"
     target_label = "job"
   }
 
   // set the container runtime as a label
   rule {
-    action = "replace"
     source_labels = ["__meta_kubernetes_pod_container_id"]
     regex = "^(\\S+):\\/\\/.+$"
     replacement = "$1"
@@ -90,7 +98,6 @@ discovery.relabel "filtered_pods" {
   // - pod.label[app.kubernetes.io/name]
   // - k8s.container.name
   rule {
-    action = "replace"
     source_labels = [
       {{ include "pod_annotation" "resource.opentelemetry.io/service.name" | quote }},
       {{ include "pod_label" "app.kubernetes.io/name" | quote }},
@@ -108,7 +115,6 @@ discovery.relabel "filtered_pods" {
   // - pod.annotation[resource.opentelemetry.io/service.namespace]
   // - pod.namespace
   rule {
-    action = "replace"
     source_labels = [
       {{ include "pod_annotation" "resource.opentelemetry.io/service.namespace" | quote }},
       "namespace",
@@ -160,7 +166,6 @@ discovery.relabel "filtered_pods" {
   rule {
     source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
     separator = "/"
-    action = "replace"
     replacement = "/var/log/pods/*$1/*.log"
     target_label = "__path__"
   }
@@ -171,7 +176,6 @@ discovery.relabel "filtered_pods" {
     source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
     separator = "/"
     regex = "(.+/.+)"
-    action = "replace"
     replacement = "/var/log/pods/*$1/*.log"
     target_label = "__path__"
   }

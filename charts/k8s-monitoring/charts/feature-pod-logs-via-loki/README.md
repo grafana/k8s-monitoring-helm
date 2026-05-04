@@ -42,6 +42,13 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 ## Values
 
+### Discovery Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| annotationSelector | string | `"logs.grafana.com/pods.enabled"` | Pod annotation to use for controlling log discovery. If a pod has this annotation, it will either enable or disable gathering of logs, depending on the value of the discoveryMethod. |
+| discoveryMethod | string | `"all"` | Controls the behavior of discovering pods for logs. Possible values: `all`, `annotation`. When set to "all", every pod (filtered by the namespace and label selectors) will have their logs gathered. When set to "annotation", only pods with the annotation selector set to something other than "false", "no" or "skip" will have their logs gathered. |
+
 ### Log Processing
 
 | Key | Type | Default | Description |

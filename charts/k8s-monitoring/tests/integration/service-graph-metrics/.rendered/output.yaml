@@ -81,6 +81,11 @@ data:
             tag_name  = "$1"
             from      = "pod"
           }
+          annotation {
+            tag_name = "logs.grafana.com/pods.enabled"
+            key      = "logs.grafana.com/pods.enabled"
+            from     = "pod"
+          }
           label {
             tag_name = "app_kubernetes_io_name"
             key      = "app.kubernetes.io/name"
@@ -94,9 +99,23 @@ data:
         }
     
         output {
+          logs = [otelcol.processor.filter.pod_logs.input]
+        }
+      } // otelcol.processor.k8sattributes "pod_logs"
+    
+      otelcol.processor.filter "pod_logs" {
+        error_mode = "ignore"
+        logs {
+          log_record = [
+            `resource.attributes["logs.grafana.com/pods.enabled"] == "false"`,
+            `resource.attributes["logs.grafana.com/pods.enabled"] == "no"`,
+            `resource.attributes["logs.grafana.com/pods.enabled"] == "skip"`,
+          ]
+        }
+        output {
           logs = [otelcol.processor.transform.pod_logs.input]
         }
-      }
+      } // otelcol.processor.filter "pod_logs"
     
       otelcol.processor.transform "pod_logs" {
         error_mode = "ignore"
@@ -104,6 +123,7 @@ data:
           context = "resource"
           statements = [
             `delete_key(attributes, "k8s.container.restart_count")`,
+            `delete_key(attributes, "logs.grafana.com/pods.enabled")`,
     
             `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil`,
             `set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil`,
@@ -950,8 +970,8 @@ data:
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlpgrpc,otlphttp", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{feature="podLogsViaOpenTelemetry", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="alloy", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="podLogsViaOpenTelemetry", version="1.0.0"} 1
     # HELP grafana_kubernetes_monitoring_collector_info A metric to report the collectors of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_collector_info gauge
     grafana_kubernetes_monitoring_collector_info{kind="daemonset", name="alloy-logs", presets="filesystem-log-reader,daemonset", type="alloy"} 1

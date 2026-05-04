@@ -42,6 +42,15 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 ## Values
 
+### Pod Discovery
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| annotationSelector | string | `"logs.grafana.com/pods.enabled"` | Pod annotation to use for controlling log discovery. If a pod has this annotation, it will either enable or disable gathering of logs, depending on the value of the discoveryMethod. |
+| discoveryMethod | string | `"all"` | Controls the behavior of discovering pods for logs. Possible values: `all`, `annotation`. When set to "all", every pod (filtered by the namespace and label selectors) will have their logs gathered. When set to "annotation", only pods with the annotation selector set to something other than "false", "no" or "skip" will have their logs gathered. |
+| excludeNamespaces | list | `[]` | Do not capture logs from any pods in these namespaces. |
+| namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
+
 ### Log Processing
 
 | Key | Type | Default | Description |
@@ -55,13 +64,6 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | otelAnnotations | bool | `false` | Whether to automatically set the recommended OpenTelemetry [resource attributes](https://opentelemetry.io/docs/specs/semconv/non-normative/k8s-attributes/). |
 | staticAttributes | object | `{}` | Log attributes to set with static values. |
 | staticAttributesFrom | object | `{}` | Log attributes to set with static values, not quoted so it can reference config components. |
-
-### Pod Discovery
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| excludeNamespaces | list | `[]` | Do not capture logs from any pods in these namespaces. |
-| namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
 
 ### Global Settings
 

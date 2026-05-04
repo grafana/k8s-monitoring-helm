@@ -61,6 +61,11 @@ declare "pod_logs_via_opentelemetry" {
         tag_name  = "$1"
         from      = "pod"
       }
+      annotation {
+        tag_name = {{ .Values.annotationSelector | quote }}
+        key      = {{ .Values.annotationSelector | quote }}
+        from     = "pod"
+      }
 {{- range $attribute, $annotation := .Values.annotations }}
       annotation {
         tag_name = {{ $attribute | quote }}
@@ -106,9 +111,26 @@ declare "pod_logs_via_opentelemetry" {
     }
 
     output {
+      logs = [otelcol.processor.filter.pod_logs.input]
+    }
+  } // otelcol.processor.k8sattributes "pod_logs"
+
+  otelcol.processor.filter "pod_logs" {
+    error_mode = "ignore"
+    logs {
+      log_record = [
+{{- if eq .Values.discoveryMethod "annotation" }}
+        `resource.attributes[{{ .Values.annotationSelector | quote }}] == nil`,
+{{- end }}
+        `resource.attributes[{{ .Values.annotationSelector | quote }}] == "false"`,
+        `resource.attributes[{{ .Values.annotationSelector | quote }}] == "no"`,
+        `resource.attributes[{{ .Values.annotationSelector | quote }}] == "skip"`,
+      ]
+    }
+    output {
       logs = [otelcol.processor.transform.pod_logs.input]
     }
-  }
+  } // otelcol.processor.filter "pod_logs"
 
   otelcol.processor.transform "pod_logs" {
     error_mode = "ignore"
@@ -116,6 +138,7 @@ declare "pod_logs_via_opentelemetry" {
       context = "resource"
       statements = [
         `delete_key(attributes, "k8s.container.restart_count")`,
+        `delete_key(attributes, {{ .Values.annotationSelector | quote }})`,
 
         `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil`,
         `set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil`,
