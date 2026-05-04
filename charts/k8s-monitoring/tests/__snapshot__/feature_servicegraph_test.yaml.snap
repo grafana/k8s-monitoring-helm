@@ -1,3 +1,100 @@
+applies per-signal paths to the servicegraph collector exporter:
+  1: |
+    |-
+      otelcol.receiver.otlp "service_graph_receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"
+        }
+
+        output {
+          traces = [otelcol.connector.servicegraph.service_graph_metrics.input]
+        }
+      }
+      otelcol.connector.servicegraph "service_graph_metrics" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.connector.servicegraph/
+
+        cache_loop = "1m"
+
+        database_name_attributes = ["db.name"]
+
+        dimensions = [
+            "cloud.availability_zone",
+            "cloud.region",
+            "deployment.environment",
+            "k8s.cluster.name",
+            "k8s.namespace.name",
+            "service.namespace",
+            "service.version",
+        ]
+
+        latency_histogram_buckets = [
+            "2ms",
+            "4ms",
+            "6ms",
+            "8ms",
+            "10ms",
+            "50ms",
+            "100ms",
+            "200ms",
+            "400ms",
+            "800ms",
+            "1s",
+            "1400ms",
+            "2s",
+            "5s",
+            "10s",
+            "15s",
+        ]
+
+        metrics_flush_interval = "60s"
+
+        store_expiration_loop = "2s"
+
+        output {
+            metrics = [
+              otelcol.processor.batch.otlpgateway.input,
+            ]
+        }
+      }
+
+
+
+
+
+      // Destination: otlpGateway (otlp)
+      otelcol.processor.batch "otlpgateway" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlphttp.otlpgateway.input]
+          logs = [otelcol.exporter.otlphttp.otlpgateway.input]
+          traces = [otelcol.exporter.otlphttp.otlpgateway.input]
+        }
+      }
+      otelcol.exporter.otlphttp "otlpgateway" {
+        metrics_endpoint = "http://custom-backend.monitoring.svc.cluster.local:4318/v2/metric/otlp"
+        traces_endpoint = "http://custom-backend.monitoring.svc.cluster.local:4318/v2/trace/otlp"
+        client {
+          endpoint = "http://custom-backend.monitoring.svc.cluster.local:4318"
+          tls {
+            insecure = true
+            insecure_skip_verify = true
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+
+        sending_queue {
+          enabled = true
+        }
+      }
 routes metrics to the correct destination with multiple OTLP destinations:
   1: |
     |-

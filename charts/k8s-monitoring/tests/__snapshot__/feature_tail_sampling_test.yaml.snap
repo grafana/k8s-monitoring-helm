@@ -1,3 +1,71 @@
+applies per-signal paths to the sampler collector exporter:
+  1: |
+    |-
+      otelcol.receiver.otlp "sampler_receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"
+        }
+
+        output {
+          traces = [otelcol.processor.tail_sampling.tail_sampler.input]
+        }
+      }
+      otelcol.processor.tail_sampling "tail_sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+        decision_cache = {
+          sampled_cache_size     = 0,
+          non_sampled_cache_size = 0,
+        }
+
+        policy {
+          name = "always_sample-policy"
+          type = "always_sample"
+
+        }
+
+        output {
+          traces = [otelcol.processor.batch.otlp.input]
+        }
+      }
+
+
+
+
+      // Destination: otlp (otlp)
+      otelcol.processor.batch "otlp" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlphttp.otlp.input]
+          logs = [otelcol.exporter.otlphttp.otlp.input]
+          traces = [otelcol.exporter.otlphttp.otlp.input]
+        }
+      }
+      otelcol.exporter.otlphttp "otlp" {
+        traces_endpoint = "http://custom-backend.monitoring.svc.cluster.local:4318/v2/trace/otlp"
+        client {
+          endpoint = "http://custom-backend.monitoring.svc.cluster.local:4318"
+          tls {
+            insecure = true
+            insecure_skip_verify = true
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+
+        sending_queue {
+          enabled = true
+        }
+      }
 creates a boolean_attribute policy:
   1: |
     |-
