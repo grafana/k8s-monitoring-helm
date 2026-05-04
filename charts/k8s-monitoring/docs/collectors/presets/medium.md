@@ -11,7 +11,7 @@
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| alloy | object | `{"resources":{"limits":{"cpu":"1000m","memory":"1Gi"},"requests":{"cpu":"250m","memory":"512Mi"}}}` | Sets resource requests and limits sized for medium clusters (approximately up to 250 nodes or moderate telemetry workloads). See [Alloy resource estimation guidelines](https://grafana.com/docs/alloy/latest/introduction/estimate-resource-usage/) for tuning. |
+| alloy | object | `{"resources":{"limits":{"cpu":"1000m","memory":"4Gi"},"requests":{"cpu":"250m","memory":"2Gi"}}}` | Sets resource requests and limits sized for medium clusters (approximately up to 250 nodes or moderate telemetry workloads). See [Alloy resource estimation guidelines](https://grafana.com/docs/alloy/latest/introduction/estimate-resource-usage/) for tuning. |
 <!-- textlint-enable terminology -->
 
 <!-- textlint-disable terminology -->
@@ -27,9 +27,9 @@ alloy:
   resources:
     requests:
       cpu: 250m
-      memory: 512Mi
+      memory: 2Gi
     limits:
       cpu: 1000m
-      memory: 1Gi
+      memory: 4Gi
 ```
 <!-- textlint-enable terminology -->

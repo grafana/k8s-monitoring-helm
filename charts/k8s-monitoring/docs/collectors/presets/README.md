@@ -25,7 +25,7 @@ that best matches your cluster size and telemetry workload.
 
 | Size | CPU Request | Memory Request | CPU Limit | Memory Limit |
 |------|-------------|----------------|-----------|--------------|
-| [small](small.md) | 100m | 128Mi | 500m | 512Mi |
-| [medium](medium.md) | 250m | 512Mi | 1000m | 1Gi |
-| [large](large.md) | 500m | 1Gi | 2000m | 2Gi |
-| [xlarge](xlarge.md) | 1000m | 2Gi | 4000m | 4Gi |
+| [small](small.md) | 100m | 512Mi | 500m | 1Gi |
+| [medium](medium.md) | 250m | 2Gi | 1000m | 4Gi |
+| [large](large.md) | 500m | 4Gi | 2000m | 8Gi |
+| [xlarge](xlarge.md) | 1000m | 8Gi | 4000m | 16Gi |
