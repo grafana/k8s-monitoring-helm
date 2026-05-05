@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Fix `cluster.nameFrom` rendering in OTLP destinations so the expression is interpolated into the OTTL transform statements via `string.format`, instead of being inlined as raw OTTL where it failed to parse (@petewall)
+
 ## 4.1
 
 *   Add `small`, `medium`, `large`, and `xlarge` collector presets that set Alloy resource requests and limits for common cluster sizes (@petewall)
