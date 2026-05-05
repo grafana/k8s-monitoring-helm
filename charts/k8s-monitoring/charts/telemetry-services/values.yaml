@@ -141,10 +141,14 @@ opencost:
       defaultClusterId: "default-cluster"
 
       extraEnv:
-        # -- Trial API Key used only with GCP.
-        # See https://www.opencost.io/docs/configuration/gcp-opencost for how to set for your environment
-        # @section -- Deployment: [OpenCost](https://github.com/opencost/opencost-helm-chart)
-        CLOUD_PROVIDER_API_KEY: AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U  # trufflehog:ignore
+        # On GCP/GKE, OpenCost's GCP provider writes ${CONFIG_PATH}/gcp.json on startup. The
+        # default of /var/configs is not writable by the non-root container user, which causes
+        # the pod to panic. Point CONFIG_PATH at the always-writable /tmp instead.
+        CONFIG_PATH: /tmp
+        # CLOUD_PROVIDER_API_KEY must be non-empty so OpenCost's NewProvider() does not refuse
+        # to construct the GCP provider on GKE; the value itself is unused (pricing falls back
+        # to defaults).
+        CLOUD_PROVIDER_API_KEY: disabled
         CURRENT_CLUSTER_ID_FILTER_ENABLED: "true"
         PROM_CLUSTER_ID_LABEL: cluster
 
