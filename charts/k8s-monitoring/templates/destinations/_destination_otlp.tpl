@@ -75,7 +75,11 @@ otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | q
     context = "resource"
     statements = [
 {{- range $label := .clusterLabels }}
-      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }})`,
+{{- if $.Values.cluster.nameFrom }}
+      string.format(`set(attributes[%q], %q)`, {{ $label | quote }}, {{ $.Values.cluster.nameFrom }}),
+{{- else }}
+      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+{{- end }}
 {{- end }}
 {{- range $resourceAttribute := $resourceAttributesToRemove }}
       `delete_key(attributes, {{ $resourceAttribute | quote }})`,
@@ -107,7 +111,11 @@ otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | q
     context = "datapoint"
     statements = [
 {{- range $label := .clusterLabels }}
-      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }})`,
+{{- if $.Values.cluster.nameFrom }}
+      string.format(`set(attributes[%q], %q)`, {{ $label | quote }}, {{ $.Values.cluster.nameFrom }}),
+{{- else }}
+      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+{{- end }}
 {{- end }}
 {{- range $datapointAttribute, $resourceAttribute := .processors.transform.metrics.datapointToResource }}
   {{- if $resourceAttribute }}
@@ -131,7 +139,11 @@ otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | q
     context = "resource"
     statements = [
 {{- range $label := .clusterLabels }}
-      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }})`,
+{{- if $.Values.cluster.nameFrom }}
+      string.format(`set(attributes[%q], %q)`, {{ $label | quote }}, {{ $.Values.cluster.nameFrom }}),
+{{- else }}
+      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+{{- end }}
 {{- end }}
 {{- range $resourceAttribute := $resourceAttributesToRemove }}
       `delete_key(attributes, {{ $resourceAttribute | quote }})`,
@@ -185,7 +197,11 @@ otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | q
     context = "resource"
     statements = [
 {{- range $label := .clusterLabels }}
-      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }})`,
+{{- if $.Values.cluster.nameFrom }}
+      string.format(`set(attributes[%q], %q)`, {{ $label | quote }}, {{ $.Values.cluster.nameFrom }}),
+{{- else }}
+      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+{{- end }}
 {{- end }}
 {{- range $resourceAttribute := $resourceAttributesToRemove }}
       `delete_key(attributes, {{ $resourceAttribute | quote }})`,

@@ -18,6 +18,22 @@ tests:
       - matchSnapshot:
           path: data["config.alloy"]
 
+  - it: allows you to use cluster.nameFrom
+    set:
+      cluster:
+        nameFrom: sys.env("CLUSTER_NAME")
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: otlp
+          url: https://otlp.example.com
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]
+
   - it: allows you to disable retry on failure
     set:
       cluster: {name: test-cluster}
