@@ -4,6 +4,7 @@
 
 *   Fix `cluster.nameFrom` rendering in OTLP destinations so the expression is interpolated into the OTTL transform statements via `string.format`, instead of being inlined as raw OTTL where it failed to parse (@petewall)
 *   Fix the pre-delete and post-install Alloy-finalizer hook templates failing to render when `alloy-operator.waitForAlloyRemoval.securityContext` is set to `null` (#2569) (@petewall)
+*   Update Alloy Operator to 0.5.7 and Beyla to 1.16.6 (@petewall)
 
 ## 4.1
 
