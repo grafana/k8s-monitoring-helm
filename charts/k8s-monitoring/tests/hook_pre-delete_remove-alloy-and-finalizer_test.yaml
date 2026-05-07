@@ -71,3 +71,17 @@ tests:
         equal:
           path: "spec.template.spec.containers[0].resources.limits.memory"
           value: 128Mi
+
+  - it: should render when securityContext is null
+    set:
+      alloy-operator:
+        deploy: true
+        waitForAlloyRemoval:
+          enabled: true
+          securityContext: null
+    asserts:
+      - hasDocuments:
+          count: 4
+      - documentIndex: 0
+        notExists:
+          path: "spec.template.spec.containers[0].securityContext"
