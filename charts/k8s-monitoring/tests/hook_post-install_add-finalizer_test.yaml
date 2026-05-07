@@ -104,3 +104,17 @@ tests:
         equal:
           path: "subjects[0].namespace"
           value: observability
+
+  - it: should render when securityContext is null
+    set:
+      alloy-operator:
+        deploy: true
+        waitForAlloyRemoval:
+          enabled: true
+          securityContext: null
+    asserts:
+      - hasDocuments:
+          count: 4
+      - documentIndex: 0
+        notExists:
+          path: "spec.template.spec.containers[0].securityContext"
