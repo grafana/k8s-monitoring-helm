@@ -75,8 +75,74 @@ jobs:
             echo "chartpath=charts/$(basename "$(pwd)")";
             echo "tagname=${name}-${version}";
             echo "packagename=${name}-${version}";
+            echo "version=${version}";
             echo "prerelease=${prerelease}";
           } >> "${GITHUB_OUTPUT}"
+
+      - name: Extract release notes from CHANGELOG
+        id: release-notes
+        working-directory: source
+        env:
+          VERSION: ${{ steps.parse-chart.outputs.version }}
+          TAGNAME: ${{ steps.parse-chart.outputs.tagname }}
+        run: |
+          changelog="charts/k8s-monitoring/CHANGELOG.md"
+          notes_file="${RUNNER_TEMP}/release_notes.md"
+
+          # Build the list of headers to try, in order:
+          #   - the full version (e.g. "4.0.5")
+          #   - the version with a trailing ".0" stripped (e.g. "4.1" for "4.1.0"),
+          #     since the changelog sometimes drops the patch component on .0 releases
+          candidates=("${VERSION}")
+          if [[ "${VERSION}" == *.0 ]]; then
+            candidates+=("${VERSION%.0}")
+          fi
+
+          extract() {
+            awk -v ver="$1" '
+              /^## / {
+                if (found) exit
+                header = $0
+                sub(/^##[[:space:]]+/, "", header)
+                if (header == ver) { found = 1; next }
+                next
+              }
+              found { print }
+            ' "$changelog"
+          }
+
+          body=""
+          for candidate in "${candidates[@]}"; do
+            body=$(extract "$candidate")
+            # Trim leading/trailing blank lines for the emptiness check
+            trimmed=$(printf '%s' "$body" | sed -e '/./,$!d' | tac | sed -e '/./,$!d' | tac)
+            if [[ -n "$trimmed" ]]; then
+              body="$trimmed"
+              echo "Matched changelog section '## ${candidate}'"
+              break
+            fi
+            body=""
+          done
+
+          if [[ -z "$body" ]]; then
+            echo "::warning::No CHANGELOG.md section found for version ${VERSION}; falling back to a generic note."
+            body="See [CHANGELOG.md](https://github.com/${GITHUB_REPOSITORY}/blob/${TAGNAME}/charts/k8s-monitoring/CHANGELOG.md) for details."
+          fi
+
+          {
+            echo "## What's changed"
+            echo
+            echo "$body"
+            echo
+            echo "---"
+            echo
+            echo "Full changelog: [CHANGELOG.md](https://github.com/${GITHUB_REPOSITORY}/blob/${TAGNAME}/charts/k8s-monitoring/CHANGELOG.md)"
+          } > "$notes_file"
+
+          echo "notes_path=${notes_file}" >> "${GITHUB_OUTPUT}"
+          echo "----- Release notes -----"
+          cat "$notes_file"
+          echo "-------------------------"
 
       - name: Add dependency chart repos
         env:
@@ -146,7 +212,7 @@ jobs:
         with:
           name: ${{ steps.parse-chart.outputs.tagname }}
           repository: grafana/k8s-monitoring-helm
-          generate_release_notes: true
+          body_path: ${{ steps.release-notes.outputs.notes_path }}
           files: |
             ${{ env.CR_PACKAGE_PATH }}/${{ steps.parse-chart.outputs.packagename }}.tgz
           tag_name: ${{ steps.parse-chart.outputs.tagname }}
