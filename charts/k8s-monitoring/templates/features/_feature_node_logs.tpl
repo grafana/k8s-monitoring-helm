@@ -5,7 +5,7 @@
 {{- $destinations := include "features.nodeLogs.destinations" . | fromYamlArray }}
 
 // Feature: Node Logs
-{{- include "feature.nodeLogs.module" (dict "Values" .Values.nodeLogs "Files" $.Subcharts.nodeLogs.Files) }}
+{{- include "feature.nodeLogs.module" (dict "Values" .Values.nodeLogs "Files" $.Subcharts.nodeLogs.Files "Template" $.Template) }}
 node_logs "feature" {
   logs_destinations = [
     {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}

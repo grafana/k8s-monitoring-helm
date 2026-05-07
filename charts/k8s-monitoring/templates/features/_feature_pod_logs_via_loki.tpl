@@ -8,7 +8,7 @@
 {{- $destinations := include "features.podLogsViaLoki.destinations" . | fromYamlArray }}
 
 // Feature: Pod Logs (Loki)
-{{- include "feature.podLogsViaLoki.module" (dict "Values" $values "Files" $.Subcharts.podLogsViaLoki.Files) }}
+{{- include "feature.podLogsViaLoki.module" (dict "Values" $values "Files" $.Subcharts.podLogsViaLoki.Files "Template" $.Template) }}
 pod_logs_via_loki "feature" {
   logs_destinations = [
     {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
