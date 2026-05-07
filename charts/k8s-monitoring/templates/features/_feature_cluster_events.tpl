@@ -4,7 +4,7 @@
 {{- if .Values.clusterEvents.enabled -}}
 {{- $destinations := include "features.clusterEvents.destinations" . | fromYamlArray }}
 // Feature: Cluster Events
-{{- include "feature.clusterEvents.module" (dict "Values" $.Values.clusterEvents "Files" $.Subcharts.clusterEvents.Files) }}
+{{- include "feature.clusterEvents.module" (dict "Values" $.Values.clusterEvents "Files" $.Subcharts.clusterEvents.Files "Template" $.Template) }}
 cluster_events "feature" {
   logs_destinations = [
     {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}

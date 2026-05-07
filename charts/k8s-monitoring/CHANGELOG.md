@@ -2,9 +2,9 @@
 
 ## Unreleased
 
-*   Fix `cluster.nameFrom` rendering in OTLP destinations so the expression is interpolated into the OTTL transform statements via `string.format`, instead of being inlined as raw OTTL where it failed to parse (@petewall)
 *   Fix the pre-delete and post-install Alloy-finalizer hook templates failing to render when `alloy-operator.waitForAlloyRemoval.securityContext` is set to `null` (#2569) (@petewall)
 *   Update Alloy Operator to 0.5.7, Beyla to 1.16.6, and k8s-manifest-tail to 0.1.4 (@petewall)
+*   Fix `extraLogProcessingStages` (and `extraLogProcessingRules` on `podLogsObjects`) failing to render under older Helm versions (e.g. those bundled with the Terraform Helm provider) with `cannot retrieve Template.Basepath from values inside tpl function`, by propagating `Template` through to the feature module includes that call `tpl` (@petewall)
 
 ## 4.1
 
