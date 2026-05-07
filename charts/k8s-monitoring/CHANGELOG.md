@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.8.8
+
+*   Fix the pre-delete and post-install Alloy-finalizer hook templates failing to render when `alloy-operator.waitForAlloyRemoval.securityContext` is set to `null` (#2569) (@petewall)
+
 ## 3.8.7
 
 *   PostgreSQL: Add `statementsLimit` option to the Database Observability `queryDetails` collector (@petewall)
