@@ -1,12 +1,13 @@
 # Changelog
 
-## Unreleased
+## 4.1.1
 
 *   Fix the pre-delete and post-install Alloy-finalizer hook templates failing to render when `alloy-operator.waitForAlloyRemoval.securityContext` is set to `null` (#2569) (@petewall)
 *   Update Alloy Operator to 0.5.7, Beyla to 1.16.6, and k8s-manifest-tail to 0.1.4 (@petewall)
 *   Fix `extraLogProcessingStages` (and `extraLogProcessingRules` on `podLogsObjects`) failing to render under older Helm versions (e.g. those bundled with the Terraform Helm provider) with `cannot retrieve Template.Basepath from values inside tpl function`, by propagating `Template` through to the feature module includes that call `tpl` (@petewall)
 *   Set `opencost.opencost.exporter.cloudProviderApiKey` to `"disabled"` so OpenCost does not try to write `/var/configs/gcp.json` on GCP/GKE and panic. Removes the placeholder GCP API key (and its `trufflehog:ignore` workarounds) from the chart defaults (@petewall)
 *   Fix OpenCost crashing on GKE: point `CONFIG_PATH` at `/tmp` so the GCP provider can write its `gcp.json` (the default `/var/configs` is not writable by the non-root container user, which caused a nil-pointer panic). Set `CLOUD_PROVIDER_API_KEY=disabled` so the GCP provider can be constructed without a real billing API key, and remove the placeholder API key (and its `trufflehog:ignore` workarounds) from the chart defaults (@petewall)
+*   Add the ability to set `scrapeNativeHistograms` for the Prometheus Operator Objects feature (@lukas-unity)
 
 ## 4.1
 
