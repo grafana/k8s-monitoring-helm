@@ -191,6 +191,9 @@ global:
   scrapeNativeHistograms: true
 ```
 
+The chart automatically prepends `PrometheusProto` to `global.scrapeProtocols` when this is enabled, since
+`PrometheusProto` is the only protocol that can carry native histograms.
+
 ### Version 3.4
 
 <!--alex disable hook-->
