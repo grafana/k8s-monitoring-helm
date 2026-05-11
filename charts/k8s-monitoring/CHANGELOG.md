@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.1.2
+
+*   Fix `global.scrapeNativeHistograms: true` crash-looping the alloy-metrics collector with `scrape_native_histograms is set to true, but PrometheusProto is not in scrape_protocols`. The chart now automatically prepends `PrometheusProto` to the rendered `scrape_protocols` list whenever native histograms are enabled, so the single-knob migration from chart 3.5.x works without also overriding `global.scrapeProtocols` (#2582) (@petewall)
+
 ## 4.1.1
 
 *   Fix the pre-delete and post-install Alloy-finalizer hook templates failing to render when `alloy-operator.waitForAlloyRemoval.securityContext` is set to `null` (#2569) (@petewall)

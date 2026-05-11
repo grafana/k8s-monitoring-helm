@@ -1,0 +1,54 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Cluster Metrics - Native Histogram Scraping
+templates:
+  - test/configmap.yaml
+tests:
+  - it: prepends PrometheusProto to scrape_protocols when scrapeNativeHistograms is enabled
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          kube-state-metrics:
+            deploy: true
+      global:
+        scrapeNativeHistograms: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: scrape_protocols = \["PrometheusProto","OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"\]
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: scrape_native_histograms = true
+
+  - it: does not duplicate PrometheusProto when it is already in scrapeProtocols
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          kube-state-metrics:
+            deploy: true
+      global:
+        scrapeNativeHistograms: true
+        scrapeProtocols: ["PrometheusProto", "OpenMetricsText1.0.0"]
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: scrape_protocols = \["PrometheusProto","OpenMetricsText1.0.0"\]
+
+  - it: leaves scrape_protocols at the default when scrapeNativeHistograms is disabled
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          kube-state-metrics:
+            deploy: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: scrape_protocols = \["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"\]

@@ -77,7 +77,7 @@ prometheus.scrape "windows_exporter" {
   job_name   = {{ .Values.windowsHosts.jobLabel | quote }}
   scrape_interval = {{ .Values.windowsHosts.scrapeInterval | default .Values.global.scrapeInterval | quote }}
   scrape_timeout = {{ .Values.windowsHosts.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
-  scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
+  scrape_protocols = {{ include "helper.scrapeProtocols" . }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
   scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
   clustering {

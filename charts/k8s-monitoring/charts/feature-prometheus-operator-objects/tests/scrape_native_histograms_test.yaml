@@ -1,0 +1,29 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Prometheus Operator Objects - Native Histogram Scraping
+templates:
+  - test/configmap.yaml
+tests:
+  - it: emits scrape_protocols with PrometheusProto prepended when scrapeNativeHistograms is enabled
+    set:
+      testing: {enabled: true}
+      global:
+        scrapeNativeHistograms: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: scrape_protocols = \["PrometheusProto","OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"\]
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: scrape_native_histograms = true
+
+  - it: does not emit scrape_protocols when scrapeNativeHistograms is disabled
+    set:
+      testing: {enabled: true}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: scrape_protocols =
