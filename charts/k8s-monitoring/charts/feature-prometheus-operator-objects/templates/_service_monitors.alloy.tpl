@@ -36,6 +36,7 @@ prometheus.operator.servicemonitors "service_monitors" {
     scrape_protocols = {{ include "helper.scrapeProtocols" . }}
     {{- end }}
     scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
+    convert_classic_histograms_to_nhcb = {{ .Values.global.convertClassicHistogramsToNhcb }}
   }
 
 {{- with .Values.serviceMonitors.excludeNamespaces }}
