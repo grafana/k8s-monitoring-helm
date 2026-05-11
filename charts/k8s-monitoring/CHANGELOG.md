@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.8.9
+
+*   Fix custom destinations with `traces.enabled: true` or `profiles.enabled: true` failing to render with `nil pointer evaluating interface {}.target`. The traces and profiles `target` template lookups now read from the correct template context (`.destination.traces.target` / `.destination.profiles.target`) so the configured target is forwarded into the rendered Alloy config (#2590) (@petewall)
+
 ## 3.8.8
 
 *   Fix the pre-delete and post-install Alloy-finalizer hook templates failing to render when `alloy-operator.waitForAlloyRemoval.securityContext` is set to `null` (#2569) (@petewall)
