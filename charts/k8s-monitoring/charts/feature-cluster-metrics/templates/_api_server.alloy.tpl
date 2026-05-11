@@ -56,6 +56,7 @@ prometheus.scrape "apiserver" {
   scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
   scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
+  convert_classic_histograms_to_nhcb = {{ .Values.global.convertClassicHistogramsToNhcb }}
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 
   tls_config {
