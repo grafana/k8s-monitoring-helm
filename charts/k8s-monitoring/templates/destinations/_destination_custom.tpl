@@ -69,10 +69,10 @@ otelcol.receiver.loki {{ include "helper.alloy_name" $.destinationName | quote }
 
 {{- /* Traces handling */}}
 {{- define "destinations.custom.supports_traces" }}{{ dig "traces" "enabled" "false" . }}{{ end -}}
-{{- define "destinations.custom.alloy.otlp.traces.target" }}{{ .traces.target }}{{ end }}
+{{- define "destinations.custom.alloy.otlp.traces.target" }}{{ .destination.traces.target }}{{ end }}
 
 {{- /* Profiles handling */}}
 {{- define "destinations.custom.supports_profiles" }}{{ dig "profiles" "enabled" "false" . }}{{ end -}}
-{{- define "destinations.custom.alloy.pyroscope.profiles.target" }}{{ .profiles.target }}{{ end }}
+{{- define "destinations.custom.alloy.pyroscope.profiles.target" }}{{ .destination.profiles.target }}{{ end }}
 
 {{- define "destinations.custom.ecosystem" }}{{ .ecosystem }}{{ end -}}

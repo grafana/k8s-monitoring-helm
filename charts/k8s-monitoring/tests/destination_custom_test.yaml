@@ -1,0 +1,62 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Destinations - Custom
+templates:
+  - alloy-config.yaml
+tests:
+  - it: renders the configured traces target for a custom otlp destination
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        my-custom-traces:
+          type: custom
+          ecosystem: otlp
+          traces:
+            enabled: true
+            target: otelcol.exporter.otlp.foo.input
+          config: |
+            otelcol.exporter.otlp "foo" {
+              client {
+                endpoint = "tempo.example.com:4317"
+              }
+            }
+      applicationObservability:
+        enabled: true
+        collector: alloy-receiver
+        receivers:
+          otlp:
+            grpc: {enabled: true}
+      collectors: {alloy-receiver: {}}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'traces_destinations\s*=\s*\[\s*otelcol\.exporter\.otlp\.foo\.input,'
+
+  - it: renders the configured profiles target for a custom pyroscope destination
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        my-custom-profiles:
+          type: custom
+          ecosystem: pyroscope
+          profiles:
+            enabled: true
+            target: pyroscope.write.foo.receiver
+          config: |
+            pyroscope.write "foo" {
+              endpoint {
+                url = "http://pyroscope.example.com:4040"
+              }
+            }
+      profilesReceiver:
+        enabled: true
+      collectors: {alloy-receiver: {}}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'profiles_destinations\s*=\s*\[\s*pyroscope\.write\.foo\.receiver,'
