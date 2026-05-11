@@ -58,6 +58,7 @@ prometheus.scrape "kube_state_metrics" {
   scrape_protocols = {{ include "helper.scrapeProtocols" . }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
   scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
+    convert_classic_histograms_to_nhcb = {{ .Values.global.convertClassicHistogramsToNhcb }}
   scheme = {{ (index .Values "kube-state-metrics").service.scheme | quote }}
   bearer_token_file = {{ (index .Values "kube-state-metrics").bearerTokenFile | quote }}
   tls_config {
