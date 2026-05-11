@@ -79,6 +79,7 @@ prometheus.scrape "windows_exporter" {
   scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
   scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
+  convert_classic_histograms_to_nhcb = {{ .Values.global.convertClassicHistogramsToNhcb }}
   clustering {
     enabled = true
   }
