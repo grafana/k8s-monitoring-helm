@@ -6,10 +6,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.5.3
+    helm.sh/chart: alloy-operator-0.5.7
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.7.0"
+    app.kubernetes.io/version: "1.8.1"
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
@@ -19,7 +19,7 @@ kind: ServiceAccount
 automountServiceAccountToken: true
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-7.2.2
+    helm.sh/chart: kube-state-metrics-7.3.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -37,7 +37,7 @@ metadata:
   name: k8smon-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: node-exporter-4.53.1
+    helm.sh/chart: node-exporter-4.55.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
@@ -1439,10 +1439,10 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy-operator-alloy-manager
   labels:
-    helm.sh/chart: alloy-operator-0.5.3
+    helm.sh/chart: alloy-operator-0.5.7
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.7.0"
+    app.kubernetes.io/version: "1.8.1"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -1469,34 +1469,40 @@ rules:
   # Rules which allow the management of ConfigMaps, ServiceAccounts, and Services.
   - apiGroups: [""]
     resources: ["configmaps", "secrets", "serviceaccounts", "services"]
-    verbs: ["*"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
   # Rules which allow the management of DaemonSets, Deployments, and StatefulSets.
   - apiGroups: ["apps"]
     resources: ["daemonsets", "deployments", "statefulsets"]
-    verbs: ["*"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
   # Rules which allow the management of Horizontal Pod Autoscalers.
   - apiGroups: ["autoscaling"]
     resources: ["horizontalpodautoscalers"]
-    verbs: ["*"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
   # Rules which allow the management of Ingresses and NetworkPolicies.
   - apiGroups: ["networking.k8s.io"]
     resources: ["ingresses", "networkpolicies"]
-    verbs: ["*"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
   # Rules which allow the management of PodDisruptionBudgets.
   - apiGroups: ["policy"]
     resources: ["poddisruptionbudgets"]
-    verbs: ["*"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
   # Rules which allow the management of ClusterRoles, ClusterRoleBindings, Roles, and RoleBindings.
+  # `bind` and `escalate` are required so the operator can create ClusterRoles/Roles for the Alloy
+  # instances it manages. Kubernetes' privilege-escalation prevention requires the creator to either
+  # already hold every permission it grants, or to have `escalate` (for roles) and `bind` (for
+  # rolebindings). The operator's role doesn't enumerate every permission Alloy ever needs, so these
+  # two verbs are required for the operator to function. `impersonate` and other dangerous verbs are
+  # intentionally omitted.
   - apiGroups: ["rbac.authorization.k8s.io"]
     resources: ["clusterroles", "clusterrolebindings", "roles", "rolebindings"]
-    verbs: ["*"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete", "bind", "escalate"]
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-7.2.2
+    helm.sh/chart: kube-state-metrics-7.3.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -1653,10 +1659,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-operator-alloy-manager
   labels:
-    helm.sh/chart: alloy-operator-0.5.3
+    helm.sh/chart: alloy-operator-0.5.7
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.7.0"
+    app.kubernetes.io/version: "1.8.1"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -1673,10 +1679,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-operator
   labels:
-    helm.sh/chart: alloy-operator-0.5.3
+    helm.sh/chart: alloy-operator-0.5.7
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.7.0"
+    app.kubernetes.io/version: "1.8.1"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -1692,7 +1698,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-7.2.2
+    helm.sh/chart: kube-state-metrics-7.3.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -1717,10 +1723,10 @@ metadata:
   name: k8smon-alloy-operator-leader-election-role
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.5.3
+    helm.sh/chart: alloy-operator-0.5.7
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.7.0"
+    app.kubernetes.io/version: "1.8.1"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -1762,10 +1768,10 @@ metadata:
   name: k8smon-alloy-operator-leader-election-rolebinding
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.5.3
+    helm.sh/chart: alloy-operator-0.5.7
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.7.0"
+    app.kubernetes.io/version: "1.8.1"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -1783,10 +1789,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.5.3
+    helm.sh/chart: alloy-operator-0.5.7
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.7.0"
+    app.kubernetes.io/version: "1.8.1"
     app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
@@ -1810,7 +1816,7 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-7.2.2
+    helm.sh/chart: kube-state-metrics-7.3.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -1838,7 +1844,7 @@ metadata:
   name: k8smon-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: node-exporter-4.53.1
+    helm.sh/chart: node-exporter-4.55.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
@@ -1893,7 +1899,7 @@ metadata:
   name: k8smon-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: node-exporter-4.53.1
+    helm.sh/chart: node-exporter-4.55.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
@@ -1917,7 +1923,7 @@ spec:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
         k8s.grafana.com/logs.job: integrations/node_exporter
       labels:
-        helm.sh/chart: node-exporter-4.53.1
+        helm.sh/chart: node-exporter-4.55.0
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: node-exporter
@@ -2122,10 +2128,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.5.3
+    helm.sh/chart: alloy-operator-0.5.7
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.7.0"
+    app.kubernetes.io/version: "1.8.1"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -2136,10 +2142,10 @@ spec:
   template:
     metadata:
       labels:
-        helm.sh/chart: alloy-operator-0.5.3
+        helm.sh/chart: alloy-operator-0.5.7
         app.kubernetes.io/name: alloy-operator
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "1.7.0"
+        app.kubernetes.io/version: "1.8.1"
         app.kubernetes.io/managed-by: Helm
     spec:
       serviceAccountName: k8smon-alloy-operator
@@ -2147,7 +2153,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: alloy-operator
-          image: "ghcr.io/grafana/alloy-operator:1.7.0"
+          image: "ghcr.io/grafana/alloy-operator:1.8.1"
           imagePullPolicy: IfNotPresent
           args:
             - --health-probe-bind-address=:8081
@@ -2193,7 +2199,7 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-7.2.2
+    helm.sh/chart: kube-state-metrics-7.3.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -2213,7 +2219,7 @@ spec:
   template:
     metadata:
       labels:        
-        helm.sh/chart: kube-state-metrics-7.2.2
+        helm.sh/chart: kube-state-metrics-7.3.0
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: kube-state-metrics
@@ -2437,6 +2443,7 @@ spec:
   extraObjects: []
   global:
     image:
+      pullPolicy: ""
       pullSecrets: []
       registry: ""
     podSecurityContext: {}
@@ -2763,6 +2770,7 @@ spec:
   extraObjects: []
   global:
     image:
+      pullPolicy: ""
       pullSecrets: []
       registry: ""
     podSecurityContext: {}
@@ -3091,6 +3099,7 @@ spec:
   extraObjects: []
   global:
     image:
+      pullPolicy: ""
       pullSecrets: []
       registry: ""
     podSecurityContext: {}
