@@ -145,8 +145,11 @@ jobs:
           REPOSITORY: ${{ github.repository }}
         run: |
           notes_file=$(mktemp)
-          printf 'v1 maintenance release. See the [chart directory at this tag](https://github.com/%s/tree/%s/charts/k8s-monitoring-v1) for the source.\n\n> **Note:** `k8s-monitoring` v1 is deprecated as of 2026-06-01. Please migrate to v4 (`charts/k8s-monitoring`).\n' \
-            "${REPOSITORY}" "${TAGNAME}" > "${notes_file}"
+          {
+            echo "v1 maintenance release. See the [chart directory at this tag](https://github.com/${REPOSITORY}/tree/${TAGNAME}/charts/k8s-monitoring-v1) for the source."
+            echo ""
+            echo "> **Note:** \`k8s-monitoring\` v1 is deprecated as of 2026-06-01. Please migrate to v4 (\`charts/k8s-monitoring\`)."
+          } > "${notes_file}"
           gh release create "${TAGNAME}" \
             --title "${TAGNAME}" \
             --repo "grafana/k8s-monitoring-helm" \
