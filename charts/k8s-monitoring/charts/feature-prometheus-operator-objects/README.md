@@ -67,6 +67,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | global.maxCacheSize | int | `100000` | Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) This should be at least 2x-5x your largest scrape target or samples appended rate. |
 | global.scrapeInterval | string | `"60s"` | How frequently to scrape metrics. |
 | global.scrapeNativeHistograms | bool | `false` | Whether to scrape native histograms from targets. Used as the default if a section does not override it. |
+| global.scrapeProtocols | list | `["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]` | The protocols to negotiate during a Prometheus metrics scrape, in order of preference. When `scrapeNativeHistograms` is enabled, `PrometheusProto` is automatically prepended to this list because it is the only protocol that supports native histograms. |
 | global.scrapeTimeout | string | `"10s"` | The timeout for scraping metrics. |
 
 ### PodMonitors

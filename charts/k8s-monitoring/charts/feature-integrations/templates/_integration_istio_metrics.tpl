@@ -117,7 +117,7 @@ prometheus.scrape {{ printf "%s_sidecar" (include "helper.alloy_name" .name) | q
   targets = discovery.relabel.{{ printf "%s_sidecar" (include "helper.alloy_name" .name) }}.output
   scrape_interval = {{ .sidecarMetrics.scrapeInterval | default $.Values.global.scrapeInterval | quote }}
   scrape_timeout = {{ .sidecarMetrics.scrapeTimeout | default $.Values.global.scrapeTimeout | quote }}
-  scrape_protocols = {{ $.Values.global.scrapeProtocols | toJson }}
+  scrape_protocols = {{ include "helper.scrapeProtocols" $ }}
   scrape_classic_histograms = {{ $.Values.global.scrapeClassicHistograms }}
   scrape_native_histograms = {{ $.Values.global.scrapeNativeHistograms }}
   clustering {
@@ -206,7 +206,7 @@ prometheus.scrape {{ printf "%s_istiod" (include "helper.alloy_name" .name) | qu
 
   scrape_interval = {{ .istiodMetrics.scrapeInterval | default $.Values.global.scrapeInterval | quote }}
   scrape_timeout = {{ .istiodMetrics.scrapeTimeout | default $.Values.global.scrapeTimeout | quote }}
-  scrape_protocols = {{ $.Values.global.scrapeProtocols | toJson }}
+  scrape_protocols = {{ include "helper.scrapeProtocols" $ }}
   scrape_classic_histograms = {{ $.Values.global.scrapeClassicHistograms }}
   scrape_native_histograms = {{ $.Values.global.scrapeNativeHistograms }}
   forward_to = [prometheus.relabel.{{ printf "%s_istiod" (include "helper.alloy_name" .name) }}.receiver]
