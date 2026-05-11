@@ -138,16 +138,17 @@ jobs:
           ls -l "${CR_PACKAGE_PATH}"
 
       - name: Make github release
-        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda  # v3.0.0
-        with:
-          name: ${{ steps.parse-chart.outputs.tagname }}
-          repository: grafana/k8s-monitoring-helm
-          body: |
-            v1 maintenance release. See the [chart directory at this tag](https://github.com/${{ github.repository }}/tree/${{ steps.parse-chart.outputs.tagname }}/charts/k8s-monitoring-v1) for the source.
-
-            > **Note:** `k8s-monitoring` v1 is deprecated as of 2026-06-01. Please migrate to v4 (`charts/k8s-monitoring`).
-          files: |
-            ${{ env.CR_PACKAGE_PATH }}/${{ steps.parse-chart.outputs.packagename }}.tgz
-          tag_name: ${{ steps.parse-chart.outputs.tagname }}
-          token: ${{ env.AUTHTOKEN }}
-          fail_on_unmatched_files: true
+        env:
+          GH_TOKEN: ${{ env.AUTHTOKEN }}
+          TAGNAME: ${{ steps.parse-chart.outputs.tagname }}
+          PACKAGENAME: ${{ steps.parse-chart.outputs.packagename }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          notes_file=$(mktemp)
+          printf 'v1 maintenance release. See the [chart directory at this tag](https://github.com/%s/tree/%s/charts/k8s-monitoring-v1) for the source.\n\n> **Note:** `k8s-monitoring` v1 is deprecated as of 2026-06-01. Please migrate to v4 (`charts/k8s-monitoring`).\n' \
+            "${REPOSITORY}" "${TAGNAME}" > "${notes_file}"
+          gh release create "${TAGNAME}" \
+            --title "${TAGNAME}" \
+            --repo "grafana/k8s-monitoring-helm" \
+            --notes-file "${notes_file}" \
+            "${CR_PACKAGE_PATH}/${PACKAGENAME}.tgz"

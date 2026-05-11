@@ -208,14 +208,20 @@ jobs:
           ls -l "${CR_PACKAGE_PATH}"
 
       - name: Make github release
-        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda  # v3.0.0
-        with:
-          name: ${{ steps.parse-chart.outputs.tagname }}
-          repository: grafana/k8s-monitoring-helm
-          body_path: ${{ steps.release-notes.outputs.notes_path }}
-          files: |
-            ${{ env.CR_PACKAGE_PATH }}/${{ steps.parse-chart.outputs.packagename }}.tgz
-          tag_name: ${{ steps.parse-chart.outputs.tagname }}
-          token: ${{ env.AUTHTOKEN }}
-          prerelease: ${{ steps.parse-chart.outputs.prerelease }}
-          fail_on_unmatched_files: true
+        env:
+          GH_TOKEN: ${{ env.AUTHTOKEN }}
+          TAGNAME: ${{ steps.parse-chart.outputs.tagname }}
+          PACKAGENAME: ${{ steps.parse-chart.outputs.packagename }}
+          NOTES_PATH: ${{ steps.release-notes.outputs.notes_path }}
+          PRERELEASE: ${{ steps.parse-chart.outputs.prerelease }}
+        run: |
+          prerelease_flag=""
+          if [[ "${PRERELEASE}" == "true" ]]; then
+            prerelease_flag="--prerelease"
+          fi
+          gh release create "${TAGNAME}" \
+            --title "${TAGNAME}" \
+            --repo "grafana/k8s-monitoring-helm" \
+            --notes-file "${NOTES_PATH}" \
+            ${prerelease_flag} \
+            "${CR_PACKAGE_PATH}/${PACKAGENAME}.tgz"
