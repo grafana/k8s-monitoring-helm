@@ -2,6 +2,7 @@
 
 ## 4.1.2
 
+*   Update Beyla to 1.16.7 (@petewall)
 *   Fix `global.scrapeNativeHistograms: true` crash-looping the alloy-metrics collector with `scrape_native_histograms is set to true, but PrometheusProto is not in scrape_protocols`. The chart now automatically prepends `PrometheusProto` to the rendered `scrape_protocols` list whenever native histograms are enabled, so the single-knob migration from chart 3.5.x works without also overriding `global.scrapeProtocols` (#2582) (@petewall)
 
 ## 4.1.1
