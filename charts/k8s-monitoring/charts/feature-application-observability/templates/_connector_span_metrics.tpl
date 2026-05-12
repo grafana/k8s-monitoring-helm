@@ -34,7 +34,7 @@ otelcol.connector.spanmetrics "{{ .name | default "default" }}" {
 {{- end }}
   }
 {{- end }}
-  exclude_dimensions = {{ .Values.connectors.spanMetrics.excludeDimensions }}
+  exclude_dimensions = {{ .Values.connectors.spanMetrics.excludeDimensions | toJson }}
   dimensions_cache_size = {{ .Values.connectors.spanMetrics.dimensionsCacheSize }}
   aggregation_cardinality_limit = {{ .Values.connectors.spanMetrics.aggregationCardinalityLimit }}
   namespace = {{ .Values.connectors.spanMetrics.namespace | quote }}
