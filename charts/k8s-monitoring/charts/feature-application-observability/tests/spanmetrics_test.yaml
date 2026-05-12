@@ -22,3 +22,22 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["module.alloy"]
+
+  - it: excludes dimensions when configured
+    set:
+      deployAsConfigMap: true
+      connectors:
+        spanMetrics:
+          enabled: true
+          excludeDimensions:
+            - status.code
+            - span.name
+      receivers:
+        otlp:
+          grpc:
+            enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
