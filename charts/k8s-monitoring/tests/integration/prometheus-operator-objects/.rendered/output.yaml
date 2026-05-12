@@ -36,6 +36,7 @@ data:
           default_scrape_interval = "60s"
           default_scrape_timeout = "10s"
           scrape_native_histograms = false
+          convert_classic_histograms_to_nhcb = false
         }
         rule {
           source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
@@ -54,6 +55,7 @@ data:
           default_scrape_interval = "60s"
           default_scrape_timeout = "10s"
           scrape_native_histograms = false
+          convert_classic_histograms_to_nhcb = false
         }
         forward_to = argument.metrics_destinations.value
       } // prometheus.relabel "probes"
@@ -67,6 +69,7 @@ data:
           default_scrape_interval = "60s"
           default_scrape_timeout = "10s"
           scrape_native_histograms = false
+          convert_classic_histograms_to_nhcb = false
         }
         forward_to = argument.metrics_destinations.value
       } // prometheus.relabel "scrapeConfigs"
@@ -86,6 +89,7 @@ data:
           default_scrape_interval = "60s"
           default_scrape_timeout = "10s"
           scrape_native_histograms = false
+          convert_classic_histograms_to_nhcb = false
         }
         rule {
           source_labels = ["job"]
@@ -199,7 +203,7 @@ data:
   self-reporting-metric.prom: |+
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="4.1.1", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="4.1.2", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="prometheusOperatorObjects", sources="ServiceMonitors,PodMonitors,Probes", version="1.0.0"} 1
@@ -635,7 +639,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-4.1.1
+    helm.sh/chart: k8s-monitoring-4.1.2
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -688,7 +692,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-4.1.1
+    helm.sh/chart: k8s-monitoring-4.1.2
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
