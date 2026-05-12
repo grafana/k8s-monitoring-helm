@@ -1,15 +1,11 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
 suite: Feature - Cluster Metrics - Native Histogram Scraping
 templates:
-  - test/configmap.yaml
+  - configmap.yaml
 tests:
   - it: prepends PrometheusProto to scrape_protocols when scrapeNativeHistograms is enabled
     set:
-      testing:
-        enabled: true
-        telemetryServices:
-          kube-state-metrics:
-            deploy: true
+      deployAsConfigMap: true
       global:
         scrapeNativeHistograms: true
     asserts:
@@ -24,11 +20,7 @@ tests:
 
   - it: does not duplicate PrometheusProto when it is already in scrapeProtocols
     set:
-      testing:
-        enabled: true
-        telemetryServices:
-          kube-state-metrics:
-            deploy: true
+      deployAsConfigMap: true
       global:
         scrapeNativeHistograms: true
         scrapeProtocols: ["PrometheusProto", "OpenMetricsText1.0.0"]
@@ -41,11 +33,7 @@ tests:
 
   - it: leaves scrape_protocols at the default when scrapeNativeHistograms is disabled
     set:
-      testing:
-        enabled: true
-        telemetryServices:
-          kube-state-metrics:
-            deploy: true
+      deployAsConfigMap: true
     asserts:
       - isKind:
           of: ConfigMap

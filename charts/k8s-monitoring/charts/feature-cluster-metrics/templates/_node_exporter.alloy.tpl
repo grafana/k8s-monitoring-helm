@@ -150,6 +150,7 @@ prometheus.scrape "node_exporter" {
   scrape_protocols = {{ include "helper.scrapeProtocols" . }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
   scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
+  convert_classic_histograms_to_nhcb = false
   scheme = {{ (index .Values "node-exporter").service.scheme | quote }}
   bearer_token_file = {{ (index .Values "node-exporter").bearerTokenFile | quote }}
   tls_config {

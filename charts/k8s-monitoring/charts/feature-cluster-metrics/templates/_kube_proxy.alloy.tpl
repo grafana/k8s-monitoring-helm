@@ -37,6 +37,7 @@ prometheus.scrape "kube_proxy" {
   scrape_protocols = {{ include "helper.scrapeProtocols" . }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
   scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
+  convert_classic_histograms_to_nhcb = false
   clustering {
     enabled = true
   }
