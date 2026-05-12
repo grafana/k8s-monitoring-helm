@@ -8,15 +8,20 @@ tests:
       cluster:
         name: ci-test-cluster
       destinations:
-        pyro:
+        - name: pyro
           type: pyroscope
           url: http://pyroscope.pyroscope.svc:4040
       profiling:
         enabled: true
+        ebpf:
+          enabled: false
+        java:
+          enabled: false
+        pprof:
+          enabled: false
         collector: alloy-profiles
-      collectors:
-        alloy-profiles:
-          presets: [privileged, daemonset]
+      alloy-profiles:
+        enabled: true
     asserts:
       - failedTemplate:
           errorMessage: |-
@@ -35,7 +40,7 @@ tests:
       cluster:
         name: ci-test-cluster
       destinations:
-        pyro:
+        - name: pyro
           type: pyroscope
           url: http://pyroscope.pyroscope.svc:4040
       profiling:
@@ -43,9 +48,12 @@ tests:
         collector: alloy-profiles
         ebpf:
           enabled: true
-      collectors:
-        alloy-profiles:
-          presets: [privileged, daemonset]
+        java:
+          enabled: false
+        pprof:
+          enabled: false
+      alloy-profiles:
+        enabled: true
     asserts:
       - notFailedTemplate: {}
 
@@ -54,7 +62,7 @@ tests:
       cluster:
         name: ci-test-cluster
       destinations:
-        pyro:
+        - name: pyro
           type: pyroscope
           url: http://pyroscope.pyroscope.svc:4040
       profiling:
@@ -62,9 +70,12 @@ tests:
         collector: alloy-profiles
         java:
           enabled: true
-      collectors:
-        alloy-profiles:
-          presets: [privileged, daemonset]
+        ebpf:
+          enabled: false
+        pprof:
+          enabled: false
+      alloy-profiles:
+        enabled: true
     asserts:
       - notFailedTemplate: {}
 
@@ -73,7 +84,7 @@ tests:
       cluster:
         name: ci-test-cluster
       destinations:
-        pyro:
+        - name: pyro
           type: pyroscope
           url: http://pyroscope.pyroscope.svc:4040
       profiling:
@@ -81,9 +92,12 @@ tests:
         collector: alloy-profiles
         pprof:
           enabled: true
-      collectors:
-        alloy-profiles:
-          presets: [privileged, daemonset]
+        ebpf:
+          enabled: false
+        java:
+          enabled: false
+      alloy-profiles:
+        enabled: true
     asserts:
       - notFailedTemplate: {}
 
@@ -92,16 +106,15 @@ tests:
       cluster:
         name: ci-test-cluster
       destinations:
-        prom:
+        - name: prom
           type: prometheus
           url: http://prometheus.prometheus.svc:9090/api/v1/write
       clusterMetrics:
         enabled: true
       telemetryServices:
         kube-state-metrics: {deploy: true}
-      collectors:
-        alloy-metrics:
-          enabled: true
-          alloy: {clustering: {enabled: true}}
+      alloy-metrics:
+        enabled: true
+        alloy: {clustering: {enabled: true}}
     asserts:
       - notFailedTemplate: {}

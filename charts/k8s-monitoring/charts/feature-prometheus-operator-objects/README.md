@@ -54,20 +54,20 @@ Be sure perform actual integration testing in a live environment in the main [k8
 <!-- markdownlint-enable no-bare-urls -->
 ## Values
 
+### Global Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| crds.convertClassicHistogramsToNhcb | bool | `false` | Whether to convert classic histograms to native histograms with custom buckets (NHCB) at scrape time. |
+| global.maxCacheSize | int | `100000` | Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) This should be at least 2x-5x your largest scrape target or samples appended rate. |
+| global.scrapeInterval | string | `"60s"` | How frequently to scrape metrics. |
+| global.scrapeTimeout | string | `"10s"` | The timeout for scraping metrics. |
+
 ### CRDs
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | crds.deploy | bool | `false` | Deploy the Prometheus Operator CRDs. |
-
-### Global Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| global.convertClassicHistogramsToNhcb | bool | `false` | Whether to convert classic histograms to native histograms with custom buckets (NHCB) at scrape time. |
-| global.maxCacheSize | int | `100000` | Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) This should be at least 2x-5x your largest scrape target or samples appended rate. |
-| global.scrapeInterval | string | `"60s"` | How frequently to scrape metrics. |
-| global.scrapeTimeout | string | `"10s"` | The timeout for scraping metrics. |
 
 ### PodMonitors
 

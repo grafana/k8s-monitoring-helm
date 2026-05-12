@@ -133,6 +133,7 @@ data:
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         scrape_native_histograms = false
+        convert_classic_histograms_to_nhcb = false
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
         tls_config {
@@ -520,13 +521,13 @@ data:
         statements = [
           `set(attributes["cluster"], "auth-integration-test")`,
           `set(attributes["k8s.cluster.name"], "auth-integration-test")`,
-          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where (resource.attributes["deployment.environment"] == nil or resource.attributes["deployment.environment"] == "") and attributes["deployment_environment"] != nil and attributes["deployment_environment"] != ""`,
           `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
-          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where (resource.attributes["deployment.environment.name"] == nil or resource.attributes["deployment.environment.name"] == "") and attributes["deployment_environment_name"] != nil and attributes["deployment_environment_name"] != ""`,
           `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
-          `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `set(resource.attributes["service.name"], attributes["service_name"] ) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and attributes["service_name"] != nil and attributes["service_name"] != ""`,
           `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
-          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where (resource.attributes["service.namespace"] == nil or resource.attributes["service.namespace"] == "") and attributes["service_namespace"] != nil and attributes["service_namespace"] != ""`,
           `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
         ]
       }
@@ -614,13 +615,13 @@ data:
         statements = [
           `set(attributes["cluster"], "auth-integration-test")`,
           `set(attributes["k8s.cluster.name"], "auth-integration-test")`,
-          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where (resource.attributes["deployment.environment"] == nil or resource.attributes["deployment.environment"] == "") and attributes["deployment_environment"] != nil and attributes["deployment_environment"] != ""`,
           `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
-          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where (resource.attributes["deployment.environment.name"] == nil or resource.attributes["deployment.environment.name"] == "") and attributes["deployment_environment_name"] != nil and attributes["deployment_environment_name"] != ""`,
           `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
-          `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `set(resource.attributes["service.name"], attributes["service_name"] ) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and attributes["service_name"] != nil and attributes["service_name"] != ""`,
           `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
-          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where (resource.attributes["service.namespace"] == nil or resource.attributes["service.namespace"] == "") and attributes["service_namespace"] != nil and attributes["service_namespace"] != ""`,
           `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
         ]
       }
@@ -720,13 +721,13 @@ data:
         statements = [
           `set(attributes["cluster"], "auth-integration-test")`,
           `set(attributes["k8s.cluster.name"], "auth-integration-test")`,
-          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where (resource.attributes["deployment.environment"] == nil or resource.attributes["deployment.environment"] == "") and attributes["deployment_environment"] != nil and attributes["deployment_environment"] != ""`,
           `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
-          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where (resource.attributes["deployment.environment.name"] == nil or resource.attributes["deployment.environment.name"] == "") and attributes["deployment_environment_name"] != nil and attributes["deployment_environment_name"] != ""`,
           `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
-          `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `set(resource.attributes["service.name"], attributes["service_name"] ) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and attributes["service_name"] != nil and attributes["service_name"] != ""`,
           `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
-          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where (resource.attributes["service.namespace"] == nil or resource.attributes["service.namespace"] == "") and attributes["service_namespace"] != nil and attributes["service_namespace"] != ""`,
           `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
         ]
       }
