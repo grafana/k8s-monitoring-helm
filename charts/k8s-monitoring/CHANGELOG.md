@@ -4,6 +4,7 @@
 
 *   Add global pull policy support for the hooks and collectors (@petewall)
 *   Fix `spanMetrics.excludeDimensions` rendering: list values are now properly quoted as strings instead of unquoted bareword identifiers, which caused Alloy to fail to parse the rendered config. (#2596) (@savannahostrowski)
+*   Remove scrape protocols from the four `prometheus.operator.*` components, which do not support setting them. (@MattiasSegerdahl)
 
 ## 4.1.2
 
