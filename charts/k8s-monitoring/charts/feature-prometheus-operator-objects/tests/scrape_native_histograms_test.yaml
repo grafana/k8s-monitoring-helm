@@ -3,7 +3,7 @@ suite: Feature - Prometheus Operator Objects - Native Histogram Scraping
 templates:
   - test/configmap.yaml
 tests:
-  - it: emits scrape_protocols with PrometheusProto prepended when scrapeNativeHistograms is enabled
+  - it: emits scrape_native_histograms but not scrape_protocols when scrapeNativeHistograms is enabled
     set:
       testing: {enabled: true}
       global:
@@ -13,10 +13,13 @@ tests:
           of: ConfigMap
       - matchRegex:
           path: data["module.alloy"]
-          pattern: scrape_protocols = \["PrometheusProto","OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"\]
-      - matchRegex:
-          path: data["module.alloy"]
           pattern: scrape_native_histograms = true
+      # scrape_protocols is not a valid argument on the prometheus.operator.* components in Alloy
+      # (only on prometheus.scrape), so the chart must never render it inside their `scrape { }` block,
+      # even when scrapeNativeHistograms is on.
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: scrape_protocols =
 
   - it: does not emit scrape_protocols when scrapeNativeHistograms is disabled
     set:
