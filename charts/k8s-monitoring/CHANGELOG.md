@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Fix `spanMetrics.excludeDimensions` rendering: list values are now properly quoted as strings instead of unquoted bareword identifiers, which caused Alloy to fail to parse the rendered config. (#2596) (@savannahostrowski)
+
 ## 4.1.2
 
 *   Add convertClassicHistogramsToNhcb setting to global (@MattiasSegerdahl)
