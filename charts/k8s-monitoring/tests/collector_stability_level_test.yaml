@@ -1,0 +1,142 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Collector - Stability Level for Experimental Features
+templates:
+  - validations.yaml
+tests:
+  - it: fails when convertClassicHistogramsToNhcb is enabled but the metrics collector lacks experimental stability
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prom.monitoring.svc:9090/api/v1/write
+      global:
+        convertClassicHistogramsToNhcb: true
+      clusterMetrics:
+        enabled: true
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+        node-exporter: {deploy: true}
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Collector "alloy-metrics" has stabilityLevel="generally-available" but the chart will render Alloy components that require stabilityLevel=experimental:
+              - feature "clusterMetrics" forwards to a prometheus destination (prom) and global.convertClassicHistogramsToNhcb: true renders `convert_classic_histograms_to_nhcb = true` on its scrape components (Alloy exposes this only at stability.level=experimental)
+
+            Please set:
+            collectors:
+              alloy-metrics:
+                alloy:
+                  stabilityLevel: experimental
+
+  - it: fails when a prometheus destination uses remoteWriteProtocol=2 but the metrics collector lacks experimental stability
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prom.monitoring.svc:9090/api/v1/write
+          remoteWriteProtocol: 2
+      clusterMetrics:
+        enabled: true
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+        node-exporter: {deploy: true}
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Collector "alloy-metrics" has stabilityLevel="generally-available" but the chart will render Alloy components that require stabilityLevel=experimental:
+              - feature "clusterMetrics" forwards to destinations.prom, which uses remoteWriteProtocol: 2 and renders `protobuf_message = "io.prometheus.write.v2.Request"` on prometheus.remote_write (Alloy exposes this only at stability.level=experimental)
+
+            Please set:
+            collectors:
+              alloy-metrics:
+                alloy:
+                  stabilityLevel: experimental
+
+  - it: passes when stabilityLevel is experimental on the per-collector key
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prom.monitoring.svc:9090/api/v1/write
+          remoteWriteProtocol: 2
+      global:
+        convertClassicHistogramsToNhcb: true
+      clusterMetrics:
+        enabled: true
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+        node-exporter: {deploy: true}
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+          alloy:
+            stabilityLevel: experimental
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: does not fail collectors that do not forward to a prometheus destination, even if convertClassicHistogramsToNhcb or remoteWriteProtocol=2 are set elsewhere
+    # Repro for the bug originally found in tests/platform/grafana-cloud/database-observability:
+    # alloy-logs was failing validation because a *separate* prometheus destination had RWv2 enabled,
+    # even though alloy-logs only forwards to Loki and never renders prometheus.remote_write.
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prom.monitoring.svc:9090/api/v1/write
+          remoteWriteProtocol: 2
+        loki:
+          type: loki
+          url: http://loki.monitoring.svc:3100/loki/api/v1/push
+      global:
+        convertClassicHistogramsToNhcb: true
+      podLogsViaLoki:
+        enabled: true
+        collector: alloy-logs
+      clusterMetrics:
+        enabled: true
+        collector: alloy-metrics
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+        node-exporter: {deploy: true}
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+        alloy-metrics:
+          presets: [clustered]
+          alloy:
+            stabilityLevel: experimental
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: passes when neither convertClassicHistogramsToNhcb nor remoteWriteProtocol=2 are set
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prom.monitoring.svc:9090/api/v1/write
+      clusterMetrics:
+        enabled: true
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+        node-exporter: {deploy: true}
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+    asserts:
+      - notFailedTemplate: {}

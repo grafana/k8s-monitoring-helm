@@ -67,6 +67,102 @@
 {{- end }}
 {{- end }}
 
+{{/* Fails when the chart will render Alloy components that require a higher stability.level
+     than the collector hosting them is configured for. Walks enabled features, looks up each
+     feature's assigned collector and the destinations it forwards to, and -- for each trigger
+     declared in collectors.experimentalStabilityRequirements -- raises the minimum required
+     stabilityLevel on the affected collector. Inputs: Values, Files. */}}
+{{- define "collectors.validate.experimentalStabilityLevel" }}
+{{- $root := . }}
+{{- $requirements := include "collectors.experimentalStabilityRequirements" . | fromYaml }}
+{{- $rank := dict "generally-available" 0 "public-preview" 1 "experimental" 2 }}
+{{- $nhcbRequired := dig "nhcbConversion" "stabilityLevel" "" $requirements }}
+{{- $rwv2Required := dig "remoteWriteV2" "stabilityLevel" "" $requirements }}
+{{- $convertNhcb := and $root.Values.global $root.Values.global.convertClassicHistogramsToNhcb }}
+{{- $collectorReasons := dict }}
+{{- $collectorMaxRequired := dict }}
+{{- range $featureKey := include "features.list.enabled" . | fromYamlArray }}
+  {{- /* selfReporting is a chart-internal feature whose collector is chosen by the chart, not the user.
+         Skip it here so the validation only fires on collectors wired through a user-facing feature. */}}
+  {{- $collectorName := "" }}
+  {{- if ne $featureKey "selfReporting" }}
+    {{- $collectorName = include "collectors.getCollectorForFeature" (dict "Values" $root.Values "Files" $root.Files "Subcharts" $root.Subcharts "featureKey" $featureKey) }}
+  {{- end }}
+  {{- if $collectorName }}
+    {{- $featureDestinations := include (printf "features.%s.destinations" $featureKey) $root | fromYamlArray }}
+    {{- range $destinationName := $featureDestinations }}
+      {{- $destination := get $root.Values.destinations $destinationName }}
+      {{- if eq (default "" $destination.type) "prometheus" }}
+        {{- /* Trigger: prometheus.remote_write protobuf v2 message */}}
+        {{- if and $rwv2Required (eq (int (default 1 $destination.remoteWriteProtocol)) 2) }}
+          {{- $reason := printf "feature %q forwards to destinations.%s, which uses remoteWriteProtocol: 2 and renders `protobuf_message = \"io.prometheus.write.v2.Request\"` on prometheus.remote_write (Alloy exposes this only at stability.level=%s)" $featureKey $destinationName $rwv2Required }}
+          {{- $existing := default list (get $collectorReasons $collectorName) }}
+          {{- if not (has $reason $existing) }}
+            {{- $_ := set $collectorReasons $collectorName (append $existing $reason) }}
+          {{- end }}
+          {{- $curMax := default "generally-available" (get $collectorMaxRequired $collectorName) }}
+          {{- if gt (int (get $rank $rwv2Required)) (int (get $rank $curMax)) }}
+            {{- $_ := set $collectorMaxRequired $collectorName $rwv2Required }}
+          {{- end }}
+        {{- end }}
+        {{- /* Trigger: convert_classic_histograms_to_nhcb on prometheus.scrape */}}
+        {{- if and $convertNhcb $nhcbRequired }}
+          {{- $reason := printf "feature %q forwards to a prometheus destination (%s) and global.convertClassicHistogramsToNhcb: true renders `convert_classic_histograms_to_nhcb = true` on its scrape components (Alloy exposes this only at stability.level=%s)" $featureKey $destinationName $nhcbRequired }}
+          {{- $existing := default list (get $collectorReasons $collectorName) }}
+          {{- if not (has $reason $existing) }}
+            {{- $_ := set $collectorReasons $collectorName (append $existing $reason) }}
+          {{- end }}
+          {{- $curMax := default "generally-available" (get $collectorMaxRequired $collectorName) }}
+          {{- if gt (int (get $rank $nhcbRequired)) (int (get $rank $curMax)) }}
+            {{- $_ := set $collectorMaxRequired $collectorName $nhcbRequired }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- range $collectorName, $reasons := $collectorReasons }}
+  {{- $required := get $collectorMaxRequired $collectorName }}
+  {{- $collectorValues := include "collector.alloy.values" (dict "Values" $root.Values "Files" $root.Files "collectorName" $collectorName) | fromYaml }}
+  {{- /* collectorCommon.alloy.<k> currently lands at the top level of collectorValues rather than under
+         collectorValues.alloy, so look in both places before deciding the user hasn't set it. */}}
+  {{- $stability := dig "alloy" "stabilityLevel" (dig "stabilityLevel" "generally-available" $collectorValues) $collectorValues }}
+  {{- $actualRank := int (default 0 (get $rank $stability)) }}
+  {{- $requiredRank := int (get $rank $required) }}
+  {{- if lt $actualRank $requiredRank }}
+    {{- $msg := list "" }}
+    {{- $msg = append $msg (printf "Collector %q has stabilityLevel=%q but the chart will render Alloy components that require stabilityLevel=%s:" $collectorName $stability $required) }}
+    {{- range $r := $reasons }}
+      {{- $msg = append $msg (printf "  - %s" $r) }}
+    {{- end }}
+    {{- $msg = append $msg "" }}
+    {{- $msg = append $msg "Please set:" }}
+    {{- $msg = append $msg "collectors:" }}
+    {{- $msg = append $msg (printf "  %s:" $collectorName) }}
+    {{- $msg = append $msg "    alloy:" }}
+    {{- $msg = append $msg (printf "      stabilityLevel: %s" $required) }}
+    {{- fail (join "\n" $msg) }}
+  {{- end }}
+{{- end }}
+{{- end }}
+
+{{/* The set of Alloy components / arguments the chart can render today that are not yet
+     generally-available, mapped to the minimum stability.level Alloy currently exposes them at.
+     Update an entry when Alloy graduates the component
+     (`experimental` → `public-preview` → `generally-available`). Set the level to
+     `generally-available` (or delete the entry) to remove the requirement entirely. */}}
+{{- define "collectors.experimentalStabilityRequirements" }}
+# Triggered by global.convertClassicHistogramsToNhcb: true on any feature that forwards to a
+# prometheus destination. Renders `convert_classic_histograms_to_nhcb = true` on the
+# prometheus.scrape components the feature emits.
+nhcbConversion:
+  stabilityLevel: experimental
+# Triggered by any prometheus destination with remoteWriteProtocol: 2. Renders
+# `protobuf_message = "io.prometheus.write.v2.Request"` on prometheus.remote_write.
+remoteWriteV2:
+  stabilityLevel: experimental
+{{- end }}
+
 {{- define "collectors.validate.atLeastOneEnabled" }}
   {{- $enabledCollectors := include "collectors.list.enabled" . | fromYamlArray }}
   {{- if eq (len $enabledCollectors) 0 }}
