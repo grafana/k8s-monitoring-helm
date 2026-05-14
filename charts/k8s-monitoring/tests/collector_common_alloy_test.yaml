@@ -1,0 +1,123 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Collectors - collectorCommon.alloy propagation
+templates:
+  - alloy.yaml
+release:
+  name: ci
+tests:
+  - it: routes `collectorCommon.alloy.stabilityLevel` to `spec.alloy.stabilityLevel` on every Alloy CR
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prom.monitoring.svc:9090/api/v1/write
+      clusterMetrics:
+        enabled: true
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+        node-exporter: {deploy: true}
+      collectorCommon:
+        alloy:
+          stabilityLevel: experimental
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: ci-alloy-metrics
+        equal:
+          path: spec.alloy.stabilityLevel
+          value: experimental
+
+  - it: keeps `collectorCommon.alloy.image` rendering to `spec.image` (top-level, where the operator reads it)
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prom.monitoring.svc:9090/api/v1/write
+      clusterMetrics:
+        enabled: true
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+        node-exporter: {deploy: true}
+      collectorCommon:
+        alloy:
+          image:
+            registry: my.registry.com
+            repository: grafana/alloy
+            tag: v1.16.1
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: ci-alloy-metrics
+        equal:
+          path: spec.image
+          value:
+            registry: my.registry.com
+            repository: grafana/alloy
+            tag: v1.16.1
+
+  - it: routes `collectorCommon.alloy.securityContext` to `spec.alloy.securityContext` (deep merge with chart defaults)
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prom.monitoring.svc:9090/api/v1/write
+      clusterMetrics:
+        enabled: true
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+        node-exporter: {deploy: true}
+      collectorCommon:
+        alloy:
+          securityContext:
+            runAsUser: 12345
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: ci-alloy-metrics
+        equal:
+          path: spec.alloy.securityContext.runAsUser
+          value: 12345
+
+  - it: lets a per-collector `collectors.<name>.alloy.stabilityLevel` override `collectorCommon.alloy.stabilityLevel`
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prom.monitoring.svc:9090/api/v1/write
+      clusterMetrics:
+        enabled: true
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+        node-exporter: {deploy: true}
+      collectorCommon:
+        alloy:
+          stabilityLevel: experimental
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+          alloy:
+            stabilityLevel: public-preview
+    asserts:
+      - documentSelector:
+          path: metadata.name
+          value: ci-alloy-metrics
+        equal:
+          path: spec.alloy.stabilityLevel
+          value: public-preview

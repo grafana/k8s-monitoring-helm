@@ -1,12 +1,25 @@
 # Changelog
 
-## 4.1.3
+## Unreleased
 
-*   Add support for the write-ahead log (WAL) setting on the Loki destination (@nooboo)
-*   Add `drop` policy support for tail sampling (@petewall)
 *   Add global pull policy support for the hooks and collectors (@petewall)
 *   Fix `spanMetrics.excludeDimensions` rendering: list values are now properly quoted as strings instead of unquoted bareword identifiers, which caused Alloy to fail to parse the rendered config. (#2596) (@savannahostrowski)
 *   Remove scrape protocols from the four `prometheus.operator.*` components, which do not support setting them. (@MattiasSegerdahl)
+*   Fix `collectorCommon.alloy.<key>` propagation: keys the upstream Alloy chart hosts under its
+    own `alloy:` subtree (`stabilityLevel`, `configMap`, `securityContext`, `clustering`,
+    `resources`, etc.) now land at `spec.alloy.<key>` on the Alloy CR, where the operator reads
+    them, instead of being silently dropped at `spec.<key>`. Keys the upstream Alloy chart exposes
+    at the top of its values (`image`, `controller`, `rbac`, ...) continue to land at
+    `spec.<key>`, so existing usage like the `docs/examples/private-image-registries` example
+    (`collectorCommon.alloy.image.registry`) keeps working unchanged. (@MattiasSegerdahl)
+*   Fail with a helpful message when the chart will render Alloy components that require
+    `stabilityLevel: experimental` (e.g. `global.convertClassicHistogramsToNhcb: true` or a
+    Prometheus destination on `remoteWriteProtocol: 2`) but a collector hosting those components
+    has a lower stabilityLevel, instead of crash-looping the collector at startup. Per-trigger
+    minimum stabilityLevel is declared in the `collectors.experimentalStabilityRequirements`
+    helper, so when Alloy graduates a component
+    (`experimental` → `public-preview` → `generally-available`) the validation is updated by
+    changing a single value. (@MattiasSegerdahl)
 
 ## 4.1.2
 

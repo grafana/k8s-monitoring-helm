@@ -116,8 +116,29 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{- define "collector.alloy.values" }}
 {{- /* The default settings set for all Alloy instances by this chart */}}
 {{- $defaultValues := "collectors/alloy-values.yaml" | .Files.Get | fromYaml }}
-{{- /* Settings in values.yaml for all Alloy instances */}}
-{{- $userCommonValues := $.Values.collectorCommon.alloy }}
+{{- /* Settings in values.yaml for all Alloy instances. `collectorCommon.alloy.<key>` mixes two
+       shapes of keys: ones that the upstream Alloy chart exposes at the top of its values
+       (image, controller, rbac, serviceAccount, ...) and ones that it nests under its own
+       `alloy:` subtree (stabilityLevel, configMap, securityContext, clustering, resources, ...).
+       Splitting the user-provided dict against `collectors/upstream/alloy-values.yaml` lets the
+       first group keep landing at `spec.<key>` on the Alloy CR (preserves the existing
+       `collectorCommon.alloy.image.tag` API documented in `docs/examples/private-image-registries`)
+       while the second group lands at `spec.alloy.<key>` where the operator actually reads it. */}}
+{{- $upstreamAlloyValues := "collectors/upstream/alloy-values.yaml" | .Files.Get | fromYaml }}
+{{- $alloySubtreeKeys := keys (default dict (get $upstreamAlloyValues "alloy")) }}
+{{- $rawUserCommon := default dict $.Values.collectorCommon.alloy }}
+{{- $userCommonAlloy := dict }}
+{{- $userCommonValues := dict }}
+{{- range $key, $val := $rawUserCommon }}
+  {{- if has $key $alloySubtreeKeys }}
+    {{- $_ := set $userCommonAlloy $key $val }}
+  {{- else }}
+    {{- $_ := set $userCommonValues $key $val }}
+  {{- end }}
+{{- end }}
+{{- if $userCommonAlloy }}
+  {{- $_ := set $userCommonValues "alloy" $userCommonAlloy }}
+{{- end }}
 {{- /* Copying the this chart's global values to the Alloy instances global values */}}
 {{- $globalValues := include "collector.alloy.values.global" . | fromYaml }}
 {{- /* Settings in values.yaml for the named instance */}}
