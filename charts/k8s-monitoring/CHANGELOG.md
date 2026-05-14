@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 4.1.3
 
 *   Add support for the write-ahead log (WAL) setting on the Loki destination (@nooboo)
 *   Add `drop` policy support for tail sampling (@petewall)
