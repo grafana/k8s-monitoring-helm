@@ -424,6 +424,7 @@ details:
 |  | profiling(feature-profiling) | 1.0.0 |
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
 |  | telemetryServices(telemetry-services) | 1.0.0 |
+| https://charts.jetstack.io | cert-manager | v1.20.2 |
 | https://grafana.github.io/helm-charts | alloy-operator | 0.5.7 |
 <!-- markdownlint-enable no-bare-urls -->
 
@@ -468,6 +469,13 @@ details:
 | autoInstrumentation | object | Disabled | Auto-Instrumentation. Requires destinations that supports metrics, logs, and traces. To see the valid options, please see the [Auto-Instrumentation feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-auto-instrumentation). |
 | autoInstrumentation.destinations | list | `[]` | The destinations where application data will be sent. If empty, all capable destinations will be used. |
 | autoInstrumentation.enabled | bool | `false` | Enable automatic instrumentation for applications. |
+
+### cert-manager
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| cert-manager.crds.enabled | bool | `true` | Install the cert-manager CRDs. Required when cert-manager is being deployed by this chart and the CRDs have not already been applied to the cluster. |
+| certManager.deploy | bool | `false` | Deploy cert-manager. Set to true to install cert-manager alongside this chart. If your cluster already has cert-manager installed, leave this disabled and reference the existing installation. |
 
 ### Cluster
 
