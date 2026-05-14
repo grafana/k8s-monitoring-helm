@@ -1,0 +1,39 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: instrumentation-hub
+
+subject:
+  releaseName: k8smon
+  path: ../../../..
+  valuesFile: values.yaml
+  set:
+    - key: "cluster.name"
+      valueFrom: clusterName
+
+cluster:
+  type: kind
+  appendRandomNumber: true
+
+dependencies:
+  - preset: test-parameters
+    namespace: default
+  - preset: test-parameters
+    namespace: toolbox
+  - file: grafana-cloud-credentials.yaml
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            RELEASE_NAME: k8smon
+            NAMESPACE: default
+            PROMETHEUS_URL: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/api/v1/query
+          envFrom:
+            - secretRef: {name: grafana-cloud-credentials}
+            - configMapRef: {name: test-parameters}
+          queries:
+            # Daemonset Metric
+            - query: alloy_build_info{collector_id="$RELEASE_NAME-$clusterName-$NAMESPACE-my-collector-$clusterName-control-plane"}
+              type: promql
