@@ -569,6 +569,24 @@ alloy-operator:
     nodeSelector:
       kubernetes.io/os: linux
 
+# cert-manager issues and manages TLS certificates for in-cluster workloads. This chart can deploy cert-manager so that
+# Issuers and Certificates can be created for components like mutating webhooks.
+certManager:
+  # -- Deploy cert-manager. Set to true to install cert-manager alongside this chart. If your cluster already has
+  # cert-manager installed, leave this disabled and reference the existing installation.
+  # @section -- cert-manager
+  deploy: false
+
+# Values forwarded to the cert-manager subchart. Only honored when `certManager.deploy` is true.
+# To see all valid settings, please see the [cert-manager Helm chart documentation](https://cert-manager.io/docs/installation/helm/).
+# @section -- cert-manager
+cert-manager:
+  crds:
+    # -- Install the cert-manager CRDs. Required when cert-manager is being deployed by this chart and the CRDs have not
+    # already been applied to the cluster.
+    # @section -- cert-manager
+    enabled: true
+
 # -- *Experimental*: Replace the body of a generated Alloy component with custom content. Each entry must match the
 # `type` and `name` of a component that the chart would otherwise render (e.g. `prometheus.relabel "metricsService"`).
 # The templated component must end with a `} // <type> "<name>"` close tag for replacement to find it, otherwise the
