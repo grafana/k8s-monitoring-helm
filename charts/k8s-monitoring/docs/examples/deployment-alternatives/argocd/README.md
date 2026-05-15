@@ -6,7 +6,7 @@ does not install the Helm chart directly, but instead utilizes `helm template` t
 them to the cluster.
 
 For a step-by-step Grafana Cloud guide built on top of these manifests, refer to
-[Send Kubernetes metrics, logs, and events with Helm and Argo CD to Grafana Cloud](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/config-other-methods/argocd-config/).
+[Send Kubernetes metrics, logs, and events with Helm and Argo CD to Grafana Cloud](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/helm-chart-config/hc-config-steps/#argocd).
 
 Three variants are provided:
 
