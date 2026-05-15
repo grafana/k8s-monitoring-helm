@@ -6,21 +6,21 @@ does not install the Helm chart directly, but instead utilizes `helm template` t
 them to the cluster.
 
 For a step-by-step Grafana Cloud guide built on top of these manifests, refer to
-[Send Kubernetes metrics, logs, and events with Helm and Argo CD to Grafana Cloud](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/config-other-methods/argocd-config/).
+[Send Kubernetes metrics, logs, and events with Helm and Argo CD to Grafana Cloud](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/helm-chart-config/hc-config-steps/#argocd).
 
 Three variants are provided:
 
-- [`k8s-monitoring-application.yaml`](./k8s-monitoring-application.yaml): a single-cluster `Application` with
-  credentials embedded in `valuesObject`. Easiest to read; convenient for getting started.
-- [`k8s-monitoring-application-external-secrets.yaml`](./k8s-monitoring-application-external-secrets.yaml): the same
-  single-cluster `Application`, but credentials are read from a pre-existing Kubernetes `Secret` using the
-  [external secrets pattern](../../auth/external-secrets). Endpoint URLs stay inline in the manifest; only credentials
-  live in the Secret. Recommended for any environment where credentials should not live in the manifest checked into
-  git.
-- [`k8s-monitoring-applicationset.yaml`](./k8s-monitoring-applicationset.yaml): an `ApplicationSet` using the
-  [cluster generator](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Cluster/) to
-  fan the same configuration out to every Argo CD cluster carrying the `kubernetes-monitoring: enabled` label.
-  Combine with the external-secrets variant when each managed cluster has its own credentials Secret.
+-   [`k8s-monitoring-application.yaml`](./k8s-monitoring-application.yaml): a single-cluster `Application` with
+    credentials embedded in `valuesObject`. Easiest to read; convenient for getting started.
+-   [`k8s-monitoring-application-external-secrets.yaml`](./k8s-monitoring-application-external-secrets.yaml): the same
+    single-cluster `Application`, but credentials are read from a pre-existing Kubernetes `Secret` using the
+    [external secrets pattern](../../auth/external-secrets). Endpoint URLs stay inline in the manifest; only credentials
+    live in the Secret. Recommended for any environment where credentials should not live in the manifest checked into
+    git.
+-   [`k8s-monitoring-applicationset.yaml`](./k8s-monitoring-applicationset.yaml): an `ApplicationSet` using the
+    [cluster generator](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Cluster/) to
+    fan the same configuration out to every Argo CD cluster carrying the `kubernetes-monitoring: enabled` label.
+    Combine with the external-secrets variant when each managed cluster has its own credentials Secret.
 
 ## Setting `null` values
 
