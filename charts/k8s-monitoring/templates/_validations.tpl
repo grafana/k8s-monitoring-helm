@@ -6,6 +6,8 @@
   {{- include "destinations.validate" . -}}
   {{- include "collectors.validate.atLeastOneEnabled" . }}
   {{- include "collectors.validate.uniqueNames" . }}
+  {{- include "collectors.validate.experimentalStabilityLevel" . }}
+  {{- include "collectors.validate.experimentalStabilityLevel" . }}
 
   {{- /* Feature Config Influence */}}
   {{- $updatedValues := $.Values }}
