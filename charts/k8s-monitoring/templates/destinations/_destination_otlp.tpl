@@ -114,7 +114,7 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
       `set(resource.attributes[{{ $resourceAttribute | quote }}], attributes[{{ $datapointAttribute | quote }}] ) where (resource.attributes[{{ $resourceAttribute | quote }}] == nil or resource.attributes[{{ $resourceAttribute | quote }}] == "") and attributes[{{ $datapointAttribute | quote }}] != nil and attributes[{{ $datapointAttribute | quote }}] != ""`,
       `delete_key(attributes, {{ $datapointAttribute | quote }}) where attributes[{{ $datapointAttribute | quote }}] == resource.attributes[{{ $resourceAttribute | quote }}]`,
 {{- else }}
-      `set(resource.attributes[{{ $resourceAttribute | quote }}], attributes[{{ $datapointAttribute | quote }}] ) where resource.attributes[{{ $resourceAttribute | quote }}] == nil and attributes[{{ $datapointAttribute | quote }}] != nil`,
+      `set(resource.attributes[{{ $resourceAttribute | quote }}], attributes[{{ $datapointAttribute | quote }}] ) where (resource.attributes[{{ $resourceAttribute | quote }}] == nil or resource.attributes[{{ $resourceAttribute | quote }}] == "") and attributes[{{ $datapointAttribute | quote }}] != nil and attributes[{{ $datapointAttribute | quote }}] != ""`,
       `delete_key(attributes, {{ $datapointAttribute | quote }}) where attributes[{{ $datapointAttribute | quote }}] == resource.attributes[{{ $resourceAttribute | quote }}]`,
 {{- end }}
   {{- end }}
@@ -160,7 +160,7 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
       `set(resource.attributes[{{ $resourceAttribute | quote }}], attributes[{{ $logAttribute | quote }}] ) where (resource.attributes[{{ $resourceAttribute | quote }}] == nil or resource.attributes[{{ $resourceAttribute | quote }}] == "") and attributes[{{ $logAttribute | quote }}] != nil and attributes[{{ $logAttribute | quote }}] != ""`,
       `delete_key(attributes, {{ $logAttribute | quote }}) where attributes[{{ $logAttribute | quote }}] == resource.attributes[{{ $resourceAttribute | quote }}]`,
 {{- else }}
-      `set(resource.attributes[{{ $resourceAttribute | quote }}], attributes[{{ $logAttribute | quote }}] ) where resource.attributes[{{ $resourceAttribute | quote }}] == nil and attributes[{{ $logAttribute | quote }}] != nil`,
+      `set(resource.attributes[{{ $resourceAttribute | quote }}], attributes[{{ $logAttribute | quote }}] ) where (resource.attributes[{{ $resourceAttribute | quote }}] == nil or resource.attributes[{{ $resourceAttribute | quote }}] == "") and attributes[{{ $logAttribute | quote }}] != nil and attributes[{{ $logAttribute | quote }}] != ""`,
       `delete_key(attributes, {{ $logAttribute | quote }}) where attributes[{{ $logAttribute | quote }}] == resource.attributes[{{ $resourceAttribute | quote }}]`,
 {{- end }}
   {{- end }}
