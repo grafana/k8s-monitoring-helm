@@ -119,7 +119,11 @@ otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | q
 {{- end }}
 {{- range $datapointAttribute, $resourceAttribute := .processors.transform.metrics.datapointToResource }}
   {{- if $resourceAttribute }}
+    {{- if or (eq $resourceAttribute "service.name") (eq $resourceAttribute "service.namespace") }}
       `set(resource.attributes[{{ $resourceAttribute | quote }}], attributes[{{ $datapointAttribute | quote }}] ) where (resource.attributes[{{ $resourceAttribute | quote }}] == nil or resource.attributes[{{ $resourceAttribute | quote }}] == "") and attributes[{{ $datapointAttribute | quote }}] != nil and attributes[{{ $datapointAttribute | quote }}] != ""`,
+    {{- else }}
+      `set(resource.attributes[{{ $resourceAttribute | quote }}], attributes[{{ $datapointAttribute | quote }}] ) where resource.attributes[{{ $resourceAttribute | quote }}] == nil and attributes[{{ $datapointAttribute | quote }}] != nil`,
+    {{- end }}
       `delete_key(attributes, {{ $datapointAttribute | quote }}) where attributes[{{ $datapointAttribute | quote }}] == resource.attributes[{{ $resourceAttribute | quote }}]`,
   {{- end }}
 {{- end }}
@@ -164,7 +168,11 @@ otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | q
       `delete_key(attributes, "loki.resource.labels")`,
 {{- range $logAttribute, $resourceAttribute := .processors.transform.logs.logToResource }}
   {{- if $resourceAttribute }}
+    {{- if or (eq $resourceAttribute "service.name") (eq $resourceAttribute "service.namespace") }}
       `set(resource.attributes[{{ $resourceAttribute | quote }}], attributes[{{ $logAttribute | quote }}] ) where (resource.attributes[{{ $resourceAttribute | quote }}] == nil or resource.attributes[{{ $resourceAttribute | quote }}] == "") and attributes[{{ $logAttribute | quote }}] != nil and attributes[{{ $logAttribute | quote }}] != ""`,
+    {{- else }}
+      `set(resource.attributes[{{ $resourceAttribute | quote }}], attributes[{{ $logAttribute | quote }}] ) where resource.attributes[{{ $resourceAttribute | quote }}] == nil and attributes[{{ $logAttribute | quote }}] != nil`,
+    {{- end }}
       `delete_key(attributes, {{ $logAttribute | quote }}) where attributes[{{ $logAttribute | quote }}] == resource.attributes[{{ $resourceAttribute | quote }}]`,
   {{- end }}
 {{- end }}

@@ -12,6 +12,7 @@ metadata:
     app.kubernetes.io/version: "1.8.1"
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
+
 ---
 # Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/serviceaccount.yaml
 apiVersion: v1
@@ -28,6 +29,7 @@ metadata:
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: rbac
 automountServiceAccountToken: true
+
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -351,9 +353,9 @@ data:
           `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
           `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
           `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
-          `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `set(resource.attributes["service.name"], attributes["service_name"] ) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and attributes["service_name"] != nil and attributes["service_name"] != ""`,
           `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
-          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where (resource.attributes["service.namespace"] == nil or resource.attributes["service.namespace"] == "") and attributes["service_namespace"] != nil and attributes["service_namespace"] != ""`,
           `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
         ]
       }
@@ -406,9 +408,9 @@ data:
           `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
           `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
           `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
-          `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `set(resource.attributes["service.name"], attributes["service_name"] ) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and attributes["service_name"] != nil and attributes["service_name"] != ""`,
           `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
-          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where (resource.attributes["service.namespace"] == nil or resource.attributes["service.namespace"] == "") and attributes["service_namespace"] != nil and attributes["service_namespace"] != ""`,
           `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
           `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
           `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
@@ -477,6 +479,7 @@ data:
         enabled = true
       }
     } // otelcol.exporter.otlp "otlp_gateway"
+
 ---
 # Source: k8s-monitoring/templates/beyla-config.yaml
 apiVersion: v1
@@ -553,6 +556,7 @@ data:
       - /login
       - /payment
       unmatched: heuristic
+
 ---
 # Source: k8s-monitoring/templates/release-info.yaml
 apiVersion: v1
@@ -574,6 +578,9 @@ data:
     # TYPE grafana_kubernetes_monitoring_collector_info gauge
     grafana_kubernetes_monitoring_collector_info{kind="statefulset", name="alloy", presets="clustered,statefulset", replicas="1", type="alloy"} 1
     # EOF
+    
+
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -659,6 +666,7 @@ rules:
   - apiGroups: [ "" ]
     resources: [ "pods", "services", "nodes" ]
     verbs: [ "list", "watch", "get" ]
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -679,6 +687,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-objects.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -699,6 +708,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
+
 ---
 # Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/cluster-role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -721,6 +731,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: k8smon-beyla
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/leader-election.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -787,6 +798,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/service.yaml
 apiVersion: v1
@@ -814,6 +826,7 @@ spec:
   selector:
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
+
 ---
 # Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/cache-service.yaml
 apiVersion: v1
@@ -837,6 +850,7 @@ spec:
       name: grpc
   selector:
     app.kubernetes.io/name: beyla-k8s-cache
+
 ---
 # Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/daemon-set.yaml
 apiVersion: apps/v1
@@ -911,6 +925,7 @@ spec:
         - name: cgroup
           hostPath:
             path: /sys/fs/cgroup
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/deployment.yaml
 apiVersion: apps/v1
@@ -982,6 +997,7 @@ spec:
             readOnlyRootFilesystem: true
       nodeSelector:
         kubernetes.io/os: linux
+
 ---
 # Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/cache-deployment.yaml
 apiVersion: apps/v1
@@ -1168,6 +1184,7 @@ roleRef:
   kind: Role
   name: k8smon-k8s-monitoring-add-finalizer
   apiGroup: rbac.authorization.k8s.io
+
 ---
 # Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1186,6 +1203,7 @@ roleRef:
   kind: Role
   name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
   apiGroup: rbac.authorization.k8s.io
+
 ---
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
 apiVersion: batch/v1
