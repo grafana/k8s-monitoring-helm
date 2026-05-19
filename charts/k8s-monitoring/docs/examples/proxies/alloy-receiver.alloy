@@ -188,9 +188,9 @@ otelcol.processor.transform "otlpgateway" {
       `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
       `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
       `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
-      `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+      `set(resource.attributes["service.name"], attributes["service_name"] ) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and attributes["service_name"] != nil and attributes["service_name"] != ""`,
       `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
-      `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+      `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where (resource.attributes["service.namespace"] == nil or resource.attributes["service.namespace"] == "") and attributes["service_namespace"] != nil and attributes["service_namespace"] != ""`,
       `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
     ]
   }
@@ -243,9 +243,9 @@ otelcol.processor.transform "otlpgateway" {
       `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
       `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
       `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
-      `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+      `set(resource.attributes["service.name"], attributes["service_name"] ) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and attributes["service_name"] != nil and attributes["service_name"] != ""`,
       `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
-      `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+      `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where (resource.attributes["service.namespace"] == nil or resource.attributes["service.namespace"] == "") and attributes["service_namespace"] != nil and attributes["service_namespace"] != ""`,
       `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
       `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
       `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
