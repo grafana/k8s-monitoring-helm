@@ -311,6 +311,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.oauth2.proxyURL | string | `""` | HTTP proxy to send requests through. |
 | externalServices.prometheus.oauth2.scopes | list | `[]` | List of scopes to authenticate with. |
 | externalServices.prometheus.oauth2.tokenURL | string | `""` | URL to fetch the token from. |
+| externalServices.prometheus.otlpTimeout | string | `""` | Time to wait before marking an OTLP metrics export request as failed. Only applies when protocol is "otlp". When unset, Alloy uses its default timeout. |
 | externalServices.prometheus.processors.batch.maxSize | int | `0` | Maximum number of spans, metric data points, or log records to send in a single batch. This number must be greater than or equal to the `size` setting. If set to 0, the batch processor will not enforce a maximum size. |
 | externalServices.prometheus.processors.batch.size | int | `8192` | Number of spans, metric data points, or log records after which a batch will be sent regardless of the timeout. This setting acts as a trigger and does not affect the size of the batch. If you need to enforce batch size, limit use `maxSize`. |
 | externalServices.prometheus.processors.batch.timeout | string | `"2s"` | How long to wait before flushing the batch. |

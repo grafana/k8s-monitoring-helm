@@ -106,6 +106,9 @@ otelcol.auth.oauth2 "metrics_service" {
 {{- end }}
 {{ if eq .protocol "otlp" }}
 otelcol.exporter.otlp "metrics_service" {
+  {{- if .otlpTimeout }}
+  timeout = {{ .otlpTimeout | quote }}
+  {{- end }}
 {{- end }}
 {{- if eq .protocol "otlphttp" }}
 otelcol.exporter.otlphttp "metrics_service" {
