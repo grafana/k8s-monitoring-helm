@@ -87,6 +87,7 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | tenantId | string | `""` | The tenant ID for the OTLP destination. |
 | tenantIdFrom | string | `""` | Raw config for accessing the tenant ID. |
 | tenantIdKey | string | `"tenantId"` | The key for storing the tenant ID in the secret. |
+| timeout | string | `5s` | Time to wait per individual attempt to send data to the OTLP destination. |
 | url | string | `""` | The URL for the OTLP destination. |
 | urlFrom | string | `""` | Raw config for accessing the URL. |
 | writeBufferSize | string | `""` | Size of the write buffer the gRPC client to use for writing requests. |

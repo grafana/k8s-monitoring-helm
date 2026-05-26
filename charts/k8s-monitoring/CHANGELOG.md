@@ -3,6 +3,7 @@
 ## 3.8.9
 
 *   Bump Alloy Operator to 0.5.8, kube-state-metrics to 7.4.0, OpenCost to 2.5.22, Windows Exporter to 0.12.7 (@petewall)
+*   Add `timeout` setting on the OTLP destination (@petewall)
 
 ## 3.8.8
 
