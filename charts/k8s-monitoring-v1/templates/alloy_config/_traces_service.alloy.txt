@@ -21,6 +21,9 @@ otelcol.exporter.otlp "traces_service" {
 {{- else if eq .protocol "otlphttp" }}
 otelcol.exporter.otlphttp "traces_service" {
 {{- end }}
+  {{- if .otlpTimeout }}
+  timeout = {{ .otlpTimeout | quote }}
+  {{- end }}
   client {
     endpoint = convert.nonsensitive(remote.kubernetes.secret.traces_service.data[{{ .hostKey | quote }}])
 {{ if eq .authMode "basic" }}
