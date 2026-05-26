@@ -1,6 +1,13 @@
 SHELL := /bin/bash
 HAS_SHELLSPEC := $(shell command -v shellspec;)
 
+HELM_VERSION ?=
+ifeq ($(HELM_VERSION),)
+HELM = helm
+else
+HELM = ../../scripts/helm-with-version $(HELM_VERSION)
+endif
+
 CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
 CHART_YAML_FILES = $(shell find templates -name "*.yaml")
 ALLOW_LISTS := default_allow_lists/cadvisor.yaml \
@@ -15,7 +22,7 @@ ALLOW_LISTS := default_allow_lists/cadvisor.yaml \
 
 pete: $(ALLOW_LISTS)
 Chart.lock: Chart.yaml
-	helm dependency update .
+	$(HELM) dependency update .
 	@touch Chart.lock # Ensure the timestamp is updated
 
 .SECONDEXPANSION:
@@ -125,11 +132,11 @@ alloy_configs = $(shell \
 )
 
 %/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES) $(ALLOW_LISTS)
-	helm template $(EXAMPLE_RELEASE_NAME) . -f $< | sed 's|value: "AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U"|&  # trufflehog:ignore|' > $@
+	$(HELM) template $(EXAMPLE_RELEASE_NAME) . -f $< | sed 's|value: "AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U"|&  # trufflehog:ignore|' > $@
 
 %/.rendered/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES) $(ALLOW_LISTS)
 	mkdir -p $(dir $@)
-	helm template $(EXAMPLE_RELEASE_NAME) . -f $< | sed 's|value: "AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U"|&  # trufflehog:ignore|' > $@
+	$(HELM) template $(EXAMPLE_RELEASE_NAME) . -f $< | sed 's|value: "AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U"|&  # trufflehog:ignore|' > $@
 
 %/metrics.alloy: %/output.yaml
 	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy") | .data["config.alloy"]' $< > $@

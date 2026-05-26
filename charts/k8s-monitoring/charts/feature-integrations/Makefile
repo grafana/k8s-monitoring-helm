@@ -1,4 +1,11 @@
-HAS_HELM_UNITTEST := $(shell helm plugin list | grep unittest 2> /dev/null)
+HELM_VERSION ?=
+ifeq ($(HELM_VERSION),)
+HELM = helm
+else
+HELM = ../../../../scripts/helm-with-version $(HELM_VERSION)
+endif
+
+HAS_HELM_UNITTEST := $(shell $(HELM) plugin list | grep unittest 2> /dev/null)
 
 SCHEMA_MODS_JSON_FILES = $(shell find schema-mods -name "*.json")
 SCHEMA_MODS_JQ_FILES = $(shell find schema-mods -name "*.jq")
@@ -16,7 +23,7 @@ templates/secrets/_secret.alloy.tpl: ../../templates/secrets/_secret.alloy.tpl
 	cp $< $@
 
 Chart.lock: Chart.yaml
-	helm dependency update .
+	$(HELM) dependency update .
 	touch Chart.lock # Ensure the timestamp is updated
 
 .SECONDEXPANSION:
@@ -81,10 +88,10 @@ build: README.md $(INTEGRATION_DOCS_FILES) Chart.lock values.schema.json templat
 
 .PHONY: test
 test: build
-	helm lint .
+	$(HELM) lint .
 	ct lint --lint-conf ../../.lintconf.yaml --helm-dependency-extra-args=--skip-refresh --charts .
 ifdef HAS_HELM_UNITTEST
-	helm unittest .
+	$(HELM) unittest .
 else
 	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:3.18.4-1.0.0 .
 endif
@@ -92,7 +99,7 @@ endif
 .PHONY: update-test-snapshots
 update-test-snapshots:
 ifdef HAS_HELM_UNITTEST
-	helm unittest . --update-snapshot
+	$(HELM) unittest . --update-snapshot
 else
 	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:3.18.4-1.0.0 . --update-snapshot
 endif

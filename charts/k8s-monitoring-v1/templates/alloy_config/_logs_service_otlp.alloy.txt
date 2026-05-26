@@ -110,6 +110,9 @@ otelcol.exporter.otlp "logs_service" {
 {{- if eq .protocol "otlphttp" }}
 otelcol.exporter.otlphttp "logs_service" {
 {{- end }}
+  {{- if .otlpTimeout }}
+  timeout = {{ .otlpTimeout | quote }}
+  {{- end }}
   client {
     endpoint = convert.nonsensitive(remote.kubernetes.secret.logs_service.data[{{ .hostKey | quote }}]) + "{{ .writeEndpoint }}"
 {{- if eq .authMode "basic" }}

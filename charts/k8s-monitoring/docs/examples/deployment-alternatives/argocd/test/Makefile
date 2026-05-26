@@ -1,3 +1,10 @@
+HELM_VERSION ?=
+ifeq ($(HELM_VERSION),)
+HELM = helm
+else
+HELM = ../../../../../../scripts/helm-with-version $(HELM_VERSION)
+endif
+
 .PHONY: clean
 clean: ;
 
@@ -18,4 +25,4 @@ values.yaml: ../k8s-monitoring-application.yaml
 	yq eval '.spec.source.helm.valuesObject' $< > $@
 
 output.yaml: values.yaml
-	helm template k8smon ../../../../.. -f $< > $@
+	$(HELM) template k8smon ../../../../.. -f $< > $@

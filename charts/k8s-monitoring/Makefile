@@ -1,4 +1,11 @@
-HAS_HELM_UNITTEST := $(shell helm plugin list | grep unittest 2> /dev/null)
+HELM_VERSION ?=
+ifeq ($(HELM_VERSION),)
+HELM = helm
+else
+HELM = ../../scripts/helm-with-version $(HELM_VERSION)
+endif
+
+HAS_HELM_UNITTEST := $(shell $(HELM) plugin list | grep unittest 2> /dev/null)
 HAS_SHELLSPEC := $(shell command -v shellspec;)
 
 CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
@@ -108,7 +115,7 @@ templates/destinations/_destination_types.tpl: $(DESTINATION_VALUES_FILES)
 	echo '{{- end -}}' >> $@
 
 Chart.lock: Chart.yaml
-	helm dependency update .
+	$(HELM) dependency update .
 	@touch Chart.lock # Ensure the timestamp is updated
 
 values.schema.json: values.yaml $(COLLECTOR_SCHEMA_FILES) $(DESTINATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/destination.json
@@ -190,11 +197,11 @@ alloy_instances = $(shell \
 )
 
 %/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
-	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
+	$(HELM) template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
 
 %/.rendered/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
 	mkdir -p $(dir $@)
-	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
+	$(HELM) template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
 
 %.alloy: $$(dir $$@)output.yaml
 	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-$(notdir $(basename $@))") | .data["config.alloy"]' $< > $@
@@ -292,13 +299,13 @@ lint-configs: $(EXAMPLE_ALLOY_FILES)
 	rm -rf data-alloy  # Clean up the data-alloy directory, which is created by lint-alloy.sh when it runs Alloy.
 
 lint-helm: build
-	helm repo add grafana https://grafana.github.io/helm-charts
-	helm lint .
+	$(HELM) repo add grafana https://grafana.github.io/helm-charts
+	$(HELM) lint .
 	ct lint --config .ct.yaml --lint-conf .lintconf.yaml --check-version-increment=false --charts .
 
 unittest: values.schema.json templates/destinations/_destination_types.tpl
 ifdef HAS_HELM_UNITTEST
-	helm unittest --failfast --with-subchart=false .
+	$(HELM) unittest --failfast --with-subchart=false .
 else
 	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:3.18.4-1.0.0 --failfast --with-subchart=false .
 endif
@@ -306,7 +313,7 @@ endif
 .PHONY: update-test-snapshots
 update-test-snapshots:
 ifdef HAS_HELM_UNITTEST
-	helm unittest --with-subchart=false . --update-snapshot
+	$(HELM) unittest --with-subchart=false . --update-snapshot
 else
 	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:3.18.4-1.0.0 --with-subchart=false . --update-snapshot
 endif
