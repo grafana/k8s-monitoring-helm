@@ -476,6 +476,9 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" $.destinationName | quo
 {{- end }}
 {{- end }}
 {{- end }}
+{{- if .timeout }}
+  timeout = {{ .timeout | quote }}
+{{- end }}
   client {
 {{- if .urlFrom }}
     endpoint = {{ .urlFrom }}
