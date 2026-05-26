@@ -3,6 +3,7 @@
 ## Unreleased
 
 *   Add `timeout` setting on the OTLP destination (@petewall)
+*   Fail rendering with a clear error when `profiling.enabled: true` is set but none of `profiling.ebpf.enabled`, `profiling.java.enabled`, or `profiling.pprof.enabled` are enabled, instead of silently producing a profiling feature that collects no data (#2620) (@petewall)
 
 ## 4.1.3
 
