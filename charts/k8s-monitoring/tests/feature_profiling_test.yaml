@@ -1,0 +1,107 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Profiling
+templates:
+  - validations.yaml
+tests:
+  - it: requires at least one profiling sub-type when profiling.enabled is true
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        pyro:
+          type: pyroscope
+          url: http://pyroscope.pyroscope.svc:4040
+      profiling:
+        enabled: true
+        collector: alloy-profiles
+      collectors:
+        alloy-profiles:
+          presets: [privileged, daemonset]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            At least one profiling type must be enabled for this feature to work.
+            Please enable one or more:
+            profiling:
+              ebpf:
+                enabled: true
+              java:
+                enabled: true
+              pprof:
+                enabled: true
+
+  - it: passes validation when ebpf is enabled
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        pyro:
+          type: pyroscope
+          url: http://pyroscope.pyroscope.svc:4040
+      profiling:
+        enabled: true
+        collector: alloy-profiles
+        ebpf:
+          enabled: true
+      collectors:
+        alloy-profiles:
+          presets: [privileged, daemonset]
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: passes validation when java is enabled
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        pyro:
+          type: pyroscope
+          url: http://pyroscope.pyroscope.svc:4040
+      profiling:
+        enabled: true
+        collector: alloy-profiles
+        java:
+          enabled: true
+      collectors:
+        alloy-profiles:
+          presets: [privileged, daemonset]
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: passes validation when pprof is enabled
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        pyro:
+          type: pyroscope
+          url: http://pyroscope.pyroscope.svc:4040
+      profiling:
+        enabled: true
+        collector: alloy-profiles
+        pprof:
+          enabled: true
+      collectors:
+        alloy-profiles:
+          presets: [privileged, daemonset]
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: does not run profiling validation when profiling.enabled is false
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      clusterMetrics:
+        enabled: true
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+      collectors:
+        alloy-metrics:
+          enabled: true
+          alloy: {clustering: {enabled: true}}
+    asserts:
+      - notFailedTemplate: {}

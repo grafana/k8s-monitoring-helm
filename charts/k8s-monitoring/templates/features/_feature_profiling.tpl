@@ -47,5 +47,6 @@ profiling "feature" {
 {{- range $collector := include "features.profiling.collectors" . | fromYamlArray }}
   {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
 {{- end -}}
+{{- include "feature.profiling.validate" (dict "Values" $.Values.profiling) }}
 {{- end -}}
 {{- end -}}
