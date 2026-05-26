@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Add `timeout` setting on the OTLP destination (@petewall)
+
 ## 4.1.3
 
 *   Add support for the write-ahead log (WAL) setting on the Loki destination (@nooboo)

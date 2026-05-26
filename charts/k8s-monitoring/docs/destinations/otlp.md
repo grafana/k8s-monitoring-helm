@@ -89,6 +89,7 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | tenantId | string | `""` | The tenant ID for the OTLP destination. |
 | tenantIdFrom | string | `""` | Raw config for accessing the tenant ID. |
 | tenantIdKey | string | `"tenantId"` | The key for storing the tenant ID in the secret. |
+| timeout | string | `5s` | Time to wait per individual attempt to send data to the OTLP destination. |
 | traces.path | string | `""` | A custom path to append to the URL when sending traces. Only used when `protocol` is `http`. Overrides the default `/v1/traces` path. For example, set `path: v2/trace/otlp` to send traces to `<url>/v2/trace/otlp`. |
 | url | string | `""` | The URL for the OTLP destination. |
 | urlFrom | string | `""` | Raw config for accessing the URL. |
