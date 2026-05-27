@@ -1,7 +1,8 @@
 # Changelog
 
 ## 3.8.9
-  
+
+*   Update kube-state-metrics, OpenCost, and Windows Exporter (@petewall)
 *   Fix `global.scrapeNativeHistograms: true` crash-looping the alloy-metrics collector with `scrape_native_histograms is set to true, but PrometheusProto is not in scrape_protocols`. The chart now automatically prepends `PrometheusProto` to the rendered `scrape_protocols` list whenever native histograms are enabled, so the single-knob migration from chart 3.5.x works without also overriding `global.scrapeProtocols` (#2582) (@petewall)
 *   Fix custom destinations with `traces.enabled: true` or `profiles.enabled: true` failing to render with `nil pointer evaluating interface {}.target`. The traces and profiles `target` template lookups now read from the correct template context (`.destination.traces.target` / `.destination.profiles.target`) so the configured target is forwarded into the rendered Alloy config (#2590) (@petewall)
 *   Set `opencost.opencost.exporter.cloudProviderApiKey` to `"disabled"` so OpenCost does not try to write `/var/configs/gcp.json` on GCP/GKE and panic. Removes the placeholder GCP API key (and its `trufflehog:ignore` workarounds) from the chart defaults (@petewall)

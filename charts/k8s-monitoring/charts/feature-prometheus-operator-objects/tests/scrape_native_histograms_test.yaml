@@ -1,11 +1,11 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
 suite: Feature - Prometheus Operator Objects - Native Histogram Scraping
 templates:
-  - test/configmap.yaml
+  - configmap.yaml
 tests:
   - it: emits scrape_protocols with PrometheusProto prepended when scrapeNativeHistograms is enabled
     set:
-      testing: {enabled: true}
+      deployAsConfigMap: true
       global:
         scrapeNativeHistograms: true
     asserts:
@@ -20,7 +20,7 @@ tests:
 
   - it: does not emit scrape_protocols when scrapeNativeHistograms is disabled
     set:
-      testing: {enabled: true}
+      deployAsConfigMap: true
     asserts:
       - isKind:
           of: ConfigMap
