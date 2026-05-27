@@ -12,7 +12,6 @@ metadata:
     app.kubernetes.io/version: "1.8.1"
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
-
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/serviceaccount.yaml
 apiVersion: v1
@@ -86,7 +85,6 @@ data:
     collector:
       service:
         include: "containerd|kubelet"
-
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -1754,7 +1752,6 @@ data:
       name      = "grafana-cloud-credentials"
       namespace = "default"
     } // remote.kubernetes.secret "grafana_cloud_metrics"
-
 ---
 # Source: k8s-monitoring/templates/release-info.yaml
 apiVersion: v1
@@ -1783,9 +1780,6 @@ data:
     grafana_kubernetes_monitoring_collector_info{kind="statefulset", name="alloy-metrics", presets="clustered,statefulset", replicas="1", type="alloy"} 1
     grafana_kubernetes_monitoring_collector_info{kind="deployment", name="alloy-singleton", presets="singleton", replicas="1", type="alloy"} 1
     # EOF
-    
-
-
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -2006,8 +2000,6 @@ rules:
   resources:
     - volumeattachments
   verbs: ["list", "watch"]
-
-
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -2028,7 +2020,6 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
-
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-objects.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -2049,7 +2040,6 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
-
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -2139,7 +2129,6 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
-
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/service.yaml
 apiVersion: v1
@@ -2167,7 +2156,6 @@ spec:
   selector:
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/service.yaml
 apiVersion: v1
@@ -2196,7 +2184,6 @@ spec:
   selector:    
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
-
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/node-exporter/templates/service.yaml
 apiVersion: v1
@@ -2225,7 +2212,6 @@ spec:
   selector:
     app.kubernetes.io/name: node-exporter
     app.kubernetes.io/instance: k8smon
-
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/windows-exporter/templates/service.yaml
 apiVersion: v1
@@ -2253,7 +2239,6 @@ spec:
   selector:
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: k8smon
-
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/node-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -2382,7 +2367,6 @@ spec:
         - name: root
           hostPath:
             path: /
-
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/windows-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -2484,7 +2468,6 @@ spec:
         - name: config
           configMap:
             name: k8smon-windows-exporter
-
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/deployment.yaml
 apiVersion: apps/v1
@@ -2556,7 +2539,6 @@ spec:
             readOnlyRootFilesystem: true
       nodeSelector:
         kubernetes.io/os: linux
-
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/deployment.yaml
 apiVersion: apps/v1
@@ -2653,7 +2635,6 @@ spec:
           readOnlyRootFilesystem: true
       nodeSelector:
         kubernetes.io/os: linux
-
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
@@ -2885,7 +2866,6 @@ roleRef:
   kind: Role
   name: k8smon-k8s-monitoring-add-finalizer
   apiGroup: rbac.authorization.k8s.io
-
 ---
 # Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -2904,7 +2884,6 @@ roleRef:
   kind: Role
   name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
   apiGroup: rbac.authorization.k8s.io
-
 ---
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
 apiVersion: batch/v1
