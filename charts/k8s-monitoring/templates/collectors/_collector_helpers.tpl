@@ -149,7 +149,7 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
     {{- $clusterNameValues = dict "alloy" (dict "clustering" (dict "name" .collectorName))}}
   {{- end }}
 {{- end }}
-{{ mergeOverwrite $defaultValues $presetValues $globalValues (deepCopy $userCommonValues) $clusterNameValues (deepCopy $userValues) | toYaml }}
+{{ mergeOverwrite $defaultValues $presetValues (deepCopy $globalValues) (deepCopy $userCommonValues) $clusterNameValues (deepCopy $userValues) | toYaml }}
 {{- end }}
 
 {{- /* Gets the Alloy values including default upstream values. Input: $, .collectorName (string, collector name), .collectorValues (object) */ -}}
