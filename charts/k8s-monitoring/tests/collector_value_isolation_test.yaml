@@ -1,0 +1,56 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Collectors - Value Isolation
+tests:
+  - it: does not leak alloy.mounts.extra from one collector instance to another
+    template: alloy.yaml
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        loki:
+          type: loki
+          url: http://loki-gateway
+      clusterEvents:
+        enabled: true
+        collector: alloy-singleton
+        destinations: [loki]
+      nodeLogs:
+        enabled: true
+        collector: alloy-logs
+        destinations: [loki]
+      collectorCommon:
+        alloy:
+          alloy:
+            mounts:
+              extra:
+                - name: commonMount
+                  mountPath: /opt/commonMount
+      collectors:
+        alloy-logs:
+          enabled: true
+          presets: [filesystem-log-reader, daemonset]
+        alloy-singleton:
+          enabled: true
+          presets: [statefulset]
+          alloy:
+            mounts:
+              extra:
+                - name: singleton-only-mount
+                  mountPath: /tmp/singleton
+    asserts:
+      - hasDocuments: {count: 2}
+      - documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-alloy-singleton
+        contains:
+          path: spec.alloy.mounts.extra
+          content:
+            name: singleton-only-mount
+            mountPath: /tmp/singleton
+      - documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-alloy-logs
+        notContains:
+          path: spec.alloy.mounts.extra
+          content:
+            name: singleton-only-mount
+            mountPath: /tmp/singleton
