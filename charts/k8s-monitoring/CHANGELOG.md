@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Fix the Service Integrations feature silently rendering no integration modules when `integrations.collector` was left at its default empty string. The feature now relies on the same collector resolution as every other feature, so simply enabling integrations (e.g. `integrations.alloy`, `integrations.cert-manager`, `integrations.istio`) generates the expected Alloy modules without also having to set `integrations.collector` explicitly (#2625) (@petewall)
 *   Add `timeout` setting on the OTLP destination (@petewall)
 *   Fail rendering with a clear error when `profiling.enabled: true` is set but none of `profiling.ebpf.enabled`, `profiling.java.enabled`, or `profiling.pprof.enabled` are enabled, instead of silently producing a profiling feature that collects no data (#2620) (@petewall)
 *   Fix Alloy collector instances cross-contaminating each other's `mounts.extra` (and other nested values from `collectorCommon.alloy` or per-instance `collectors.<name>`) due to Sprig `mergeOverwrite` aliasing nested map/slice references. The user-supplied merge inputs (`$userCommonValues` and `$userValues`) are now `deepCopy`-ed before merging (#2623) (@petewall)

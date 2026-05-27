@@ -25,9 +25,7 @@
 {{- end }}
 
 {{- define "features.integrations.include" }}
-{{- if eq .collectorName .Values.integrations.collector }}
   {{ include "features.integrations.metrics.include" . | indent 0 }}
-{{- end }}
 {{- end }}
 
 {{- define "features.integrations.destinations" }}
