@@ -6,6 +6,7 @@
 *   Add `timeout` setting on the OTLP destination (@petewall)
 *   Fail rendering with a clear error when `profiling.enabled: true` is set but none of `profiling.ebpf.enabled`, `profiling.java.enabled`, or `profiling.pprof.enabled` are enabled, instead of silently producing a profiling feature that collects no data (#2620) (@petewall)
 *   Fix Alloy collector instances cross-contaminating each other's `mounts.extra` (and other nested values from `collectorCommon.alloy` or per-instance `collectors.<name>`) due to Sprig `mergeOverwrite` aliasing nested map/slice references. The user-supplied merge inputs (`$userCommonValues` and `$userValues`) are now `deepCopy`-ed before merging (#2623) (@petewall)
+*   Update Alloy Operator to 0.5.8, OpenCost to 2.5.21 and Windows Exporter to 0.12.7 (@petewall)
 
 ## 4.1.3
 
