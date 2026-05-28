@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 4.1.4
 
 *   Fix the Service Integrations feature silently rendering no integration modules when `integrations.collector` was left at its default empty string. The feature now relies on the same collector resolution as every other feature, so simply enabling integrations (e.g. `integrations.alloy`, `integrations.cert-manager`, `integrations.istio`) generates the expected Alloy modules without also having to set `integrations.collector` explicitly (#2625) (@petewall)
 *   Add `timeout` setting on the OTLP destination (@petewall)
