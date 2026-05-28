@@ -424,7 +424,7 @@ details:
 |  | profiling(feature-profiling) | 1.0.0 |
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
 |  | telemetryServices(telemetry-services) | 1.0.0 |
-| https://grafana.github.io/helm-charts | alloy-operator | 0.5.7 |
+| https://grafana.github.io/helm-charts | alloy-operator | 0.5.8 |
 <!-- markdownlint-enable no-bare-urls -->
 
 <!--alex disable host-hostess-->
