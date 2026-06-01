@@ -1,5 +1,78 @@
 {{- define "telemetryServices.validate" }}
   {{- include "telemetryServices.validate.opencost" . }}
+  {{- include "telemetryServices.validate.nodeExporter" . }}
+{{- end }}
+
+{{/*
+Best-effort check for an existing Node Exporter when deploying the bundled one.
+Uses `lookup` to find DaemonSets that look like Node Exporter and bind the same port. `lookup` returns
+nothing during `helm template`/`--dry-run` (no cluster connection), so this check is skipped in those cases.
+If a conflict is found, recommend either using the existing Node Exporter or deploying on a unique port.
+*/}}
+{{- define "telemetryServices.validate.nodeExporter" }}
+{{- $nodeExporter := index .Values.telemetryServices "node-exporter" }}
+{{- if and $nodeExporter.deploy (dig "portConflictCheck" true $nodeExporter) }}
+  {{- $ourPort := dig "service" "port" 9100 $nodeExporter | int }}
+  {{- $conflict := dict }}
+  {{- range $daemonSet := (lookup "apps/v1" "DaemonSet" "" "").items }}
+    {{- if not $conflict.found }}
+      {{- $labels := $daemonSet.metadata.labels | default dict }}
+      {{- /* Skip the Node Exporter managed by this release (relevant on upgrades) */}}
+      {{- if ne (dig "app.kubernetes.io/instance" "" $labels) $.Release.Name }}
+        {{- $nameLabel := dig "app.kubernetes.io/name" "" $labels }}
+        {{- $isNodeExporter := regexMatch "node[-_]exporter" $nameLabel }}
+        {{- range $container := (dig "spec" "template" "spec" "containers" (list) $daemonSet) }}
+          {{- if regexMatch "node[-_]exporter" (dig "image" "" $container) }}
+            {{- $isNodeExporter = true }}
+          {{- end }}
+        {{- end }}
+        {{- if $isNodeExporter }}
+          {{- range $container := (dig "spec" "template" "spec" "containers" (list) $daemonSet) }}
+            {{- range $port := (dig "ports" (list) $container) }}
+              {{- if or (eq (int (dig "containerPort" 0 $port)) $ourPort) (eq (int (dig "hostPort" 0 $port)) $ourPort) }}
+                {{- $_ := set $conflict "found" true }}
+                {{- $_ := set $conflict "namespace" $daemonSet.metadata.namespace }}
+                {{- $_ := set $conflict "name" $daemonSet.metadata.name }}
+                {{- $_ := set $conflict "nameLabel" (default "prometheus-node-exporter" $nameLabel) }}
+              {{- end }}
+            {{- end }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+
+  {{- if $conflict.found }}
+    {{- $msg := list "" (printf "A Node Exporter already appears to be running in this cluster on port %d." $ourPort) }}
+    {{- $msg = append $msg (printf "Found DaemonSet \"%s\" in namespace \"%s\"." $conflict.name $conflict.namespace) }}
+    {{- $msg = append $msg "Deploying another Node Exporter on the same port will cause a host port conflict, since Node Exporter runs with hostNetwork enabled." }}
+    {{- $msg = append $msg "" }}
+    {{- $msg = append $msg "Option 1: Don't deploy the bundled Node Exporter and use the existing one:" }}
+    {{- $msg = append $msg "telemetryServices:" }}
+    {{- $msg = append $msg "  node-exporter:" }}
+    {{- $msg = append $msg "    deploy: false" }}
+    {{- if dig "linuxHosts" "enabled" false (.Values.hostMetrics | default dict) }}
+      {{- $msg = append $msg "And point Host Metrics at the existing Node Exporter:" }}
+      {{- $msg = append $msg "hostMetrics:" }}
+      {{- $msg = append $msg "  linuxHosts:" }}
+      {{- $msg = append $msg (printf "    namespace: %s" $conflict.namespace) }}
+      {{- $msg = append $msg "    labelMatchers:" }}
+      {{- $msg = append $msg (printf "      app.kubernetes.io/name: %s" $conflict.nameLabel) }}
+    {{- end }}
+    {{- $msg = append $msg "" }}
+    {{- $msg = append $msg "Option 2: Deploy the bundled Node Exporter on a different, unused port:" }}
+    {{- $msg = append $msg "telemetryServices:" }}
+    {{- $msg = append $msg "  node-exporter:" }}
+    {{- $msg = append $msg "    service:" }}
+    {{- $msg = append $msg "      port: <unique-port>" }}
+    {{- $msg = append $msg "" }}
+    {{- $msg = append $msg "If this detection is incorrect, you can disable this check:" }}
+    {{- $msg = append $msg "telemetryServices:" }}
+    {{- $msg = append $msg "  node-exporter:" }}
+    {{- $msg = append $msg "    portConflictCheck: false" }}
+    {{- fail (join "\n" $msg) }}
+  {{- end }}
+{{- end }}
 {{- end }}
 
 {{- define "telemetryServices.validate.opencost" }}
