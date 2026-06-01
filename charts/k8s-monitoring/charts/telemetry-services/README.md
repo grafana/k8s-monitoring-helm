@@ -74,6 +74,7 @@ telemetryServices:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | node-exporter.deploy | bool | `true` | Deploy Node Exporter. Set to false if your cluster already has Node Exporter deployed. |
+| node-exporter.portConflictCheck | bool | `true` | Check for an existing Node Exporter using the same port before deploying. If a conflict is detected, the install fails with guidance to use the existing Node Exporter or pick a unique port. Set to false to skip the check. |
 
 ### OpenCost
 
