@@ -5,7 +5,7 @@
 
 # k8s-monitoring
 
-![Version: 1.6.52](https://img.shields.io/badge/Version-1.6.52-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.31.1](https://img.shields.io/badge/AppVersion-2.31.1-informational?style=flat-square)
+![Version: 1.6.53](https://img.shields.io/badge/Version-1.6.53-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.33.0](https://img.shields.io/badge/AppVersion-2.33.0-informational?style=flat-square)
 A Helm chart for gathering, scraping, and forwarding Kubernetes telemetry data to a Grafana Stack.
 
 ## Upcoming Deprecation
@@ -143,16 +143,16 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://grafana.github.io/helm-charts | alloy | 1.8.1 |
-| https://grafana.github.io/helm-charts | alloy-events(alloy) | 1.8.1 |
-| https://grafana.github.io/helm-charts | alloy-logs(alloy) | 1.8.1 |
-| https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 1.8.1 |
+| https://grafana.github.io/helm-charts | alloy | 1.8.2 |
+| https://grafana.github.io/helm-charts | alloy-events(alloy) | 1.8.2 |
+| https://grafana.github.io/helm-charts | alloy-logs(alloy) | 1.8.2 |
+| https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 1.8.2 |
 | https://grafana.github.io/helm-charts | beyla | 1.16.7 |
-| https://opencost.github.io/opencost-helm-chart | opencost | 2.5.14 |
-| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 7.3.0 |
+| https://opencost.github.io/opencost-helm-chart | opencost | 2.5.22 |
+| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 7.4.0 |
 | https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.55.0 |
-| https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | 28.0.1 |
-| https://prometheus-community.github.io/helm-charts | prometheus-windows-exporter | 0.12.6 |
+| https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | 29.0.0 |
+| https://prometheus-community.github.io/helm-charts | prometheus-windows-exporter | 0.12.7 |
 | https://sustainable-computing-io.github.io/kepler-helm-chart | kepler | 0.6.1 |
 <!-- markdownlint-enable no-bare-urls -->
 
