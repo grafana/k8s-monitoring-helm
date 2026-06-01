@@ -5,7 +5,8 @@
 
 # k8s-monitoring
 
-![Version: 2.0.44](https://img.shields.io/badge/Version-2.0.44-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.0.44](https://img.shields.io/badge/AppVersion-2.0.44-informational?style=flat-square)
+> **:exclamation: This Helm Chart is deprecated!**
+![Version: 2.0.45](https://img.shields.io/badge/Version-2.0.45-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.0.45](https://img.shields.io/badge/AppVersion-2.0.45-informational?style=flat-square)
 Capture all telemetry data from your Kubernetes cluster.
 
 ## Breaking change announcements
