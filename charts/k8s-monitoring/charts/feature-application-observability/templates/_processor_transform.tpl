@@ -63,16 +63,24 @@ otelcol.processor.transform "{{ .name | default "default" }}" {
 {{- end }}
 {{- end }}
 {{- if .Values.traces.enabled }}
-{{- if .Values.traces.transforms.resource }}
   trace_statements {
     context = "resource"
     statements = [
+      `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["app.kubernetes.io/name"] != nil and attributes["app.kubernetes.io/name"] != ""`,
+      `set(attributes["service.name"], attributes["k8s.deployment.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.deployment.name"] != nil and attributes["k8s.deployment.name"] != ""`,
+      `set(attributes["service.name"], attributes["k8s.replicaset.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.replicaset.name"] != nil and attributes["k8s.replicaset.name"] != ""`,
+      `set(attributes["service.name"], attributes["k8s.statefulset.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.statefulset.name"] != nil and attributes["k8s.statefulset.name"] != ""`,
+      `set(attributes["service.name"], attributes["k8s.daemonset.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.daemonset.name"] != nil and attributes["k8s.daemonset.name"] != ""`,
+      `set(attributes["service.name"], attributes["k8s.cronjob.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.cronjob.name"] != nil and attributes["k8s.cronjob.name"] != ""`,
+      `set(attributes["service.name"], attributes["k8s.job.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.job.name"] != nil and attributes["k8s.job.name"] != ""`,
+      `set(attributes["service.name"], attributes["k8s.pod.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.pod.name"] != nil and attributes["k8s.pod.name"] != ""`,
+      `set(attributes["service.name"], attributes["k8s.container.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.container.name"] != nil and attributes["k8s.container.name"] != ""`,
+      `set(attributes["service.namespace"], attributes["k8s.namespace.name"]) where (attributes["service.namespace"] == nil or attributes["service.namespace"] == "") and attributes["k8s.namespace.name"] != nil and attributes["k8s.namespace.name"] != ""`,
 {{- range $transform := .Values.traces.transforms.resource }}
 {{ $transform | quote | indent 6 }},
 {{- end }}
     ]
   }
-{{- end }}
 {{- if or .Values.traces.transforms.span .Values.traces.setSpanNameSemanticConvention }}
   trace_statements {
     context = "span"
