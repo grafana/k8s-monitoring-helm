@@ -12,22 +12,7 @@ env:
 permissions: {}
 
 jobs:
-  get-helm-charts-token:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    outputs:
-      token: ${{ steps.get-github-app-token.outputs.token }}
-    steps:
-      - name: Get GitHub App token
-        id: get-github-app-token
-        uses: grafana/shared-workflows/actions/create-github-app-token@ae92934a14a48b94494dbc06d74a81d47fe08a40  # create-github-app-token/v0.2.2
-        with:
-          github_app: k8s-monitoring-helm
-
   release-chart:
-    needs: get-helm-charts-token
     uses: grafana/helm-charts/.github/workflows/update-helm-repo.yaml@d7c4f4491dbe46d853833cd15a35159c28061f39
     permissions:
       contents: write
@@ -37,12 +22,11 @@ jobs:
       charts_dir: charts
       cr_configfile: .github/configs/cr.yaml
       ct_configfile: charts/k8s-monitoring/.ct.yaml
-    secrets:
-      helm_repo_token: ${{ needs.get-helm-charts-token.outputs.token }}
+      github_app: Kubenetes Monitoring Helm chart
 
   release:
     runs-on: ubuntu-latest
-    needs: [release-chart, get-helm-charts-token]
+    needs: release-chart
 
     # These permissions are needed to assume roles from GitHub's OIDC.
     permissions:
@@ -168,9 +152,15 @@ jobs:
             esac
           done <<< "$deps"
 
+      - name: Get GitHub App token
+        id: get-github-app-token
+        uses: grafana/shared-workflows/actions/create-github-app-token@259ba21cb3ff07724f331e26d926d655d24b317b  # create-github-app-token/v0.2.3
+        with:
+          github_app: Kubenetes Monitoring Helm chart
+
       - name: Set the token
         env:
-          APP_TOKEN: ${{ needs.get-helm-charts-token.outputs.token }}
+          APP_TOKEN: ${{ steps.get-github-app-token.outputs.token }}
         run: echo "AUTHTOKEN=${APP_TOKEN}" >> "${GITHUB_ENV}"
 
       - name: Install CR tool
