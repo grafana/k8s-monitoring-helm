@@ -20,6 +20,7 @@ If a conflict is found, recommend either using the existing Node Exporter or dep
       {{- /* Skip the Node Exporter managed by this release (relevant on upgrades) */}}
       {{- if ne (dig "app.kubernetes.io/instance" "" $labels) $.Release.Name }}
         {{- $nameLabel := dig "app.kubernetes.io/name" "" $labels }}
+        {{- $dsHostNetwork := dig "spec" "template" "spec" "hostNetwork" false $daemonSet }}
         {{- $isNodeExporter := regexMatch "node[-_]exporter" $nameLabel }}
         {{- range $container := (dig "spec" "template" "spec" "containers" (list) $daemonSet) }}
           {{- if regexMatch "node[-_]exporter" (dig "image" "" $container) }}
@@ -29,7 +30,7 @@ If a conflict is found, recommend either using the existing Node Exporter or dep
         {{- if $isNodeExporter }}
           {{- range $container := (dig "spec" "template" "spec" "containers" (list) $daemonSet) }}
             {{- range $port := (dig "ports" (list) $container) }}
-              {{- if or (eq (int (dig "containerPort" 0 $port)) $ourPort) (eq (int (dig "hostPort" 0 $port)) $ourPort) }}
+              {{- if or (eq (int (dig "hostPort" 0 $port)) $ourPort) (and $dsHostNetwork (eq (int (dig "containerPort" 0 $port)) $ourPort)) }}
                 {{- $_ := set $conflict "found" true }}
                 {{- $_ := set $conflict "namespace" $daemonSet.metadata.namespace }}
                 {{- $_ := set $conflict "name" $daemonSet.metadata.name }}
