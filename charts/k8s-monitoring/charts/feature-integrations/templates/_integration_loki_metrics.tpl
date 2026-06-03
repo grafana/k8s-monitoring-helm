@@ -99,6 +99,9 @@ declare "loki_integration" {
       }
 
       {{ include "feature.integrations.commonDiscoveryRules" . | nindent 6 }}
+{{- if $.Values.loki.extraDiscoveryRules }}
+{{ $.Values.loki.extraDiscoveryRules | indent 6 }}
+{{- end }}
     } // discovery.relabel "loki_pods"
 
     export "output" {

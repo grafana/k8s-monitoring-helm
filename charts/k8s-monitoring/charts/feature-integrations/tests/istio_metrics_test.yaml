@@ -1,0 +1,51 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Integration - Istio - Metrics
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should route sidecar and istiod extraDiscoveryRules to their own discovery.relabel components
+    set:
+      testing: {enabled: true}
+      istio:
+        instances:
+          - name: istio
+            sidecarMetrics:
+              extraDiscoveryRules: |-
+                rule {
+                  action = "labelmap"
+                  regex  = "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_(.*)"
+                }
+            istiodMetrics:
+              extraDiscoveryRules: |-
+                rule {
+                  target_label = "mesh_component"
+                  replacement  = "istiod"
+                }
+    asserts:
+      - isKind:
+          of: ConfigMap
+      # The sidecar rule lands inside discovery.relabel "istio_sidecar", before its scrape
+      - matchRegex:
+          path: data["metrics.alloy"]
+          pattern: (?s)discovery\.relabel "istio_sidecar" \{.*?action = "labelmap".*?prometheus\.scrape "istio_sidecar"
+      # The istiod rule lands inside discovery.relabel "istio_istiod", before its scrape
+      - matchRegex:
+          path: data["metrics.alloy"]
+          pattern: (?s)discovery\.relabel "istio_istiod" \{.*?target_label = "mesh_component".*?prometheus\.scrape "istio_istiod"
+      # The two are independent: the sidecar block must not contain the istiod rule
+      - notMatchRegex:
+          path: data["metrics.alloy"]
+          pattern: (?s)discovery\.relabel "istio_sidecar" \{.*?mesh_component.*?prometheus\.scrape "istio_sidecar"
+
+  - it: should not add discovery rules when extraDiscoveryRules is unset
+    set:
+      testing: {enabled: true}
+      istio:
+        instances:
+          - name: istio
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["metrics.alloy"]
+          pattern: mesh_component

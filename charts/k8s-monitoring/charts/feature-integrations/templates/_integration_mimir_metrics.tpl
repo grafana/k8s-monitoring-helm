@@ -99,6 +99,9 @@ declare "mimir_integration" {
       }
 
       {{- include "feature.integrations.commonDiscoveryRules" . | nindent 6 }}
+{{- if $.Values.mimir.extraDiscoveryRules }}
+{{ $.Values.mimir.extraDiscoveryRules | indent 6 }}
+{{- end }}
     } // discovery.relabel "mimir_pods"
 
     export "output" {

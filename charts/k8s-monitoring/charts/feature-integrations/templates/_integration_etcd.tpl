@@ -133,6 +133,9 @@ discovery.relabel {{ include "helper.alloy_name" .name | quote }} {
     replacement = "kubernetes"
     target_label = "source"
   }
+{{- if (index $.Values "etcd").extraDiscoveryRules }}
+{{ (index $.Values "etcd").extraDiscoveryRules | indent 2 }}
+{{- end }}
 }
 
 prometheus.scrape {{ include "helper.alloy_name" .name | quote }} {

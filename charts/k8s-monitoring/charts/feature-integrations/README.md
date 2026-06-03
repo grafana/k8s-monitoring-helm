@@ -77,25 +77,29 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| alloy | object | `{"instances":[]}` | Scrape metrics/logs from Grafana Alloy |
+| alloy | object | `{"extraDiscoveryRules":"","instances":[]}` | Scrape metrics/logs from Grafana Alloy |
+| alloy.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for every discovered target of this integration. Applied pre-scrape against targets from Kubernetes service discovery, so all `__meta*` labels are present (e.g. `labelmap` from pod annotations). ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 
 ### Integration: cert-manager
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| cert-manager | object | `{"instances":[]}` | Scrape metrics/logs from cert-manager |
+| cert-manager | object | `{"extraDiscoveryRules":"","instances":[]}` | Scrape metrics/logs from cert-manager |
+| cert-manager.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for every discovered target of this integration. Applied pre-scrape against targets from Kubernetes service discovery, so all `__meta*` labels are present (e.g. `labelmap` from pod annotations). ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 
 ### Integration: DCGM Exporter
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| dcgm-exporter | object | `{"instances":[]}` | Scrape metrics/logs from DCGM Exporter |
+| dcgm-exporter | object | `{"extraDiscoveryRules":"","instances":[]}` | Scrape metrics/logs from DCGM Exporter |
+| dcgm-exporter.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for every discovered target of this integration. Applied pre-scrape against targets from Kubernetes service discovery, so all `__meta*` labels are present (e.g. `labelmap` from pod annotations). ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 
 ### Integration: etcd
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| etcd | object | `{"instances":[]}` | Scrape metrics/logs from etcd |
+| etcd | object | `{"extraDiscoveryRules":"","instances":[]}` | Scrape metrics/logs from etcd |
+| etcd.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for every discovered target of this integration. Applied pre-scrape against targets from Kubernetes service discovery, so all `__meta*` labels are present (e.g. `labelmap` from pod annotations). ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 
 ### Global Settings
 
@@ -114,7 +118,8 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| grafana | object | `{"instances":[]}` | Scrape metrics/logs from Grafana |
+| grafana | object | `{"extraDiscoveryRules":"","instances":[]}` | Scrape metrics/logs from Grafana |
+| grafana.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for every discovered target of this integration. Applied pre-scrape against targets from Kubernetes service discovery, so all `__meta*` labels are present (e.g. `labelmap` from pod annotations). ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 
 ### Integration: Istio
 
@@ -126,13 +131,15 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| loki | object | `{"instances":[]}` | Scrape metrics/logs from Loki |
+| loki | object | `{"extraDiscoveryRules":"","instances":[]}` | Scrape metrics/logs from Loki |
+| loki.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for every discovered target of this integration. Applied pre-scrape against targets from Kubernetes service discovery, so all `__meta*` labels are present (e.g. `labelmap` from pod annotations). ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 
 ### Integration: Mimir
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| mimir | object | `{"instances":[]}` | Scrape metrics/logs from Mimir |
+| mimir | object | `{"extraDiscoveryRules":"","instances":[]}` | Scrape metrics/logs from Mimir |
+| mimir.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for every discovered target of this integration. Applied pre-scrape against targets from Kubernetes service discovery, so all `__meta*` labels are present (e.g. `labelmap` from pod annotations). ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 
 ### Integration: MySQL
 
@@ -162,7 +169,8 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| tempo | object | `{"instances":[]}` | Scrape metrics/logs from Tempo |
+| tempo | object | `{"extraDiscoveryRules":"","instances":[]}` | Scrape metrics/logs from Tempo |
+| tempo.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for every discovered target of this integration. Applied pre-scrape against targets from Kubernetes service discovery, so all `__meta*` labels are present (e.g. `labelmap` from pod annotations). ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 <!-- textlint-enable terminology -->
 
 ## Contributing
