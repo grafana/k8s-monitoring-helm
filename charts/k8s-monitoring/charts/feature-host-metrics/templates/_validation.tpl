@@ -1,5 +1,5 @@
 {{- define "feature.hostMetrics.validate" }}
-{{- if .Values.linuxHosts.enabled }}
+{{- if and .Values.linuxHosts.enabled (ne (.Values.linuxHosts.source | default "node-exporter") "alloy") }}
   {{- if not (dig "node-exporter" "deploy" false (.telemetryServices | default dict)) }}
     {{- if not (or .Values.linuxHosts.namespace .Values.linuxHosts.labelMatchers) }}
       {{- $msg := list "" "The Linux host configuration requires a connection to Node Exporter" }}

@@ -14,12 +14,86 @@
 
 {{- define "feature.hostMetrics.linuxHosts.alloy" }}
 {{- if .Values.linuxHosts.enabled }}
+{{- $source := .Values.linuxHosts.source | default "node-exporter" }}
+{{- $metricAllowList := include "feature.hostMetrics.linuxHosts.allowList" . | fromYamlArray }}
+{{- $metricDenyList := .Values.linuxHosts.metricsTuning.excludeMetrics }}
+{{- /* The only difference between the two sources is how the targets are discovered: an external Node Exporter
+       deployment, or an internal prometheus.exporter.unix run by Alloy. Both expose their targets as
+       discovery.relabel.node_exporter.output, which the shared scrape and metrics tuning below consume. */}}
+{{- if eq $source "alloy" }}
+{{- include "feature.hostMetrics.linuxHosts.discovery.viaAlloy" . }}
+{{- else }}
+{{- include "feature.hostMetrics.linuxHosts.discovery.viaNodeExporter" . }}
+{{- end }}
+
+prometheus.scrape "node_exporter" {
+  targets = discovery.relabel.node_exporter.output
+  job_name = {{ .Values.linuxHosts.jobLabel | quote }}
+  scrape_interval = {{ .Values.linuxHosts.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_timeout = {{ .Values.linuxHosts.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
+  scrape_protocols = {{ include "helper.scrapeProtocols" . }}
+  scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
+  scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
+  convert_classic_histograms_to_nhcb = {{ .Values.global.convertClassicHistogramsToNhcb }}
+{{- if ne $source "alloy" }}
+  scheme = {{ .Values.linuxHosts.scheme | quote }}
+  {{- if .Values.linuxHosts.bearerTokenFile }}
+  bearer_token_file = {{ .Values.linuxHosts.bearerTokenFile | quote }}
+  {{- end }}
+  tls_config {
+    insecure_skip_verify = true
+  }
+
+  clustering {
+    enabled = true
+  }
+{{- end }}
+
+{{- if or $metricAllowList $metricDenyList .Values.linuxHosts.metricsTuning.dropMetricsForFilesystem .Values.linuxHosts.extraMetricProcessingRules }}
+  forward_to = [prometheus.relabel.node_exporter.receiver]
+} // prometheus.scrape "node_exporter"
+
+prometheus.relabel "node_exporter" {
+  max_cache_size = {{ .Values.linuxHosts.maxCacheSize | default .Values.global.maxCacheSize | int }}
+
+{{- if $metricAllowList }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ $metricAllowList | join "|" | quote }}
+    action = "keep"
+  }
+{{- end }}
+{{- if $metricDenyList }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ $metricDenyList | join "|" | quote }}
+    action = "drop"
+  }
+{{- end }}
+{{- if .Values.linuxHosts.metricsTuning.dropMetricsForFilesystem }}
+  // Drop metrics for certain file systems
+  rule {
+    source_labels = ["__name__", "fstype"]
+    separator = "@"
+    regex = "node_filesystem.*@({{ join "|" .Values.linuxHosts.metricsTuning.dropMetricsForFilesystem }})"
+    action = "drop"
+  }
+{{- end }}
+
+{{- if .Values.linuxHosts.extraMetricProcessingRules }}
+  {{- .Values.linuxHosts.extraMetricProcessingRules | nindent 2}}
+{{- end }}
+{{- end }}
+  forward_to = argument.metrics_destinations.value
+} // prometheus.relabel "node_exporter"
+{{- end }}
+{{- end }}
+
+{{- define "feature.hostMetrics.linuxHosts.discovery.viaNodeExporter" }}
 {{- $namespace := .Values.linuxHosts.namespace }}
 {{- if dig "node-exporter" "deploy" false (.telemetryServices | default dict) }}
   {{- $namespace = (dig "node-exporter" "namespaceOverride" false (.telemetryServices | default dict) | default .Release.Namespace) }}
 {{- end }}
-{{- $metricAllowList := include "feature.hostMetrics.linuxHosts.allowList" . | fromYamlArray }}
-{{- $metricDenyList := .Values.linuxHosts.metricsTuning.excludeMetrics }}
 {{- $labelSelectors := list }}
 {{- if .Values.linuxHosts.labelMatchers }}
   {{- range $label, $value := .Values.linuxHosts.labelMatchers }}
@@ -140,64 +214,42 @@ discovery.relabel "node_exporter" {
   {{- .Values.linuxHosts.extraDiscoveryRules | nindent 2 }}
 {{- end }}
 } // discovery.relabel "node_exporter"
+{{- end }}
 
-prometheus.scrape "node_exporter" {
-  targets = discovery.relabel.node_exporter.output
-  job_name = {{ .Values.linuxHosts.jobLabel | quote }}
-  scrape_interval = {{ .Values.linuxHosts.scrapeInterval | default .Values.global.scrapeInterval | quote }}
-  scrape_timeout = {{ .Values.linuxHosts.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
-  scrape_protocols = {{ include "helper.scrapeProtocols" . }}
-  scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
-  scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
-  convert_classic_histograms_to_nhcb = {{ .Values.global.convertClassicHistogramsToNhcb }}
-  scheme = {{ .Values.linuxHosts.scheme | quote }}
-  {{- if .Values.linuxHosts.bearerTokenFile }}
-  bearer_token_file = {{ .Values.linuxHosts.bearerTokenFile | quote }}
-  {{- end }}
-  tls_config {
-    insecure_skip_verify = true
-  }
+{{- define "feature.hostMetrics.linuxHosts.discovery.viaAlloy" }}
 
-  clustering {
-    enabled = true
-  }
+// Linux hosts via Alloy (prometheus.exporter.unix)
+prometheus.exporter.unix "node_exporter" {
+  rootfs_path = "/host/root"
+  procfs_path = "/host/proc"
+  sysfs_path  = "/host/sys"
+} // prometheus.exporter.unix "node_exporter"
 
-{{- if or $metricAllowList $metricDenyList .Values.linuxHosts.metricsTuning.dropMetricsForFilesystem .Values.linuxHosts.extraMetricProcessingRules }}
-  forward_to = [prometheus.relabel.node_exporter.receiver]
-} // prometheus.scrape "node_exporter"
+discovery.relabel "node_exporter" {
+  targets = prometheus.exporter.unix.node_exporter.targets
 
-prometheus.relabel "node_exporter" {
-  max_cache_size = {{ .Values.linuxHosts.maxCacheSize | default .Values.global.maxCacheSize | int }}
-
-{{- if $metricAllowList }}
+  // Set the instance label to the node name
   rule {
-    source_labels = ["__name__"]
-    regex = {{ $metricAllowList | join "|" | quote }}
-    action = "keep"
+    action = "replace"
+    target_label = "instance"
+    replacement = sys.env("NODE_NAME")
   }
-{{- end }}
-{{- if $metricDenyList }}
-  rule {
-    source_labels = ["__name__"]
-    regex = {{ $metricDenyList | join "|" | quote }}
-    action = "drop"
-  }
-{{- end }}
-{{- if .Values.linuxHosts.metricsTuning.dropMetricsForFilesystem }}
-  // Drop metrics for certain file systems
-  rule {
-    source_labels = ["__name__", "fstype"]
-    separator = "@"
-    regex = "node_filesystem.*@({{ join "|" .Values.linuxHosts.metricsTuning.dropMetricsForFilesystem }})"
-    action = "drop"
-  }
-{{- end }}
 
-{{- if .Values.linuxHosts.extraMetricProcessingRules }}
-  {{- .Values.linuxHosts.extraMetricProcessingRules | nindent 2}}
+  // Override the job label set by prometheus.exporter.unix to match the Node Exporter source
+  rule {
+    action = "replace"
+    target_label = "job"
+    replacement = {{ .Values.linuxHosts.jobLabel | quote }}
+  }
+
+  // set a source label
+  rule {
+    action = "replace"
+    replacement = "kubernetes"
+    target_label = "source"
+  }
+{{- if .Values.linuxHosts.extraDiscoveryRules }}
+  {{- .Values.linuxHosts.extraDiscoveryRules | nindent 2 }}
 {{- end }}
-{{- end }}
-  forward_to = argument.metrics_destinations.value
-} // prometheus.relabel "node_exporter"
-{{- end }}
+} // discovery.relabel "node_exporter"
 {{- end }}

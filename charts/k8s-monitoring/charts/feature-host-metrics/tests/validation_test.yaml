@@ -27,6 +27,65 @@ tests:
                 labelMatchers:
                   app.kubernetes.io/name: prometheus-node-exporter
 
+  - it: should not require Node Exporter when Linux hosts source is alloy
+    set:
+      testing: {enabled: true}
+      linuxHosts:
+        enabled: true
+        source: alloy
+      windowsHosts:
+        enabled: false
+      energyMetrics:
+        enabled: false
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: should fail when Linux hosts source is alloy but collector is not a daemonset
+    set:
+      testing:
+        enabled: true
+        Collector:
+          controller:
+            type: deployment
+      linuxHosts:
+        enabled: true
+        source: alloy
+      windowsHosts:
+        enabled: false
+      energyMetrics:
+        enabled: false
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Collecting Linux host metrics with Alloy (hostMetrics.linuxHosts.source: alloy) requires Alloy to be a DaemonSet.
+            Please set:
+            collectors:
+              alloy-test:
+                presets: [linux-host-monitor, daemonset]
+
+  - it: should fail when Linux hosts source is alloy but collector does not mount the host filesystem
+    set:
+      testing:
+        enabled: true
+        Collector:
+          controller:
+            type: daemonset
+      linuxHosts:
+        enabled: true
+        source: alloy
+      windowsHosts:
+        enabled: false
+      energyMetrics:
+        enabled: false
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Collecting Linux host metrics with Alloy (hostMetrics.linuxHosts.source: alloy) requires Alloy to mount the host filesystem at /host/root.
+            Please set:
+            collectors:
+              alloy-test:
+                presets: [linux-host-monitor, daemonset]
+
   - it: should fail when Windows hosts do not specify Windows Exporter selectors
     set:
       testing: {enabled: true}
