@@ -32,6 +32,7 @@ prometheus.operator.podmonitors "pod_monitors" {
     default_scrape_interval = {{ .Values.podMonitors.scrapeInterval | default .Values.global.scrapeInterval | quote }}
     default_scrape_timeout = {{ .Values.podMonitors.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
     scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
+    convert_classic_histograms_to_nhcb = {{ .Values.global.convertClassicHistogramsToNhcb }}
   }
 
 {{- with .Values.podMonitors.excludeNamespaces }}

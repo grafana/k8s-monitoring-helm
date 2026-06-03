@@ -33,6 +33,7 @@ prometheus.operator.servicemonitors "service_monitors" {
     default_scrape_interval = {{ .Values.serviceMonitors.scrapeInterval | default .Values.global.scrapeInterval | quote }}
     default_scrape_timeout = {{ .Values.serviceMonitors.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
     scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
+    convert_classic_histograms_to_nhcb = {{ .Values.global.convertClassicHistogramsToNhcb }}
   }
 
 {{- with .Values.serviceMonitors.excludeNamespaces }}

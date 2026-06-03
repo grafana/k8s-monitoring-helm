@@ -32,6 +32,7 @@ prometheus.operator.probes "probes" {
     default_scrape_interval = {{ .Values.probes.scrapeInterval | default .Values.global.scrapeInterval | quote }}
     default_scrape_timeout = {{ .Values.probes.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
     scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
+    convert_classic_histograms_to_nhcb = {{ .Values.global.convertClassicHistogramsToNhcb }}
   }
 
 {{- with .Values.probes.excludeNamespaces }}
