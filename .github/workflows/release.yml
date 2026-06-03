@@ -13,7 +13,7 @@ permissions: {}
 
 jobs:
   release-chart:
-    uses: grafana/helm-charts/.github/workflows/update-helm-repo.yaml@fa81478435d74d219108506981c03827715068bc
+    uses: grafana/helm-charts/.github/workflows/update-helm-repo.yaml@d7c4f4491dbe46d853833cd15a35159c28061f39
     permissions:
       contents: write
       id-token: write
@@ -22,8 +22,7 @@ jobs:
       charts_dir: charts
       cr_configfile: .github/configs/cr.yaml
       ct_configfile: charts/k8s-monitoring/.ct.yaml
-    secrets:
-      vault_repo_secret_name: github-app
+      github_app: kubernetes-monitoring-helm-chart
 
   release:
     runs-on: ubuntu-latest
@@ -49,17 +48,9 @@ jobs:
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - name: Set up Helm
-        id: setup-helm
-        uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4  # v4.3.1
-        continue-on-error: true
-
-      - name: Set up Homebrew
-        if: ${{ steps.setup-helm.outcome == 'failure' }}
-        uses: Homebrew/actions/setup-homebrew@fb0fe15d936a80ac0ba4c6cee691bc3da3f00f4e
-
-      - name: Install Helm
-        if: ${{ steps.setup-helm.outcome == 'failure' }}
-        run: brew install helm
+        uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2  # v5.0.0
+        with:
+          version: v4.1.4  # pin to 4.1.x; 4.2.x changes template output formatting (helm/helm#32132)
 
       - name: Parse Chart.yaml
         id: parse-chart
@@ -67,11 +58,82 @@ jobs:
         run: |
           name=$(yq ".name" < Chart.yaml)
           version=$(yq ".version" < Chart.yaml)
+          prerelease=false
+          if [[ "$version" == *-* ]]; then
+            prerelease=true
+          fi
           {
             echo "chartpath=charts/$(basename "$(pwd)")";
             echo "tagname=${name}-${version}";
             echo "packagename=${name}-${version}";
+            echo "version=${version}";
+            echo "prerelease=${prerelease}";
           } >> "${GITHUB_OUTPUT}"
+
+      - name: Extract release notes from CHANGELOG
+        id: release-notes
+        working-directory: source
+        env:
+          VERSION: ${{ steps.parse-chart.outputs.version }}
+          TAGNAME: ${{ steps.parse-chart.outputs.tagname }}
+        run: |
+          changelog="charts/k8s-monitoring/CHANGELOG.md"
+          notes_file="${RUNNER_TEMP}/release_notes.md"
+
+          # Build the list of headers to try, in order:
+          #   - the full version (e.g. "4.0.5")
+          #   - the version with a trailing ".0" stripped (e.g. "4.1" for "4.1.0"),
+          #     since the changelog sometimes drops the patch component on .0 releases
+          candidates=("${VERSION}")
+          if [[ "${VERSION}" == *.0 ]]; then
+            candidates+=("${VERSION%.0}")
+          fi
+
+          extract() {
+            awk -v ver="$1" '
+              /^## / {
+                if (found) exit
+                header = $0
+                sub(/^##[[:space:]]+/, "", header)
+                if (header == ver) { found = 1; next }
+                next
+              }
+              found { print }
+            ' "$changelog"
+          }
+
+          body=""
+          for candidate in "${candidates[@]}"; do
+            body=$(extract "$candidate")
+            # Trim leading/trailing blank lines for the emptiness check
+            trimmed=$(printf '%s' "$body" | sed -e '/./,$!d' | tac | sed -e '/./,$!d' | tac)
+            if [[ -n "$trimmed" ]]; then
+              body="$trimmed"
+              echo "Matched changelog section '## ${candidate}'"
+              break
+            fi
+            body=""
+          done
+
+          if [[ -z "$body" ]]; then
+            echo "::warning::No CHANGELOG.md section found for version ${VERSION}; falling back to a generic note."
+            body="See [CHANGELOG.md](https://github.com/${GITHUB_REPOSITORY}/blob/${TAGNAME}/charts/k8s-monitoring/CHANGELOG.md) for details."
+          fi
+
+          {
+            echo "## What's changed"
+            echo
+            echo "$body"
+            echo
+            echo "---"
+            echo
+            echo "Full changelog: [CHANGELOG.md](https://github.com/${GITHUB_REPOSITORY}/blob/${TAGNAME}/charts/k8s-monitoring/CHANGELOG.md)"
+          } > "$notes_file"
+
+          echo "notes_path=${notes_file}" >> "${GITHUB_OUTPUT}"
+          echo "----- Release notes -----"
+          cat "$notes_file"
+          echo "-------------------------"
 
       - name: Add dependency chart repos
         env:
@@ -90,29 +152,15 @@ jobs:
             esac
           done <<< "$deps"
 
-      - name: Retrieve GitHub App credentials from Vault
-        id: get-secrets
-        uses: grafana/shared-workflows/actions/get-vault-secrets@a37de51f3d713a30a9e4b21bcdfbd38170020593  # v1.1.0
-        env:
-          VAULT_REPO_SECRET_NAME: github-app
+      - name: Get GitHub App token
+        id: get-github-app-token
+        uses: grafana/shared-workflows/actions/create-github-app-token@795f748a236f9de024b7514efc9a208456e7e468  # create-github-app-token/v0.3.0
         with:
-          repo_secrets: |
-            GITHUB_APP_ID=${{ env.VAULT_REPO_SECRET_NAME }}:app-id
-            PRIVATE_KEY=${{ env.VAULT_REPO_SECRET_NAME }}:private-key
-
-      - name: Generate GitHub App Token
-        if: env.GITHUB_APP_ID != ''
-        id: app-token
-        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3  # v3.1.1
-        with:
-          # Variables generated by the previous step get-secrets
-          app-id: ${{ env.GITHUB_APP_ID }}
-          private-key: ${{ env.PRIVATE_KEY }}
-          owner: ${{ github.repository_owner }}
+          github_app: kubernetes-monitoring-helm-chart
 
       - name: Set the token
         env:
-          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_TOKEN: ${{ steps.get-github-app-token.outputs.token }}
         run: echo "AUTHTOKEN=${APP_TOKEN}" >> "${GITHUB_ENV}"
 
       - name: Install CR tool
@@ -127,7 +175,7 @@ jobs:
           tar -xzf cr.tar.gz -C "${CR_TOOL_PATH}"
           rm -f cr.tar.gz
 
-      - name: Create helm package
+      - name: Create Helm package
         env:
           CHARTPATH: ${{ steps.parse-chart.outputs.chartpath }}
         working-directory: source
@@ -136,14 +184,21 @@ jobs:
           echo "Result of chart package:"
           ls -l "${CR_PACKAGE_PATH}"
 
-      - name: Make github release
-        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe  # v2.6.1
-        with:
-          name: ${{ steps.parse-chart.outputs.tagname }}
-          repository: grafana/k8s-monitoring-helm
-          generate_release_notes: true
-          files: |
-            ${{ env.CR_PACKAGE_PATH }}/${{ steps.parse-chart.outputs.packagename }}.tgz
-          tag_name: ${{ steps.parse-chart.outputs.tagname }}
-          token: ${{ env.AUTHTOKEN }}
-          fail_on_unmatched_files: true
+      - name: Make GitHub release
+        env:
+          GH_TOKEN: ${{ env.AUTHTOKEN }}
+          TAGNAME: ${{ steps.parse-chart.outputs.tagname }}
+          PACKAGENAME: ${{ steps.parse-chart.outputs.packagename }}
+          NOTES_PATH: ${{ steps.release-notes.outputs.notes_path }}
+          PRERELEASE: ${{ steps.parse-chart.outputs.prerelease }}
+        run: |
+          prerelease_flag=""
+          if [[ "${PRERELEASE}" == "true" ]]; then
+            prerelease_flag="--prerelease"
+          fi
+          gh release create "${TAGNAME}" \
+            --title "${TAGNAME}" \
+            --repo "grafana/k8s-monitoring-helm" \
+            --notes-file "${NOTES_PATH}" \
+            ${prerelease_flag} \
+            "${CR_PACKAGE_PATH}/${PACKAGENAME}.tgz"
