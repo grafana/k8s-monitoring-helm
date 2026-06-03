@@ -7,6 +7,8 @@
 *   Fail rendering with a clear error when `profiling.enabled: true` is set but none of `profiling.ebpf.enabled`, `profiling.java.enabled`, or `profiling.pprof.enabled` are enabled, instead of silently producing a profiling feature that collects no data (#2620) (@petewall)
 *   Add support for the write-ahead log (WAL) setting on the Loki destination (@nooboo)
 *   Fix `spanMetrics.excludeDimensions` rendering: list values are now properly quoted as strings instead of unquoted bareword identifiers, which caused Alloy to fail to parse the rendered config. (#2596) (@savannahostrowski)
+*   Automatically prepend the `PrometheusProto` scrape protocol to `global.scrapeProtocols` when `global.scrapeNativeHistograms` is enabled, so native histograms are actually negotiated and collected. (@petewall)
+*   Remove the unsupported `scrape_protocols` attribute from the Prometheus Operator Objects feature (PodMonitors, Probes, ScrapeConfigs, ServiceMonitors), which is not accepted by the `prometheus.operator.*` components. (@petewall)
 
 ## 3.8.8
 

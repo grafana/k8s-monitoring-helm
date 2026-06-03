@@ -76,7 +76,7 @@ prometheus.scrape "windows_exporter" {
   job_name   = {{ (index .Values "windows-exporter").jobLabel | quote }}
   scrape_interval = {{ (index .Values "windows-exporter").scrapeInterval | default .Values.global.scrapeInterval | quote }}
   scrape_timeout = {{ (index .Values "windows-exporter").scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
-  scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
+  scrape_protocols = {{ include "helper.scrapeProtocols" . }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
   scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
   convert_classic_histograms_to_nhcb = {{ .Values.global.convertClassicHistogramsToNhcb }}

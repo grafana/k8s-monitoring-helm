@@ -140,7 +140,7 @@ prometheus.scrape {{ include "helper.alloy_name" .name | quote }} {
   job_name = {{ .jobLabel | quote }}
   scrape_interval = {{ .metrics.scrapeInterval | default .scrapeInterval | default $.Values.global.scrapeInterval | quote }}
   scrape_timeout = {{ .metrics.scrapeTimeout | default .scrapeTimeout | default $.Values.global.scrapeTimeout | quote }}
-  scrape_protocols = {{ $.Values.global.scrapeProtocols | toJson }}
+  scrape_protocols = {{ include "helper.scrapeProtocols" $ }}
   scrape_classic_histograms = {{ $.Values.global.scrapeClassicHistograms }}
   scrape_native_histograms = {{ $.Values.global.scrapeNativeHistograms }}
   clustering {

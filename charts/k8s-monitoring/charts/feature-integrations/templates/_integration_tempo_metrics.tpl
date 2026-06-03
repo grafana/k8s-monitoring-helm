@@ -262,7 +262,7 @@ tempo_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
   scrape_interval = {{ .metrics.scrapeInterval | default .scrapeInterval | default $.Values.global.scrapeInterval | quote }}
   scrape_timeout = {{ .metrics.scrapeTimeout | default .scrapeTimeout | default $.Values.global.scrapeTimeout | quote }}
-  scrape_protocols = {{ $.Values.global.scrapeProtocols | toJson }}
+  scrape_protocols = {{ include "helper.scrapeProtocols" $ }}
   scrape_classic_histograms = {{ $.Values.global.scrapeClassicHistograms }}
   scrape_native_histograms = {{ $.Values.global.scrapeNativeHistograms }}
   max_cache_size = {{ .metrics.maxCacheSize | default $.Values.global.maxCacheSize | int }}

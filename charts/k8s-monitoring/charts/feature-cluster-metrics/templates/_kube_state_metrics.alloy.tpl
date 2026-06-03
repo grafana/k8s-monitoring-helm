@@ -65,7 +65,7 @@ prometheus.scrape "kube_state_metrics" {
   job_name = {{ (index .Values "kube-state-metrics").jobLabel | quote }}
   scrape_interval = {{ (index .Values "kube-state-metrics").scrapeInterval | default .Values.global.scrapeInterval | quote }}
   scrape_timeout = {{ (index .Values "kube-state-metrics").scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
-  scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
+  scrape_protocols = {{ include "helper.scrapeProtocols" . }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
   scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
   convert_classic_histograms_to_nhcb = {{ .Values.global.convertClassicHistogramsToNhcb }}

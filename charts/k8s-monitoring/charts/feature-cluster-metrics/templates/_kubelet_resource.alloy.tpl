@@ -45,7 +45,7 @@ prometheus.scrape "kubelet_resources" {
   scheme   = "https"
   scrape_interval = {{ .Values.kubeletResource.scrapeInterval | default .Values.global.scrapeInterval | quote }}
   scrape_timeout = {{ .Values.kubeletResource.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
-  scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
+  scrape_protocols = {{ include "helper.scrapeProtocols" . }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
   scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
   convert_classic_histograms_to_nhcb = {{ .Values.global.convertClassicHistogramsToNhcb }}

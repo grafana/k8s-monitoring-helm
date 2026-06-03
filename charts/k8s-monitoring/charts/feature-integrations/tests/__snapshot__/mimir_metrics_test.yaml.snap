@@ -1,0 +1,288 @@
+should create the mimir metrics config:
+  1: |
+    |-
+      declare "mimir_integration" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+
+        declare "mimir_integration_discovery" {
+          argument "namespaces" {
+            comment = "The namespaces to look for targets in (default: [] is all namespaces)"
+            optional = true
+          }
+
+          argument "field_selectors" {
+            comment = "The field selectors to use to find matching targets (default: [])"
+            optional = true
+          }
+
+          argument "label_selectors" {
+            comment = "The label selectors to use to find matching targets (default: [\"app.kubernetes.io/name=mimir\"])"
+            optional = true
+          }
+
+          argument "port_name" {
+            comment = "The of the port to scrape metrics from (default: http-metrics)"
+            optional = true
+          }
+
+          // mimir service discovery for all of the pods
+          discovery.kubernetes "mimir_pods" {
+            role = "pod"
+
+            selectors {
+              role = "pod"
+              field = string.join(coalesce(argument.field_selectors.value, []), ",")
+              label = string.join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=mimir"]), ",")
+            }
+
+            namespaces {
+              names = coalesce(argument.namespaces.value, [])
+            }
+
+          }
+
+          // mimir relabelings (pre-scrape)
+          discovery.relabel "mimir_pods" {
+            targets = discovery.kubernetes.mimir_pods.targets
+
+            // keep only the specified metrics port name, and pods that are Running and ready
+            rule {
+              source_labels = [
+                "__meta_kubernetes_pod_container_port_name",
+                "__meta_kubernetes_pod_phase",
+                "__meta_kubernetes_pod_ready",
+                "__meta_kubernetes_pod_container_init",
+              ]
+              separator = "@"
+              regex = coalesce(argument.port_name.value, "http-metrics") + "@Running@true@false"
+              action = "keep"
+            }
+
+            rule {
+              source_labels = ["__meta_kubernetes_pod_node_name"]
+              target_label = "node"
+            }
+
+            // the mimir-mixin expects the job label to be namespace/component
+            rule {
+              source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_component"]
+              separator = "/"
+              target_label = "job"
+            }
+
+            rule {
+              source_labels = ["__meta_kubernetes_namespace"]
+              target_label  = "namespace"
+            }
+
+            rule {
+              source_labels = ["__meta_kubernetes_pod_name"]
+              target_label  = "pod"
+            }
+
+            rule {
+              source_labels = ["__meta_kubernetes_pod_container_name"]
+              target_label  = "container"
+            }
+
+            // set the workload to the controller kind and name
+            rule {
+              action = "lowercase"
+              source_labels = ["__meta_kubernetes_pod_controller_kind"]
+              target_label  = "workload_type"
+            }
+
+            rule {
+              source_labels = ["__meta_kubernetes_pod_controller_name"]
+              target_label  = "workload"
+            }
+
+            // remove the hash from the ReplicaSet
+            rule {
+              source_labels = [
+                "workload_type",
+                "workload",
+              ]
+              separator = "/"
+              regex = "replicaset/(.+)-.+$"
+              target_label  = "workload"
+            }
+
+            // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+            rule {
+              action = "replace"
+              source_labels = [
+                "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+                "__meta_kubernetes_pod_label_k8s_app",
+                "__meta_kubernetes_pod_label_app",
+              ]
+              separator = ";"
+              regex = "^(?:;*)?([^;]+).*$"
+              replacement = "$1"
+              target_label = "app"
+            }
+
+            // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
+            rule {
+              action = "replace"
+              source_labels = [
+                "__meta_kubernetes_pod_label_app_kubernetes_io_component",
+                "__meta_kubernetes_pod_label_k8s_component",
+                "__meta_kubernetes_pod_label_component",
+              ]
+              regex = "^(?:;*)?([^;]+).*$"
+              replacement = "$1"
+              target_label = "component"
+            }
+
+            // set a source label
+            rule {
+              action = "replace"
+              replacement = "kubernetes"
+              target_label = "source"
+            }
+
+          }
+
+          export "output" {
+            value = discovery.relabel.mimir_pods.output
+          }
+        }
+
+        declare "mimir_integration_scrape" {
+          argument "targets" {
+            comment = "Must be a list() of targets"
+          }
+
+          argument "forward_to" {
+            comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
+          }
+
+          argument "job_label" {
+            comment = "The job label to add for all Mimir metrics (default: integrations/mimir)"
+            optional = true
+          }
+
+          argument "keep_metrics" {
+            comment = "A regular expression of metrics to keep (default: see below)"
+            optional = true
+          }
+
+          argument "drop_metrics" {
+            comment = "A regular expression of metrics to drop (default: see below)"
+            optional = true
+          }
+
+          argument "scrape_interval" {
+            comment = "How often to scrape metrics from the targets (default: 60s)"
+            optional = true
+          }
+
+          argument "scrape_timeout" {
+            comment = "The timeout for scraping metrics from the targets (default: 10s)"
+            optional = true
+          }
+
+          argument "scrape_protocols" {
+            comment = "The scrape protocols to use for scraping metrics"
+            optional = true
+          }
+
+          argument "scrape_classic_histograms" {
+            comment = "Whether to scrape classic histograms (default: false)."
+            optional = true
+          }
+
+          argument "scrape_native_histograms" {
+            comment = "Whether to scrape native histograms (default: false)."
+            optional = true
+          }
+
+          argument "max_cache_size" {
+            comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
+            optional = true
+          }
+
+          argument "clustering" {
+            comment = "Whether or not clustering should be enabled (default: false)"
+            optional = true
+          }
+
+          prometheus.scrape "mimir" {
+            job_name = coalesce(argument.job_label.value, "integrations/mimir")
+            forward_to = [prometheus.relabel.mimir.receiver]
+            targets = argument.targets.value
+            scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+            scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
+            scrape_protocols = argument.scrape_protocols.value
+            scrape_classic_histograms = argument.scrape_classic_histograms.value
+            scrape_native_histograms = argument.scrape_native_histograms.value
+
+            clustering {
+              enabled = coalesce(argument.clustering.value, false)
+            }
+          }
+
+          // mimir metric relabelings (post-scrape)
+          prometheus.relabel "mimir" {
+            forward_to = argument.forward_to.value
+            max_cache_size = coalesce(argument.max_cache_size.value, 100000)
+
+            // drop metrics that match the drop_metrics regex
+            rule {
+              source_labels = ["__name__"]
+              regex = coalesce(argument.drop_metrics.value, "")
+              action = "drop"
+            }
+
+            // keep only metrics that match the keep_metrics regex
+            rule {
+              source_labels = ["__name__"]
+              regex = coalesce(argument.keep_metrics.value, "(.+)")
+              action = "keep"
+            }
+
+            // the mimir-mixin expects the instance label to be the node name
+            rule {
+              source_labels = ["node"]
+              target_label = "instance"
+              replacement = "$1"
+            }
+            rule {
+              action = "labeldrop"
+              regex = "node"
+            }
+
+            // set the memcached exporter container name from container="exporter" to container="memcached"
+            rule {
+              source_labels = ["component", "container"]
+              separator = ";"
+              regex = "memcached-[^;]+;exporter"
+              target_label = "container"
+              replacement = "memcached"
+            }
+          }
+        }
+
+        mimir_integration_discovery "mimir" {
+          namespaces = []
+          label_selectors = ["app.kubernetes.io/name=mimir"]
+          port_name = "http-metrics"
+        }
+
+        mimir_integration_scrape  "mimir" {
+          targets = mimir_integration_discovery.mimir.output
+          job_label = "integrations/mimir"
+          clustering = true
+          keep_metrics = "up|scrape_samples_scraped|cortex_alertmanager_alerts|cortex_alertmanager_alerts_invalid_total|cortex_alertmanager_alerts_received_total|cortex_alertmanager_dispatcher_aggregation_groups|cortex_alertmanager_notification_latency_seconds_bucket|cortex_alertmanager_notification_latency_seconds_count|cortex_alertmanager_notification_latency_seconds_sum|cortex_alertmanager_notifications_failed_total|cortex_alertmanager_notifications_total|cortex_alertmanager_partial_state_merges_failed_total|cortex_alertmanager_partial_state_merges_total|cortex_alertmanager_ring_check_errors_total|cortex_alertmanager_silences|cortex_alertmanager_state_fetch_replica_state_failed_total|cortex_alertmanager_state_fetch_replica_state_total|cortex_alertmanager_state_initial_sync_completed_total|cortex_alertmanager_state_initial_sync_duration_seconds_bucket|cortex_alertmanager_state_initial_sync_duration_seconds_count|cortex_alertmanager_state_initial_sync_duration_seconds_sum|cortex_alertmanager_state_persist_failed_total|cortex_alertmanager_state_persist_total|cortex_alertmanager_state_replication_failed_total|cortex_alertmanager_state_replication_total|cortex_alertmanager_sync_configs_failed_total|cortex_alertmanager_sync_configs_total|cortex_alertmanager_tenants_discovered|cortex_alertmanager_tenants_owned|cortex_blockbuilder_consume_cycle_duration_seconds|cortex_blockbuilder_consumer_lag_records|cortex_blockbuilder_tsdb_compact_and_upload_failed_total|cortex_bucket_blocks_count|cortex_bucket_index_estimated_compaction_jobs|cortex_bucket_index_estimated_compaction_jobs_errors_total|cortex_bucket_index_last_successful_update_timestamp_seconds|cortex_bucket_store_block_drop_failures_total|cortex_bucket_store_block_drops_total|cortex_bucket_store_block_load_failures_total|cortex_bucket_store_block_loads_total|cortex_bucket_store_blocks_loaded|cortex_bucket_store_indexheader_lazy_load_duration_seconds_bucket|cortex_bucket_store_indexheader_lazy_load_duration_seconds_count|cortex_bucket_store_indexheader_lazy_load_duration_seconds_sum|cortex_bucket_store_indexheader_lazy_load_total|cortex_bucket_store_indexheader_lazy_unload_total|cortex_bucket_store_series_batch_preloading_load_duration_seconds_sum|cortex_bucket_store_series_batch_preloading_wait_duration_seconds_sum|cortex_bucket_store_series_blocks_queried_sum|cortex_bucket_store_series_data_size_fetched_bytes_sum|cortex_bucket_store_series_data_size_touched_bytes_sum|cortex_bucket_store_series_hash_cache_hits_total|cortex_bucket_store_series_hash_cache_requests_total|cortex_bucket_store_series_request_stage_duration_seconds_bucket|cortex_bucket_store_series_request_stage_duration_seconds_count|cortex_bucket_store_series_request_stage_duration_seconds_sum|cortex_bucket_stores_blocks_last_successful_sync_timestamp_seconds|cortex_bucket_stores_gate_duration_seconds_bucket|cortex_bucket_stores_gate_duration_seconds_count|cortex_bucket_stores_gate_duration_seconds_sum|cortex_bucket_stores_tenants_synced|cortex_build_info|cortex_cache_memory_hits_total|cortex_cache_memory_requests_total|cortex_compactor_block_cleanup_failures_total|cortex_compactor_block_cleanup_last_successful_run_timestamp_seconds|cortex_compactor_block_max_time_delta_seconds_bucket|cortex_compactor_block_max_time_delta_seconds_count|cortex_compactor_block_max_time_delta_seconds_sum|cortex_compactor_blocks_cleaned_total|cortex_compactor_blocks_marked_for_deletion_total|cortex_compactor_blocks_marked_for_no_compaction_total|cortex_compactor_disk_out_of_space_errors_total|cortex_compactor_group_compaction_runs_started_total|cortex_compactor_last_successful_run_timestamp_seconds|cortex_compactor_meta_sync_duration_seconds_bucket|cortex_compactor_meta_sync_duration_seconds_count|cortex_compactor_meta_sync_duration_seconds_sum|cortex_compactor_meta_sync_failures_total|cortex_compactor_meta_syncs_total|cortex_compactor_runs_completed_total|cortex_compactor_runs_failed_total|cortex_compactor_runs_started_total|cortex_compactor_tenants_discovered|cortex_compactor_tenants_processing_failed|cortex_compactor_tenants_processing_succeeded|cortex_compactor_tenants_skipped|cortex_config_hash|cortex_discarded_exemplars_total|cortex_discarded_requests_total|cortex_discarded_samples_total|cortex_distributor_deduped_samples_total|cortex_distributor_exemplars_in_total|cortex_distributor_inflight_push_requests|cortex_distributor_instance_limits|cortex_distributor_instance_rejected_requests_total|cortex_distributor_latest_seen_sample_timestamp_seconds|cortex_distributor_non_ha_samples_received_total|cortex_distributor_received_exemplars_total|cortex_distributor_received_requests_total|cortex_distributor_received_samples_total|cortex_distributor_replication_factor|cortex_distributor_requests_in_total|cortex_distributor_samples_in_total|cortex_inflight_requests|cortex_ingest_storage_reader_buffered_fetched_records|cortex_ingest_storage_reader_fetch_errors_total|cortex_ingest_storage_reader_fetches_total|cortex_ingest_storage_reader_missed_records_total|cortex_ingest_storage_reader_offset_commit_failures_total|cortex_ingest_storage_reader_offset_commit_requests_total|cortex_ingest_storage_reader_read_errors_total|cortex_ingest_storage_reader_receive_delay_seconds_count|cortex_ingest_storage_reader_receive_delay_seconds_sum|cortex_ingest_storage_reader_records_failed_total|cortex_ingest_storage_reader_records_total|cortex_ingest_storage_reader_requests_failed_total|cortex_ingest_storage_reader_requests_total|cortex_ingest_storage_strong_consistency_failures_total|cortex_ingest_storage_strong_consistency_requests_total|cortex_ingest_storage_writer_buffered_produce_bytes|cortex_ingest_storage_writer_buffered_produce_bytes_limit|cortex_ingester_active_native_histogram_buckets|cortex_ingester_active_native_histogram_buckets_custom_tracker|cortex_ingester_active_native_histogram_series|cortex_ingester_active_native_histogram_series_custom_tracker|cortex_ingester_active_series|cortex_ingester_active_series_custom_tracker|cortex_ingester_client_request_duration_seconds_bucket|cortex_ingester_client_request_duration_seconds_count|cortex_ingester_client_request_duration_seconds_sum|cortex_ingester_ingested_exemplars_total|cortex_ingester_ingested_samples_total|cortex_ingester_instance_limits|cortex_ingester_instance_rejected_requests_total|cortex_ingester_local_limits|cortex_ingester_memory_series|cortex_ingester_memory_series_created_total|cortex_ingester_memory_series_removed_total|cortex_ingester_memory_users|cortex_ingester_oldest_unshipped_block_timestamp_seconds|cortex_ingester_owned_series|cortex_ingester_queried_exemplars_bucket|cortex_ingester_queried_exemplars_count|cortex_ingester_queried_exemplars_sum|cortex_ingester_queried_samples_bucket|cortex_ingester_queried_samples_count|cortex_ingester_queried_samples_sum|cortex_ingester_queried_series_bucket|cortex_ingester_queried_series_count|cortex_ingester_queried_series_sum|cortex_ingester_shipper_last_successful_upload_timestamp_seconds|cortex_ingester_shipper_upload_failures_total|cortex_ingester_shipper_uploads_total|cortex_ingester_tsdb_checkpoint_creations_failed_total|cortex_ingester_tsdb_checkpoint_creations_total|cortex_ingester_tsdb_checkpoint_deletions_failed_total|cortex_ingester_tsdb_compaction_duration_seconds_bucket|cortex_ingester_tsdb_compaction_duration_seconds_count|cortex_ingester_tsdb_compaction_duration_seconds_sum|cortex_ingester_tsdb_compactions_failed_total|cortex_ingester_tsdb_compactions_total|cortex_ingester_tsdb_exemplar_exemplars_appended_total|cortex_ingester_tsdb_exemplar_exemplars_in_storage|cortex_ingester_tsdb_exemplar_last_exemplars_timestamp_seconds|cortex_ingester_tsdb_exemplar_series_with_exemplars_in_storage|cortex_ingester_tsdb_head_max_timestamp_seconds|cortex_ingester_tsdb_head_truncations_failed_total|cortex_ingester_tsdb_mmap_chunk_corruptions_total|cortex_ingester_tsdb_out_of_order_samples_appended_total|cortex_ingester_tsdb_storage_blocks_bytes|cortex_ingester_tsdb_symbol_table_size_bytes|cortex_ingester_tsdb_wal_corruptions_total|cortex_ingester_tsdb_wal_truncate_duration_seconds_count|cortex_ingester_tsdb_wal_truncate_duration_seconds_sum|cortex_ingester_tsdb_wal_truncations_failed_total|cortex_ingester_tsdb_wal_truncations_total|cortex_ingester_tsdb_wal_writes_failed_total|cortex_kv_request_duration_seconds_bucket|cortex_kv_request_duration_seconds_count|cortex_kv_request_duration_seconds_sum|cortex_lifecycler_read_only|cortex_limits_defaults|cortex_limits_overrides|cortex_partition_ring_partitions|cortex_prometheus_notifications_dropped_total|cortex_prometheus_notifications_errors_total|cortex_prometheus_notifications_queue_capacity|cortex_prometheus_notifications_queue_length|cortex_prometheus_notifications_sent_total|cortex_prometheus_rule_evaluation_duration_seconds_count|cortex_prometheus_rule_evaluation_duration_seconds_sum|cortex_prometheus_rule_evaluation_failures_total|cortex_prometheus_rule_evaluations_total|cortex_prometheus_rule_group_duration_seconds_count|cortex_prometheus_rule_group_duration_seconds_sum|cortex_prometheus_rule_group_iterations_missed_total|cortex_prometheus_rule_group_iterations_total|cortex_prometheus_rule_group_rules|cortex_querier_blocks_consistency_checks_failed_total|cortex_querier_blocks_consistency_checks_total|cortex_querier_request_duration_seconds_bucket|cortex_querier_request_duration_seconds_count|cortex_querier_request_duration_seconds_sum|cortex_querier_storegateway_instances_hit_per_query_bucket|cortex_querier_storegateway_instances_hit_per_query_count|cortex_querier_storegateway_instances_hit_per_query_sum|cortex_querier_storegateway_refetches_per_query_bucket|cortex_querier_storegateway_refetches_per_query_count|cortex_querier_storegateway_refetches_per_query_sum|cortex_query_frontend_queries_total|cortex_query_frontend_queue_duration_seconds_bucket|cortex_query_frontend_queue_duration_seconds_count|cortex_query_frontend_queue_duration_seconds_sum|cortex_query_frontend_queue_length|cortex_query_frontend_retries_bucket|cortex_query_frontend_retries_count|cortex_query_frontend_retries_sum|cortex_query_scheduler_connected_querier_clients|cortex_query_scheduler_querier_inflight_requests|cortex_query_scheduler_queue_duration_seconds_bucket|cortex_query_scheduler_queue_duration_seconds_count|cortex_query_scheduler_queue_duration_seconds_sum|cortex_query_scheduler_queue_length|cortex_request_duration_seconds|cortex_request_duration_seconds_bucket|cortex_request_duration_seconds_count|cortex_request_duration_seconds_sum|cortex_ring_members|cortex_ruler_managers_total|cortex_ruler_queries_failed_total|cortex_ruler_queries_total|cortex_ruler_ring_check_errors_total|cortex_ruler_write_requests_failed_total|cortex_ruler_write_requests_total|cortex_runtime_config_hash|cortex_runtime_config_last_reload_successful|cortex_tcp_connections|cortex_tcp_connections_limit|go_memstats_heap_inuse_bytes|keda_scaler_errors|keda_scaler_metrics_value|kube_deployment_spec_replicas|kube_deployment_status_replicas_unavailable|kube_deployment_status_replicas_updated|kube_endpoint_address|kube_horizontalpodautoscaler_spec_target_metric|kube_horizontalpodautoscaler_status_condition|kube_pod_info|kube_statefulset_replicas|kube_statefulset_status_current_revision|kube_statefulset_status_replicas_current|kube_statefulset_status_replicas_ready|kube_statefulset_status_replicas_updated|kube_statefulset_status_update_revision|kubelet_volume_stats_capacity_bytes|kubelet_volume_stats_used_bytes|memberlist_client_cluster_members_count|memcached_limit_bytes|mimir_continuous_test_queries_failed_total|mimir_continuous_test_query_result_checks_failed_total|mimir_continuous_test_writes_failed_total|node_disk_read_bytes_total|node_disk_written_bytes_total|process_memory_map_areas|process_memory_map_areas_limit|prometheus_tsdb_compaction_duration_seconds_bucket|prometheus_tsdb_compaction_duration_seconds_count|prometheus_tsdb_compaction_duration_seconds_sum|prometheus_tsdb_compactions_total|rollout_operator_last_successful_group_reconcile_timestamp_seconds|thanos_cache_hits_total|thanos_cache_operation_duration_seconds_bucket|thanos_cache_operation_duration_seconds_count|thanos_cache_operation_duration_seconds_sum|thanos_cache_operation_failures_total|thanos_cache_operations_total|thanos_cache_requests_total|thanos_objstore_bucket_last_successful_upload_time|thanos_objstore_bucket_operation_duration_seconds_bucket|thanos_objstore_bucket_operation_duration_seconds_count|thanos_objstore_bucket_operation_duration_seconds_sum|thanos_objstore_bucket_operation_failures_total|thanos_objstore_bucket_operations_total|thanos_store_index_cache_hits_total|thanos_store_index_cache_requests_total"
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          max_cache_size = 100000
+          forward_to = argument.metrics_destinations.value
+        }
+      }

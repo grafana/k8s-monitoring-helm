@@ -17,3 +17,10 @@
 {{- define "service_label" -}}
 {{ printf "__meta_kubernetes_service_label_%s" (include "escape_label_or_annotation" .) }}
 {{- end }}
+{{- define "helper.scrapeProtocols" -}}
+{{- $protocols := .Values.global.scrapeProtocols -}}
+{{- if and .Values.global.scrapeNativeHistograms (not (has "PrometheusProto" $protocols)) -}}
+{{- $protocols = prepend $protocols "PrometheusProto" -}}
+{{- end -}}
+{{ $protocols | toJson }}
+{{- end -}}
