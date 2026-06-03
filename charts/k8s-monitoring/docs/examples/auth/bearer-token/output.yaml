@@ -14,7 +14,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
-
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/serviceaccount.yaml
 apiVersion: v1
@@ -31,7 +30,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
-
 ---
 # Source: k8s-monitoring/charts/alloy-receiver/templates/serviceaccount.yaml
 apiVersion: v1
@@ -48,7 +46,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
-
 ---
 # Source: k8s-monitoring/templates/destination_secret.yaml
 apiVersion: v1
@@ -218,7 +215,7 @@ data:
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="2.0.45", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="2.0.46", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="jaegerthrifthttp", version="1.0.0"} 1
@@ -712,7 +709,6 @@ data:
       name      = "my-tempo-secret"
       namespace = "tempo"
     }
-
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1035,7 +1031,6 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-logs
     namespace: default
-
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1058,7 +1053,6 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-metrics
     namespace: default
-
 ---
 # Source: k8s-monitoring/charts/alloy-receiver/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1081,7 +1075,6 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-receiver
     namespace: default
-
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/service.yaml
 apiVersion: v1
@@ -1108,7 +1101,6 @@ spec:
       port: 12345
       targetPort: 12345
       protocol: "TCP"
-
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/cluster_service.yaml
 apiVersion: v1
@@ -1142,7 +1134,6 @@ spec:
       port: 12345
       targetPort: 12345
       protocol: "TCP"
-
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/service.yaml
 apiVersion: v1
@@ -1169,7 +1160,6 @@ spec:
       port: 12345
       targetPort: 12345
       protocol: "TCP"
-
 ---
 # Source: k8s-monitoring/charts/alloy-receiver/templates/service.yaml
 apiVersion: v1
@@ -1200,7 +1190,6 @@ spec:
       port: 14268
       targetPort: 14268
       protocol: TCP
-
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/controllers/daemonset.yaml
 apiVersion: apps/v1
@@ -1321,7 +1310,6 @@ spec:
         - name: dockercontainers
           hostPath:
             path: /var/lib/docker/containers
-
 ---
 # Source: k8s-monitoring/charts/alloy-receiver/templates/controllers/daemonset.yaml
 apiVersion: apps/v1
@@ -1430,7 +1418,6 @@ spec:
         - name: config
           configMap:
             name: k8smon-alloy-receiver
-
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/controllers/statefulset.yaml
 apiVersion: apps/v1
