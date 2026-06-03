@@ -44,6 +44,68 @@ tests:
                   app.kubernetes.io/name: kube-state-metrics
                 namespace: kube-state-metrics-namespace
 
+  - it: should fail when no pods match the configured kube-state-metrics label matchers in the namespace
+    set:
+      testing: {enabled: true}
+      kube-state-metrics:
+        enabled: true
+        namespace: kube-state-metrics-namespace
+        labelMatchers:
+          app.kubernetes.io/name: kube-state-metrics
+    kubernetesProvider:
+      scheme:
+        "v1/Pod":
+          gvr:
+            version: v1
+            resource: pods
+          namespaced: true
+      objects:
+        - kind: Pod
+          apiVersion: v1
+          metadata:
+            name: some-other-workload
+            namespace: kube-state-metrics-namespace
+            labels:
+              app.kubernetes.io/name: something-else
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Unable to find any kube-state-metrics pods matching the configured labelMatchers in namespace "kube-state-metrics-namespace".
+            The configured labelMatchers were:
+              app.kubernetes.io/name: kube-state-metrics
+
+            Please verify the namespace and labelMatchers point to a running kube-state-metrics.
+
+  - it: should pass when a pod matches the configured kube-state-metrics label matchers in the namespace
+    set:
+      testing: {enabled: true}
+      kube-state-metrics:
+        enabled: true
+        namespace: kube-state-metrics-namespace
+        labelMatchers:
+          app.kubernetes.io/name: kube-state-metrics
+    kubernetesProvider:
+      scheme:
+        "v1/Pod":
+          gvr:
+            version: v1
+            resource: pods
+          namespaced: true
+      objects:
+        - kind: Pod
+          apiVersion: v1
+          metadata:
+            name: kube-state-metrics-abcde
+            namespace: kube-state-metrics-namespace
+            labels:
+              app.kubernetes.io/name: kube-state-metrics
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'label = "app.kubernetes.io/name=kube-state-metrics"'
+
   - it: should fail when node-exporter is set under clusterMetrics
     set:
       testing:
