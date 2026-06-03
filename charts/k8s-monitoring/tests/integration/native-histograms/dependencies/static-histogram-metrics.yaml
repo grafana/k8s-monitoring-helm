@@ -1,0 +1,77 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: histogram
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: static-histogram
+  namespace: histogram
+data:
+  # A classic (bucketed) histogram served as plain text. With
+  # global.convertClassicHistogramsToNhcb enabled, the collector converts this
+  # to a native histogram (NHCB) at scrape time.
+  metrics.prom: |
+    # HELP test_request_duration_seconds A static classic histogram for testing
+    # TYPE test_request_duration_seconds histogram
+    test_request_duration_seconds_bucket{le="0.1"} 1
+    test_request_duration_seconds_bucket{le="0.5"} 4
+    test_request_duration_seconds_bucket{le="1"} 9
+    test_request_duration_seconds_bucket{le="+Inf"} 10
+    test_request_duration_seconds_sum 3.5
+    test_request_duration_seconds_count 10
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: OCIRepository
+metadata:
+  name: nginx
+  namespace: histogram
+spec:
+  interval: 1m
+  url: oci://registry-1.docker.io/bitnamicharts/nginx
+  ref:
+    semver: 18.2.5
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: static-histogram-metrics
+  namespace: histogram
+spec:
+  interval: 1m
+  chartRef:
+    kind: OCIRepository
+    name: nginx
+  values:
+    image:
+      repository: bitnamilegacy/nginx
+    podLabels:
+      app.kubernetes.io/name: static-histogram
+    # Annotations consumed by the annotation-autodiscovery feature. This routes the
+    # scrape through the prometheus.scrape component, which is where the chart applies
+    # the scrape_protocols helper (prepending PrometheusProto when native histograms
+    # are enabled).
+    podAnnotations:
+      k8s.grafana.com/scrape: "true"
+      k8s.grafana.com/job: "static-histogram"
+      k8s.grafana.com/metrics.portNumber: "8080"
+    replicaCount: 1
+    service:
+      type: ClusterIP
+    serverBlock: |-
+      server {
+        listen 0.0.0.0:8080;
+        location /metrics {
+          default_type "text/plain";
+          alias /data/metrics.prom;
+        }
+      }
+    extraVolumes:
+      - name: static-histogram
+        configMap:
+          name: static-histogram
+    extraVolumeMounts:
+      - name: static-histogram
+        mountPath: /data

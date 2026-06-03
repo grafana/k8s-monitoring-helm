@@ -1,0 +1,54 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: native-histograms
+
+subject:
+  releaseName: k8smon
+  path: ../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: dependencies/static-histogram-metrics.yaml
+  - preset: prometheus
+    overrides:
+      server:
+        # extraFlags is a list, so the override replaces the preset default.
+        # Keep the remote-write receiver flag and add native-histograms support
+        # so Prometheus will store the histograms the collector sends.
+        extraFlags:
+          - web.enable-remote-write-receiver
+          - enable-feature=native-histograms
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: native-histograms-test
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+          queries:
+            # Feature is enabled and reporting
+            - query: grafana_kubernetes_monitoring_build_info{cluster="$CLUSTER"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="annotationAutodiscovery"}
+              type: promql
+
+            # The static target's classic histogram is stored as a NATIVE histogram.
+            # histogram_count() only returns a value for native histograms, so a
+            # matching result proves the end-to-end native-histogram path works
+            # (PrometheusProto negotiation + NHCB conversion + RW2.0 + native-histogram storage).
+            # The static exposition reports a _count of 10.
+            - query: histogram_count(test_request_duration_seconds{cluster="$CLUSTER", job="static-histogram"})
+              type: promql
+              expect:
+                value: 10
+
+            # After NHCB conversion the classic _bucket series should no longer exist.
+            - query: count(test_request_duration_seconds_bucket{cluster="$CLUSTER"}) or vector(0)
+              type: promql
+              expect:
+                value: 0

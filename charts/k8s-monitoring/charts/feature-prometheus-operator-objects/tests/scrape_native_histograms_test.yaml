@@ -1,0 +1,32 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Prometheus Operator Objects - Native Histogram Scraping
+templates:
+  - configmap.yaml
+tests:
+  - it: emits scrape_native_histograms but not scrape_protocols when scrapeNativeHistograms is enabled
+    set:
+      deployAsConfigMap: true
+      global:
+        scrapeNativeHistograms: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: scrape_native_histograms = true
+      # scrape_protocols is not a valid argument on the prometheus.operator.* components in Alloy
+      # (only on prometheus.scrape), so the chart must never render it inside their `scrape { }` block,
+      # even when scrapeNativeHistograms is on.
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: scrape_protocols =
+
+  - it: does not emit scrape_protocols when scrapeNativeHistograms is disabled
+    set:
+      deployAsConfigMap: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: scrape_protocols =

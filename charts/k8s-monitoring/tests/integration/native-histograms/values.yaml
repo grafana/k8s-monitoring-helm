@@ -1,0 +1,34 @@
+---
+cluster:
+  name: native-histograms-test
+
+destinations:
+  - name: localPrometheus
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+    # Required to forward native histograms over remote_write. Without this the
+    # prometheus.remote_write endpoint renders send_native_histograms = false and
+    # silently drops the scraped native histograms before they reach Prometheus.
+    sendNativeHistograms: true
+    # Remote Write 2.0 is required for native histograms with custom buckets (NHCB),
+    # which is what convertClassicHistogramsToNhcb produces. Over Remote Write 1.0,
+    # Alloy drops them with reason="nhcb_in_rw1_not_supported".
+    remoteWriteProtocol: 2
+
+global:
+  # Negotiate the PrometheusProto scrape protocol (prepended automatically by the
+  # scrape_protocols helper) so native histograms can be collected.
+  scrapeNativeHistograms: true
+  # Convert the static target's classic histogram into a native histogram (NHCB)
+  # at scrape time, so it lands in Prometheus as a native histogram.
+  convertClassicHistogramsToNhcb: true
+
+annotationAutodiscovery:
+  enabled: true
+
+alloy-metrics:
+  enabled: true
+  alloy:
+    stabilityLevel: experimental
+  liveDebugging:
+    enabled: true
