@@ -2,7 +2,7 @@
 
 ## 3.8.9
 
-*   Bump Alloy Operator to 0.5.8, kube-state-metrics to 7.4.0, OpenCost to 2.5.22, Windows Exporter to 0.12.7 (@petewall)
+*   Bump Alloy Operator to 0.5.8, OpenCost to 2.5.22, Windows Exporter to 0.12.7 (@petewall)
 *   Add `timeout` setting on the OTLP destination (@petewall)
 *   Fail rendering with a clear error when `profiling.enabled: true` is set but none of `profiling.ebpf.enabled`, `profiling.java.enabled`, or `profiling.pprof.enabled` are enabled, instead of silently producing a profiling feature that collects no data (#2620) (@petewall)
 *   Add support for the write-ahead log (WAL) setting on the Loki destination (@nooboo)
