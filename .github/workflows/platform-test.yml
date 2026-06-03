@@ -21,7 +21,7 @@ jobs:
       tests: ${{ steps.list_tests.outputs.tests }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           persist-credentials: 'false'
 
@@ -69,23 +69,25 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           path: source
           persist-credentials: 'false'
 
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           path: helm-chart-toolbox
           repository: grafana/helm-chart-toolbox
           persist-credentials: 'false'
 
       - name: Set up Helm
-        uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4  # v4.3.1
+        uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2  # v5.0.0
+        with:
+          version: v4.1.4  # pin to 4.1.x; 4.2.x changes template output formatting (helm/helm#32132)
 
       - name: Setup Flux CLI
-        uses: fluxcd/flux2/action@6bf37f6a560fd84982d67f853162e4b3c2235edb  # v2.6.4
+        uses: fluxcd/flux2/action@1fd61a06264d71cf445ed55c4f14d401d26a1c64  # v2.8.8
 
       - name: Check for cluster config
         id: check-cluster-config
@@ -96,7 +98,7 @@ jobs:
 
       - name: Setup Kind CLI
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'kind' }}
-        uses: helm/kind-action@a1b0e391336a6ee6713a0583f8c6240d70863de3  # v1.12.0
+        uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc  # v1.14.0
         with:
           install_only: true
 
@@ -114,7 +116,7 @@ jobs:
 
       - name: Setup Azure CLI
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'aks' }}
-        uses: azure/cli@089eac9d8cc39f5d003e94f8b65efc51076c9cbd  # v2.1.0
+        uses: azure/cli@9eb25b8360668fb0ecbafa808d40e2197b2f5f52  # v3.0.0
         with:
           azcliversion: latest
           inlineScript: |
@@ -132,7 +134,7 @@ jobs:
 
       - name: Setup OpenShift Installer CLI
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'openshift' }}
-        uses: robinraju/release-downloader@daf26c55d821e836577a15f77d86ddc078948b05  # v1.12
+        uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
           repository: okd-project/okd
           latest: true
@@ -154,7 +156,7 @@ jobs:
 
       - name: Configure AWS Credentials
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'eks' }}
-        uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838  # v5.0.0
+        uses: aws-actions/configure-aws-credentials@99214aa6889fcddfa57764031d71add364327e59  # v6.1.3
         with:
           aws-access-key-id: '${{ fromJSON(steps.get-aws-credentials.outputs.secrets).AWS_ACCESS_KEY_ID }}'
           aws-secret-access-key: '${{ fromJSON(steps.get-aws-credentials.outputs.secrets).AWS_SECRET_ACCESS_KEY }}'
@@ -198,6 +200,7 @@ jobs:
 
       - name: Run test
         env:
+          KUBECONFIG: "${{ github.workspace }}/source/charts/k8s-monitoring/tests/platform/${{ matrix.test }}/kubeconfig.yaml"
           TEST_DIRECTORY: "source/charts/k8s-monitoring/tests/platform/${{ matrix.test }}"
           DELETE_CLUSTER: true
         run: |
