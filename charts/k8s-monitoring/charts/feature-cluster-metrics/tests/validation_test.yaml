@@ -16,12 +16,33 @@ tests:
             telemetryServices:
               kube-state-metrics:
                 deploy: true
-            Or, set the namespace and label matchers for an existing kube-state-metrics:
+            Or, set the label matchers (and optionally a namespace) for an existing kube-state-metrics:
             clusterMetrics:
               kube-state-metrics:
-                namespace: kube-state-metrics-namespace
                 labelMatchers:
                   app.kubernetes.io/name: kube-state-metrics
+                namespace: kube-state-metrics-namespace
+
+  - it: should fail when kube-state-metrics sets only a namespace without label matchers
+    set:
+      testing: {enabled: true}
+      kube-state-metrics:
+        enabled: true
+        namespace: kube-state-metrics-namespace
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The kube-state-metrics configuration requires a connection to kube-state-metrics
+            Please enable the built-in deployment:
+            telemetryServices:
+              kube-state-metrics:
+                deploy: true
+            Or, set the label matchers (and optionally a namespace) for an existing kube-state-metrics:
+            clusterMetrics:
+              kube-state-metrics:
+                labelMatchers:
+                  app.kubernetes.io/name: kube-state-metrics
+                namespace: kube-state-metrics-namespace
 
   - it: should fail when node-exporter is set under clusterMetrics
     set:

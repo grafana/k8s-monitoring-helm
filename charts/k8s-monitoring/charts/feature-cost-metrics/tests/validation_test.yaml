@@ -14,9 +14,29 @@ tests:
             telemetryServices:
               opencost:
                 deploy: true
-            Or, set the namespace and label matchers for an existing OpenCost:
+            Or, set the label matchers (and optionally a namespace) for an existing OpenCost:
             costMetrics:
               opencost:
-                namespace: opencost-namespace
                 labelMatchers:
                   app.kubernetes.io/name: opencost
+                namespace: opencost-namespace
+
+  - it: should fail when OpenCost sets only a namespace without label matchers
+    set:
+      testing: {enabled: true}
+      opencost:
+        namespace: opencost-namespace
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The OpenCost configuration requires a connection to OpenCost
+            Please enable the built-in deployment:
+            telemetryServices:
+              opencost:
+                deploy: true
+            Or, set the label matchers (and optionally a namespace) for an existing OpenCost:
+            costMetrics:
+              opencost:
+                labelMatchers:
+                  app.kubernetes.io/name: opencost
+                namespace: opencost-namespace

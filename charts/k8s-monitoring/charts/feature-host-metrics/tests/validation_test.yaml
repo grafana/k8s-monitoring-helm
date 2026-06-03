@@ -20,12 +20,37 @@ tests:
             telemetryServices:
               node-exporter:
                 deploy: true
-            Or, set the namespace and label matchers for an existing Node Exporter:
+            Or, set the label matchers (and optionally a namespace) for an existing Node Exporter:
             hostMetrics:
               linuxHosts:
-                namespace: node-exporter-namespace
                 labelMatchers:
                   app.kubernetes.io/name: prometheus-node-exporter
+                namespace: node-exporter-namespace
+
+  - it: should fail when Linux hosts set only a namespace without label matchers
+    set:
+      testing: {enabled: true}
+      linuxHosts:
+        enabled: true
+        namespace: node-exporter-namespace
+      windowsHosts:
+        enabled: false
+      energyMetrics:
+        enabled: false
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Linux host configuration requires a connection to Node Exporter
+            Please enable the built-in deployment:
+            telemetryServices:
+              node-exporter:
+                deploy: true
+            Or, set the label matchers (and optionally a namespace) for an existing Node Exporter:
+            hostMetrics:
+              linuxHosts:
+                labelMatchers:
+                  app.kubernetes.io/name: prometheus-node-exporter
+                namespace: node-exporter-namespace
 
   - it: should fail when Windows hosts do not specify Windows Exporter selectors
     set:
@@ -44,12 +69,12 @@ tests:
             telemetryServices:
               windows-exporter:
                 deploy: true
-            Or, set the namespace and label matchers for an existing Windows Exporter:
+            Or, set the label matchers (and optionally a namespace) for an existing Windows Exporter:
             hostMetrics:
               windowsHosts:
-                namespace: windows-exporter-namespace
                 labelMatchers:
                   app.kubernetes.io/name: prometheus-windows-exporter
+                namespace: windows-exporter-namespace
 
   - it: should fail when host energy metrics do not specify Kepler selectors
     set:
@@ -68,12 +93,12 @@ tests:
             telemetryServices:
               kepler:
                 deploy: true
-            Or, set the namespace and label matchers for an existing Kepler:
+            Or, set the label matchers (and optionally a namespace) for an existing Kepler:
             hostMetrics:
               energyMetrics:
-                namespace: kepler-namespace
                 labelMatchers:
                   app.kubernetes.io/name: kepler
+                namespace: kepler-namespace
 
   - it: should fail when deployment-level setting is under hostMetrics.linuxHosts
     set:
