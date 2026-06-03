@@ -82,20 +82,12 @@ jobs:
           persist-credentials: 'false'
 
       - name: Set up Helm
-        id: setup-helm
-        uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4  # v4.3.1
-        continue-on-error: true
-
-      - name: Set up Homebrew
-        if: ${{ steps.setup-helm.outcome == 'failure' }}
-        uses: Homebrew/actions/setup-homebrew@fb0fe15d936a80ac0ba4c6cee691bc3da3f00f4e
-
-      - name: Install Helm
-        if: ${{ steps.setup-helm.outcome == 'failure' }}
-        run: brew install helm
+        uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2  # v5.0.0
+        with:
+          version: v4.1.4  # pin to 4.1.x; 4.2.x changes template output formatting (helm/helm#32132)
 
       - name: Setup Flux CLI
-        uses: fluxcd/flux2/action@5adad89dcce7b79f20274ae8e112bcec7bd46764  # v2.8.5
+        uses: fluxcd/flux2/action@1fd61a06264d71cf445ed55c4f14d401d26a1c64  # v2.8.8
 
       - name: Check for cluster config
         id: check-cluster-config
@@ -124,7 +116,7 @@ jobs:
 
       - name: Setup Azure CLI
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'aks' }}
-        uses: azure/cli@9f7ce6f37c31b777ec6c6b6d1dfe7db79f497956  # v2.2.0
+        uses: azure/cli@9eb25b8360668fb0ecbafa808d40e2197b2f5f52  # v3.0.0
         with:
           azcliversion: latest
           inlineScript: |
@@ -142,7 +134,7 @@ jobs:
 
       - name: Setup OpenShift Installer CLI
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'openshift' }}
-        uses: robinraju/release-downloader@daf26c55d821e836577a15f77d86ddc078948b05  # v1.12
+        uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
           repository: okd-project/okd
           latest: true
@@ -164,7 +156,7 @@ jobs:
 
       - name: Configure AWS Credentials
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'eks' }}
-        uses: aws-actions/configure-aws-credentials@ec61189d14ec14c8efccab744f656cffd0e33f37  # v6.1.0
+        uses: aws-actions/configure-aws-credentials@99214aa6889fcddfa57764031d71add364327e59  # v6.1.3
         with:
           aws-access-key-id: '${{ fromJSON(steps.get-aws-credentials.outputs.secrets).AWS_ACCESS_KEY_ID }}'
           aws-secret-access-key: '${{ fromJSON(steps.get-aws-credentials.outputs.secrets).AWS_SECRET_ACCESS_KEY }}'
@@ -208,6 +200,7 @@ jobs:
 
       - name: Run test
         env:
+          KUBECONFIG: "${{ github.workspace }}/source/charts/k8s-monitoring/tests/platform/${{ matrix.test }}/kubeconfig.yaml"
           TEST_DIRECTORY: "source/charts/k8s-monitoring/tests/platform/${{ matrix.test }}"
           DELETE_CLUSTER: true
         run: |
