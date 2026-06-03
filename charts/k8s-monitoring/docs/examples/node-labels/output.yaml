@@ -14,7 +14,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
-
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/serviceaccount.yaml
 apiVersion: v1
@@ -31,7 +30,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
-
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/serviceaccount.yaml
 apiVersion: v1
@@ -105,7 +103,6 @@ data:
     collector:
       service:
         include: "containerd|kubelet"
-
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -1193,7 +1190,7 @@ data:
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="2.0.45", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="2.0.46", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="annotationAutodiscovery", version="1.0.0"} 1
@@ -1429,7 +1426,6 @@ data:
         "k8s_cluster_name" = "pod-labels-and-annotations",
       }
     }
-
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1786,8 +1782,6 @@ rules:
   resources:
     - volumeattachments
   verbs: ["list", "watch"]
-
-
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1810,7 +1804,6 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-logs
     namespace: default
-
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1833,7 +1826,6 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-metrics
     namespace: default
-
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1883,7 +1875,6 @@ spec:
       port: 12345
       targetPort: 12345
       protocol: "TCP"
-
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/cluster_service.yaml
 apiVersion: v1
@@ -1917,7 +1908,6 @@ spec:
       port: 12345
       targetPort: 12345
       protocol: "TCP"
-
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/service.yaml
 apiVersion: v1
@@ -1944,7 +1934,6 @@ spec:
       port: 12345
       targetPort: 12345
       protocol: "TCP"
-
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/service.yaml
 apiVersion: v1
@@ -1973,7 +1962,6 @@ spec:
   selector:    
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
-
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/node-exporter/templates/service.yaml
 apiVersion: v1
@@ -2002,7 +1990,6 @@ spec:
   selector:
     app.kubernetes.io/name: node-exporter
     app.kubernetes.io/instance: k8smon
-
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/service.yaml
 apiVersion: v1
@@ -2030,7 +2017,6 @@ spec:
   selector:
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: k8smon
-
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/controllers/daemonset.yaml
 apiVersion: apps/v1
@@ -2148,7 +2134,6 @@ spec:
         - name: dockercontainers
           hostPath:
             path: /var/lib/docker/containers
-
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/node-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -2277,7 +2262,6 @@ spec:
         - name: root
           hostPath:
             path: /
-
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -2379,7 +2363,6 @@ spec:
         - name: config
           configMap:
             name: k8smon-windows-exporter
-
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/deployment.yaml
 apiVersion: apps/v1
@@ -2474,7 +2457,6 @@ spec:
           readOnlyRootFilesystem: true
       nodeSelector:
         kubernetes.io/os: linux
-
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/controllers/statefulset.yaml
 apiVersion: apps/v1

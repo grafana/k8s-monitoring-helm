@@ -14,7 +14,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
-
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -368,13 +367,11 @@ data:
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="2.0.45", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="2.0.46", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlphttp", version="1.0.0"} 1
     # EOF
-    
-
 ---
 # Source: k8s-monitoring/charts/alloy-receiver/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -497,7 +494,6 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-receiver
     namespace: default
-
 ---
 # Source: k8s-monitoring/charts/alloy-receiver/templates/service.yaml
 apiVersion: v1
@@ -528,7 +524,6 @@ spec:
       port: 4318
       targetPort: 4318
       protocol: TCP
-
 ---
 # Source: k8s-monitoring/charts/alloy-receiver/templates/controllers/daemonset.yaml
 apiVersion: apps/v1
