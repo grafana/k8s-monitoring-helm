@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.8.9
+
+*   Bump Alloy Operator to 0.5.8, kube-state-metrics to 7.4.0, OpenCost to 2.5.22, Windows Exporter to 0.12.7 (@petewall)
+
 ## 3.8.8
 
 *   Fix the pre-delete and post-install Alloy-finalizer hook templates failing to render when `alloy-operator.waitForAlloyRemoval.securityContext` is set to `null` (#2569) (@petewall)
