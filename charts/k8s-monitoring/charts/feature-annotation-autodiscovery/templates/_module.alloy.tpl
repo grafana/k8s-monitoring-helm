@@ -42,7 +42,7 @@ declare "annotation_autodiscovery" {
 {{- if .Values.bearerToken.enabled }}
     bearer_token_file = {{ .Values.bearerToken.token | quote }}
 {{- end }}
-    scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
+    scrape_protocols = {{ include "helper.scrapeProtocols" . }}
     scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
     scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
     convert_classic_histograms_to_nhcb = {{ .Values.global.convertClassicHistogramsToNhcb }}
@@ -68,7 +68,7 @@ declare "annotation_autodiscovery" {
     tls_config {
       insecure_skip_verify = true
     }
-    scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
+    scrape_protocols = {{ include "helper.scrapeProtocols" . }}
     scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
     scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
     convert_classic_histograms_to_nhcb = {{ .Values.global.convertClassicHistogramsToNhcb }}

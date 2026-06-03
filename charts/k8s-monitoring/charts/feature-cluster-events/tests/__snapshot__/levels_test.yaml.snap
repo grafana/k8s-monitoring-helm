@@ -1,0 +1,198 @@
+can restrict events from a given list of levels:
+  1: |
+    |-
+      declare "cluster_events" {
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        loki.source.kubernetes_events "cluster_events" {
+          job_name   = "integrations/kubernetes/eventhandler"
+          log_format = "logfmt"
+          forward_to = [loki.process.cluster_events.receiver]
+        }
+
+        loki.process "cluster_events" {
+
+          // add a static source label to the logs so they can be differentiated / restricted if necessary
+          stage.static_labels {
+            values = {
+              "source" = "kubernetes-events",
+            }
+          }
+
+          // extract some of the fields from the log line, these could be used as labels, structured metadata, etc.
+          stage.logfmt {
+            mapping = {
+              "component" = "sourcecomponent", // map the sourcecomponent field to component
+              "kind" = "",
+              "level" = "type", // most events don't have a level but they do have a "type" i.e. Normal, Warning, Error, etc.
+              "name" = "",
+              "node" = "sourcehost", // map the sourcehost field to node
+              "reason" = "",
+            }
+          }
+          // set these values as labels, they may or may not be used as index labels in Loki as they can be dropped
+          // prior to being written to Loki, but this makes them available
+          stage.labels {
+            values = {
+              "component" = "",
+              "kind" = "",
+              "level" = "",
+              "name" = "",
+              "node" = "",
+              "reason" = "",
+            }
+          }
+
+          // if kind=Node, set the node label by copying the name field
+          stage.match {
+            selector = "{kind=\"Node\"}"
+
+            stage.labels {
+              values = {
+                "node" = "name",
+              }
+            }
+          }
+          stage.drop {
+            source = "reason"
+            expression = "Normal"
+            drop_counter_reason = "excluded_reasons"
+          }
+
+          // set the level extracted key value as a normalized log level
+          stage.match {
+            selector = "{level=\"Normal\"}"
+
+            stage.static_labels {
+              values = {
+                level = "Info",
+              }
+            }
+          }
+          stage.structured_metadata {
+            values = {
+              "name" = "name",
+            }
+          }
+
+          // Only keep the labels that are defined in the `keepLabels` list.
+          stage.label_keep {
+            values = ["job","level","namespace","node","source","reason"]
+          }
+          stage.labels {
+            values = {
+              "service_name" = "job",
+            }
+          }
+          forward_to = argument.logs_destinations.value
+        }
+      }
+can restrict events to a given list of levels:
+  1: |
+    |-
+      declare "cluster_events" {
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        loki.source.kubernetes_events "cluster_events" {
+          job_name   = "integrations/kubernetes/eventhandler"
+          log_format = "logfmt"
+          forward_to = [loki.process.cluster_events.receiver]
+        }
+
+        loki.process "cluster_events" {
+
+          // add a static source label to the logs so they can be differentiated / restricted if necessary
+          stage.static_labels {
+            values = {
+              "source" = "kubernetes-events",
+            }
+          }
+
+          // extract some of the fields from the log line, these could be used as labels, structured metadata, etc.
+          stage.logfmt {
+            mapping = {
+              "component" = "sourcecomponent", // map the sourcecomponent field to component
+              "kind" = "",
+              "level" = "type", // most events don't have a level but they do have a "type" i.e. Normal, Warning, Error, etc.
+              "name" = "",
+              "node" = "sourcehost", // map the sourcehost field to node
+              "reason" = "",
+            }
+          }
+          // set these values as labels, they may or may not be used as index labels in Loki as they can be dropped
+          // prior to being written to Loki, but this makes them available
+          stage.labels {
+            values = {
+              "component" = "",
+              "kind" = "",
+              "level" = "",
+              "name" = "",
+              "node" = "",
+              "reason" = "",
+            }
+          }
+
+          // if kind=Node, set the node label by copying the name field
+          stage.match {
+            selector = "{kind=\"Node\"}"
+
+            stage.labels {
+              values = {
+                "node" = "name",
+              }
+            }
+          }
+          stage.static_labels {
+            values = {
+              drop = "yes",
+            }
+          }
+          stage.match {
+            selector = "{reason=~\"Warning|Error\"}"
+            stage.static_labels {
+              values = {
+                drop = "no",
+              }
+            }
+          }
+          stage.match {
+            selector = "{drop=\"yes\"}"
+            action = "drop"
+            drop_counter_reason = "not_included_reasons"
+          }
+          stage.label_drop {
+            values = ["drop"]
+          }
+
+          // set the level extracted key value as a normalized log level
+          stage.match {
+            selector = "{level=\"Normal\"}"
+
+            stage.static_labels {
+              values = {
+                level = "Info",
+              }
+            }
+          }
+          stage.structured_metadata {
+            values = {
+              "name" = "name",
+            }
+          }
+
+          // Only keep the labels that are defined in the `keepLabels` list.
+          stage.label_keep {
+            values = ["job","level","namespace","node","source","reason"]
+          }
+          stage.labels {
+            values = {
+              "service_name" = "job",
+            }
+          }
+          forward_to = argument.logs_destinations.value
+        }
+      }

@@ -34,7 +34,7 @@ prometheus.scrape "kube_controller_manager" {
   scheme            = "https"
   scrape_interval   = {{ .Values.kubeControllerManager.scrapeInterval | default .Values.global.scrapeInterval | quote }}
   scrape_timeout = {{ .Values.kubeControllerManager.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
-  scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
+  scrape_protocols = {{ include "helper.scrapeProtocols" . }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
   scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
   convert_classic_histograms_to_nhcb = {{ .Values.global.convertClassicHistogramsToNhcb }}

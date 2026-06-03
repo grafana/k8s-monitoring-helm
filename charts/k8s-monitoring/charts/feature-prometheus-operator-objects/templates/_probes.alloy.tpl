@@ -31,9 +31,6 @@ prometheus.operator.probes "probes" {
   scrape {
     default_scrape_interval = {{ .Values.probes.scrapeInterval | default .Values.global.scrapeInterval | quote }}
     default_scrape_timeout = {{ .Values.probes.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
-    {{- if .Values.global.scrapeNativeHistograms }}
-    scrape_protocols = {{ include "helper.scrapeProtocols" . }}
-    {{- end }}
     scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
   }
 

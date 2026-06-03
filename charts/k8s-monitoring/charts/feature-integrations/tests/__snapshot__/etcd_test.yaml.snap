@@ -1,0 +1,247 @@
+can be restricted to a namespace:
+  1: |
+    |-
+      declare "etcd_integration" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+
+        discovery.kubernetes "my_etcd" {
+          role = "pod"
+
+          selectors {
+            role = "pod"
+            label = "app.kubernetes.io/component=my-etcd"
+          }
+          namespaces {
+            names = ["kube-system"]
+          }
+        }
+
+        discovery.relabel "my_etcd" {
+          targets = discovery.kubernetes.my_etcd.targets
+
+          // keep only the specified metrics port name, and pods that are Running and ready
+          rule {
+            source_labels = [
+              "__meta_kubernetes_pod_phase",
+              "__meta_kubernetes_pod_ready",
+            ]
+            separator = "@"
+            regex = "Running@true"
+            action = "keep"
+          }
+
+          // drop any init containers
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_init"]
+            regex = "true"
+            action = "drop"
+          }
+
+          // set the metrics port
+          rule {
+            source_labels = ["__meta_kubernetes_pod_ip"]
+            replacement = "$1:2381"
+            target_label = "__address__"
+          }
+
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label  = "namespace"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label  = "pod"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            target_label  = "container"
+          }
+          rule {
+            source_labels = [
+              "__meta_kubernetes_pod_controller_kind",
+              "__meta_kubernetes_pod_controller_name",
+            ]
+            separator = "/"
+            target_label  = "workload"
+          }
+          rule {
+            source_labels = ["workload"]
+            regex = "(ReplicaSet/.+)-.+"
+            target_label  = "workload"
+          }
+
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+              "__meta_kubernetes_pod_label_k8s_app",
+              "__meta_kubernetes_pod_label_app",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "app"
+          }
+
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_label_app_kubernetes_io_component",
+              "__meta_kubernetes_pod_label_k8s_component",
+              "__meta_kubernetes_pod_label_component",
+            ]
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "component"
+          }
+
+          rule {
+            action = "replace"
+            replacement = "kubernetes"
+            target_label = "source"
+          }
+        }
+
+        prometheus.scrape "my_etcd" {
+          targets = discovery.relabel.my_etcd.output
+          job_name = "integrations/etcd"
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          clustering {
+            enabled = true
+          }
+          forward_to = [prometheus.relabel.my_etcd.receiver]
+        }
+
+        prometheus.relabel "my_etcd" {
+          max_cache_size = 100000
+          forward_to = argument.metrics_destinations.value
+        }
+      }
+should create the etcd config:
+  1: |
+    |-
+      declare "etcd_integration" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+
+        discovery.kubernetes "etcd" {
+          role = "pod"
+
+          selectors {
+            role = "pod"
+            label = "app.kubernetes.io/component=etcd"
+          }
+        }
+
+        discovery.relabel "etcd" {
+          targets = discovery.kubernetes.etcd.targets
+
+          // keep only the specified metrics port name, and pods that are Running and ready
+          rule {
+            source_labels = [
+              "__meta_kubernetes_pod_phase",
+              "__meta_kubernetes_pod_ready",
+            ]
+            separator = "@"
+            regex = "Running@true"
+            action = "keep"
+          }
+
+          // drop any init containers
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_init"]
+            regex = "true"
+            action = "drop"
+          }
+
+          // set the metrics port
+          rule {
+            source_labels = ["__meta_kubernetes_pod_ip"]
+            replacement = "$1:2381"
+            target_label = "__address__"
+          }
+
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label  = "namespace"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label  = "pod"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            target_label  = "container"
+          }
+          rule {
+            source_labels = [
+              "__meta_kubernetes_pod_controller_kind",
+              "__meta_kubernetes_pod_controller_name",
+            ]
+            separator = "/"
+            target_label  = "workload"
+          }
+          rule {
+            source_labels = ["workload"]
+            regex = "(ReplicaSet/.+)-.+"
+            target_label  = "workload"
+          }
+
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+              "__meta_kubernetes_pod_label_k8s_app",
+              "__meta_kubernetes_pod_label_app",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "app"
+          }
+
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_label_app_kubernetes_io_component",
+              "__meta_kubernetes_pod_label_k8s_component",
+              "__meta_kubernetes_pod_label_component",
+            ]
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "component"
+          }
+
+          rule {
+            action = "replace"
+            replacement = "kubernetes"
+            target_label = "source"
+          }
+        }
+
+        prometheus.scrape "etcd" {
+          targets = discovery.relabel.etcd.output
+          job_name = "integrations/etcd"
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          clustering {
+            enabled = true
+          }
+          forward_to = [prometheus.relabel.etcd.receiver]
+        }
+
+        prometheus.relabel "etcd" {
+          max_cache_size = 100000
+          forward_to = argument.metrics_destinations.value
+        }
+      }
