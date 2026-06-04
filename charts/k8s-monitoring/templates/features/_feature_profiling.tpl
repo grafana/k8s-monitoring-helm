@@ -7,9 +7,10 @@
 {{- include "feature.profiling.module" (dict "Values" $.Values.profiling "Files" $.Subcharts.profiling.Files) }}
 profiling "feature" {
   profiles_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "profiles" "ecosystem" "pyroscope") | indent 4 | trim }}
+    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "profiling" "destinationNames" $destinations "type" "profiles" "ecosystem" "pyroscope") | indent 4 | trim }}
   ]
 }
+{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "profiling" "destinationNames" $destinations "type" "profiles" "ecosystem" "pyroscope") }}
 {{- end -}}
 {{- end -}}
 
@@ -41,6 +42,7 @@ profiling "feature" {
 {{- $featureName := "Profiling" }}
 {{- $destinations := include "features.profiling.destinations" . | fromYamlArray }}
 {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "profiles" "ecosystem" "pyroscope" "featureName" $featureName) }}
+{{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "profiling" "featureName" $featureName "type" "profiles" "ecosystem" "pyroscope") }}
 {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
 {{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}
 {{- include "feature.profiling.validate" (dict "Values" $.Values.profiling) }}
