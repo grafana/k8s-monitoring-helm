@@ -7,9 +7,10 @@
 {{- include "feature.profilesReceiver.module" (dict "Values" $.Values.profilesReceiver "Files" $.Subcharts.profilesReceiver.Files) }}
 profiles_receiver "feature" {
   profiles_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "profiles" "ecosystem" "pyroscope") | indent 4 | trim }}
+    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "profilesReceiver" "destinationNames" $destinations "type" "profiles" "ecosystem" "pyroscope") | indent 4 | trim }}
   ]
 }
+{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "profilesReceiver" "destinationNames" $destinations "type" "profiles" "ecosystem" "pyroscope") }}
 {{- end -}}
 {{- end -}}
 
@@ -53,6 +54,7 @@ profiles_receiver "feature" {
 {{- $featureName := "Profiles Receiver" }}
 {{- $destinations := include "features.profilesReceiver.destinations" . | fromYamlArray }}
 {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "profiles" "ecosystem" "pyroscope" "featureName" $featureName) }}
+{{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "profilesReceiver" "featureName" $featureName "type" "profiles" "ecosystem" "pyroscope") }}
 {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
 {{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}
 {{- include "collectors.requireExtraPort" (dict "Values" $.Values "collectorName" $collectorName "featureName" $featureName "portNumber" $.Values.profilesReceiver.port "portName" "profiles" "portProtocol" "TCP") }}

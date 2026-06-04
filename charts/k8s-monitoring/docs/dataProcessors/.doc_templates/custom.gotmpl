@@ -1,0 +1,87 @@
+# Custom Processor
+
+The custom processor lets you insert arbitrary Alloy configuration into a feature's pipeline. It supports any
+`(telemetry type, ecosystem)` tuple, so a single custom processor can transform Prometheus metrics, OTLP logs,
+Pyroscope profiles, and so on — you enable each tuple you want to handle and supply its `input` and `config`.
+
+<!-- textlint-disable terminology -->
+{{ template "chart.valuesSection" . }}
+<!-- textlint-enable terminology -->
+
+## Authoring a custom processor
+
+For each `(type, ecosystem)` tuple the processor handles:
+
+1.  Set `<type>.<ecosystem>.enabled: true`.
+2.  Set `<type>.<ecosystem>.input` to the Alloy component reference where the chart should forward data into your
+    pipeline. The stamper that precedes your processor forwards to this ref.
+3.  Set `<type>.<ecosystem>.config` to the raw Alloy block(s) defining your pipeline. The terminal component in your
+    block must have its `forward_to` (or `output { ... }`) point at the chart-generated output sink for this tuple.
+
+### Output sink naming convention
+
+The chart generates one output sink per `(processor, type, ecosystem)`. Your pipeline's terminal `forward_to` must
+target this sink so the chart can wire it to either the next processor in the chain or to per-destination gates.
+
+| `(type, ecosystem)`          | Sink reference                                                            |
+|------------------------------|---------------------------------------------------------------------------|
+| `(metrics, prometheus)`      | `prometheus.relabel.<proc>_out_metrics_prometheus.receiver`               |
+| `(metrics, otlp)`            | `otelcol.processor.batch.<proc>_out_metrics_otlp.input`                   |
+| `(logs, loki)`               | `loki.process.<proc>_out_logs_loki.receiver`                              |
+| `(logs, otlp)`               | `otelcol.processor.batch.<proc>_out_logs_otlp.input`                      |
+| `(traces, otlp)`             | `otelcol.processor.batch.<proc>_out_traces_otlp.input`                    |
+| `(profiles, pyroscope)`      | `pyroscope.relabel.<proc>_out_profiles_pyroscope.receiver`                |
+
+`<proc>` is the processor's key with dashes converted to underscores.
+
+### Where the pipeline runs
+
+A custom processor's pipeline is emitted only in the collectors whose features actually use it. The same processor can
+serve features running on different collectors without cross-pollution — the chart slices the rendered pipeline per
+`(feature, type, ecosystem)`.
+
+## Example
+
+This example defines a `redact` processor that drops the `user_email` label from Prometheus metrics and the
+`http.request.header.authorization` attribute from OTLP logs. The `clusterMetrics` feature uses it for Prometheus
+metrics; the `clusterEvents` feature uses it for Loki logs (which would be a no-op for this processor since it doesn't
+enable the `(logs, loki)` tuple — the chart drops it from the chain for that tuple).
+
+```yaml
+dataProcessors:
+  redact:
+    type: custom
+    metrics:
+      prometheus:
+        enabled: true
+        input: prometheus.relabel.redact_in_metrics_prometheus.receiver
+        config: |
+          prometheus.relabel "redact_in_metrics_prometheus" {
+            forward_to = [prometheus.relabel.redact_out_metrics_prometheus.receiver]
+            rule {
+              action = "labeldrop"
+              regex  = "user_email"
+            }
+          }
+    logs:
+      otlp:
+        enabled: true
+        input: otelcol.processor.transform.redact_in_logs_otlp.input
+        config: |
+          otelcol.processor.transform "redact_in_logs_otlp" {
+            error_mode = "ignore"
+            log_statements {
+              context = "log"
+              statements = [
+                `delete_key(attributes, "http.request.header.authorization")`,
+              ]
+            }
+            output {
+              logs = [otelcol.processor.batch.redact_out_logs_otlp.input]
+            }
+          }
+
+clusterMetrics:
+  enabled: true
+  dataProcessors: [redact]
+```

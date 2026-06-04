@@ -2,21 +2,26 @@
 
 {{- define "features.applicationObservability.include" }}
 {{- if .Values.applicationObservability.enabled -}}
-{{- $destinations := include "features.applicationObservability.destinations" . | fromYamlArray }}
+{{- $metricsDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray }}
+{{- $logsDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "logs" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray }}
+{{- $tracesDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "traces" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray }}
 
 // Feature: Application Observability
 {{- include "feature.applicationObservability.module" (dict "Values" $.Values.applicationObservability "Files" $.Subcharts.applicationObservability.Files) }}
 application_observability "feature" {
   metrics_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "metrics" "ecosystem" "otlp") | indent 4 | trim }}
+    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "applicationObservability" "destinationNames" $metricsDestinations "type" "metrics" "ecosystem" "otlp") | indent 4 | trim }}
   ]
   logs_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "logs" "ecosystem" "otlp") | indent 4 | trim }}
+    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "applicationObservability" "destinationNames" $logsDestinations "type" "logs" "ecosystem" "otlp") | indent 4 | trim }}
   ]
   traces_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "traces" "ecosystem" "otlp") | indent 4 | trim }}
+    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "applicationObservability" "destinationNames" $tracesDestinations "type" "traces" "ecosystem" "otlp") | indent 4 | trim }}
   ]
 }
+{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "applicationObservability" "destinationNames" $metricsDestinations "type" "metrics" "ecosystem" "otlp") }}
+{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "applicationObservability" "destinationNames" $logsDestinations "type" "logs" "ecosystem" "otlp") }}
+{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "applicationObservability" "destinationNames" $tracesDestinations "type" "traces" "ecosystem" "otlp") }}
 {{- end -}}
 {{- end -}}
 
@@ -97,16 +102,19 @@ application_observability "feature" {
   {{- if .Values.applicationObservability.metrics.enabled -}}
     {{- $metricDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
     {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $metricDestinations "type" "metrics" "ecosystem" "otlp" "featureName" $featureName) }}
+    {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" $featureKey "featureName" $featureName "type" "metrics" "ecosystem" "otlp") }}
   {{- end -}}
 
   {{- if .Values.applicationObservability.logs.enabled -}}
-    {{- $logDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "logs" "ecosystem" "loki" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
-    {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $logDestinations "type" "logs" "ecosystem" "loki" "featureName" $featureName) }}
+    {{- $logDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "logs" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
+    {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $logDestinations "type" "logs" "ecosystem" "otlp" "featureName" $featureName) }}
+    {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" $featureKey "featureName" $featureName "type" "logs" "ecosystem" "otlp") }}
   {{- end -}}
 
   {{- if .Values.applicationObservability.traces.enabled -}}
     {{- $traceDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "traces" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
     {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $traceDestinations "type" "traces" "ecosystem" "otlp" "featureName" $featureName) }}
+    {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" $featureKey "featureName" $featureName "type" "traces" "ecosystem" "otlp") }}
   {{- end -}}
 
   {{/* Collector validations */}}

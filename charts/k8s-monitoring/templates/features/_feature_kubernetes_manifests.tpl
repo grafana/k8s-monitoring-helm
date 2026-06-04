@@ -7,9 +7,10 @@
 {{- include "feature.kubernetesManifests.module" (dict "Values" $.Values.kubernetesManifests "Files" $.Subcharts.kubernetesManifests.Files "Release" $.Release "telemetryServices" $.Values.telemetryServices) }}
 kubernetes_manifests "feature" {
   logs_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
+    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "kubernetesManifests" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
   ]
 }
+{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "kubernetesManifests" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") }}
 {{- end -}}
 {{- end -}}
 
@@ -41,6 +42,7 @@ kubernetes_manifests "feature" {
 {{- $featureName := "Kubernetes Manifests" }}
 {{- $destinationNames := include "features.kubernetesManifests.destinations" . | fromYamlArray }}
 {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinationNames "type" "logs" "ecosystem" "loki" "featureName" $featureName) }}
+{{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "kubernetesManifests" "featureName" $featureName "type" "logs" "ecosystem" "loki") }}
 {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
 {{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}
 {{- $k8sManifestTail := index $.Values.telemetryServices "k8s-manifest-tail" }}

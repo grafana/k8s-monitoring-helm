@@ -67,6 +67,16 @@ global:
 destinations: {}
 
 #
+# Data Processors
+#
+
+# -- Optional processors that sit between features and destinations. A feature can opt in by listing a processor under
+# its `dataProcessors:` key. Data from that feature flows through the processor's pipeline before reaching its
+# destinations. See the [data processors documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/dataProcessors/README.md).
+# @section -- Data Processors
+dataProcessors: {}
+
+#
 # Features
 #
 
@@ -83,6 +93,11 @@ clusterMetrics:
   # -- The destinations where cluster metrics will be sent. If empty, all metrics-capable destinations will be used.
   # @section -- Features - Cluster Metrics
   destinations: []
+
+  # -- Optional chain of processors to run before delivering data to destinations.
+  # Each entry is a key from the top-level `dataProcessors:` map.
+  # @section -- Features - Cluster Metrics
+  dataProcessors: []
 
   # -- Which collector to assign this feature to.
   # @section -- Features - Cluster Metrics
@@ -105,6 +120,11 @@ costMetrics:
   # @section -- Features - Cost Metrics
   destinations: []
 
+  # -- Optional chain of processors to run before delivering data to destinations.
+  # Each entry is a key from the top-level `dataProcessors:` map.
+  # @section -- Features - Cost Metrics
+  dataProcessors: []
+
   # -- Which collector to assign this feature to.
   # @section -- Features - Cost Metrics
   # @ignored
@@ -125,6 +145,11 @@ hostMetrics:
   # -- The destinations where cluster metrics will be sent. If empty, all metrics-capable destinations will be used.
   # @section -- Features - Host Metrics
   destinations: []
+
+  # -- Optional chain of processors to run before delivering data to destinations.
+  # Each entry is a key from the top-level `dataProcessors:` map.
+  # @section -- Features - Host Metrics
+  dataProcessors: []
 
   # -- Which collector to assign this feature to.
   # @section -- Features - Host Metrics
@@ -147,6 +172,11 @@ clusterEvents:
   # @section -- Features - Cluster Events
   destinations: []
 
+  # -- Optional chain of processors to run before delivering data to destinations.
+  # Each entry is a key from the top-level `dataProcessors:` map.
+  # @section -- Features - Cluster Events
+  dataProcessors: []
+
   # -- Which collector to assign this feature to.
   # @section -- Features - Cluster Events
   # @ignored
@@ -167,6 +197,11 @@ nodeLogs:
   # -- The destinations where logs will be sent. If empty, all logs-capable destinations will be used.
   # @section -- Features - Node Logs
   destinations: []
+
+  # -- Optional chain of processors to run before delivering data to destinations.
+  # Each entry is a key from the top-level `dataProcessors:` map.
+  # @section -- Features - Node Logs
+  dataProcessors: []
 
   # -- Which collector to assign this feature to.
   # @section -- Features - Node Logs
@@ -189,6 +224,11 @@ podLogsViaLoki:
   # @section -- Features - Pod Logs via Loki
   destinations: []
 
+  # -- Optional chain of processors to run before delivering data to destinations.
+  # Each entry is a key from the top-level `dataProcessors:` map.
+  # @section -- Features - Pod Logs via Loki
+  dataProcessors: []
+
   # -- Which collector to assign this feature to.
   # @section -- Features - Pod Logs via Loki
   # @ignored
@@ -209,6 +249,11 @@ podLogsViaOpenTelemetry:
   # -- The destinations where logs will be sent. If empty, all logs-capable destinations will be used.
   # @section -- Features - Pod Logs via OpenTelemetry
   destinations: []
+
+  # -- Optional chain of processors to run before delivering data to destinations.
+  # Each entry is a key from the top-level `dataProcessors:` map.
+  # @section -- Features - Pod Logs via OpenTelemetry
+  dataProcessors: []
 
   # -- Which collector to assign this feature to.
   # @section -- Features - Pod Logs via OpenTelemetry
@@ -231,6 +276,11 @@ podLogsViaKubernetesApi:
   # @section -- Features - Pod Logs via Kubernetes API
   destinations: []
 
+  # -- Optional chain of processors to run before delivering data to destinations.
+  # Each entry is a key from the top-level `dataProcessors:` map.
+  # @section -- Features - Pod Logs via Kubernetes API
+  dataProcessors: []
+
   # -- Which collector to assign this feature to.
   # @section -- Features - Pod Logs via Kubernetes API
   # @ignored
@@ -252,6 +302,11 @@ podLogsObjects:
   # @section -- Features - PodLogs Objects
   destinations: []
 
+  # -- Optional chain of processors to run before delivering data to destinations.
+  # Each entry is a key from the top-level `dataProcessors:` map.
+  # @section -- Features - PodLogs Objects
+  dataProcessors: []
+
   # -- Which collector to assign this feature to.
   # @section -- Features - PodLogs Objects
   # @ignored
@@ -272,6 +327,11 @@ applicationObservability:
   # -- The destinations where application data will be sent. If empty, all capable destinations will be used.
   # @section -- Features - Application Observability
   destinations: []
+
+  # -- Optional chain of processors to run before delivering data to destinations.
+  # Each entry is a key from the top-level `dataProcessors:` map.
+  # @section -- Features - Application Observability
+  dataProcessors: []
 
   # -- The receivers used for receiving application data.
   # @section -- Features - Application Observability
@@ -298,6 +358,11 @@ autoInstrumentation:
   # @section -- Features - Auto-Instrumentation
   destinations: []
 
+  # -- Optional chain of processors to run before delivering data to destinations.
+  # Each entry is a key from the top-level `dataProcessors:` map.
+  # @section -- Features - Auto-Instrumentation
+  dataProcessors: []
+
   # -- Which collector to assign this feature to.
   # @section -- Features - Auto-Instrumentation
   # @ignored
@@ -318,6 +383,11 @@ annotationAutodiscovery:
   # -- The destinations where cluster metrics will be sent. If empty, all metrics-capable destinations will be used.
   # @section -- Features - Annotation Autodiscovery
   destinations: []
+
+  # -- Optional chain of processors to run before delivering data to destinations.
+  # Each entry is a key from the top-level `dataProcessors:` map.
+  # @section -- Features - Annotation Autodiscovery
+  dataProcessors: []
 
   # -- Which collector to assign this feature to.
   # @section -- Features - Annotation Autodiscovery
@@ -340,6 +410,11 @@ prometheusOperatorObjects:
   # @section -- Features - Prometheus Operator Objects
   destinations: []
 
+  # -- Optional chain of processors to run before delivering data to destinations.
+  # Each entry is a key from the top-level `dataProcessors:` map.
+  # @section -- Features - Prometheus Operator Objects
+  dataProcessors: []
+
   # -- Which collector to assign this feature to.
   # @section -- Features - Prometheus Operator Objects
   # @ignored
@@ -360,6 +435,11 @@ profiling:
   # -- The destinations where profiles will be sent. If empty, all profiles-capable destinations will be used.
   # @section -- Features - Profiling
   destinations: []
+
+  # -- Optional chain of processors to run before delivering data to destinations.
+  # Each entry is a key from the top-level `dataProcessors:` map.
+  # @section -- Features - Profiling
+  dataProcessors: []
 
   # -- Which collector to assign this feature to.
   # @section -- Features - Profiling
@@ -382,6 +462,11 @@ profilesReceiver:
   # @section -- Features - Profiles Receiver
   destinations: []
 
+  # -- Optional chain of processors to run before delivering data to destinations.
+  # Each entry is a key from the top-level `dataProcessors:` map.
+  # @section -- Features - Profiles Receiver
+  dataProcessors: []
+
   # -- Which collector to assign this feature to.
   # @section -- Features - Profiles Receiver
   # @ignored
@@ -403,6 +488,11 @@ kubernetesManifests:
   # @section -- Features - Kubernetes Manifests
   destinations: []
 
+  # -- Optional chain of processors to run before delivering data to destinations.
+  # Each entry is a key from the top-level `dataProcessors:` map.
+  # @section -- Features - Kubernetes Manifests
+  dataProcessors: []
+
   # -- Which collector to assign this feature to.
   # @section -- Features - Kubernetes Manifests
   # @ignored
@@ -416,6 +506,11 @@ integrations:
   # -- The destinations where integration metrics will be sent. If empty, all metrics-capable destinations will be used.
   # @section -- Features - Service Integrations
   destinations: []
+
+  # -- Optional chain of processors to run before delivering data to destinations.
+  # Each entry is a key from the top-level `dataProcessors:` map.
+  # @section -- Features - Service Integrations
+  dataProcessors: []
 
   # -- Which collector to assign this feature to.
   # @section -- Features - Service Integrations
@@ -437,6 +532,11 @@ selfReporting:
   # -- The destinations where self-report metrics will be sent. If empty, all metrics-capable destinations will be used.
   # @section -- Features - Self-reporting
   destinations: []
+
+  # -- Optional chain of processors to run before delivering data to destinations.
+  # Each entry is a key from the top-level `dataProcessors:` map.
+  # @section -- Features - Self-reporting
+  dataProcessors: []
 
   # -- How frequently to generate self-report metrics. This does utilize the global scrapeInterval setting.
   # @default -- 60s
