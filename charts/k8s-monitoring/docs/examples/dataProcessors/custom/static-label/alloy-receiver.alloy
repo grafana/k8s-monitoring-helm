@@ -1,0 +1,382 @@
+// Feature: Application Observability
+declare "application_observability" {
+  argument "metrics_destinations" {
+    comment = "Must be a list of metrics destinations where collected metrics should be forwarded to"
+  }
+
+  argument "logs_destinations" {
+    comment = "Must be a list of log destinations where collected logs should be forwarded to"
+  }
+
+  argument "traces_destinations" {
+    comment = "Must be a list of trace destinations where collected trace should be forwarded to"
+  }
+
+  // OTLP Receiver
+  otelcol.receiver.otlp "receiver" {
+    grpc {
+      endpoint = "0.0.0.0:4317"
+      include_metadata = false
+      max_recv_msg_size = "4MiB"
+      read_buffer_size = "512KiB"
+      write_buffer_size = "32KiB"
+    }
+    debug_metrics {
+      disable_high_cardinality_metrics = true
+    }
+    output {
+      traces = [otelcol.processor.resourcedetection.default.input]
+    }
+  } // otelcol.receiver.otlp "receiver"
+
+  // Resource Detection Processor
+  otelcol.processor.resourcedetection "default" {
+    detectors = ["env","system"]
+    override = true
+
+    system {
+      hostname_sources = ["os"]
+    }
+
+    output {
+      traces = [otelcol.processor.k8sattributes.default.input]
+    }
+  }
+
+  // K8s Attributes Processor
+  otelcol.processor.k8sattributes "default" {
+    passthrough = false
+    extract {
+      metadata = ["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time"]
+    }
+    pod_association {
+      source {
+        from = "resource_attribute"
+        name = "k8s.pod.ip"
+      }
+    }
+    pod_association {
+      source {
+        from = "resource_attribute"
+        name = "k8s.pod.uid"
+      }
+    }
+    pod_association {
+      source {
+        from = "connection"
+      }
+    }
+
+    output {
+      traces = [otelcol.processor.transform.default.input]
+    }
+  }
+
+  // Transform Processor
+  otelcol.processor.transform "default" {
+    error_mode = "ignore"
+    trace_statements {
+      context = "span"
+      statements = [
+       "set_semconv_span_name(\"1.37.0\", \"original_span_name\")",
+      ]
+    }
+
+    output {
+      traces = [otelcol.processor.batch.default.input]
+    }
+  }
+
+  // Batch Processor
+  otelcol.processor.batch "default" {
+    send_batch_size = 8192
+    send_batch_max_size = 0
+    timeout = "2s"
+
+    output {
+      traces = argument.traces_destinations.value
+    }
+  }
+} // declare "application_observability"
+application_observability "feature" {
+  metrics_destinations = [
+    otelcol.exporter.prometheus.prometheus.input,
+  ]
+  logs_destinations = [
+    otelcol.exporter.loki.loki.input,
+  ]
+  traces_destinations = [
+    otelcol.processor.transform.applicationobservability_stamp_traces_otlp.input,
+  ]
+}
+otelcol.processor.transform "applicationobservability_stamp_traces_otlp" {
+  error_mode = "ignore"
+  trace_statements {
+    context = "resource"
+    statements = [
+      "set(attributes[\"selected_destinations\"], \"tempo\")",
+    ]
+  }
+  output {
+    traces = [otelcol.processor.transform.static_label_traces.input]
+  }
+}
+// Processor: static-label (custom) — traces/otlp
+otelcol.processor.transform "static_label_traces" {
+  error_mode = "ignore"
+  trace_statements {
+    context = "resource"
+    statements = [
+      "set(attributes[\"region\"], \"central\")",
+    ]
+  }
+  output {
+    traces = [otelcol.processor.batch.static_label_out_traces_otlp.input]
+  }
+}
+otelcol.processor.batch "static_label_out_traces_otlp" {
+  output {
+    traces = [otelcol.processor.filter.static_label_tempo_gate_traces_otlp.input]
+  }
+}
+otelcol.processor.filter "static_label_tempo_gate_traces_otlp" {
+  error_mode = "ignore"
+  traces {
+    span = [
+      "not IsMatch(resource.attributes[\"selected_destinations\"], \"(^|.*,)tempo(,.*|$)\")",
+    ]
+  }
+  output {
+    traces = [otelcol.processor.transform.static_label_tempo_gate_traces_otlp_strip.input]
+  }
+}
+otelcol.processor.transform "static_label_tempo_gate_traces_otlp_strip" {
+  error_mode = "ignore"
+  trace_statements {
+    context = "resource"
+    statements = [
+      "delete_key(attributes, \"selected_destinations\")",
+    ]
+  }
+  output {
+    traces = [otelcol.processor.attributes.tempo.input]
+  }
+}
+// Feature: Profiles Receiver
+declare "profiles_receiver" {
+  argument "profiles_destinations" {
+    comment = "Must be a list of profile destinations where collected profiles should be forwarded to"
+  }
+
+  pyroscope.receive_http "default" {
+    http {
+      listen_address = "0.0.0.0"
+      listen_port = "4040"
+    }
+
+    forward_to = argument.profiles_destinations.value
+  } // pyroscope.relabel "default"
+} // declare "profiles_receiver"
+profiles_receiver "feature" {
+  profiles_destinations = [
+    pyroscope.relabel.profilesreceiver_stamp_profiles_pyroscope.receiver,
+  ]
+}
+pyroscope.relabel "profilesreceiver_stamp_profiles_pyroscope" {
+  forward_to = [pyroscope.relabel.static_label_profiles.receiver]
+  rule {
+    target_label = "selected_destinations"
+    replacement  = "pyroscope"
+  }
+}
+// Processor: static-label (custom) — profiles/pyroscope
+pyroscope.relabel "static_label_profiles" {
+  rule {
+    target_label = "region"
+    replacement  = "central"
+  }
+  forward_to = [pyroscope.relabel.static_label_out_profiles_pyroscope.receiver]
+}
+pyroscope.relabel "static_label_out_profiles_pyroscope" {
+  forward_to = [pyroscope.relabel.static_label_pyroscope_gate_profiles_pyroscope.receiver]
+}
+pyroscope.relabel "static_label_pyroscope_gate_profiles_pyroscope" {
+  forward_to = [pyroscope.write.pyroscope.receiver]
+  rule {
+    source_labels = ["selected_destinations"]
+    regex         = "(^|.*,)pyroscope(,.*|$)"
+    action        = "keep"
+  }
+  rule {
+    action = "labeldrop"
+    regex  = "selected_destinations"
+  }
+}
+
+
+
+
+
+// Destination: loki (loki)
+otelcol.exporter.loki "loki" {
+  forward_to = [loki.write.loki.receiver]
+} // otelcol.exporter.loki "loki"
+
+loki.write "loki" {
+  endpoint {
+    url = "http://loki.loki.svc:3100/loki/api/v1/push"
+    retry_on_http_429 = true
+    tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+      password = remote.kubernetes.secret.loki.data["password"]
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+  external_labels = {
+    "cluster" = "static-label",
+    "k8s_cluster_name" = "static-label",
+  }
+} // loki.write "loki"
+
+remote.kubernetes.secret "loki" {
+  name      = "loki-k8smon-k8s-monitoring"
+  namespace = "default"
+} // remote.kubernetes.secret "loki"
+
+
+// Destination: prometheus (prometheus)
+otelcol.exporter.prometheus "prometheus" {
+  add_metric_suffixes = true
+  resource_to_telemetry_conversion = false
+  forward_to = [prometheus.remote_write.prometheus.receiver]
+} // otelcol.exporter.prometheus "prometheus"
+
+prometheus.remote_write "prometheus" {
+  endpoint {
+    url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
+    headers = {
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    send_native_histograms = false
+
+    queue_config {
+      capacity = 10000
+      min_shards = 1
+      max_shards = 50
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "30ms"
+      max_backoff = "5s"
+      retry_on_http_429 = true
+      sample_age_limit = "0s"
+    }
+  }
+
+  wal {
+    truncate_frequency = "2h"
+    min_keepalive_time = "5m"
+    max_keepalive_time = "8h"
+  }
+  external_labels = {
+    "cluster" = "static-label",
+    "k8s_cluster_name" = "static-label",
+  }
+} // prometheus.remote_write "prometheus"
+
+// Destination: pyroscope (pyroscope)
+pyroscope.write "pyroscope" {
+  endpoint {
+    url = "http://pyroscope.pyroscope.svc:4040"
+    headers = {
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+
+  external_labels = {
+    "cluster" = "static-label",
+    "k8s_cluster_name" = "static-label",
+  }
+} // pyroscope.write "pyroscope"
+
+// Destination: tempo (otlp)
+otelcol.processor.attributes "tempo" {
+  output {
+    traces = [otelcol.processor.transform.tempo.input]
+  }
+} // otelcol.processor.attributes "tempo"
+
+otelcol.processor.transform "tempo" {
+  error_mode = "ignore"
+
+  trace_statements {
+    context = "resource"
+    statements = [
+      `set(attributes["cluster"], "static-label")`,
+      `set(attributes["k8s.cluster.name"], "static-label")`,
+      `delete_key(attributes, "process.pid")`,
+      `delete_key(attributes, "process.parent_pid")`,
+      `delete_key(attributes, "process.executable.path")`,
+      `delete_key(attributes, "process.command_line")`,
+      `delete_key(attributes, "process.command_args")`,
+      `delete_key(attributes, "process.owner")`,
+      `delete_key(attributes, "process.runtime.version")`,
+      `delete_key(attributes, "process.runtime.description")`,
+      `delete_key(attributes, "host.ip")`,
+      `delete_key(attributes, "host.mac")`,
+      `delete_key(attributes, "k8s.pod.start_time")`,
+      `delete_key(attributes, "k8s.pod.uid")`,
+      `delete_key(attributes, "container.image.id")`,
+      `delete_key(attributes, "container.image.repo_digests")`,
+      `delete_key(attributes, "os.description")`,
+      `delete_key(attributes, "os.build_id")`,
+    ]
+  }
+
+  output {
+    traces = [otelcol.processor.batch.tempo.input]
+  }
+} // otelcol.processor.transform "tempo"
+
+otelcol.processor.batch "tempo" {
+  timeout = "2s"
+  send_batch_size = 8192
+  send_batch_max_size = 0
+
+  output {
+    traces = [otelcol.exporter.otlp.tempo.input]
+  }
+} // otelcol.processor.batch "tempo"
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo.tempo.svc:4317"
+    tls {
+      insecure = true
+      insecure_skip_verify = true
+    }
+  }
+
+  retry_on_failure {
+    enabled = true
+    initial_interval = "5s"
+    max_interval = "30s"
+    max_elapsed_time = "5m"
+  }
+
+  sending_queue {
+    enabled = true
+  }
+} // otelcol.exporter.otlp "tempo"
+

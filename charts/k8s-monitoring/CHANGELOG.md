@@ -3,6 +3,7 @@
 ## 4.2.0
 
 *   Add `hostMetrics.linuxHosts.source` (`node-exporter` (default) or `alloy`). With `alloy`, Linux host metrics are collected directly by the assigned collector via `prometheus.exporter.unix`, requiring no Node Exporter deployment. This needs a privileged DaemonSet that mounts the host filesystem, configured with the new `presets: [linux-host-monitor, daemonset]`. The `nodeLabels` enrichment is not yet supported with `source: alloy`. (#2660) (@petewall)
+*   Introduce Data Processors, a method for transforming data between features and destinations. Initial processors include the `custom` processor.
 
 ## 4.1.x
 
