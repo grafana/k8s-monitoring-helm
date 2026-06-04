@@ -101,9 +101,10 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
     action = "keep"
   }
   forward_to = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
+    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "selfReporting" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
   ]
 } // prometheus.relabel "kubernetes_monitoring_telemetry"
+{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "selfReporting" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") }}
 {{- end }}
 {{- end }}
 
