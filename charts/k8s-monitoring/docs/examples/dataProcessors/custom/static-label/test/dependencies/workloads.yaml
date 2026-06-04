@@ -1,0 +1,147 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: workload
+---
+# --- Metrics source: an annotated pod exposing a static Prometheus metric, picked up by
+# the annotationAutodiscovery feature. ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: static-metric
+  namespace: workload
+data:
+  metrics: |
+    # HELP example_app_up Static metric used by the static-label processor test.
+    # TYPE example_app_up gauge
+    example_app_up 1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metrics-source
+  namespace: workload
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metrics-source
+  template:
+    metadata:
+      labels:
+        app: metrics-source
+      annotations:
+        k8s.grafana.com/scrape: "true"
+        k8s.grafana.com/metrics.portNumber: "8080"
+        k8s.grafana.com/metrics.path: /metrics
+    spec:
+      containers:
+        - name: httpd
+          image: busybox
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              cp /data/metrics /www/metrics
+              exec httpd -f -p 8080 -h /www
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: metric
+              mountPath: /data
+            - name: www
+              mountPath: /www
+      volumes:
+        - name: metric
+          configMap:
+            name: static-metric
+        - name: www
+          emptyDir: {}
+---
+# --- Logs source: a pod that continuously emits log lines. podLogsViaLoki tails it. ---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: log-source
+  namespace: workload
+spec:
+  containers:
+    - name: busybox
+      image: busybox
+      args:
+        - /bin/sh
+        - -c
+        - |
+          while true; do
+            echo "level=INFO msg=\"static-label log line\""
+            sleep 5
+          done
+---
+# --- Telemetry generator: a standalone Alloy instance (deployed via its own Helm chart, so
+# it does NOT depend on the k8s-monitoring chart's Alloy CRD) that produces both traces and
+# profiles and sends them into the chart's applicationObservability + profilesReceiver. ---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: telemetry-generator
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: grafana
+  namespace: telemetry-generator
+spec:
+  interval: 1m
+  url: https://grafana.github.io/helm-charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: telemetry-generator
+  namespace: telemetry-generator
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: alloy
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: telemetry-generator
+      interval: 1m
+  values:
+    controller:
+      type: deployment
+      replicas: 1
+    alloy:
+      configMap:
+        content: |-
+          // Traces: export Alloy's own internal traces over OTLP to the chart receiver.
+          tracing {
+            sampling_fraction = 1
+            write_to = [otelcol.exporter.otlp.traces.input]
+          }
+
+          otelcol.exporter.otlp "traces" {
+            client {
+              endpoint = "k8smon-alloy-receiver.default.svc:4317"
+              tls {
+                insecure = true
+                insecure_skip_verify = true
+              }
+            }
+          }
+
+          // Profiles: scrape this Alloy's own pprof endpoints and write to the chart receiver.
+          pyroscope.scrape "self" {
+            targets = [
+              {"__address__" = "localhost:12345", "service_name" = "telemetry-generator"},
+            ]
+            forward_to = [pyroscope.write.chart.receiver]
+          }
+
+          pyroscope.write "chart" {
+            endpoint {
+              url = "http://k8smon-alloy-receiver.default.svc:4040"
+            }
+          }
