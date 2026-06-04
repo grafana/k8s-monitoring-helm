@@ -92,6 +92,9 @@ declare "grafana_integration" {
       }
 
       {{ include "feature.integrations.commonDiscoveryRules" . | nindent 6 }}
+{{- if $.Values.grafana.extraDiscoveryRules }}
+{{ $.Values.grafana.extraDiscoveryRules | indent 6 }}
+{{- end }}
     } // discovery.relabel "grafana_pods"
 
     export "output" {

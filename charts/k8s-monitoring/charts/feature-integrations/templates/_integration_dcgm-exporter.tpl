@@ -73,6 +73,9 @@ declare "dcgm_exporter_integration" {
         regex = coalesce(argument.port_name.value, "metrics") + "@Running@true@false"
         action = "keep"
       }
+{{- if (index $.Values "dcgm-exporter").extraDiscoveryRules }}
+{{ (index $.Values "dcgm-exporter").extraDiscoveryRules | indent 6 }}
+{{- end }}
     } // discovery.relabel "dcgm_exporter_pods"
 
     export "output" {

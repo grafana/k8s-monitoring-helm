@@ -99,6 +99,9 @@ declare "tempo_integration" {
       }
 
       {{ include "feature.integrations.commonDiscoveryRules" . | nindent 6 }}
+{{- if $.Values.tempo.extraDiscoveryRules }}
+{{ $.Values.tempo.extraDiscoveryRules | indent 6 }}
+{{- end }}
     } // discovery.relabel "tempo_pods"
 
     export "output" {

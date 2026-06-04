@@ -17,6 +17,30 @@ tests:
       - matchSnapshot:
           path: data["metrics.alloy"]
 
+  - it: should append extraDiscoveryRules to the discovery.relabel
+    set:
+      testing: {enabled: true}
+      cert-manager:
+        extraDiscoveryRules: |-
+          rule {
+            action = "labelmap"
+            regex  = "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_(.*)"
+          }
+        instances:
+          - name: cert-manager
+            labelSelectors:
+              app.kubernetes.io/name: cert-manager
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["metrics.alloy"]
+          pattern: |-
+            \s*  rule \{
+            \s*    action = "labelmap"
+            \s*    regex  = "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_\(\.\*\)"
+            \s*  \}
+
   - it: can be restricted to a namespace
     set:
       testing: {enabled: true}

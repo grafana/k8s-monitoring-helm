@@ -78,6 +78,9 @@ declare "alloy_integration" {
       }
 
       {{- include "feature.integrations.commonDiscoveryRules" . | nindent 6 }}
+{{- if $.Values.alloy.extraDiscoveryRules }}
+{{ $.Values.alloy.extraDiscoveryRules | indent 6 }}
+{{- end }}
     } // discovery.relabel "alloy_pods"
 
     export "output" {
