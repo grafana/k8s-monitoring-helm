@@ -38,6 +38,33 @@ their default allow lists:
 | [Node Exporter](https://github.com/prometheus/node_exporter)                 | Linux Kubernetes nodes    | [default-allow-lists/node-exporter.yaml](./default-allow-lists/node-exporter.yaml), [default-allow-lists/node-exporter-integration.yaml](./default-allow-lists/node-exporter-integration.yaml) |
 | [Windows Exporter](https://github.com/prometheus-community/windows_exporter) | Windows Kubernetes nodes  | [default-allow-lists/windows-exporter.yaml](./default-allow-lists/windows-exporter.yaml)                                                                                                       |
 
+### Collecting Linux host metrics with Alloy
+
+By default, Linux host metrics are collected by scraping a [Node Exporter](https://github.com/prometheus/node_exporter)
+deployment, discovered either through `telemetryServices.node-exporter` or through the `labelMatchers`/`namespace`
+settings. Alternatively, set `hostMetrics.linuxHosts.source: alloy` to have the assigned collector gather host metrics
+directly using Alloy's built-in [`prometheus.exporter.unix`](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.unix/)
+component. This does not require a Node Exporter deployment.
+
+When using `source: alloy`, the assigned collector must be a privileged DaemonSet that mounts the host filesystem.
+Apply the `linux-host-monitor` preset (which grants the required privileges and host mounts) together with the
+`daemonset` preset (which runs the collector on every node):
+
+```yaml
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+    source: alloy
+
+collectors:
+  alloy-metrics:
+    presets: [linux-host-monitor, daemonset]
+```
+
+> **Note:** The `nodeLabels` enrichment is not yet supported when `source: alloy`, because it relies on Kubernetes
+> pod and node discovery metadata that is not present when collecting metrics locally with `prometheus.exporter.unix`.
+
 ## Metrics tuning and allow lists
 
 For any metric source, you can adjust the amount of metrics being scraped and their labels to limit the number of metrics delivered to your destinations. Many of the metric sources have a default allow list. The allow list for a metric source is designed to return a useful, but minimal set of metrics for typical use cases. Some metrics sources have an integration allow list, which contains even more metrics for diving into the details of the source itself.
@@ -152,6 +179,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | linuxHosts.scheme | string | `"http"` | The scrape scheme for Linux host metrics. |
 | linuxHosts.scrapeInterval | string | `60s` | How frequently to scrape Linux host metrics. Overrides `global.scrapeInterval`. |
 | linuxHosts.scrapeTimeout | string | `10s` | The timeout for scraping Linux host metrics. Overrides `global.scrapeTimeout`. |
+| linuxHosts.source | string | `"node-exporter"` | How to collect Linux host metrics. "node-exporter" scrapes a Node Exporter deployment (discovered via telemetryServices or labelMatchers). "alloy" collects host metrics directly using `prometheus.exporter.unix` on the assigned collector, which must be a privileged DaemonSet (use the "linux-host-monitor" and "daemonset" collector presets) and does not require a Node Exporter deployment. Note: the `nodeLabels` enrichment is not yet supported when source is "alloy". |
 
 ### Node Labels
 
