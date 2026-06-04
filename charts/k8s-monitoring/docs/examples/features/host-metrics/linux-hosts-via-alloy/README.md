@@ -2,12 +2,14 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
+<!--alex disable host-hostess hostesses-hosts -->
 # Linux Host Metrics via Alloy
 
 This example demonstrates how to collect Linux host metrics directly with Alloy, using the built-in
 `prometheus.exporter.unix` component instead of scraping a separate Node Exporter deployment. Setting
 `hostMetrics.linuxHosts.source: alloy` requires the assigned collector to be a privileged DaemonSet that
-mounts the host filesystem, which is configured here with the `linux-host-monitor` collector preset.
+mounts the host filesystem, which is configured here with the `linux-host-monitor` and `daemonset` collector presets.
+<!--alex enable host-hostess hostesses-hosts -->
 
 ## Values
 

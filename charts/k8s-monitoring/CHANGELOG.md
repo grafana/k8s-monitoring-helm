@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-*   Add `hostMetrics.linuxHosts.source` (`node-exporter` (default) or `alloy`). With `source: alloy`, Linux host metrics are collected directly by the assigned collector using `prometheus.exporter.unix`, without requiring a Node Exporter deployment (`telemetryServices.node-exporter`). This requires the collector to be a privileged DaemonSet that mounts the host filesystem; a new `linux-host-monitor` collector preset grants the required privileges and host mounts, and is used together with the `daemonset` preset (`presets: [linux-host-monitor, daemonset]`). Note: the `nodeLabels` enrichment is not yet supported when `source: alloy` (#2660) (@petewall)
+*   Add `hostMetrics.linuxHosts.source` (`node-exporter` (default) or `alloy`). With `alloy`, Linux host metrics are collected directly by the assigned collector via `prometheus.exporter.unix`, requiring no Node Exporter deployment. This needs a privileged DaemonSet that mounts the host filesystem, configured with the new `presets: [linux-host-monitor, daemonset]`. The `nodeLabels` enrichment is not yet supported with `source: alloy`. (#2660) (@petewall)
 
 ## 4.1.4
 
