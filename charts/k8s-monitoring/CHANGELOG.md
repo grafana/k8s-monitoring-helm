@@ -1,13 +1,17 @@
 # Changelog
 
-## Unreleased
+## 4.2.0
+
+*   Add `hostMetrics.linuxHosts.source` (`node-exporter` (default) or `alloy`). With `alloy`, Linux host metrics are collected directly by the assigned collector via `prometheus.exporter.unix`, requiring no Node Exporter deployment. This needs a privileged DaemonSet that mounts the host filesystem, configured with the new `presets: [linux-host-monitor, daemonset]`. The `nodeLabels` enrichment is not yet supported with `source: alloy`. (#2660) (@petewall)
+
+## 4.1.x
 
 *   Require `labelMatchers` (rather than accepting a `namespace` alone) when connecting Cluster Metrics (kube-state-metrics), Host Metrics (Node Exporter, Windows Exporter, Kepler), or Cost Metrics (OpenCost) to an existing service that is not deployed via `telemetryServices`. Previously a namespace-only configuration rendered an empty `label = ""` selector that matched every pod in the namespace. (@petewall)
 *   Add a best-effort validator that uses Helm `lookup` to confirm the configured `labelMatchers` actually select running pods in the specified `namespace` for an existing kube-state-metrics, Node Exporter, Windows Exporter, Kepler, or OpenCost. The check is skipped during `helm template`/`--dry-run` (no cluster connection) and only runs when a namespace is set. (@petewall)
-*   Add a best-effort validator that checks (via Helm `lookup`) for an existing Node Exporter using the same port when deploying the bundled `telemetryServices.node-exporter`. If a port conflict is detected, the install fails with guidance to either skip the deployment and point Host Metrics at the existing Node Exporter, or deploy on a unique port. (@petewall)
 
 ## 4.1.4
 
+*   Add a best-effort validator that checks (via Helm `lookup`) for an existing Node Exporter using the same port when deploying the bundled `telemetryServices.node-exporter`. If a port conflict is detected, the install fails with guidance to either skip the deployment and point Host Metrics at the existing Node Exporter, or deploy on a unique port. (@petewall)
 *   Fix the Service Integrations feature silently rendering no integration modules when `integrations.collector` was left at its default empty string. The feature now relies on the same collector resolution as every other feature, so simply enabling integrations (e.g. `integrations.alloy`, `integrations.cert-manager`, `integrations.istio`) generates the expected Alloy modules without also having to set `integrations.collector` explicitly (#2625) (@petewall)
 *   Add `timeout` setting on the OTLP destination (@petewall)
 *   Fail rendering with a clear error when `profiling.enabled: true` is set but none of `profiling.ebpf.enabled`, `profiling.java.enabled`, or `profiling.pprof.enabled` are enabled, instead of silently producing a profiling feature that collects no data (#2620) (@petewall)

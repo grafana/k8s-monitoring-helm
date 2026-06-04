@@ -1,0 +1,36 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Host Metrics - Linux hosts via Alloy
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should render prometheus.exporter.unix when source is alloy
+    set:
+      testing: {enabled: true}
+      linuxHosts:
+        enabled: true
+        source: alloy
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should not render Node Exporter discovery when source is alloy
+    set:
+      testing: {enabled: true}
+      linuxHosts:
+        enabled: true
+        source: alloy
+    asserts:
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: discovery\.kubernetes "node_exporter"
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: clustering \{
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: prometheus\.exporter\.unix "node_exporter"
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: replacement = sys\.env\("NODE_NAME"\)
