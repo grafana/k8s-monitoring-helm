@@ -1,0 +1,165 @@
+// Feature: Host Metrics
+declare "host_metrics" {
+  argument "metrics_destinations" {
+    comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+  }
+
+  prometheus.exporter.unix "node_exporter" {
+    rootfs_path = "/host/root"
+    procfs_path = "/host/proc"
+    sysfs_path  = "/host/sys"
+  } // prometheus.exporter.unix "node_exporter"
+
+  discovery.relabel "node_exporter" {
+    targets = prometheus.exporter.unix.node_exporter.targets
+
+    // Set the instance label to the node name
+    rule {
+      target_label = "instance"
+      replacement = sys.env("NODE_NAME")
+    }
+
+    // Override the job label set by prometheus.exporter.unix to match the Node Exporter source
+    rule {
+      target_label = "job"
+      replacement = "integrations/node_exporter"
+    }
+
+    rule {
+      target_label = "source"
+      replacement = "kubernetes"
+    }
+  } // discovery.relabel "node_exporter"
+
+  prometheus.scrape "node_exporter" {
+    targets = discovery.relabel.node_exporter.output
+    job_name = "integrations/node_exporter"
+    scrape_interval = "60s"
+    scrape_timeout = "10s"
+    scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+    scrape_classic_histograms = false
+    scrape_native_histograms = false
+    convert_classic_histograms_to_nhcb = false
+    forward_to = [prometheus.relabel.node_exporter.receiver]
+  } // prometheus.scrape "node_exporter"
+
+  prometheus.relabel "node_exporter" {
+    max_cache_size = 100000
+    rule {
+      source_labels = ["__name__"]
+      regex = "up|scrape_samples_scraped|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|node_network_receive_bytes_total|node_network_receive_drop_total|node_network_transmit_bytes_total|node_network_transmit_drop_total|process_cpu_seconds_total|process_resident_memory_bytes"
+      action = "keep"
+    }
+    // Drop metrics for certain file systems
+    rule {
+      source_labels = ["__name__", "fstype"]
+      separator = "@"
+      regex = "node_filesystem.*@(ramfs|tmpfs)"
+      action = "drop"
+    }
+    forward_to = argument.metrics_destinations.value
+  } // prometheus.relabel "node_exporter"
+} // declare "host_metrics"
+host_metrics "feature" {
+  metrics_destinations = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+}
+
+
+
+
+
+
+
+
+
+
+// Self Reporting
+prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
+  set_collectors = ["textfile"]
+  textfile {
+    directory = "/etc/release-info"
+  }
+} // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
+
+discovery.relabel "kubernetes_monitoring_telemetry" {
+  targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
+  rule {
+    target_label = "instance"
+    action = "replace"
+    replacement = "k8smon"
+  }
+  rule {
+    target_label = "job"
+    action = "replace"
+    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  }
+} // discovery.relabel "kubernetes_monitoring_telemetry"
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+  scrape_interval = "60s"
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
+
+prometheus.relabel "kubernetes_monitoring_telemetry" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "grafana_kubernetes_monitoring_.*"
+    action = "keep"
+  }
+  forward_to = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+} // prometheus.relabel "kubernetes_monitoring_telemetry"
+
+
+
+
+
+// Destination: prometheus (prometheus)
+otelcol.exporter.prometheus "prometheus" {
+  add_metric_suffixes = true
+  resource_to_telemetry_conversion = false
+  forward_to = [prometheus.remote_write.prometheus.receiver]
+} // otelcol.exporter.prometheus "prometheus"
+
+prometheus.remote_write "prometheus" {
+  endpoint {
+    url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
+    headers = {
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    send_native_histograms = false
+
+    queue_config {
+      capacity = 10000
+      min_shards = 1
+      max_shards = 50
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "30ms"
+      max_backoff = "5s"
+      retry_on_http_429 = true
+      sample_age_limit = "0s"
+    }
+  }
+
+  wal {
+    truncate_frequency = "2h"
+    min_keepalive_time = "5m"
+    max_keepalive_time = "8h"
+  }
+  external_labels = {
+    "cluster" = "host-metrics-example-cluster",
+    "k8s_cluster_name" = "host-metrics-example-cluster",
+  }
+} // prometheus.remote_write "prometheus"
+
