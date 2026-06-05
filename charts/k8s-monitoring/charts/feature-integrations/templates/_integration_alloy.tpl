@@ -78,9 +78,6 @@ declare "alloy_integration" {
       }
 
       {{- include "feature.integrations.commonDiscoveryRules" . | nindent 6 }}
-{{- if $.Values.alloy.extraDiscoveryRules }}
-{{ $.Values.alloy.extraDiscoveryRules | indent 6 }}
-{{- end }}
     } // discovery.relabel "alloy_pods"
 
     export "output" {
@@ -279,8 +276,19 @@ alloy_integration_discovery {{ include "helper.alloy_name" .name | quote }} {
   {{- end }}
 }
 
-alloy_integration_scrape {{ include "helper.alloy_name" .name | quote }} {
+{{- if .extraDiscoveryRules }}
+discovery.relabel {{ printf "%s_extra" (include "helper.alloy_name" .name) | quote }} {
   targets = alloy_integration_discovery.{{ include "helper.alloy_name" .name }}.output
+{{ .extraDiscoveryRules | indent 2 }}
+}
+{{- end }}
+
+alloy_integration_scrape {{ include "helper.alloy_name" .name | quote }} {
+{{- if .extraDiscoveryRules }}
+  targets = discovery.relabel.{{ printf "%s_extra" (include "helper.alloy_name" .name) }}.output
+{{- else }}
+  targets = alloy_integration_discovery.{{ include "helper.alloy_name" .name }}.output
+{{- end }}
   job_label = {{ .jobLabel | quote }}
   clustering = true
   {{- if $metricAllowList }}

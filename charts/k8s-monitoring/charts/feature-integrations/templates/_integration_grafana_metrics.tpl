@@ -92,9 +92,6 @@ declare "grafana_integration" {
       }
 
       {{ include "feature.integrations.commonDiscoveryRules" . | nindent 6 }}
-{{- if $.Values.grafana.extraDiscoveryRules }}
-{{ $.Values.grafana.extraDiscoveryRules | indent 6 }}
-{{- end }}
     } // discovery.relabel "grafana_pods"
 
     export "output" {
@@ -237,8 +234,19 @@ grafana_integration_discovery {{ include "helper.alloy_name" .name | quote }} {
   port_name = {{ .metrics.portName | quote }}
 }
 
-grafana_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
+{{- if .extraDiscoveryRules }}
+discovery.relabel {{ printf "%s_extra" (include "helper.alloy_name" .name) | quote }} {
   targets = grafana_integration_discovery.{{ include "helper.alloy_name" .name }}.output
+{{ .extraDiscoveryRules | indent 2 }}
+}
+{{- end }}
+
+grafana_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
+{{- if .extraDiscoveryRules }}
+  targets = discovery.relabel.{{ printf "%s_extra" (include "helper.alloy_name" .name) }}.output
+{{- else }}
+  targets = grafana_integration_discovery.{{ include "helper.alloy_name" .name }}.output
+{{- end }}
   job_label = "integrations/grafana"
   clustering = true
 {{- if $metricAllowList }}

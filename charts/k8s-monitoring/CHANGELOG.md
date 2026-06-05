@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-*   Add `extraDiscoveryRules` to the Service Integrations feature, allowing pre-scrape `discovery.relabel` rules — e.g. a `labelmap` from pod annotations — to enrich an integration's scraped metrics with custom labels while the `__meta_*` discovery labels are still present. Available on all nine Kubernetes service-discovery integrations; Istio sets it per sidecar and istiod. (@bradleypettit)
+*   Add per-instance `extraDiscoveryRules` to the Service Integrations feature, allowing pre-scrape `discovery.relabel` rules — e.g. a `labelmap` from pod annotations — to enrich an integration's scraped metrics with custom labels while the `__meta_*` discovery labels are still present. Set on each integration instance (the targets it discovers are unique); available on all nine Kubernetes service-discovery integrations, with Istio set per sidecar and istiod. (@bradleypettit)
 *   Add a best-effort validator that checks (via Helm `lookup`) for an existing Node Exporter using the same port when deploying the bundled `telemetryServices.node-exporter`. If a port conflict is detected, the install fails with guidance to either skip the deployment and point Host Metrics at the existing Node Exporter, or deploy on a unique port. (@petewall)
 
 ## 4.1.4

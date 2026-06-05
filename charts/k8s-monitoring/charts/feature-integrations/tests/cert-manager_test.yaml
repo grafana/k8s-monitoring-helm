@@ -21,15 +21,15 @@ tests:
     set:
       testing: {enabled: true}
       cert-manager:
-        extraDiscoveryRules: |-
-          rule {
-            action = "labelmap"
-            regex  = "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_(.*)"
-          }
         instances:
           - name: cert-manager
             labelSelectors:
               app.kubernetes.io/name: cert-manager
+            extraDiscoveryRules: |-
+              rule {
+                action = "labelmap"
+                regex  = "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_(.*)"
+              }
     asserts:
       - isKind:
           of: ConfigMap

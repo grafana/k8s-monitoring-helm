@@ -99,9 +99,6 @@ declare "mimir_integration" {
       }
 
       {{- include "feature.integrations.commonDiscoveryRules" . | nindent 6 }}
-{{- if $.Values.mimir.extraDiscoveryRules }}
-{{ $.Values.mimir.extraDiscoveryRules | indent 6 }}
-{{- end }}
     } // discovery.relabel "mimir_pods"
 
     export "output" {
@@ -253,8 +250,19 @@ mimir_integration_discovery {{ include "helper.alloy_name" .name | quote }} {
   port_name = {{ .metrics.portName | quote }}
 }
 
-mimir_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
+{{- if .extraDiscoveryRules }}
+discovery.relabel {{ printf "%s_extra" (include "helper.alloy_name" .name) | quote }} {
   targets = mimir_integration_discovery.{{ include "helper.alloy_name" .name }}.output
+{{ .extraDiscoveryRules | indent 2 }}
+}
+{{- end }}
+
+mimir_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
+{{- if .extraDiscoveryRules }}
+  targets = discovery.relabel.{{ printf "%s_extra" (include "helper.alloy_name" .name) }}.output
+{{- else }}
+  targets = mimir_integration_discovery.{{ include "helper.alloy_name" .name }}.output
+{{- end }}
   job_label = "integrations/mimir"
   clustering = true
 {{- if $metricAllowList }}

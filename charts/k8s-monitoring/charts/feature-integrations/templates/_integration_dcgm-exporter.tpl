@@ -73,9 +73,6 @@ declare "dcgm_exporter_integration" {
         regex = coalesce(argument.port_name.value, "metrics") + "@Running@true@false"
         action = "keep"
       }
-{{- if (index $.Values "dcgm-exporter").extraDiscoveryRules }}
-{{ (index $.Values "dcgm-exporter").extraDiscoveryRules | indent 6 }}
-{{- end }}
     } // discovery.relabel "dcgm_exporter_pods"
 
     export "output" {
@@ -275,8 +272,19 @@ dcgm_exporter_integration_discovery {{ include "helper.alloy_name" .name | quote
 {{- end }}
 }
 
-dcgm_exporter_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
+{{- if .extraDiscoveryRules }}
+discovery.relabel {{ printf "%s_extra" (include "helper.alloy_name" .name) | quote }} {
   targets = dcgm_exporter_integration_discovery.{{ include "helper.alloy_name" .name }}.output
+{{ .extraDiscoveryRules | indent 2 }}
+}
+{{- end }}
+
+dcgm_exporter_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
+{{- if .extraDiscoveryRules }}
+  targets = discovery.relabel.{{ printf "%s_extra" (include "helper.alloy_name" .name) }}.output
+{{- else }}
+  targets = dcgm_exporter_integration_discovery.{{ include "helper.alloy_name" .name }}.output
+{{- end }}
   job_label = {{ .jobLabel | quote }}
   clustering = true
 {{- if $metricAllowList }}

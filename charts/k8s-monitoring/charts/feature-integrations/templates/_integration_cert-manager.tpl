@@ -138,8 +138,8 @@ discovery.relabel {{ include "helper.alloy_name" .name | quote }} {
     replacement = "kubernetes"
     target_label = "source"
   }
-{{- if (index $.Values "cert-manager").extraDiscoveryRules }}
-{{ (index $.Values "cert-manager").extraDiscoveryRules | indent 2 }}
+{{- if .extraDiscoveryRules }}
+{{ .extraDiscoveryRules | indent 2 }}
 {{- end }}
 }
 

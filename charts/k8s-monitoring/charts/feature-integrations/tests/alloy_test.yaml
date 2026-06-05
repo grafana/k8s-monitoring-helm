@@ -66,34 +66,30 @@ tests:
       - matchSnapshot:
           path: data["metrics.alloy"]
 
-  - it: should inject extraDiscoveryRules into the discovery.relabel
+  - it: should inject per-instance extraDiscoveryRules into a chained discovery.relabel
     set:
       testing: {enabled: true}
       alloy:
-        extraDiscoveryRules: |-
-          rule {
-            action = "labelmap"
-            regex  = "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_(.*)"
-          }
         instances:
           - name: alloy-metrics
             labelSelectors:
               app.kubernetes.io/name: alloy-metrics
+            extraDiscoveryRules: |-
+              rule {
+                action = "labelmap"
+                regex  = "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_(.*)"
+              }
     asserts:
       - isKind:
           of: ConfigMap
-      # The rule is appended into the shared discovery.relabel; no separate wrapper component is created.
+      # A per-instance discovery.relabel wrapper is created, consuming the discovery output and holding the extra rule
       - matchRegex:
           path: data["metrics.alloy"]
-          pattern: |-
-            \s*  rule \{
-            \s*    action = "labelmap"
-            \s*    regex  = "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_\(\.\*\)"
-            \s*  \}
-      # The scrape still consumes the discovery component directly (no wrapper repoint)
+          pattern: (?s)discovery\.relabel "alloy_metrics_extra" \{\s*targets = alloy_integration_discovery\.alloy_metrics\.output.*?action = "labelmap"
+      # The scrape repoints to the wrapper component
       - matchRegex:
           path: data["metrics.alloy"]
-          pattern: \s+targets = alloy_integration_discovery\.alloy_metrics\.output
+          pattern: \s+targets = discovery\.relabel\.alloy_metrics_extra\.output
 
   - it: should not inject discovery rules when extraDiscoveryRules is unset
     set:
@@ -109,6 +105,14 @@ tests:
       - notMatchRegex:
           path: data["metrics.alloy"]
           pattern: action = "labelmap"
+      # No wrapper component is created
+      - notMatchRegex:
+          path: data["metrics.alloy"]
+          pattern: discovery\.relabel "alloy_metrics_extra"
+      # The scrape consumes the discovery component directly
+      - matchRegex:
+          path: data["metrics.alloy"]
+          pattern: \s+targets = alloy_integration_discovery\.alloy_metrics\.output
 
   - it: should add the attach_metadata block to the discovery.kubernetes
     set:
