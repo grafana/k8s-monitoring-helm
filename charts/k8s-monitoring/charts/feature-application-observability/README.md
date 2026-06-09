@@ -20,6 +20,35 @@ applicationObservability:
     ...
 ```
 
+## Service name and namespace detection
+
+By default, this feature relies on the application's OpenTelemetry SDK to set `service.name` and `service.namespace`.
+
+Set `alignServiceNameWithOTelOperator: true` to opt in to having this feature fill those values in (without overwriting
+anything the application already reported) following the
+[OpenTelemetry Operator service name conventions](https://opentelemetry.io/docs/specs/semconv/non-normative/k8s-attributes/).
+These are also what Grafana Beyla uses, so enabling this flag makes `service.name` consistent across metrics, logs,
+traces, and profiles from the same workload. Enabling the flag also automatically enables
+`processors.k8sattributes.otelAnnotations`, which translates `resource.opentelemetry.io/*` pod annotations into
+resource attributes.
+
+When the flag is enabled, `service.name` is set to the first value found from the following ordered list:
+
+1.  The `service.name` resource attribute reported by the application
+2.  The `resource.opentelemetry.io/service.name` pod annotation
+3.  The `app.kubernetes.io/instance` pod label
+4.  The `app.kubernetes.io/name` pod label
+5.  The name of the workload that owns the pod (Deployment, StatefulSet, DaemonSet, CronJob, Job, ...)
+6.  The pod name
+
+`service.namespace` is set to the first value found from: the `service.namespace` resource attribute reported by the
+application, then the `resource.opentelemetry.io/service.namespace` pod annotation, then the pod namespace.
+
+Note: OpenTelemetry SDKs that are not configured with a service name report `unknown_service:<language>`. Because that
+counts as a reported value, the fallback list does not apply to it.
+
+To pin a specific service name for a workload, set the `resource.opentelemetry.io/service.name` annotation on the pod.
+
 ## Testing
 
 This chart contains unit tests to verify the generated configuration. The hidden value `deployAsConfigMap` will render
@@ -48,6 +77,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 <!--alex disable host-hostess-->
 ## Values
+
+### General
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| alignServiceNameWithOTelOperator | bool | `false` | Align the `service.name` and `service.namespace` resource attributes with the [OpenTelemetry Operator service name conventions](https://opentelemetry.io/docs/specs/semconv/non-normative/k8s-attributes/) (which is what Grafana Beyla uses) when the application has not reported them itself. When enabled, the detection chain becomes: pod annotation `resource.opentelemetry.io/service.name` → pod label `app.kubernetes.io/instance` → pod label `app.kubernetes.io/name` → owner workload name (Deployment, StatefulSet, etc.) → pod name. Enabling this also enables `processors.k8sattributes.otelAnnotations`. |
 
 ### Connectors: Grafana Cloud Host Info
 
@@ -148,7 +183,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | processors.k8sattributes.filters.ownNode | bool | `false` | Only extract Kubernetes attributes for telemetry data coming from the same node as this Alloy instance. |
 | processors.k8sattributes.labels | list | `[]` | Kubernetes labels to extract and add to the attributes of the received telemetry data in the form of a list of otelcol.processor.k8sattributes extract > label blocks. See the [Alloy documentation](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.k8sattributes/#label-extract) for details on how to configure label blocks. |
 | processors.k8sattributes.metadata | list | `["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time"]` | Kubernetes metadata to extract and add to the attributes of the received telemetry data. |
-| processors.k8sattributes.otelAnnotations | bool | `false` | Whether to automatically set the recommended OpenTelemetry [resource attributes](https://opentelemetry.io/docs/specs/semconv/non-normative/k8s-attributes/). |
+| processors.k8sattributes.otelAnnotations | bool | `false` | Whether to automatically set the recommended OpenTelemetry [resource attributes](https://opentelemetry.io/docs/specs/semconv/non-normative/k8s-attributes/). This translates pod annotations like `resource.opentelemetry.io/service.name` into resource attributes. Automatically enabled when `alignServiceNameWithOTelOperator` is true. |
 | processors.k8sattributes.passthrough | bool | `false` | Pass through signals as-is, only adding a `k8s.pod.ip` resource attribute. |
 | processors.k8sattributes.podAssociation | list | `[{"from":"resource_attribute","name":"k8s.pod.ip"},{"from":"resource_attribute","name":"k8s.pod.uid"},{"from":"connection"}]` | Defines the rules on how to associate logs/traces/metrics to Pods. |
 

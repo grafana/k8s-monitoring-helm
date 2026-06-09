@@ -88,6 +88,15 @@ annotations:
 # @section -- Volume Log Gathering
 onlyGatherNewLogLines: true
 
+# -- Align the `service_name` label with the
+# [OpenTelemetry Operator service name conventions](https://opentelemetry.io/docs/specs/semconv/non-normative/k8s-attributes/)
+# (which is what Grafana Beyla uses). When enabled, the detection chain becomes:
+# pod annotation `resource.opentelemetry.io/service.name` → pod label `app.kubernetes.io/instance` → pod label
+# `app.kubernetes.io/name` → owner workload name (Deployment, StatefulSet, etc.) → pod name → container name.
+# When disabled, the previous chain is used: annotation → pod label `app.kubernetes.io/name` → container name.
+# @section -- Log Processing
+alignServiceNameWithOTelOperator: false
+
 # -- Default parsing format if it cannot be determined from container UID. Options are `null`, `cri`, or `docker`.
 # @section -- Log Processing
 defaultLogFormat: cri

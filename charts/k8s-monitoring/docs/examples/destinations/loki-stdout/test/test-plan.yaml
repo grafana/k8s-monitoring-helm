@@ -46,10 +46,10 @@ tests:
             - query: sum(count_over_time({cluster="$CLUSTER", namespace="default", app_kubernetes_io_name="alloy-operator"}[1h]))
               type: logql
 
-            # Pod logs from production namespace come through
-            - query: sum(count_over_time({cluster="$CLUSTER", namespace="production", service_name="busybox"}[1h]))
+            # Pod logs from production namespace come through (service_name comes from the Deployment name)
+            - query: sum(count_over_time({cluster="$CLUSTER", namespace="production", service_name="prod-pods"}[1h]))
               type: logql
 
             # Pod logs from production namespace are also logged by alloy-logs
-            - query: sum(count_over_time({cluster="loki-stdout-destination-test", namespace="default", service_name="alloy-logs"}[1h] |~ "loki.echo.lokistdout" |~ "entry=\"level=ERROR Something went wrong\"" |~ "namespace=\\\\\"production\\\\\""))
+            - query: sum(count_over_time({cluster="loki-stdout-destination-test", namespace="default", service_name="k8smon-alloy-logs"}[1h] |~ "loki.echo.lokistdout" |~ "entry=\"level=ERROR Something went wrong\"" |~ "namespace=\\\\\"production\\\\\""))
               type: logql

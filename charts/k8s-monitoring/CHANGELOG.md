@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+*   Add the `alignServiceNameWithOTelOperator` opt-in flag (default `false`) to the Pod Logs (Loki), Pod Logs (OpenTelemetry),
+    and Application Observability features. When enabled, the `service.name` detection chain follows the
+    [OpenTelemetry Operator service name conventions](https://opentelemetry.io/docs/specs/semconv/non-normative/k8s-attributes/),
+    which is what Grafana Beyla uses: `resource.opentelemetry.io/service.name` pod annotation → `app.kubernetes.io/instance`
+    pod label → `app.kubernetes.io/name` pod label → owner workload name (Deployment name is resolved for ReplicaSet-owned
+    pods) → pod name → container name. When the flag is set on the Application Observability feature, the
+    `processors.k8sattributes.otelAnnotations` setting is also enabled automatically. This makes `service.name` consistent
+    across metrics, logs, traces, and profiles for the same workload (#2547) (@petewall)
+*   Extend the Profiling feature (eBPF, Java, pprof) `service_name` detection chain with the owner workload name (with
+    the Deployment name resolved for ReplicaSet-owned pods) and the pod name as fallbacks before the container name.
+    This brings profile `service_name` in line with the same OpenTelemetry Operator conventions, so profiles correlate
+    with Beyla-produced metrics out of the box (#2547) (@petewall)
+
 ## 4.2.0
 
 *   Add `hostMetrics.linuxHosts.source` (`node-exporter` (default) or `alloy`). With `alloy`, Linux host metrics are collected directly by the assigned collector via `prometheus.exporter.unix`, requiring no Node Exporter deployment. This needs a privileged DaemonSet that mounts the host filesystem, configured with the new `presets: [linux-host-monitor, daemonset]`. The `nodeLabels` enrichment is not yet supported with `source: alloy`. (#2660) (@petewall)

@@ -22,6 +22,35 @@ applicationObservability:
     ...
 ```
 
+## Service name and namespace detection
+
+By default, this feature relies on the application's OpenTelemetry SDK to set `service.name` and `service.namespace`.
+
+Set `alignServiceNameWithOTelOperator: true` to opt in to having this feature fill those values in (without overwriting
+anything the application already reported) following the
+[OpenTelemetry Operator service name conventions](https://opentelemetry.io/docs/specs/semconv/non-normative/k8s-attributes/).
+These are also what Grafana Beyla uses, so enabling this flag makes `service.name` consistent across metrics, logs,
+traces, and profiles from the same workload. Enabling the flag also automatically enables
+`processors.k8sattributes.otelAnnotations`, which translates `resource.opentelemetry.io/*` pod annotations into
+resource attributes.
+
+When the flag is enabled, `service.name` is set to the first value found from the following ordered list:
+
+1.  The `service.name` resource attribute reported by the application
+2.  The `resource.opentelemetry.io/service.name` pod annotation
+3.  The `app.kubernetes.io/instance` pod label
+4.  The `app.kubernetes.io/name` pod label
+5.  The name of the workload that owns the pod (Deployment, StatefulSet, DaemonSet, CronJob, Job, ...)
+6.  The pod name
+
+`service.namespace` is set to the first value found from: the `service.namespace` resource attribute reported by the
+application, then the `resource.opentelemetry.io/service.namespace` pod annotation, then the pod namespace.
+
+Note: OpenTelemetry SDKs that are not configured with a service name report `unknown_service:<language>`. Because that
+counts as a reported value, the fallback list does not apply to it.
+
+To pin a specific service name for a workload, set the `resource.opentelemetry.io/service.name` annotation on the pod.
+
 ## Testing
 
 This chart contains unit tests to verify the generated configuration. The hidden value `deployAsConfigMap` will render
