@@ -4,6 +4,10 @@
 -->
 # Metric Enrichment
 
+**DEPRECATED**: The `metricEnrichment` option on the Prometheus destination is deprecated. Please use the
+`kubernetesEnrichment` data processor instead, which supports labels and annotations across metrics, logs, traces, and
+profiles.
+
 This example shows how to use the `prometheus.enrich` component to attach labels to metrics from other sources.
 In this example, we get the list of pods, extract the `color` label that's on the namespace, then combine that with any
 metrics that have both `namespace` and `pod` already set. This is all done in a custom destination, which then forwards

@@ -11,6 +11,7 @@
   {{- if not (has $processor.type $types) }}
     {{- fail (printf "Processor %q has unknown type %q. Known processor types: %v" $processorName $processor.type $types) }}
   {{- end }}
+  {{- include (printf "dataProcessors.%s.validate" $processor.type) (dict "processor" $processor "processorName" $processorName) }}
 {{- end }}
 {{- end }}
 
@@ -45,4 +46,10 @@
 {{- $featureValues := default dict (get .root.Values .featureKey) }}
 {{- $chain := default list (dig "dataProcessors" list $featureValues) }}
 {{- include "dataProcessors.validate.featureChain" (dict "Values" .root.Values "featureName" .featureName "processorNames" $chain "type" .type "ecosystem" .ecosystem) }}
+{{- /* Per-type feature validation hook. Runs after featureChain, so every name in the
+       chain is known to exist and support this (type, ecosystem). */}}
+{{- range $procName := $chain }}
+  {{- $processor := get $.root.Values.dataProcessors $procName }}
+  {{- include (printf "dataProcessors.%s.validate.feature" $processor.type) (dict "root" $.root "featureKey" $.featureKey "featureName" $.featureName "processorName" $procName "processor" $processor "type" $.type "ecosystem" $.ecosystem) }}
+{{- end }}
 {{- end }}

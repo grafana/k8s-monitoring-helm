@@ -1,5 +1,13 @@
 {{- define "secrets.list.custom-dataProcessor" }}{{ end -}}
 
+{{- /* Per-type validation hooks. The custom processor has nothing extra to validate. */}}
+{{- define "dataProcessors.custom.validate" }}{{ end -}}
+{{- define "dataProcessors.custom.validate.feature" }}{{ end -}}
+
+{{- /* Per-collector shared components hook. The custom processor renders everything inside
+       its per-(type, ecosystem) config blocks, so there is nothing shared to render. */}}
+{{- define "dataProcessors.custom.alloy.collectorComponents" }}{{ end -}}
+
 {{- /* Per-(type, ecosystem) support flags. */}}
 {{- define "dataProcessors.custom.supports_metrics_prometheus" }}{{ dig "metrics" "prometheus" "enabled" false . }}{{ end -}}
 {{- define "dataProcessors.custom.supports_metrics_otlp" }}{{ dig "metrics" "otlp" "enabled" false . }}{{ end -}}
