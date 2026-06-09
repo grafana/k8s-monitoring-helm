@@ -49,11 +49,24 @@ otelcol.processor.k8sattributes "{{ .name | default "default" }}" {
   }
   {{- end }}
   extract {
-{{- if .Values.processors.k8sattributes.otelAnnotations }}
-    otel_annotations = {{ .Values.processors.k8sattributes.otelAnnotations }}
+{{- if or .Values.processors.k8sattributes.otelAnnotations .Values.alignServiceNameWithOTelOperator }}
+    otel_annotations = true
 {{- end }}
 {{- if .Values.processors.k8sattributes.metadata }}
     metadata = {{ .Values.processors.k8sattributes.metadata | toJson }}
+{{- end }}
+{{- if .Values.alignServiceNameWithOTelOperator }}
+    // Extracted for service.name detection. Deleted in the transform processor.
+    label {
+      tag_name = "app.kubernetes.io/instance"
+      key = "app.kubernetes.io/instance"
+      from = "pod"
+    }
+    label {
+      tag_name = "app.kubernetes.io/name"
+      key = "app.kubernetes.io/name"
+      from = "pod"
+    }
 {{- end }}
 {{- range .Values.processors.k8sattributes.labels }}
     label {

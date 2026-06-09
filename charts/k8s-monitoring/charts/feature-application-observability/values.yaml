@@ -4,6 +4,15 @@ global:
   # @section -- Global Settings
   namespaceOverride: ""
 
+# -- Align the `service.name` and `service.namespace` resource attributes with the
+# [OpenTelemetry Operator service name conventions](https://opentelemetry.io/docs/specs/semconv/non-normative/k8s-attributes/)
+# (which is what Grafana Beyla uses) when the application has not reported them itself. When enabled, the detection
+# chain becomes: pod annotation `resource.opentelemetry.io/service.name` → pod label `app.kubernetes.io/instance` →
+# pod label `app.kubernetes.io/name` → owner workload name (Deployment, StatefulSet, etc.) → pod name. Enabling this
+# also enables `processors.k8sattributes.otelAnnotations`.
+# @section -- General
+alignServiceNameWithOTelOperator: false
+
 receivers:
   otlp:
     # The OTLP gRPC receiver configuration.
@@ -212,6 +221,8 @@ processors:
 
     # -- Whether to automatically set the recommended OpenTelemetry
     # [resource attributes](https://opentelemetry.io/docs/specs/semconv/non-normative/k8s-attributes/).
+    # This translates pod annotations like `resource.opentelemetry.io/service.name` into resource attributes.
+    # Automatically enabled when `alignServiceNameWithOTelOperator` is true.
     # @section -- Processors: K8s Attributes
     otelAnnotations: false
 

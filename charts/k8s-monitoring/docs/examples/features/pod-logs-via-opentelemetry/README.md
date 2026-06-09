@@ -30,6 +30,7 @@ destinations:
 
 podLogsViaOpenTelemetry:
   enabled: true
+  alignServiceNameWithOTelOperator: true
   namespaces:
     - development
     - production
