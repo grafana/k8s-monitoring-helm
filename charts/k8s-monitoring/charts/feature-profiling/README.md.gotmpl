@@ -16,6 +16,32 @@ profiling:
   enabled: true
 ```
 
+## Service name and namespace detection
+
+This feature sets the `service_name` and `service_namespace` labels on collected profiles, following the
+[OpenTelemetry Operator service name conventions](https://opentelemetry.io/docs/specs/semconv/non-normative/k8s-attributes/).
+This matches the behavior of Grafana Beyla, so telemetry from the same workload correlates across metrics, logs,
+traces, and profiles.
+
+`service_name` is set to the first value found from the following ordered list:
+
+1.  The `resource.opentelemetry.io/service.name` pod annotation
+2.  The `app.kubernetes.io/instance` pod label
+3.  The `app.kubernetes.io/name` pod label
+4.  The name of the workload that owns the pod (Deployment, StatefulSet, DaemonSet, CronJob, Job, ...). For pods owned
+    by a Deployment via a ReplicaSet, the Deployment name is used.
+5.  The pod name
+6.  The container name
+
+`service_namespace` is set to the first value found from the following ordered list:
+
+1.  The `resource.opentelemetry.io/service.namespace` pod annotation
+2.  The pod namespace
+
+To pin a specific service name for a workload, for example, to preserve the value used by previous versions of this
+chart, set the `resource.opentelemetry.io/service.name` annotation on the pod. It takes the highest precedence in
+every telemetry path.
+
 ## Testing
 
 This chart contains unit tests to verify the generated configuration. The hidden value `deployAsConfigMap` will render
