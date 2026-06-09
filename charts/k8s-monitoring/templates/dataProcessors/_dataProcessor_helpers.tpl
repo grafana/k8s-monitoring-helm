@@ -25,3 +25,21 @@
   {{- $matches | toYaml | indent 0 }}
 {{- end }}
 {{- end }}
+
+{{/* Renders chart-owned components that are shared across all of a processor's pipeline
+     slices on a collector (e.g. a Kubernetes discovery used by every (type, ecosystem)
+     slice). Called once per collector after the feature modules and pipeline slices are
+     assembled; `config` is the assembled Alloy config so each processor type's hook can
+     render its shared components only when something in the config references them.
+
+     Inputs:
+       Values (map)    — chart values (for .Values.dataProcessors)
+       config (string) — the collector's assembled Alloy config */}}
+{{- define "dataProcessors.alloy.collectorComponents" }}
+{{- $types := include "dataProcessors.types" . | fromYamlArray }}
+{{- range $processorName, $processor := default dict .Values.dataProcessors }}
+  {{- if has $processor.type $types }}
+    {{- include (printf "dataProcessors.%s.alloy.collectorComponents" $processor.type) (dict "processor" $processor "processorName" $processorName "config" $.config) }}
+  {{- end }}
+{{- end }}
+{{- end }}

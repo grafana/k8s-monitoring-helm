@@ -5,9 +5,10 @@ They can rewrite labels, drop fields, redact values, batch records, or otherwise
 opt in to a chain of processors; the chart renders the processor pipeline and wires it between the feature and its
 destinations.
 
-| Type     | Description                                                                       | Docs                |
-|----------|-----------------------------------------------------------------------------------|---------------------|
-| `custom` | Arbitrary Alloy block authored by the user. Supports any (type, ecosystem) tuple. | [Docs](./custom.md) |
+| Type                   | Description                                                                                                | Docs                              |
+|------------------------|------------------------------------------------------------------------------------------------------------|-----------------------------------|
+| `custom`               | Arbitrary Alloy block authored by the user. Supports any (type, ecosystem) tuple.                          | [Docs](./custom.md)               |
+| `kubernetesEnrichment` | Copies Kubernetes namespace/pod labels and annotations onto telemetry. Supports any (type, ecosystem) tuple. | [Docs](./kubernetesEnrichment.md) |
 
 ## Configuration
 
