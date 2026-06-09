@@ -76,3 +76,7 @@
 {{- define "pod_annotation" -}}
 {{ printf "__meta_kubernetes_pod_annotation_%s" (include "escape_label" .) }}
 {{- end }}
+
+{{- define "namespace_annotation" -}}
+{{ printf "__meta_kubernetes_namespace_annotation_%s" (include "escape_label" .) }}
+{{- end }}
