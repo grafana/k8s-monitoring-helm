@@ -68,3 +68,41 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["module.alloy"]
+
+  - it: reads the app label fallback from the configured label attribute
+    set:
+      testing: {enabled: true}
+      labels:
+        app_kubernetes_io_name: app.kubernetes.io/instance
+        my_app: app.kubernetes.io/name
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '`set\(attributes\["service\.name"\], attributes\["my_app"\]\) where \(attributes\["service\.name"\] == nil or attributes\["service\.name"\] == ""\) and attributes\["my_app"\] != nil and attributes\["my_app"\] != ""`'
+
+  - it: omits the app label fallback when no label maps to app.kubernetes.io/name
+    set:
+      testing: {enabled: true}
+      labels:
+        app_kubernetes_io_name: app.kubernetes.io/instance
+    asserts:
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'set\(attributes\["service\.name"\], attributes\["app'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '(?s)delete_key\(attributes, "logs\.grafana\.com/pods\.enabled"\)`,\s+`set\(attributes\["service\.name"\], attributes\["k8s\.deployment\.name"\]\)'
+
+  - it: does not fall back to replicaset or container names
+    set:
+      testing: {enabled: true}
+    asserts:
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'set\(attributes\["service\.name"\], attributes\["k8s\.replicaset\.name"\]\)'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'set\(attributes\["service\.name"\], attributes\["k8s\.container\.name"\]\)'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '`set\(attributes\["service\.name"\], attributes\["app_kubernetes_io_name"\]\) where \(attributes\["service\.name"\] == nil or attributes\["service\.name"\] == ""\) and attributes\["app_kubernetes_io_name"\] != nil and attributes\["app_kubernetes_io_name"\] != ""`'
