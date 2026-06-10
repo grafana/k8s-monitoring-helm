@@ -1,0 +1,62 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Application Observability - Service attribute fallback
+templates:
+  - test/configmap.yaml
+tests:
+  - it: does not render the fallback or the internal label extraction by default
+    set:
+      testing: {enabled: true}
+      receivers:
+        otlp:
+          grpc:
+            enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'k8s\.grafana\.com/internal\.app-name'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'set\(attributes\["service\.name"\]'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'set\(attributes\["service\.namespace"\]'
+
+  - it: extracts the app label into the internal attribute when the flag is on
+    set:
+      testing: {enabled: true}
+      receivers:
+        otlp:
+          grpc:
+            enabled: true
+      processors:
+        transform:
+          setServiceAttributesFromKubernetes: true
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '(?s)extract \{.*label \{[^}]*tag_name = "k8s\.grafana\.com/internal\.app-name"[^}]*key = "app\.kubernetes\.io/name"[^}]*from = "pod"'
+
+  - it: keeps user k8sattributes labels alongside the internal extraction
+    set:
+      testing: {enabled: true}
+      receivers:
+        otlp:
+          grpc:
+            enabled: true
+      processors:
+        transform:
+          setServiceAttributesFromKubernetes: true
+        k8sattributes:
+          labels:
+            - tag_name: my.team
+              key: team
+              from: pod
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'tag_name = "my\.team"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'tag_name = "k8s\.grafana\.com/internal\.app-name"'
