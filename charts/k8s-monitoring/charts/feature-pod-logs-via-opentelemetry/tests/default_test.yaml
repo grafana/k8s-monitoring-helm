@@ -72,6 +72,9 @@ tests:
   - it: reads the app label fallback from the configured label attribute
     set:
       testing: {enabled: true}
+      # labels is iterated alphabetically; app_kubernetes_io_name is remapped away
+      # (Helm merges maps, it cannot be removed), so my_app is the first key whose
+      # value is app.kubernetes.io/name.
       labels:
         app_kubernetes_io_name: app.kubernetes.io/instance
         my_app: app.kubernetes.io/name

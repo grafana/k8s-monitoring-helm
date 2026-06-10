@@ -1,4 +1,6 @@
 {{- define "feature.podLogsViaOpenTelemetry.module" }}
+{{- /* Find the attribute key whose Kubernetes label value is app.kubernetes.io/name.
+       Helm iterates maps in alphabetical key order; the first match wins. */}}
 {{- $appLabelAttribute := "" }}
 {{- range $attribute, $label := .Values.labels }}
 {{- if and (not $appLabelAttribute) (eq $label "app.kubernetes.io/name") }}
