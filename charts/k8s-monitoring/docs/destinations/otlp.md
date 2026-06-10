@@ -255,3 +255,13 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | tls.keyFile | string | `""` | The client key for the server (as a path to a file). |
 | tls.keyFrom | string | `""` | Raw config for accessing the client key. |
 <!-- textlint-enable terminology -->
+
+## Service attribute promotion precedence
+
+The `processors.transform.logs.logToResource` and `processors.transform.metrics.datapointToResource`
+maps only copy into a resource attribute when it is missing or empty. When
+`applicationObservability.processors.transform.setServiceAttributesFromKubernetes` is enabled,
+`service.name` and `service.namespace` are filled from Kubernetes metadata in the Application
+Observability pipeline before telemetry reaches this destination, so a log-record or metric-datapoint
+scoped `service_name`/`service_namespace` attribute will not override the Kubernetes-derived value for
+that telemetry.
