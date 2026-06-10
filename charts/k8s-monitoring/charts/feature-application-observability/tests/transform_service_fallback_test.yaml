@@ -116,7 +116,10 @@ tests:
     asserts:
       - matchRegex:
           path: data["module.alloy"]
-          pattern: '(?s)set\(attributes\["service\.namespace"\], attributes\["k8s\.namespace\.name"\]\).*custom\.marker.*delete_key\(attributes, "k8s\.grafana\.com/internal\.app-name"\)'
+          pattern: '(?s)`set\(attributes\["service\.namespace"\], attributes\["k8s\.namespace\.name"\]\)[^`]*`,\s+"set\(attributes\[\\"custom\.marker\\"\], \\"user\\"\)",\s+`delete_key\(attributes, "k8s\.grafana\.com/internal\.app-name"\)`'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: '(?s)trace_statements \{\s+context = "resource"\s+statements = \[\s+"set\(attributes\[\\"custom\.marker\\"'
 
   - it: renders only user resource transforms when the flag is off
     set:
