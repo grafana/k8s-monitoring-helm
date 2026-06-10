@@ -63,3 +63,4 @@ This document lists the component versions bundled with each release of the k8s-
 | 4.1.1 | 0.5.7 | 1.8.1 | 1.16.1 |
 | 4.1.2 | 0.5.7 | 1.8.1 | 1.16.1 |
 | 4.1.3 | 0.5.7 | 1.8.1 | 1.16.1 |
+| 4.1.4 | 0.5.7 | 1.8.1 | 1.16.1 |

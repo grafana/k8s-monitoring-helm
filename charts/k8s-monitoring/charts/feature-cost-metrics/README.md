@@ -3,47 +3,51 @@
 (      To make changes, please modify README.md.gotmpl and run `helm-docs`)
 -->
 
-# Feature: Cluster Metrics
+# Feature: Cost Metrics
 
-This chart deploys the Cluster Metrics feature of the Kubernetes Monitoring Helm Chart, which uses allow
-lists to limit the metrics needed. An allow list is a set of metric names that will be kept, while any metrics
-not on the list will be dropped. With [metrics tuning](#metrics-tuning--allow-lists), you can further customize which metrics are collected.
+This chart deploys the Cost Metrics feature of the Kubernetes Monitoring Helm Chart. It gathers cost metrics for the
+Kubernetes cluster and the objects running inside it from [OpenCost](https://www.opencost.io/), and uses an allow list
+to limit the metrics needed. An allow list is a set of metric names that will be kept, while any metrics not on the list
+will be dropped. With [metrics tuning](#metrics-tuning--allow-lists), you can further customize which metrics are collected.
 
 ## Usage
 
 ```yaml
-clusterMetrics:
+costMetrics:
   enabled: true
 ```
 
+This feature scrapes metrics from an OpenCost instance, but does not deploy OpenCost itself. The simplest way to deploy
+OpenCost alongside this feature is to use the `telemetryServices` section of the parent chart, which also wires up the
+required metrics source for you:
+
+```yaml
+costMetrics:
+  enabled: true
+
+telemetryServices:
+  opencost:
+    deploy: true
+    metricsSource: <destination name>  # The metric destination OpenCost queries for required metrics
+```
+
+If you are deploying OpenCost some other way, set `costMetrics.opencost.labelMatchers` and `costMetrics.opencost.namespace`
+so the feature can discover the OpenCost pods to scrape.
+
 ## How it works
 
-This chart includes the ability to collect metrics from the following:
-
-*   The Kubernetes cluster itself
-*   Sources like the Kubelet and cAdvisor
-*   Common supporting services like [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics) and
-    [Node Exporter](https://github.com/prometheus/node_exporter)
-*   Systems to capture additional data like Kepler
+This chart scrapes cost metrics from [OpenCost](https://www.opencost.io/). OpenCost monitors the cost of the Kubernetes
+cluster and the objects running inside it, and exposes those costs as Prometheus metrics. This feature discovers the
+OpenCost pods, scrapes their metrics, and applies an allow list to limit the metrics delivered to your destinations.
 
 ### Metrics sources
 
-The Cluster Metrics feature of the Kubernetes Monitoring Helm Chart includes the following metric systems and
-their default allow lists:
+The Cost Metrics feature of the Kubernetes Monitoring Helm Chart includes the following metric system and its default
+allow list:
 
-| Metric source                                                                | Gathers information about                                                                    | Allow list                                                                                                                                                                                     |
-|------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| API Server                                                                   | Kubernetes API Server                                                                        | NA                                                                                                                                                                                             |
-| [cAdvisor](https://github.com/google/cadvisor)                               | Containers on each node                                                                      | [default-allow-lists/cadvisor.yaml](./default-allow-lists/cadvisor.yaml)                                                                                                                       |
-| [Kepler](https://sustainable-computing.io/)                                  | Kubernetes cluster                                                                           | [default-allow-lists/kepler.yaml](./default-allow-lists/kepler.yaml)                                                                                                                           |
-| Kube Controller Manager                                                      | Kubernetes Controller Manager                                                                | NA                                                                                                                                                                                             |
-| Kube Proxy                                                                   | Kube Proxy                                                                                   | NA                                                                                                                                                                                             |
-| Kube Scheduler                                                               | Kube Scheduler                                                                               | NA                                                                                                                                                                                             |
-| Kubelet                                                                      | Kubernetes information on each node                                                          | [default-allow-lists/kubelet.yaml](./default-allow-lists/kubelet.yaml)                                                                                                                         |
-| [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics)       | Kubernetes                                                                                   |                                                                                                                                                                                                |
-| resources inside the cluster                                                 | [default-allow-lists/kube-state-metrics.yaml](./default-allow-lists/kube-state-metrics.yaml) |                                                                                                                                                                                                |
-| [Node Exporter](https://github.com/prometheus/node_exporter)                 | Linux Kubernetes nodes                                                                       | [default-allow-lists/node-exporter.yaml](./default-allow-lists/node-exporter.yaml), [default-allow-lists/node-exporter-integration.yaml](./default-allow-lists/node-exporter-integration.yaml) |
-| [Windows Exporter](https://github.com/prometheus-community/windows_exporter) | Windows Kubernetes nodes                                                                     | [default-allow-lists/windows-exporter.yaml](./default-allow-lists/windows-exporter.yaml)                                                                                                       |
+| Metric source                            | Gathers information about                                          | Allow list                                                              |
+|------------------------------------------|-------------------------------------------------------------------|-------------------------------------------------------------------------|
+| [OpenCost](https://www.opencost.io/)     | The cost of the Kubernetes cluster and the objects running inside | [default-allow-lists/opencost.yaml](./default-allow-lists/opencost.yaml) |
 
 ## Metrics tuning and allow lists
 
@@ -130,7 +134,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | opencost.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for OpenCost. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | opencost.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for OpenCost. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no __meta* labels are present. |
 | opencost.jobLabel | string | `"integrations/opencost"` | The value for the job label. |
-| opencost.labelMatchers | object | `{}` | Labels used to select the OpenCost pods. If deploying from telemetry services, this will automatically be populated. |
+| opencost.labelMatchers | object | `{}` | Labels used to select the OpenCost pods. Required when connecting to an existing OpenCost; if deploying from telemetry services, this will automatically be populated. |
 | opencost.maxCacheSize | string | `100000` | Sets the max_cache_size for the prometheus.relabel component for OpenCost. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
 | opencost.metricsSource | string | `""` | The name of the metric destination where OpenCost will query for required metrics. Setting this will enable guided setup for required OpenCost parameters. To skip guided setup, set this to "custom". |
 | opencost.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |

@@ -1,0 +1,350 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Validations - Node Exporter port conflict
+templates:
+  - validations.yaml
+tests:
+  - it: fails when an existing Node Exporter is found on the same port, and points Host Metrics at it
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      hostMetrics:
+        enabled: true
+        collector: alloy-metrics
+        linuxHosts:
+          enabled: true
+      telemetryServices:
+        node-exporter:
+          deploy: true
+    kubernetesProvider:
+      scheme:
+        "v1/Node":
+          gvr:
+            version: "v1"
+            resource: "nodes"
+          namespaced: false
+        "apps/v1/DaemonSet":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "daemonsets"
+          namespaced: true
+      objects:
+        - kind: Node
+          apiVersion: v1
+          metadata:
+            name: node1
+        - kind: DaemonSet
+          apiVersion: apps/v1
+          metadata:
+            name: node-exporter
+            namespace: monitoring
+            labels:
+              app.kubernetes.io/name: prometheus-node-exporter
+          spec:
+            template:
+              spec:
+                hostNetwork: true
+                containers:
+                  - name: node-exporter
+                    image: quay.io/prometheus/node-exporter:v1.8.0
+                    ports:
+                      - name: metrics
+                        containerPort: "9100"
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            A Node Exporter already appears to be running in this cluster on port 9100.
+            Found DaemonSet "node-exporter" in namespace "monitoring".
+            Deploying another Node Exporter on the same port will cause a host port conflict, since Node Exporter runs with hostNetwork enabled.
+
+            Option 1: Don't deploy the bundled Node Exporter and use the existing one:
+            telemetryServices:
+              node-exporter:
+                deploy: false
+            And point Host Metrics at the existing Node Exporter:
+            hostMetrics:
+              linuxHosts:
+                namespace: monitoring
+                labelMatchers:
+                  app.kubernetes.io/name: prometheus-node-exporter
+
+            Option 2: Deploy the bundled Node Exporter on a different, unused port:
+            telemetryServices:
+              node-exporter:
+                service:
+                  port: <unique-port>
+
+            If this detection is incorrect, you can disable this check:
+            telemetryServices:
+              node-exporter:
+                portConflictCheck: false
+
+  - it: detects an existing Node Exporter by container image and omits the Host Metrics hint when Host Metrics is off
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      clusterMetrics:
+        enabled: true
+        collector: alloy-metrics
+      telemetryServices:
+        kube-state-metrics:
+          deploy: true
+        node-exporter:
+          deploy: true
+    kubernetesProvider:
+      scheme:
+        "v1/Node":
+          gvr:
+            version: "v1"
+            resource: "nodes"
+          namespaced: false
+        "apps/v1/DaemonSet":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "daemonsets"
+          namespaced: true
+      objects:
+        - kind: Node
+          apiVersion: v1
+          metadata:
+            name: node1
+        - kind: DaemonSet
+          apiVersion: apps/v1
+          metadata:
+            name: my-metrics-agent
+            namespace: observability
+          spec:
+            template:
+              spec:
+                hostNetwork: true
+                containers:
+                  - name: exporter
+                    image: quay.io/prometheus/node-exporter:v1.8.0
+                    ports:
+                      - containerPort: "9100"
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            A Node Exporter already appears to be running in this cluster on port 9100.
+            Found DaemonSet "my-metrics-agent" in namespace "observability".
+            Deploying another Node Exporter on the same port will cause a host port conflict, since Node Exporter runs with hostNetwork enabled.
+
+            Option 1: Don't deploy the bundled Node Exporter and use the existing one:
+            telemetryServices:
+              node-exporter:
+                deploy: false
+
+            Option 2: Deploy the bundled Node Exporter on a different, unused port:
+            telemetryServices:
+              node-exporter:
+                service:
+                  port: <unique-port>
+
+            If this detection is incorrect, you can disable this check:
+            telemetryServices:
+              node-exporter:
+                portConflictCheck: false
+
+  - it: does not fail when the existing Node Exporter uses a different port
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      hostMetrics:
+        enabled: true
+        collector: alloy-metrics
+        linuxHosts:
+          enabled: true
+      telemetryServices:
+        node-exporter:
+          deploy: true
+    kubernetesProvider:
+      scheme:
+        "v1/Node":
+          gvr:
+            version: "v1"
+            resource: "nodes"
+          namespaced: false
+        "apps/v1/DaemonSet":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "daemonsets"
+          namespaced: true
+      objects:
+        - kind: Node
+          apiVersion: v1
+          metadata:
+            name: node1
+        - kind: DaemonSet
+          apiVersion: apps/v1
+          metadata:
+            name: node-exporter
+            namespace: monitoring
+            labels:
+              app.kubernetes.io/name: prometheus-node-exporter
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: node-exporter
+                    image: quay.io/prometheus/node-exporter:v1.8.0
+                    ports:
+                      - containerPort: "9101"
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: ignores the Node Exporter managed by this release
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      hostMetrics:
+        enabled: true
+        collector: alloy-metrics
+        linuxHosts:
+          enabled: true
+      telemetryServices:
+        node-exporter:
+          deploy: true
+    kubernetesProvider:
+      scheme:
+        "v1/Node":
+          gvr:
+            version: "v1"
+            resource: "nodes"
+          namespaced: false
+        "apps/v1/DaemonSet":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "daemonsets"
+          namespaced: true
+      objects:
+        - kind: Node
+          apiVersion: v1
+          metadata:
+            name: node1
+        - kind: DaemonSet
+          apiVersion: apps/v1
+          metadata:
+            name: RELEASE-NAME-prometheus-node-exporter
+            namespace: NAMESPACE
+            labels:
+              app.kubernetes.io/name: prometheus-node-exporter
+              app.kubernetes.io/instance: RELEASE-NAME
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: node-exporter
+                    image: quay.io/prometheus/node-exporter:v1.8.0
+                    ports:
+                      - containerPort: "9100"
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: does not fail when the port conflict check is disabled, even with a conflicting Node Exporter
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      hostMetrics:
+        enabled: true
+        collector: alloy-metrics
+        linuxHosts:
+          enabled: true
+      telemetryServices:
+        node-exporter:
+          deploy: true
+          portConflictCheck: false
+    kubernetesProvider:
+      scheme:
+        "v1/Node":
+          gvr:
+            version: "v1"
+            resource: "nodes"
+          namespaced: false
+        "apps/v1/DaemonSet":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "daemonsets"
+          namespaced: true
+      objects:
+        - kind: Node
+          apiVersion: v1
+          metadata:
+            name: node1
+        - kind: DaemonSet
+          apiVersion: apps/v1
+          metadata:
+            name: node-exporter
+            namespace: monitoring
+            labels:
+              app.kubernetes.io/name: prometheus-node-exporter
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: node-exporter
+                    image: quay.io/prometheus/node-exporter:v1.8.0
+                    ports:
+                      - containerPort: "9100"
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: does not fail when no existing Node Exporter is present
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      hostMetrics:
+        enabled: true
+        collector: alloy-metrics
+        linuxHosts:
+          enabled: true
+      telemetryServices:
+        node-exporter:
+          deploy: true
+    asserts:
+      - notFailedTemplate: {}

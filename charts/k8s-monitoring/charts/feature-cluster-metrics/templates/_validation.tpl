@@ -2,19 +2,21 @@
 {{- $ksmSettings := (index .Values "kube-state-metrics") }}
 {{- if $ksmSettings.enabled }}
   {{- if not (dig "kube-state-metrics" "deploy" false (.telemetryServices | default dict)) }}
-    {{- if not (or $ksmSettings.namespace $ksmSettings.labelMatchers) }}
+    {{- if not $ksmSettings.labelMatchers }}
       {{- $msg := list "" "The kube-state-metrics configuration requires a connection to kube-state-metrics" }}
       {{- $msg = append $msg "Please enable the built-in deployment:" }}
       {{- $msg = append $msg "telemetryServices:" }}
       {{- $msg = append $msg "  kube-state-metrics:" }}
       {{- $msg = append $msg "    deploy: true" }}
-      {{- $msg = append $msg "Or, set the namespace and label matchers for an existing kube-state-metrics:" }}
+      {{- $msg = append $msg "Or, set the label matchers (and optionally a namespace) for an existing kube-state-metrics:" }}
       {{- $msg = append $msg "clusterMetrics:" }}
       {{- $msg = append $msg "  kube-state-metrics:" }}
-      {{- $msg = append $msg "    namespace: kube-state-metrics-namespace" }}
       {{- $msg = append $msg "    labelMatchers:" }}
       {{- $msg = append $msg "      app.kubernetes.io/name: kube-state-metrics" }}
+      {{- $msg = append $msg "    namespace: kube-state-metrics-namespace" }}
       {{- fail (join "\n" $msg) }}
+    {{- else }}
+      {{- include "feature.validateLabelMatchersFindPods" (dict "namespace" $ksmSettings.namespace "labelMatchers" $ksmSettings.labelMatchers "serviceName" "kube-state-metrics") }}
     {{- end }}
   {{- end }}
 {{- end }}

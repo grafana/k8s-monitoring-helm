@@ -36,10 +36,10 @@ telemetryServices:
 | Repository | Name | Version |
 |------------|------|---------|
 | https://grafana.github.io/helm-charts | k8s-manifest-tail(k8s-manifest-tail) | 0.1.4 |
-| https://opencost.github.io/opencost-helm-chart | opencost | 2.5.14 |
+| https://opencost.github.io/opencost-helm-chart | opencost | 2.5.21 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 7.3.0 |
 | https://prometheus-community.github.io/helm-charts | node-exporter(prometheus-node-exporter) | 4.55.0 |
-| https://prometheus-community.github.io/helm-charts | windows-exporter(prometheus-windows-exporter) | 0.12.6 |
+| https://prometheus-community.github.io/helm-charts | windows-exporter(prometheus-windows-exporter) | 0.12.7 |
 | https://sustainable-computing-io.github.io/kepler-helm-chart | kepler | 0.6.1 |
 <!-- markdownlint-enable no-bare-urls -->
 ## Values
@@ -74,6 +74,7 @@ telemetryServices:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | node-exporter.deploy | bool | `true` | Deploy Node Exporter. Set to false if your cluster already has Node Exporter deployed. |
+| node-exporter.portConflictCheck | bool | `true` | Check for an existing Node Exporter using the same port before deploying. If a conflict is detected, the install fails with guidance to use the existing Node Exporter or pick a unique port. Set to false to skip the check. |
 
 ### OpenCost
 

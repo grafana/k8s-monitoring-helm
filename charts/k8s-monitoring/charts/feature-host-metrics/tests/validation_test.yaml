@@ -20,12 +20,194 @@ tests:
             telemetryServices:
               node-exporter:
                 deploy: true
-            Or, set the namespace and label matchers for an existing Node Exporter:
+            Or, set the label matchers (and optionally a namespace) for an existing Node Exporter:
             hostMetrics:
               linuxHosts:
-                namespace: node-exporter-namespace
                 labelMatchers:
                   app.kubernetes.io/name: prometheus-node-exporter
+                namespace: node-exporter-namespace
+
+  - it: should fail when Linux hosts set only a namespace without label matchers
+    set:
+      testing: {enabled: true}
+      linuxHosts:
+        enabled: true
+        namespace: node-exporter-namespace
+      windowsHosts:
+        enabled: false
+      energyMetrics:
+        enabled: false
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Linux host configuration requires a connection to Node Exporter
+            Please enable the built-in deployment:
+            telemetryServices:
+              node-exporter:
+                deploy: true
+            Or, set the label matchers (and optionally a namespace) for an existing Node Exporter:
+            hostMetrics:
+              linuxHosts:
+                labelMatchers:
+                  app.kubernetes.io/name: prometheus-node-exporter
+                namespace: node-exporter-namespace
+
+  - it: should fail when no pods match the configured Node Exporter label matchers in the namespace
+    set:
+      testing: {enabled: true}
+      linuxHosts:
+        enabled: true
+        namespace: node-exporter-namespace
+        labelMatchers:
+          app.kubernetes.io/name: prometheus-node-exporter
+      windowsHosts:
+        enabled: false
+      energyMetrics:
+        enabled: false
+    kubernetesProvider:
+      scheme:
+        "v1/Pod":
+          gvr:
+            version: v1
+            resource: pods
+          namespaced: true
+      objects:
+        - kind: Pod
+          apiVersion: v1
+          metadata:
+            name: some-other-workload
+            namespace: node-exporter-namespace
+            labels:
+              app.kubernetes.io/name: something-else
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Unable to find any Node Exporter pods matching the configured labelMatchers in namespace "node-exporter-namespace".
+            The configured labelMatchers were:
+              app.kubernetes.io/name: prometheus-node-exporter
+
+            Please verify the namespace and labelMatchers point to a running Node Exporter.
+
+  - it: should pass when a pod matches the configured Node Exporter label matchers in the namespace
+    set:
+      testing: {enabled: true}
+      linuxHosts:
+        enabled: true
+        namespace: node-exporter-namespace
+        labelMatchers:
+          app.kubernetes.io/name: prometheus-node-exporter
+      windowsHosts:
+        enabled: false
+      energyMetrics:
+        enabled: false
+    kubernetesProvider:
+      scheme:
+        "v1/Pod":
+          gvr:
+            version: v1
+            resource: pods
+          namespaced: true
+      objects:
+        - kind: Pod
+          apiVersion: v1
+          metadata:
+            name: prometheus-node-exporter-abcde
+            namespace: node-exporter-namespace
+            labels:
+              app.kubernetes.io/name: prometheus-node-exporter
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'label = "app.kubernetes.io/name=prometheus-node-exporter"'
+
+  - it: should fail when a pod matches only some of the configured Node Exporter label matchers
+    set:
+      testing: {enabled: true}
+      linuxHosts:
+        enabled: true
+        namespace: node-exporter-namespace
+        labelMatchers:
+          app.kubernetes.io/name: prometheus-node-exporter
+          app.kubernetes.io/instance: my-release
+      windowsHosts:
+        enabled: false
+      energyMetrics:
+        enabled: false
+    kubernetesProvider:
+      scheme:
+        "v1/Pod":
+          gvr:
+            version: v1
+            resource: pods
+          namespaced: true
+      objects:
+        - kind: Pod
+          apiVersion: v1
+          metadata:
+            name: prometheus-node-exporter-abcde
+            namespace: node-exporter-namespace
+            labels:
+              app.kubernetes.io/name: prometheus-node-exporter
+              app.kubernetes.io/instance: a-different-release
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Unable to find any Node Exporter pods matching the configured labelMatchers in namespace "node-exporter-namespace".
+            The configured labelMatchers were:
+              app.kubernetes.io/instance: my-release
+              app.kubernetes.io/name: prometheus-node-exporter
+
+            Please verify the namespace and labelMatchers point to a running Node Exporter.
+
+  - it: should skip the pod lookup check when the namespace has no pods (best-effort, e.g. helm template)
+    set:
+      testing: {enabled: true}
+      linuxHosts:
+        enabled: true
+        namespace: node-exporter-namespace
+        labelMatchers:
+          app.kubernetes.io/name: prometheus-node-exporter
+      windowsHosts:
+        enabled: false
+      energyMetrics:
+        enabled: false
+    asserts:
+      - isKind:
+          of: ConfigMap
+
+  - it: should skip the pod lookup check when Node Exporter is deployed by telemetryServices
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          node-exporter:
+            deploy: true
+      linuxHosts:
+        enabled: true
+      windowsHosts:
+        enabled: false
+      energyMetrics:
+        enabled: false
+    kubernetesProvider:
+      scheme:
+        "v1/Pod":
+          gvr:
+            version: v1
+            resource: pods
+          namespaced: true
+      objects:
+        - kind: Pod
+          apiVersion: v1
+          metadata:
+            name: some-other-workload
+            namespace: NAMESPACE
+            labels:
+              app.kubernetes.io/name: something-else
+    asserts:
+      - isKind:
+          of: ConfigMap
 
   - it: should fail when Windows hosts do not specify Windows Exporter selectors
     set:
@@ -44,12 +226,12 @@ tests:
             telemetryServices:
               windows-exporter:
                 deploy: true
-            Or, set the namespace and label matchers for an existing Windows Exporter:
+            Or, set the label matchers (and optionally a namespace) for an existing Windows Exporter:
             hostMetrics:
               windowsHosts:
-                namespace: windows-exporter-namespace
                 labelMatchers:
                   app.kubernetes.io/name: prometheus-windows-exporter
+                namespace: windows-exporter-namespace
 
   - it: should fail when host energy metrics do not specify Kepler selectors
     set:
@@ -68,12 +250,12 @@ tests:
             telemetryServices:
               kepler:
                 deploy: true
-            Or, set the namespace and label matchers for an existing Kepler:
+            Or, set the label matchers (and optionally a namespace) for an existing Kepler:
             hostMetrics:
               energyMetrics:
-                namespace: kepler-namespace
                 labelMatchers:
                   app.kubernetes.io/name: kepler
+                namespace: kepler-namespace
 
   - it: should fail when deployment-level setting is under hostMetrics.linuxHosts
     set:
