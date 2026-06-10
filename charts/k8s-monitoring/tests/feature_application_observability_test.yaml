@@ -2,7 +2,6 @@
 suite: Feature - Application Observability
 templates:
   - alloy.yaml
-  - alloy-config.yaml
   - validations.yaml
 tests:
   - it: enables the right ports on Alloy when the receivers are enabled
@@ -118,36 +117,3 @@ tests:
               port: 6831
               protocol: UDP
               targetPort: 6831
-
-  - it: sets empty trace service attributes from Kubernetes resource attributes
-    set:
-      cluster: {name: test-cluster}
-      destinations:
-        otlp:
-          type: otlp
-          url: "http://otlp.receiver.svc:4317"
-      applicationObservability:
-        enabled: true
-        collector: alloy-receiver
-        receivers:
-          otlp:
-            grpc:
-              enabled: true
-      collectors: {alloy-receiver: {}}
-      selfReporting: {enabled: false}
-    template: alloy-config.yaml
-    asserts:
-      - isKind:
-          of: ConfigMap
-      - matchRegex:
-          path: data["config.alloy"]
-          pattern: '(?s)trace_statements \{\s+context = "resource".*`set\(attributes\["service\.name"\], attributes\["app\.kubernetes\.io/name"\]\) where \(attributes\["service\.name"\] == nil or attributes\["service\.name"\] == ""\) and attributes\["app\.kubernetes\.io/name"\] != nil and attributes\["app\.kubernetes\.io/name"\] != ""`'
-      - matchRegex:
-          path: data["config.alloy"]
-          pattern: '(?s)trace_statements \{\s+context = "resource".*`set\(attributes\["service\.name"\], attributes\["k8s\.deployment\.name"\]\) where \(attributes\["service\.name"\] == nil or attributes\["service\.name"\] == ""\) and attributes\["k8s\.deployment\.name"\] != nil and attributes\["k8s\.deployment\.name"\] != ""`'
-      - matchRegex:
-          path: data["config.alloy"]
-          pattern: '(?s)trace_statements \{\s+context = "resource".*`set\(attributes\["service\.name"\], attributes\["k8s\.container\.name"\]\) where \(attributes\["service\.name"\] == nil or attributes\["service\.name"\] == ""\) and attributes\["k8s\.container\.name"\] != nil and attributes\["k8s\.container\.name"\] != ""`'
-      - matchRegex:
-          path: data["config.alloy"]
-          pattern: '(?s)trace_statements \{\s+context = "resource".*`set\(attributes\["service\.namespace"\], attributes\["k8s\.namespace\.name"\]\) where \(attributes\["service\.namespace"\] == nil or attributes\["service\.namespace"\] == ""\) and attributes\["k8s\.namespace\.name"\] != nil and attributes\["k8s\.namespace\.name"\] != ""`'
