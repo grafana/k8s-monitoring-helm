@@ -2,6 +2,7 @@
 suite: Feature - Application Observability
 templates:
   - alloy.yaml
+  - alloy-config.yaml
   - validations.yaml
 tests:
   - it: enables the right ports on Alloy when the receivers are enabled
@@ -117,3 +118,66 @@ tests:
               port: 6831
               protocol: UDP
               targetPort: 6831
+
+  - it: does not set service attributes from Kubernetes by default
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        otlp:
+          type: otlp
+          url: "http://otlp.receiver.svc:4317"
+      applicationObservability:
+        enabled: true
+        collector: alloy-receiver
+        receivers:
+          otlp:
+            grpc:
+              enabled: true
+      collectors: {alloy-receiver: {}}
+      selfReporting: {enabled: false}
+    template: alloy-config.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'k8s\.grafana\.com/internal\.app-name'
+
+  - it: sets service attributes from Kubernetes resource attributes when enabled
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        otlp:
+          type: otlp
+          url: "http://otlp.receiver.svc:4317"
+      applicationObservability:
+        enabled: true
+        collector: alloy-receiver
+        processors:
+          transform:
+            setServiceAttributesFromKubernetes: true
+        receivers:
+          otlp:
+            grpc:
+              enabled: true
+      collectors: {alloy-receiver: {}}
+      selfReporting: {enabled: false}
+    template: alloy-config.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '(?s)trace_statements \{\s+context = "resource".*`set\(attributes\["service\.name"\], attributes\["k8s\.grafana\.com/internal\.app-name"\]\)'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '(?s)metric_statements \{\s+context = "resource".*`set\(attributes\["service\.name"\], attributes\["k8s\.grafana\.com/internal\.app-name"\]\)'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '(?s)log_statements \{\s+context = "resource".*`set\(attributes\["service\.name"\], attributes\["k8s\.grafana\.com/internal\.app-name"\]\)'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '`set\(attributes\["service\.namespace"\], attributes\["k8s\.namespace\.name"\]\) where \(attributes\["service\.namespace"\] == nil or attributes\["service\.namespace"\] == ""\) and attributes\["k8s\.namespace\.name"\] != nil and attributes\["k8s\.namespace\.name"\] != ""`'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'set\(attributes\["service\.name"\], attributes\["k8s\.container\.name"\]\)'
