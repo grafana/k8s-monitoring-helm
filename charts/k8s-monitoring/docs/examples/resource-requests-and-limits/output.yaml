@@ -2488,14 +2488,19 @@ spec:
             # Add any additional provided variables
             - name: CLOUD_PROVIDER_API_KEY
               value: "disabled"
-            - name: CONFIG_PATH
-              value: "/tmp"
             - name: CURRENT_CLUSTER_ID_FILTER_ENABLED
               value: "true"
             - name: PROM_CLUSTER_ID_LABEL
               value: "cluster"
             - name: MCP_SERVER_ENABLED
               value: "false"
+          volumeMounts:
+            - mountPath: /var/configs
+              name: configs
+              readOnly: false
+      volumes:
+        - emptyDir: {}
+          name: configs
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1

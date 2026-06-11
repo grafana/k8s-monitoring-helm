@@ -55,6 +55,7 @@ telemetryServices:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | k8s-manifest-tail.deploy | bool | `false` | Deploy k8s-manifest-tail to watch and log Kubernetes manifest changes. |
+| k8s-manifest-tail.extraEnv | list | `[]` | Extra environment variables, required for setting the OTLP destination for the manifests. |
 
 ### Kepler
 
@@ -81,6 +82,7 @@ telemetryServices:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | opencost.deploy | bool | `false` | Deploy OpenCost. |
+| opencost.extraVolumes | list | `[{"emptyDir":{},"name":"configs"}]` | On GCP/GKE, OpenCost's GCP provider writes ${CONFIG_PATH}/gcp.json on startup. CONFIG_PATH defaults to /var/configs, which is not writable by the non-root container user, causing the pod to panic. Mount an emptyDir there so the default path is writable. This is preferred over setting CONFIG_PATH via extraEnv, which collides with the CONFIG_PATH the OpenCost chart sets when customPricing is enabled (duplicate env var). The upstream chart only mounts at /var/configs when cloud integration is enabled, so this does not conflict by default. |
 | opencost.metricsSource | string | `""` | The name of the metric destination where OpenCost will query for required metrics. Setting this will enable guided setup for required OpenCost parameters. To skip guided setup, set this to "custom". |
 | opencost.opencost.prometheus.existingSecretName | string | `""` | The name of the secret containing the username and password for the metrics service. This must be in the same namespace as the OpenCost deployment. |
 | opencost.opencost.prometheus.external.url | string | `""` | The URL for Prometheus queries. It should match externalServices.prometheus.host + "/api/prom" |
@@ -92,9 +94,3 @@ telemetryServices:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | windows-exporter.deploy | bool | `true` | Deploy Windows Exporter. Set to false if your cluster already has Windows Exporter deployed. |
-
-### Other Values
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| k8s-manifest-tail.extraEnv | list | `[]` | Extra environment variables, required for setting the OTLP destination for the manifests. @secton -- k8s-manifest-tail |
