@@ -1,4 +1,12 @@
 {{- define "feature.podLogsViaOpenTelemetry.module" }}
+{{- /* Find the attribute key whose Kubernetes label value is app.kubernetes.io/name.
+       Helm iterates maps in alphabetical key order; the first match wins. */}}
+{{- $appLabelAttribute := "" }}
+{{- range $attribute, $label := .Values.labels }}
+{{- if and (not $appLabelAttribute) (eq $label "app.kubernetes.io/name") }}
+{{- $appLabelAttribute = $attribute }}
+{{- end }}
+{{- end }}
 declare "pod_logs_via_opentelemetry" {
   argument "logs_destinations" {
     comment = "Must be a list of log destinations where collected logs should be forwarded to"
@@ -140,15 +148,15 @@ declare "pod_logs_via_opentelemetry" {
         `delete_key(attributes, "k8s.container.restart_count")`,
         `delete_key(attributes, {{ .Values.annotationSelector | quote }})`,
 
-        `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["app.kubernetes.io/name"] != nil and attributes["app.kubernetes.io/name"] != ""`,
+{{- if $appLabelAttribute }}
+        `set(attributes["service.name"], attributes[{{ $appLabelAttribute | quote }}]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes[{{ $appLabelAttribute | quote }}] != nil and attributes[{{ $appLabelAttribute | quote }}] != ""`,
+{{- end }}
         `set(attributes["service.name"], attributes["k8s.deployment.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.deployment.name"] != nil and attributes["k8s.deployment.name"] != ""`,
-        `set(attributes["service.name"], attributes["k8s.replicaset.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.replicaset.name"] != nil and attributes["k8s.replicaset.name"] != ""`,
         `set(attributes["service.name"], attributes["k8s.statefulset.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.statefulset.name"] != nil and attributes["k8s.statefulset.name"] != ""`,
         `set(attributes["service.name"], attributes["k8s.daemonset.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.daemonset.name"] != nil and attributes["k8s.daemonset.name"] != ""`,
         `set(attributes["service.name"], attributes["k8s.cronjob.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.cronjob.name"] != nil and attributes["k8s.cronjob.name"] != ""`,
         `set(attributes["service.name"], attributes["k8s.job.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.job.name"] != nil and attributes["k8s.job.name"] != ""`,
         `set(attributes["service.name"], attributes["k8s.pod.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.pod.name"] != nil and attributes["k8s.pod.name"] != ""`,
-        `set(attributes["service.name"], attributes["k8s.container.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.container.name"] != nil and attributes["k8s.container.name"] != ""`,
 
         `set(attributes["service.namespace"], attributes["k8s.namespace.name"]) where (attributes["service.namespace"] == nil or attributes["service.namespace"] == "") and attributes["k8s.namespace.name"] != nil and attributes["k8s.namespace.name"] != ""`,
 

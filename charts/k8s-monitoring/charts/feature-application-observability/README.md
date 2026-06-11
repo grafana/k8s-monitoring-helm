@@ -178,6 +178,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | processors.transform.errorMode | string | `"ignore"` | How to react to errors if they occur while processing a statement. Valid options are "ignore", "silent", and "propagate". |
+| processors.transform.setServiceAttributesFromKubernetes | bool | `false` | Fill missing or empty `service.name` and `service.namespace` resource attributes from Kubernetes metadata on metrics, logs, and traces. `service.name` falls back through the `app.kubernetes.io/name` pod label, then `k8s.deployment.name`, `k8s.statefulset.name`, `k8s.daemonset.name`, `k8s.cronjob.name`, `k8s.job.name`, and `k8s.pod.name`. `service.namespace` falls back to `k8s.namespace.name`. |
 
 ### Receivers: Jaeger
 

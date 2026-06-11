@@ -1,17 +1,42 @@
 {{/* Inputs: Values (values) metricsOutput, logsOutput, tracesOutput, name */}}
 {{/* https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.transform/ */}}
+
+{{/* Service attribute fallback: fill missing/empty service.name and service.namespace from Kubernetes
+     metadata extracted by the k8sattributes processor. Reads the app.kubernetes.io/name pod label via the
+     internal k8s.grafana.com/internal.app-name attribute (see _processor_k8sattributes.tpl), which is
+     removed again by the cleanup helper after user transforms have run. */}}
+{{- define "feature.applicationObservability.processor.transform.serviceFallbackStatements" -}}
+`set(attributes["service.name"], attributes["k8s.grafana.com/internal.app-name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.grafana.com/internal.app-name"] != nil and attributes["k8s.grafana.com/internal.app-name"] != ""`,
+`set(attributes["service.name"], attributes["k8s.deployment.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.deployment.name"] != nil and attributes["k8s.deployment.name"] != ""`,
+`set(attributes["service.name"], attributes["k8s.statefulset.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.statefulset.name"] != nil and attributes["k8s.statefulset.name"] != ""`,
+`set(attributes["service.name"], attributes["k8s.daemonset.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.daemonset.name"] != nil and attributes["k8s.daemonset.name"] != ""`,
+`set(attributes["service.name"], attributes["k8s.cronjob.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.cronjob.name"] != nil and attributes["k8s.cronjob.name"] != ""`,
+`set(attributes["service.name"], attributes["k8s.job.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.job.name"] != nil and attributes["k8s.job.name"] != ""`,
+`set(attributes["service.name"], attributes["k8s.pod.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.pod.name"] != nil and attributes["k8s.pod.name"] != ""`,
+`set(attributes["service.namespace"], attributes["k8s.namespace.name"]) where (attributes["service.namespace"] == nil or attributes["service.namespace"] == "") and attributes["k8s.namespace.name"] != nil and attributes["k8s.namespace.name"] != ""`,
+{{- end }}
+{{- define "feature.applicationObservability.processor.transform.serviceFallbackCleanup" -}}
+`delete_key(attributes, "k8s.grafana.com/internal.app-name")`,
+{{- end }}
+
 {{- define "feature.applicationObservability.processor.transform.alloy.target" }}otelcol.processor.transform.{{ .name | default "default" }}.input{{ end }}
 {{- define "feature.applicationObservability.processor.transform.alloy" }}
 otelcol.processor.transform "{{ .name | default "default" }}" {
   error_mode = {{ .Values.processors.transform.errorMode | quote }}
 
 {{- if .Values.metrics.enabled }}
-{{- if .Values.metrics.transforms.resource }}
+{{- if or .Values.processors.transform.setServiceAttributesFromKubernetes .Values.metrics.transforms.resource }}
   metric_statements {
     context = "resource"
     statements = [
+{{- if .Values.processors.transform.setServiceAttributesFromKubernetes }}
+{{ include "feature.applicationObservability.processor.transform.serviceFallbackStatements" . | trim | indent 6 }}
+{{- end }}
 {{- range $transform := .Values.metrics.transforms.resource }}
 {{ $transform | quote | indent 6 }},
+{{- end }}
+{{- if .Values.processors.transform.setServiceAttributesFromKubernetes }}
+{{ include "feature.applicationObservability.processor.transform.serviceFallbackCleanup" . | trim | indent 6 }}
 {{- end }}
     ]
   }
@@ -41,6 +66,9 @@ otelcol.processor.transform "{{ .name | default "default" }}" {
   log_statements {
     context = "resource"
     statements = [
+{{- if .Values.processors.transform.setServiceAttributesFromKubernetes }}
+{{ include "feature.applicationObservability.processor.transform.serviceFallbackStatements" . | trim | indent 6 }}
+{{- end }}
 {{- if .Values.logs.transforms.resource }}
 {{- range $transform := .Values.logs.transforms.resource }}
 {{ $transform | quote | indent 6 }},
@@ -49,6 +77,9 @@ otelcol.processor.transform "{{ .name | default "default" }}" {
       "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
       "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
       "set(attributes[\"loki.resource.labels\"], \"{{ .Values.logs.transforms.labels | join ", " }}\")",
+{{- if .Values.processors.transform.setServiceAttributesFromKubernetes }}
+{{ include "feature.applicationObservability.processor.transform.serviceFallbackCleanup" . | trim | indent 6 }}
+{{- end }}
     ]
   }
 {{- if .Values.logs.transforms.log }}
@@ -63,12 +94,18 @@ otelcol.processor.transform "{{ .name | default "default" }}" {
 {{- end }}
 {{- end }}
 {{- if .Values.traces.enabled }}
-{{- if .Values.traces.transforms.resource }}
+{{- if or .Values.processors.transform.setServiceAttributesFromKubernetes .Values.traces.transforms.resource }}
   trace_statements {
     context = "resource"
     statements = [
+{{- if .Values.processors.transform.setServiceAttributesFromKubernetes }}
+{{ include "feature.applicationObservability.processor.transform.serviceFallbackStatements" . | trim | indent 6 }}
+{{- end }}
 {{- range $transform := .Values.traces.transforms.resource }}
 {{ $transform | quote | indent 6 }},
+{{- end }}
+{{- if .Values.processors.transform.setServiceAttributesFromKubernetes }}
+{{ include "feature.applicationObservability.processor.transform.serviceFallbackCleanup" . | trim | indent 6 }}
 {{- end }}
     ]
   }

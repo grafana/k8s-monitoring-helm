@@ -301,6 +301,13 @@ processors:
     # @section -- Processors: Transform
     errorMode: ignore
 
+    # -- Fill missing or empty `service.name` and `service.namespace` resource attributes from Kubernetes metadata
+    # on metrics, logs, and traces. `service.name` falls back through the `app.kubernetes.io/name` pod label, then
+    # `k8s.deployment.name`, `k8s.statefulset.name`, `k8s.daemonset.name`, `k8s.cronjob.name`, `k8s.job.name`, and
+    # `k8s.pod.name`. `service.namespace` falls back to `k8s.namespace.name`.
+    # @section -- Processors: Transform
+    setServiceAttributesFromKubernetes: false
+
 # Connectors are components that create new telemetry data from existing telemetry data.
 connectors:
   grafanaCloudMetrics:

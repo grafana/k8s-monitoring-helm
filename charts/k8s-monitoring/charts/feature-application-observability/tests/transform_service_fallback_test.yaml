@@ -1,0 +1,141 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Application Observability - Service attribute fallback
+templates:
+  - test/configmap.yaml
+tests:
+  - it: does not render the fallback or the internal label extraction by default
+    set:
+      testing: {enabled: true}
+      receivers:
+        otlp:
+          grpc:
+            enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'k8s\.grafana\.com/internal\.app-name'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'set\(attributes\["service\.name"\]'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'set\(attributes\["service\.namespace"\]'
+
+  - it: extracts the app label into the internal attribute when the flag is on
+    set:
+      testing: {enabled: true}
+      receivers:
+        otlp:
+          grpc:
+            enabled: true
+      processors:
+        transform:
+          setServiceAttributesFromKubernetes: true
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '(?s)extract \{[^}]*label \{[^}]*tag_name = "k8s\.grafana\.com/internal\.app-name"[^}]*key = "app\.kubernetes\.io/name"[^}]*from = "pod"'
+
+  - it: keeps user k8sattributes labels alongside the internal extraction
+    set:
+      testing: {enabled: true}
+      receivers:
+        otlp:
+          grpc:
+            enabled: true
+      processors:
+        transform:
+          setServiceAttributesFromKubernetes: true
+        k8sattributes:
+          labels:
+            - tag_name: my.team
+              key: team
+              from: pod
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'tag_name = "my\.team"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'tag_name = "k8s\.grafana\.com/internal\.app-name"'
+
+  - it: renders the service fallback chain on all three signals when enabled
+    set:
+      testing: {enabled: true}
+      receivers:
+        otlp:
+          grpc:
+            enabled: true
+      processors:
+        transform:
+          setServiceAttributesFromKubernetes: true
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '(?s)metric_statements \{\s+context = "resource"\s+statements = \[\s+`set\(attributes\["service\.name"\], attributes\["k8s\.grafana\.com/internal\.app-name"\]\)'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '(?s)log_statements \{\s+context = "resource"\s+statements = \[\s+`set\(attributes\["service\.name"\], attributes\["k8s\.grafana\.com/internal\.app-name"\]\)'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '(?s)trace_statements \{\s+context = "resource"\s+statements = \[\s+`set\(attributes\["service\.name"\], attributes\["k8s\.grafana\.com/internal\.app-name"\]\)'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '`set\(attributes\["service\.name"\], attributes\["k8s\.deployment\.name"\]\) where \(attributes\["service\.name"\] == nil or attributes\["service\.name"\] == ""\) and attributes\["k8s\.deployment\.name"\] != nil and attributes\["k8s\.deployment\.name"\] != ""`'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '`set\(attributes\["service\.namespace"\], attributes\["k8s\.namespace\.name"\]\) where \(attributes\["service\.namespace"\] == nil or attributes\["service\.namespace"\] == ""\) and attributes\["k8s\.namespace\.name"\] != nil and attributes\["k8s\.namespace\.name"\] != ""`'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '`delete_key\(attributes, "k8s\.grafana\.com/internal\.app-name"\)`'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'set\(attributes\["service\.name"\], attributes\["k8s\.replicaset\.name"\]\)'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'set\(attributes\["service\.name"\], attributes\["k8s\.container\.name"\]\)'
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: renders user resource transforms between the fallback chain and the cleanup
+    set:
+      testing: {enabled: true}
+      receivers:
+        otlp:
+          grpc:
+            enabled: true
+      processors:
+        transform:
+          setServiceAttributesFromKubernetes: true
+      traces:
+        transforms:
+          resource:
+            - set(attributes["custom.marker"], "user")
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '(?s)`set\(attributes\["service\.namespace"\], attributes\["k8s\.namespace\.name"\]\)[^`]*`,\s+"set\(attributes\[\\"custom\.marker\\"\], \\"user\\"\)",\s+`delete_key\(attributes, "k8s\.grafana\.com/internal\.app-name"\)`'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: '(?s)trace_statements \{\s+context = "resource"\s+statements = \[\s+"set\(attributes\[\\"custom\.marker\\"'
+
+  - it: renders only user resource transforms when the flag is off
+    set:
+      testing: {enabled: true}
+      receivers:
+        otlp:
+          grpc:
+            enabled: true
+      metrics:
+        transforms:
+          resource:
+            - set(attributes["custom.marker"], "user")
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'custom\.marker'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'k8s\.grafana\.com/internal\.app-name'

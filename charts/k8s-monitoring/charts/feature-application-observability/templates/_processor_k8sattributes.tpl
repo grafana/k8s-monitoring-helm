@@ -62,6 +62,13 @@ otelcol.processor.k8sattributes "{{ .name | default "default" }}" {
     {{- end }}
     }
 {{- end }}
+{{- if .Values.processors.transform.setServiceAttributesFromKubernetes }}
+    label {
+      tag_name = "k8s.grafana.com/internal.app-name"
+      key = "app.kubernetes.io/name"
+      from = "pod"
+    }
+{{- end }}
 {{- range .Values.processors.k8sattributes.annotations }}
     annotation {
     {{- range $k, $v := . }}
