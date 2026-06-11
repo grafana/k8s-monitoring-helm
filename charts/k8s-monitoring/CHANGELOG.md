@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 4.1.5
 
 *   Fix OpenCost failing to deploy with `duplicate entries for key [name="CONFIG_PATH"]` when `customPricing` is enabled. The GKE GCP-provider workaround no longer sets `CONFIG_PATH` via `extraEnv` (which collided with the `CONFIG_PATH` the OpenCost chart sets for custom pricing); instead it mounts a writable `emptyDir` at OpenCost's default config path (`/var/configs`). (#2692) (@petewall)
 *   Require `labelMatchers` (rather than accepting a `namespace` alone) when connecting Cluster Metrics (kube-state-metrics), Host Metrics (Node Exporter, Windows Exporter, Kepler), or Cost Metrics (OpenCost) to an existing service that is not deployed via `telemetryServices`. Previously a namespace-only configuration rendered an empty `label = ""` selector that matched every pod in the namespace. (@petewall)
