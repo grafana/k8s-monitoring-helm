@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Fix OpenCost failing to deploy with `duplicate entries for key [name="CONFIG_PATH"]` when `customPricing` is enabled. The GKE GCP-provider workaround no longer sets `CONFIG_PATH` via `extraEnv` (which collided with the `CONFIG_PATH` the OpenCost chart sets for custom pricing); instead it mounts a writable `emptyDir` at OpenCost's default config path (`/var/configs`). (#2692) (@petewall)
 *   Require `labelMatchers` (rather than accepting a `namespace` alone) when connecting Cluster Metrics (kube-state-metrics), Host Metrics (Node Exporter, Windows Exporter, Kepler), or Cost Metrics (OpenCost) to an existing service that is not deployed via `telemetryServices`. Previously a namespace-only configuration rendered an empty `label = ""` selector that matched every pod in the namespace. (@petewall)
 *   Add a best-effort validator that uses Helm `lookup` to confirm the configured `labelMatchers` actually select running pods in the specified `namespace` for an existing kube-state-metrics, Node Exporter, Windows Exporter, Kepler, or OpenCost. The check is skipped during `helm template`/`--dry-run` (no cluster connection) and only runs when a namespace is set. (@petewall)
 *   Add a best-effort validator that checks (via Helm `lookup`) for an existing Node Exporter using the same port when deploying the bundled `telemetryServices.node-exporter`. If a port conflict is detected, the install fails with guidance to either skip the deployment and point Host Metrics at the existing Node Exporter, or deploy on a unique port. (@petewall)

@@ -139,6 +139,17 @@ opencost:
   # @section -- OpenCost
   metricsSource: ""
 
+  # -- On GCP/GKE, OpenCost's GCP provider writes ${CONFIG_PATH}/gcp.json on startup. CONFIG_PATH
+  # defaults to /var/configs, which is not writable by the non-root container user, causing the
+  # pod to panic. Mount an emptyDir there so the default path is writable. This is preferred over
+  # setting CONFIG_PATH via extraEnv, which collides with the CONFIG_PATH the OpenCost chart sets
+  # when customPricing is enabled (duplicate env var). The upstream chart only mounts at
+  # /var/configs when cloud integration is enabled, so this does not conflict by default.
+  # @section -- OpenCost
+  extraVolumes:
+    - name: configs
+      emptyDir: {}
+
   opencost:
     # @ignored -- This skips including these values in README.md
     exporter:
@@ -147,16 +158,17 @@ opencost:
       defaultClusterId: "default-cluster"
 
       extraEnv:
-        # On GCP/GKE, OpenCost's GCP provider writes ${CONFIG_PATH}/gcp.json on startup. The
-        # default of /var/configs is not writable by the non-root container user, which causes
-        # the pod to panic. Point CONFIG_PATH at the always-writable /tmp instead.
-        CONFIG_PATH: /tmp
         # CLOUD_PROVIDER_API_KEY must be non-empty so OpenCost's NewProvider() does not refuse
         # to construct the GCP provider on GKE; the value itself is unused (pricing falls back
         # to defaults).
         CLOUD_PROVIDER_API_KEY: disabled
         CURRENT_CLUSTER_ID_FILTER_ENABLED: "true"
         PROM_CLUSTER_ID_LABEL: cluster
+
+      extraVolumeMounts:
+        - mountPath: /var/configs
+          name: configs
+          readOnly: false
 
     # @ignored -- This skips including these values in README.md
     carbonCost:
@@ -220,7 +232,7 @@ k8s-manifest-tail:
     logs.grafana.com/pods.enabled: "false"
 
   # -- Extra environment variables, required for setting the OTLP destination for the manifests.
-  # @secton -- k8s-manifest-tail
+  # @section -- k8s-manifest-tail
   extraEnv: []
   #  - name: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
   #    value: http://k8smon-alloy-receiver.default.svc:4317
