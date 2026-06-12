@@ -8,9 +8,10 @@
 {{- include "feature.podLogsViaOpenTelemetry.module" (dict "Values" .Values.podLogsViaOpenTelemetry "Files" $.Subcharts.podLogsViaOpenTelemetry.Files) }}
 pod_logs_via_opentelemetry "feature" {
   logs_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "logs" "ecosystem" "otlp") | indent 4 | trim }}
+    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "podLogsViaOpenTelemetry" "destinationNames" $destinations "type" "logs" "ecosystem" "otlp") | indent 4 | trim }}
   ]
 }
+{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "podLogsViaOpenTelemetry" "destinationNames" $destinations "type" "logs" "ecosystem" "otlp") }}
 {{- end -}}
 {{- end -}}
 
@@ -42,6 +43,7 @@ pod_logs_via_opentelemetry "feature" {
 {{- $featureName := "Kubernetes Pod logs via OpenTelemetry" }}
 {{- $destinations := include "features.podLogsViaOpenTelemetry.destinations" . | fromYamlArray }}
 {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "otlp" "featureName" $featureName) }}
+{{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" $featureKey "featureName" $featureName "type" "logs" "ecosystem" "otlp") }}
 
 {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
 {{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}

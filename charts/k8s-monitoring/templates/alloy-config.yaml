@@ -17,6 +17,10 @@
     {{ $alloyConfig = cat $alloyConfig (include (printf "features.%s.include" $featureKey) $values | trim | nindent 0) }}
   {{- end }}
 {{- end }}
+{{- $dataProcessorSharedComponents := include "dataProcessors.alloy.collectorComponents" (dict "Values" $.Values "config" $alloyConfig) | trim }}
+{{- if $dataProcessorSharedComponents }}
+  {{- $alloyConfig = cat $alloyConfig ($dataProcessorSharedComponents | nindent 0) }}
+{{- end }}
 {{- $alloyConfig = cat $alloyConfig (include "collectors.logging.alloy" $collectorValues | trim | nindent 0) }}
 {{- $alloyConfig = cat $alloyConfig (include "collectors.liveDebugging.alloy" $collectorValues | trim | nindent 0) }}
 {{- $alloyConfig = cat $alloyConfig (include "collectors.remoteConfig.alloy" $values | trim | nindent 0) }}

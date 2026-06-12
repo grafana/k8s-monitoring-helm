@@ -1,0 +1,89 @@
+---
+# The custom processor declares one pipeline per (telemetry-type, ecosystem) tuple it
+# supports. Each pipeline has:
+#   - `enabled`: whether this processor is available for that tuple
+#   - `input`: the Alloy component reference where the chart should forward data into
+#     the user's pipeline
+#   - `config`: a raw Alloy block defining the user's pipeline. Its terminal forward_to
+#     must target the chart-generated output sink for this tuple. Naming convention:
+#       (type=metrics, ecosystem=prometheus) -> prometheus.relabel.<proc>_out_metrics_prometheus.receiver
+#       (type=metrics, ecosystem=otlp)       -> otelcol.processor.batch.<proc>_out_metrics_otlp.input
+#       (type=logs,    ecosystem=loki)       -> loki.process.<proc>_out_logs_loki.receiver
+#       (type=logs,    ecosystem=otlp)       -> otelcol.processor.batch.<proc>_out_logs_otlp.input
+#       (type=traces,  ecosystem=otlp)       -> otelcol.processor.batch.<proc>_out_traces_otlp.input
+#       (type=profiles, ecosystem=pyroscope) -> pyroscope.relabel.<proc>_out_profiles_pyroscope.receiver
+# `<proc>` is the processor's key with dashes converted to underscores.
+#
+# Pipelines are emitted only in the collectors whose features actually use them, so the
+# same processor can serve features running on different collectors without cross-pollution.
+#
+# This data processor is considered experimental and subject to change.
+
+metrics:
+  prometheus:
+    # -- Enable processing Prometheus-formatted metrics through this processor.
+    # @section -- Metrics (Prometheus)
+    enabled: false
+    # -- Alloy component reference where the chart forwards Prometheus metrics into the
+    # user's pipeline.
+    # @section -- Metrics (Prometheus)
+    input: ""
+    # -- Raw Alloy block for the Prometheus metrics pipeline.
+    # @section -- Metrics (Prometheus)
+    config: ""
+  otlp:
+    # -- Enable processing OTLP-formatted metrics through this processor.
+    # @section -- Metrics (OTLP)
+    enabled: false
+    # -- Alloy component reference where the chart forwards OTLP metrics into the user's pipeline.
+    # @section -- Metrics (OTLP)
+    input: ""
+    # -- Raw Alloy block for the OTLP metrics pipeline.
+    # @section -- Metrics (OTLP)
+    config: ""
+
+logs:
+  loki:
+    # -- Enable processing Loki-formatted logs through this processor.
+    # @section -- Logs (Loki)
+    enabled: false
+    # -- Alloy component reference where the chart forwards Loki logs into the user's pipeline.
+    # @section -- Logs (Loki)
+    input: ""
+    # -- Raw Alloy block for the Loki logs pipeline.
+    # @section -- Logs (Loki)
+    config: ""
+  otlp:
+    # -- Enable processing OTLP-formatted logs through this processor.
+    # @section -- Logs (OTLP)
+    enabled: false
+    # -- Alloy component reference where the chart forwards OTLP logs into the user's pipeline.
+    # @section -- Logs (OTLP)
+    input: ""
+    # -- Raw Alloy block for the OTLP logs pipeline.
+    # @section -- Logs (OTLP)
+    config: ""
+
+traces:
+  otlp:
+    # -- Enable processing OTLP-formatted traces through this processor.
+    # @section -- Traces (OTLP)
+    enabled: false
+    # -- Alloy component reference where the chart forwards OTLP traces into the user's pipeline.
+    # @section -- Traces (OTLP)
+    input: ""
+    # -- Raw Alloy block for the OTLP traces pipeline.
+    # @section -- Traces (OTLP)
+    config: ""
+
+profiles:
+  pyroscope:
+    # -- Enable processing Pyroscope profiles through this processor.
+    # @section -- Profiles (Pyroscope)
+    enabled: false
+    # -- Alloy component reference where the chart forwards profiles into the user's pipeline.
+    # @section -- Profiles (Pyroscope)
+    input: ""
+    # -- Raw Alloy block for the Pyroscope profiles pipeline.
+    # @section -- Profiles (Pyroscope)
+    config: ""

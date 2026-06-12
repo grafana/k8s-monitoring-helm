@@ -1,0 +1,50 @@
+---
+# The kubernetesEnrichment processor copies Kubernetes namespace and pod labels and
+# annotations onto telemetry data as it flows from features to destinations. Telemetry is
+# matched to its source pod or namespace via its `namespace` and `pod` labels (Prometheus
+# metrics, Loki logs, Pyroscope profiles) or its Kubernetes resource attributes (OTLP
+# metrics, logs, and traces).
+#
+# Each setting is a map of `<telemetry label>: <Kubernetes label or annotation name>`. The
+# key is the label (or OTLP resource attribute) added to the telemetry data; the value is
+# the label or annotation on the Kubernetes object to copy. For example:
+#   podAnnotations:
+#     owner: example.com/owner
+# copies the pod's `example.com/owner` annotation to the `owner` label.
+#
+# The Prometheus metrics, Loki logs, and Pyroscope profiles pipelines use experimental
+# Alloy components (`prometheus.enrich`, `loki.enrich`, `pyroscope.enrich`), so any
+# collector running those pipelines must set `alloy.stabilityLevel: experimental`. The
+# OTLP pipelines use the generally available `otelcol.processor.k8sattributes` component.
+#
+# For the label-based pipelines, the telemetry label name is sanitized to a valid label
+# name (e.g. `cost-center` becomes `cost_center`). OTLP resource attributes use the
+# telemetry label name verbatim.
+#
+# Note that enrichment can greatly increase the resource utilization of the collector.
+#
+# This data processor is considered experimental and subject to change.
+
+# -- Kubernetes namespace labels to copy to telemetry data, as a map of
+# `<telemetry label>: <namespace label name>`. Applies to data carrying a `namespace`
+# label (or Kubernetes resource attributes for OTLP).
+# @section -- General
+namespaceLabels: {}
+
+# -- Kubernetes namespace annotations to copy to telemetry data, as a map of
+# `<telemetry label>: <namespace annotation name>`. Applies to data carrying a `namespace`
+# label (or Kubernetes resource attributes for OTLP).
+# @section -- General
+namespaceAnnotations: {}
+
+# -- Kubernetes pod labels to copy to telemetry data, as a map of
+# `<telemetry label>: <pod label name>`. Applies to data carrying `namespace` and `pod`
+# labels (or Kubernetes resource attributes for OTLP).
+# @section -- General
+podLabels: {}
+
+# -- Kubernetes pod annotations to copy to telemetry data, as a map of
+# `<telemetry label>: <pod annotation name>`. Applies to data carrying `namespace` and
+# `pod` labels (or Kubernetes resource attributes for OTLP).
+# @section -- General
+podAnnotations: {}

@@ -7,9 +7,10 @@
 {{- include "feature.clusterEvents.module" (dict "Values" $.Values.clusterEvents "Files" $.Subcharts.clusterEvents.Files "Template" $.Template) }}
 cluster_events "feature" {
   logs_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
+    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "clusterEvents" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
   ]
 }
+{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "clusterEvents" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") }}
 {{- end -}}
 {{- end -}}
 
@@ -41,6 +42,7 @@ cluster_events "feature" {
 {{- $featureName := "Kubernetes Cluster events" }}
 {{- $destinationNames := include "features.clusterEvents.destinations" . | fromYamlArray }}
 {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinationNames "type" "logs" "ecosystem" "loki" "featureName" $featureName) }}
+{{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "clusterEvents" "featureName" $featureName "type" "logs" "ecosystem" "loki") }}
 {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
 {{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}
 {{- if $.Values.clusterEvents.clustering }}

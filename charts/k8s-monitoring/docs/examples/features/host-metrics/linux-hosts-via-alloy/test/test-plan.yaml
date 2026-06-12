@@ -1,0 +1,58 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: host-metrics-linux-hosts-via-alloy
+
+subject:
+  releaseName: k8smon
+  path: ../../../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - preset: prometheus
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+
+tests:
+  - type: kubernetes-objects-test
+    values:
+      checks:
+        # The assigned collector is a DaemonSet (configured by the linux-host-monitor and daemonset presets)
+        - {name: k8smon-alloy-metrics, kind: DaemonSet, namespace: default}
+        # No Node Exporter DaemonSet is deployed when source is "alloy"
+        - {name: k8smon-node-exporter, kind: DaemonSet, namespace: default, expect: {count: 0}}
+
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: host-metrics-example-cluster
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+
+          queries:
+            # Linux host metrics are flowing, collected by Alloy via prometheus.exporter.unix
+            - query: node_cpu_seconds_total{cluster="$CLUSTER"}
+              type: promql
+            - query: node_memory_MemTotal_bytes{cluster="$CLUSTER"}
+              type: promql
+
+            # The job label and a per-node instance label are set, matching the Node Exporter behavior
+            - query: up{cluster="$CLUSTER", job="integrations/node_exporter", instance!=""}
+              type: promql
+
+            # No Node Exporter workload is deployed when source is "alloy"
+            - query: count(up{cluster="$CLUSTER", app="node-exporter"})
+              type: promql
+              expect:
+                count: 0

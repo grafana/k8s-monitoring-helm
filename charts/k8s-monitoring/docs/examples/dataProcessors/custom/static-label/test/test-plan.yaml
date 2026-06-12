@@ -1,0 +1,81 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: static-label
+
+subject:
+  releaseName: k8smon
+  path: ../../../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  # Generators for each telemetry type (metrics target, log emitter, trace + profile sources).
+  - file: dependencies/workloads.yaml
+  - preset: prometheus
+  - preset: loki
+  - preset: tempo
+  - preset: pyroscope
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+            - name: Loki
+              type: loki
+              url: http://loki.loki.svc:3100
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+            - name: Tempo
+              type: tempo
+              url: http://tempo.tempo.svc:3200
+            - name: Pyroscope
+              type: grafana-pyroscope-datasource
+              url: http://pyroscope.pyroscope.svc:4040
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: static-label
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+            TEMPO_URL: http://tempo.tempo.svc:3200/api/search
+            PROFILECLI_URL: http://pyroscope.pyroscope.svc:4040
+
+          queries:
+            # Metrics (annotationAutodiscovery -> prometheus): the scraped metric carries the
+            # region label added by the static-label processor.
+            - query: example_app_up{cluster="$CLUSTER", region="central"}
+              type: promql
+              expect:
+                value: 1
+                operator: ==
+
+            # Logs (podLogsViaLoki -> loki): log lines carry the region label.
+            - query: count_over_time({cluster="$CLUSTER", namespace="workload", region="central"}[1h])
+              type: logql
+
+            # Traces (applicationObservability -> tempo): spans carry the region resource attribute.
+            - query: '{.k8s.cluster.name="$CLUSTER" && .region="central"}'
+              type: traceql
+
+            # Profiles (profilesReceiver -> pyroscope): profiles carry the region label.
+            - query: '{cluster="$CLUSTER", region="central"}'
+              type: pyroql
