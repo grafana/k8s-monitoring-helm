@@ -38,6 +38,7 @@ destinations:
 # Will automatically go to both loki and lokiStdout destinations
 podLogsViaLoki:
   enabled: true
+  alignServiceNameWithOTelOperator: true
 
 collectors:
   alloy-logs:

@@ -14,6 +14,31 @@ podLogsViaLoki:
   enabled: true
 ```
 
+## Service name and namespace detection
+
+This feature sets the `service_name` and `service_namespace` labels on collected logs. The default detection chain
+for `service_name` is, in order: the `resource.opentelemetry.io/service.name` pod annotation, the
+`app.kubernetes.io/name` pod label, and the container name.
+
+Set `alignServiceNameWithOTelOperator: true` to opt in to the
+[OpenTelemetry Operator service name conventions](https://opentelemetry.io/docs/specs/semconv/non-normative/k8s-attributes/)
+instead. These are also what Grafana Beyla uses for application metrics, so enabling this flag makes `service_name`
+consistent across metrics, logs, traces, and profiles from the same workload. The chain becomes:
+
+1.  The `resource.opentelemetry.io/service.name` pod annotation
+2.  The `app.kubernetes.io/instance` pod label
+3.  The `app.kubernetes.io/name` pod label
+4.  The name of the workload that owns the pod (Deployment, StatefulSet, DaemonSet, CronJob, Job, ...). For pods owned
+    by a Deployment via a ReplicaSet, the Deployment name is used.
+5.  The pod name
+6.  The container name
+
+In either mode, `service_namespace` is set to the first value found from: the
+`resource.opentelemetry.io/service.namespace` pod annotation, then the pod namespace.
+
+To pin a specific service name for a workload, set the `resource.opentelemetry.io/service.name` annotation on the
+pod. It takes the highest precedence in every mode.
+
 ## Testing
 
 This chart contains unit tests to verify the generated configuration. The hidden value `deployAsConfigMap` will render
@@ -42,23 +67,24 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 ## Values
 
-### Discovery Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| annotationSelector | string | `"logs.grafana.com/pods.enabled"` | Pod annotation to use for controlling log discovery. If a pod has this annotation, it will either enable or disable gathering of logs, depending on the value of the discoveryMethod. |
-| discoveryMethod | string | `"all"` | Controls the behavior of discovering pods for logs. Possible values: `all`, `annotation`. When set to "all", every pod (filtered by the namespace and label selectors) will have their logs gathered. When set to "annotation", only pods with the annotation selector set to something other than "false", "no" or "skip" will have their logs gathered. |
-
 ### Log Processing
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| alignServiceNameWithOTelOperator | bool | `false` | Align the `service_name` label with the [OpenTelemetry Operator service name conventions](https://opentelemetry.io/docs/specs/semconv/non-normative/k8s-attributes/) (which is what Grafana Beyla uses). When enabled, the detection chain becomes: pod annotation `resource.opentelemetry.io/service.name` → pod label `app.kubernetes.io/instance` → pod label `app.kubernetes.io/name` → owner workload name (Deployment, StatefulSet, etc.) → pod name → container name. When disabled, the previous chain is used: annotation → pod label `app.kubernetes.io/name` → container name. |
 | annotations | object | `{"job":"k8s.grafana.com/logs.job"}` | Log labels to set with values copied from the Kubernetes Pod annotations. Format: `<log_label>: <kubernetes_annotation>`. |
 | cri.maxPartialLines | int | `100` | Maximum number of partial lines to hold in memory before forcing a merge. Increase this value if logs are being lost due to partial line limits. |
 | defaultLogFormat | string | `"cri"` | Default parsing format if it cannot be determined from container UID. Options are `null`, `cri`, or `docker`. |
 | labels | object | `{"app_kubernetes_io_name":"app.kubernetes.io/name"}` | Log labels to set with values copied from the Kubernetes Pod labels. Format: `<log_label>: <kubernetes_label>`. |
 | staticLabels | object | `{}` | Log labels to set with static values. |
 | staticLabelsFrom | object | `{}` | Log labels to set with static values, not quoted so it can reference config components. |
+
+### Discovery Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| annotationSelector | string | `"logs.grafana.com/pods.enabled"` | Pod annotation to use for controlling log discovery. If a pod has this annotation, it will either enable or disable gathering of logs, depending on the value of the discoveryMethod. |
+| discoveryMethod | string | `"all"` | Controls the behavior of discovering pods for logs. Possible values: `all`, `annotation`. When set to "all", every pod (filtered by the namespace and label selectors) will have their logs gathered. When set to "annotation", only pods with the annotation selector set to something other than "false", "no" or "skip" will have their logs gathered. |
 
 ### Pod Discovery
 
