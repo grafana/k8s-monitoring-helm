@@ -23,6 +23,29 @@ tests:
       - matchSnapshot:
           path: data["config.alloy"]
 
+  - it: sets the provider attribute from the configured platform
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      global:
+        platform: openshift
+      collectors:
+        alloy-metrics:
+          remoteConfig:
+            enabled: true
+            url: https://fleet-management-prod-001.grafana.net
+            auth:
+              type: basic
+              username: 123456
+              password: "It's a secret to everyone"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '"provider" = "openshift",'
+
   - it: allows for overriding the default attributes
     template: alloy-config.yaml
     set:

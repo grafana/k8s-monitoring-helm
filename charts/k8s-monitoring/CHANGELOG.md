@@ -5,6 +5,9 @@
 *   Fix the deployment notes printing an empty "It will:" section when no local features are enabled (e.g. when only using remote configuration or only deploying telemetry services) (#2711) (@petewall)
 *   Fix the OTLP destination `timeout` setting rendering `timeout` at the top level of the `otelcol.exporter.otlp`/`otelcol.exporter.otlphttp` component instead of inside the `client` block. Alloy 1.16.3+ rejects the misplaced attribute (`unrecognized attribute name "timeout"`), causing the collector to fail to start. (#2710) (@petewall)
 *   Update Alloy Operator to 0.5.10 and kube-state-metrics to 7.5.1 (@petewall)
+*   Expand the platform detection template to recognize Azure AKS, Google GKE, and Amazon EKS (in addition to OpenShift) by inspecting node labels and cloud provider IDs, and expose the detection result through a reusable `validations.platform.detect` template. (@petewall)
+*   Set the `provider` attribute reported by the Remote Configuration (`remotecfg`) feature to the configured or detected platform (`openshift`, `aks`, `gke`, `eks`) when it can be determined. (@petewall)
+*   Report the detected platform in the `platform` label of the `grafana_kubernetes_monitoring_build_info` self-reporting metric when `global.platform` is not set explicitly. (@petewall)
 
 ## 4.1.5
 
