@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+*   Expand the platform detection template to recognize Azure AKS, Google GKE, and Amazon EKS (in addition to OpenShift) by inspecting node labels and cloud provider IDs, and expose the detection result through a reusable `validations.platform.detect` template. (@petewall)
+*   Set the `provider` attribute reported by the Remote Configuration (`remotecfg`) feature to the configured or detected platform (`openshift`, `aks`, `gke`, `eks`), falling back to `kubernetes` when the platform cannot be determined. (@petewall)
+*   Report the detected platform in the `platform` label of the `grafana_kubernetes_monitoring_build_info` self-reporting metric when `global.platform` is not set explicitly. (@petewall)
+
 ## 4.1.5
 
 *   Fix OpenCost failing to deploy with `duplicate entries for key [name="CONFIG_PATH"]` when `customPricing` is enabled. The GKE GCP-provider workaround no longer sets `CONFIG_PATH` via `extraEnv` (which collided with the `CONFIG_PATH` the OpenCost chart sets for custom pricing); instead it mounts a writable `emptyDir` at OpenCost's default config path (`/var/configs`). (#2692) (@petewall)

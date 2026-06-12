@@ -89,6 +89,10 @@ remotecfg {
 {{- end }}
   poll_frequency = {{ .pollFrequency | quote }}
 {{- $attributes := dict "platform" "kubernetes" }}
+{{- $provider := include "validations.platform.resolve" $ | trim }}
+{{- if $provider }}
+  {{- $attributes = merge $attributes (dict "provider" $provider) }}
+{{- end }}
 {{- $attributes = merge $attributes (dict "source" $.Chart.Name) }}
 {{- $attributes = merge $attributes (dict "sourceVersion" $.Chart.Version) }}
 {{- $attributes = merge $attributes (dict "release" $.Release.Name) }}
