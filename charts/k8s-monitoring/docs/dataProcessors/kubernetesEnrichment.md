@@ -21,6 +21,8 @@ Telemetry is matched to its source pod or namespace as follows:
 Namespace labels and annotations only require the namespace match; pod labels and annotations require both `namespace`
 and `pod` to be identified.
 
+This data processor is considered experimental and subject to change.
+
 <!-- textlint-disable terminology -->
 ## Values
 

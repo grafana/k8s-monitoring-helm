@@ -4,6 +4,8 @@ The custom processor lets you insert arbitrary Alloy configuration into a featur
 `(telemetry type, ecosystem)` tuple, so a single custom processor can transform Prometheus metrics, OTLP logs,
 Pyroscope profiles, and so on — you enable each tuple you want to handle and supply its `input` and `config`.
 
+This data processor is considered experimental and subject to change.
+
 <!-- textlint-disable terminology -->
 ## Values
 
