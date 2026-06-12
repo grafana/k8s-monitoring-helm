@@ -36,3 +36,19 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["self-reporting-metric.prom"]
+
+  - it: reports the configured platform in the build info metric
+    set:
+      cluster: {name: test-cluster}
+      global: {platform: openshift}
+      collectors: {alloy-singleton: {presets: [singleton]}}
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus:9090/api/v1/write
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["self-reporting-metric.prom"]
+          pattern: 'grafana_kubernetes_monitoring_build_info\{version="[^"]+", namespace="[^"]+", platform="openshift"\} 1'
