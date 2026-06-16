@@ -1,0 +1,126 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Validations - OpenCost cloud integration /var/configs conflict
+templates:
+  - validations.yaml
+tests:
+  - it: fails when cloud integration (secret) is enabled alongside the chart-managed /var/configs volume
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        - name: prometheus
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      clusterMetrics:
+        enabled: true
+        opencost:
+          enabled: true
+          metricsSource: prometheus
+          opencost:
+            exporter:
+              defaultClusterId: ci-test-cluster
+            prometheus:
+              external:
+                url: http://prometheus.prometheus.svc:9090/api/v1/query
+            cloudIntegrationSecret: my-cloud-integration
+      alloy-metrics:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            OpenCost cloud integration is enabled, which mounts a writable volume at /var/configs.
+            This conflicts with the chart-managed /var/configs volume used to work around the GKE GCP provider.
+            Since cloud integration already makes /var/configs writable, remove the chart-managed volume:
+            clusterMetrics:
+              opencost:
+                extraVolumes: []
+                opencost:
+                  exporter:
+                    extraVolumeMounts: []
+
+  - it: fails when cloud integration (raw JSON) is enabled alongside the chart-managed /var/configs volume
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        - name: prometheus
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      clusterMetrics:
+        enabled: true
+        opencost:
+          enabled: true
+          metricsSource: prometheus
+          opencost:
+            exporter:
+              defaultClusterId: ci-test-cluster
+            prometheus:
+              external:
+                url: http://prometheus.prometheus.svc:9090/api/v1/query
+            cloudIntegrationJSON: |-
+              {"gcp": []}
+      alloy-metrics:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            OpenCost cloud integration is enabled, which mounts a writable volume at /var/configs.
+            This conflicts with the chart-managed /var/configs volume used to work around the GKE GCP provider.
+            Since cloud integration already makes /var/configs writable, remove the chart-managed volume:
+            clusterMetrics:
+              opencost:
+                extraVolumes: []
+                opencost:
+                  exporter:
+                    extraVolumeMounts: []
+
+  - it: does not fail when cloud integration is enabled and the chart-managed volume is removed
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        - name: prometheus
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      clusterMetrics:
+        enabled: true
+        opencost:
+          enabled: true
+          metricsSource: prometheus
+          extraVolumes: []
+          opencost:
+            exporter:
+              defaultClusterId: ci-test-cluster
+              extraVolumeMounts: []
+            prometheus:
+              external:
+                url: http://prometheus.prometheus.svc:9090/api/v1/query
+            cloudIntegrationSecret: my-cloud-integration
+      alloy-metrics:
+        enabled: true
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: does not fail in the default case without cloud integration
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        - name: prometheus
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      clusterMetrics:
+        enabled: true
+        opencost:
+          enabled: true
+          metricsSource: prometheus
+          opencost:
+            exporter:
+              defaultClusterId: ci-test-cluster
+            prometheus:
+              external:
+                url: http://prometheus.prometheus.svc:9090/api/v1/query
+      alloy-metrics:
+        enabled: true
+    asserts:
+      - notFailedTemplate: {}

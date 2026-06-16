@@ -3,6 +3,7 @@
 ## 3.8.10
 
 *   Bump Alloy Operator to 0.5.10, Beyla to 1.16.8, kube-state-metrics to 7.5.1, and OpenCost to 2.5.23 (@petewall)
+*   Fix OpenCost failing to deploy with `duplicate entries for key [name="CONFIG_PATH"]` when `customPricing` is enabled. The GKE GCP-provider workaround no longer sets `CONFIG_PATH` via `extraEnv` (which collided with the `CONFIG_PATH` the OpenCost chart sets for custom pricing); instead it mounts a writable `emptyDir` at OpenCost's default config path (`/var/configs`). (#2692) (@petewall)
 
 ## 3.8.9
 
