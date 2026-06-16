@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.8.10
+
+*   Bump Alloy Operator to 0.5.10, Beyla to 1.16.8, kube-state-metrics to 7.5.1, and OpenCost to 2.5.23 (@petewall)
+
 ## 3.8.9
 
 *   Bump Alloy Operator to 0.5.8, OpenCost to 2.5.22, Windows Exporter to 0.12.7 (@petewall)
