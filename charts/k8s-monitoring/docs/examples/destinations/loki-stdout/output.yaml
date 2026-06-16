@@ -6,10 +6,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.5.8
+    helm.sh/chart: alloy-operator-0.5.10
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.8.2"
+    app.kubernetes.io/version: "1.10.0"
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
@@ -317,10 +317,10 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy-operator-alloy-manager
   labels:
-    helm.sh/chart: alloy-operator-0.5.8
+    helm.sh/chart: alloy-operator-0.5.10
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.8.2"
+    app.kubernetes.io/version: "1.10.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -381,10 +381,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-operator-alloy-manager
   labels:
-    helm.sh/chart: alloy-operator-0.5.8
+    helm.sh/chart: alloy-operator-0.5.10
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.8.2"
+    app.kubernetes.io/version: "1.10.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -401,10 +401,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-operator
   labels:
-    helm.sh/chart: alloy-operator-0.5.8
+    helm.sh/chart: alloy-operator-0.5.10
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.8.2"
+    app.kubernetes.io/version: "1.10.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -422,10 +422,10 @@ metadata:
   name: k8smon-alloy-operator-leader-election-role
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.5.8
+    helm.sh/chart: alloy-operator-0.5.10
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.8.2"
+    app.kubernetes.io/version: "1.10.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -467,10 +467,10 @@ metadata:
   name: k8smon-alloy-operator-leader-election-rolebinding
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.5.8
+    helm.sh/chart: alloy-operator-0.5.10
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.8.2"
+    app.kubernetes.io/version: "1.10.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -488,10 +488,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.5.8
+    helm.sh/chart: alloy-operator-0.5.10
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.8.2"
+    app.kubernetes.io/version: "1.10.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
@@ -515,10 +515,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.5.8
+    helm.sh/chart: alloy-operator-0.5.10
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.8.2"
+    app.kubernetes.io/version: "1.10.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -529,10 +529,10 @@ spec:
   template:
     metadata:
       labels:
-        helm.sh/chart: alloy-operator-0.5.8
+        helm.sh/chart: alloy-operator-0.5.10
         app.kubernetes.io/name: alloy-operator
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "1.8.2"
+        app.kubernetes.io/version: "1.10.0"
         app.kubernetes.io/managed-by: Helm
     spec:
       serviceAccountName: k8smon-alloy-operator
@@ -540,7 +540,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: alloy-operator
-          image: "ghcr.io/grafana/alloy-operator:1.8.2"
+          image: "ghcr.io/grafana/alloy-operator:1.10.0"
           imagePullPolicy: IfNotPresent
           args:
             - --health-probe-bind-address=:8081
@@ -662,6 +662,7 @@ spec:
       enabled: false
       horizontal:
         enabled: false
+        externalHPA: false
         maxReplicas: 5
         minReplicas: 1
         scaleDown:
@@ -891,6 +892,7 @@ spec:
     annotations: {}
     clusterIP: ""
     enabled: true
+    externalTrafficPolicy: Cluster
     internalTrafficPolicy: Cluster
     nodePort: 31128
     type: ClusterIP
@@ -1007,7 +1009,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.8.9
+    helm.sh/chart: k8s-monitoring-3.8.10
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -1060,7 +1062,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.8.9
+    helm.sh/chart: k8s-monitoring-3.8.10
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
