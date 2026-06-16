@@ -57,6 +57,35 @@ cluster_metrics "feature" {
 {{- define "features.clusterMetrics.validate.opencost" }}
 {{- if .Values.clusterMetrics.opencost.enabled}}
   {{- $destinations := include "features.clusterMetrics.destinations" . | fromYamlArray }}
+
+  {{/*
+  The chart mounts an emptyDir at /var/configs (OpenCost's default CONFIG_PATH) so the GCP provider
+  can write gcp.json on GKE. When cloud integration is enabled, the OpenCost chart already mounts its
+  own writable volume at /var/configs, so our extra mount collides (duplicate mountPath). In that case
+  the chart-managed volume is unnecessary and must be removed.
+  */}}
+  {{- $cloudIntegration := or (dig "opencost" "cloudIntegrationSecret" "" .Values.clusterMetrics.opencost) (dig "opencost" "cloudIntegrationJSON" "" .Values.clusterMetrics.opencost) }}
+  {{- if $cloudIntegration }}
+    {{- $varConfigsMount := false }}
+    {{- range $mount := (dig "opencost" "exporter" "extraVolumeMounts" (list) .Values.clusterMetrics.opencost) }}
+      {{- if eq (dig "mountPath" "" $mount) "/var/configs" }}
+        {{- $varConfigsMount = true }}
+      {{- end }}
+    {{- end }}
+    {{- if $varConfigsMount }}
+      {{- $msg := list "" "OpenCost cloud integration is enabled, which mounts a writable volume at /var/configs." }}
+      {{- $msg = append $msg "This conflicts with the chart-managed /var/configs volume used to work around the GKE GCP provider." }}
+      {{- $msg = append $msg "Since cloud integration already makes /var/configs writable, remove the chart-managed volume:" }}
+      {{- $msg = append $msg "clusterMetrics:" }}
+      {{- $msg = append $msg "  opencost:" }}
+      {{- $msg = append $msg "    extraVolumes: []" }}
+      {{- $msg = append $msg "    opencost:" }}
+      {{- $msg = append $msg "      exporter:" }}
+      {{- $msg = append $msg "        extraVolumeMounts: []" }}
+      {{- fail (join "\n" $msg) }}
+    {{- end }}
+  {{- end }}
+
   {{- if ne .Values.cluster.name .Values.clusterMetrics.opencost.opencost.exporter.defaultClusterId }}
     {{- $msg := list "" "The OpenCost default cluster id should match the cluster name." }}
     {{- $msg = append $msg "Please set:" }}
