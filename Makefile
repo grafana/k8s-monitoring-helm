@@ -1,6 +1,5 @@
 SHELL := /bin/bash
 
-CHARTS = $(shell ls --color=never charts)
 HELM_VERSION ?= $(shell helm version --short)
 HELM_MAJOR_VERSION = $(shell echo $(HELM_VERSION) | cut -d '.' -f 1 | sed -e 's/v//')
 HELM_MINOR_VERSION = $(shell echo $(HELM_VERSION) | cut -d '.' -f 2)
@@ -27,18 +26,12 @@ check-helm-version:
 .PHONY: clean
 clean: ## Clean all charts
 	rm -rf node_modules
-	set -e && \
-	for chart in $(CHARTS); do \
-		make -C charts/$$chart $@; \
-	done
+	make -C charts/k8s-monitoring $@;
 
 ##@ Build
 .PHONY: build
 build: check-helm-version ## Build all charts
-	set -e && \
-	for chart in $(CHARTS); do \
-		make -C charts/$$chart $@; \
-	done
+	make -C charts/k8s-monitoring $@;
 
 ##@ Install
 .PHONY: install
@@ -57,10 +50,7 @@ node_modules/.bin/textlint: package.json yarn.lock
 ##@ Tests
 .PHONY: test
 test: build lint ## Run tests for all charts
-	set -e && \
-	for chart in $(CHARTS); do \
-		make -C charts/$$chart $@; \
-	done
+	make -C charts/k8s-monitoring $@;
 
 .PHONY: lint
 lint: lint-alloy lint-shell lint-markdown lint-terraform lint-text lint-yaml lint-alex lint-misspell lint-actionlint lint-zizmor ## Run all linters

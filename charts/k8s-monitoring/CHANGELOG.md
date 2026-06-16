@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Update Alloy Operator to 0.5.10 and kube-state-metrics to 7.5.1 (@petewall)
+
 ## 4.1.5
 
 *   Fix OpenCost failing to deploy with `duplicate entries for key [name="CONFIG_PATH"]` when `customPricing` is enabled. The GKE GCP-provider workaround no longer sets `CONFIG_PATH` via `extraEnv` (which collided with the `CONFIG_PATH` the OpenCost chart sets for custom pricing); instead it mounts a writable `emptyDir` at OpenCost's default config path (`/var/configs`). (#2692) (@petewall)
