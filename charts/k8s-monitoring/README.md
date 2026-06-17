@@ -393,6 +393,7 @@ details:
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
 | rlankfo | <robert.lankford@grafana.com> |  |
+| TylerHelmuth | <tyler.helmuth@grafana.com> |  |
 <!-- textlint-enable terminology -->
 
 <!-- markdownlint-disable no-bare-urls -->
