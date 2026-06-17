@@ -444,10 +444,10 @@ otelcol.exporter.otlp {{ include "helper.alloy_name" .name | quote }} {
 {{- else if eq .protocol "http" }}
 otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
-{{- if .timeout }}
-  timeout = {{ .timeout | quote }}
-{{- end }}
   client {
+{{- if .timeout }}
+    timeout = {{ .timeout | quote }}
+{{- end }}
 {{- if .urlFrom }}
     endpoint = {{ .urlFrom }}
 {{- else }}
