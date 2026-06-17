@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Add `optenTelemetryConversion.keepIdentifyingResourceAttributes` option to `otelcol.exporter.prometheus` component to optionally preserve `service.name`, `service.namespace`, and `service.instance.id` attributes as labels on `target_info` metric during OTLP to prometheus conversion. (@rlankfo)
+
 ## 4.1.6
 
 *   Fix the deployment notes printing an empty "It will:" section when no local features are enabled (e.g. when only using remote configuration or only deploying telemetry services) (#2711) (@petewall)
