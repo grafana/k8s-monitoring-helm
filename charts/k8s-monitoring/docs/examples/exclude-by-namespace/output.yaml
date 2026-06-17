@@ -12,6 +12,7 @@ metadata:
     app.kubernetes.io/version: "1.10.0"
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
+
 ---
 # Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/serviceaccount.yaml
 apiVersion: v1
@@ -28,6 +29,7 @@ metadata:
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: rbac
 automountServiceAccountToken: true
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/serviceaccount.yaml
 apiVersion: v1
@@ -2303,6 +2305,7 @@ data:
     otelcol.exporter.prometheus "prometheus" {
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
+      keep_identifying_resource_attributes = false
       forward_to = [prometheus.remote_write.prometheus.receiver]
     } // otelcol.exporter.prometheus "prometheus"
     
@@ -2549,6 +2552,7 @@ data:
     otelcol.exporter.prometheus "prometheus" {
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
+      keep_identifying_resource_attributes = false
       forward_to = [prometheus.remote_write.prometheus.receiver]
     } // otelcol.exporter.prometheus "prometheus"
     
@@ -2824,6 +2828,7 @@ data:
     otelcol.exporter.prometheus "prometheus" {
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
+      keep_identifying_resource_attributes = false
       forward_to = [prometheus.remote_write.prometheus.receiver]
     } // otelcol.exporter.prometheus "prometheus"
     
@@ -2860,6 +2865,7 @@ data:
         "k8s_cluster_name" = "exclude-by-namespace-cluster",
       }
     } // prometheus.remote_write "prometheus"
+
 ---
 # Source: k8s-monitoring/templates/beyla-config.yaml
 apiVersion: v1
@@ -2909,6 +2915,7 @@ data:
       - application_host
       path: /metrics
       port: 9090
+
 ---
 # Source: k8s-monitoring/templates/release-info.yaml
 apiVersion: v1
@@ -2940,6 +2947,9 @@ data:
     grafana_kubernetes_monitoring_collector_info{kind="deployment", name="alloy-receiver", presets="deployment", replicas="1", type="alloy"} 1
     grafana_kubernetes_monitoring_collector_info{kind="deployment", name="alloy-singleton", presets="singleton", replicas="1", type="alloy"} 1
     # EOF
+    
+
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -3025,6 +3035,7 @@ rules:
   - apiGroups: [ "" ]
     resources: [ "pods", "services", "nodes" ]
     verbs: [ "list", "watch", "get" ]
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -3181,6 +3192,8 @@ rules:
   resources:
     - volumeattachments
   verbs: ["list", "watch"]
+
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -3201,6 +3214,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-objects.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -3221,6 +3235,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
+
 ---
 # Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/cluster-role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -3243,6 +3258,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: k8smon-beyla
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -3332,6 +3348,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/service.yaml
 apiVersion: v1
@@ -3359,6 +3376,7 @@ spec:
   selector:
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
+
 ---
 # Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/cache-service.yaml
 apiVersion: v1
@@ -3382,6 +3400,7 @@ spec:
       name: grpc
   selector:
     app.kubernetes.io/name: beyla-k8s-cache
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/service.yaml
 apiVersion: v1
@@ -3410,6 +3429,7 @@ spec:
   selector:    
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/node-exporter/templates/service.yaml
 apiVersion: v1
@@ -3438,6 +3458,7 @@ spec:
   selector:
     app.kubernetes.io/name: node-exporter
     app.kubernetes.io/instance: k8smon
+
 ---
 # Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/daemon-set.yaml
 apiVersion: apps/v1
@@ -3512,6 +3533,7 @@ spec:
         - name: cgroup
           hostPath:
             path: /sys/fs/cgroup
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/node-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -3640,6 +3662,7 @@ spec:
         - name: root
           hostPath:
             path: /
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/deployment.yaml
 apiVersion: apps/v1
@@ -3711,6 +3734,7 @@ spec:
             readOnlyRootFilesystem: true
       nodeSelector:
         kubernetes.io/os: linux
+
 ---
 # Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/cache-deployment.yaml
 apiVersion: apps/v1
@@ -3857,6 +3881,7 @@ spec:
           readOnlyRootFilesystem: true
       nodeSelector:
         kubernetes.io/os: linux
+
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
@@ -4141,6 +4166,7 @@ roleRef:
   kind: Role
   name: k8smon-k8s-monitoring-add-finalizer
   apiGroup: rbac.authorization.k8s.io
+
 ---
 # Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -4159,6 +4185,7 @@ roleRef:
   kind: Role
   name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
   apiGroup: rbac.authorization.k8s.io
+
 ---
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
 apiVersion: batch/v1
