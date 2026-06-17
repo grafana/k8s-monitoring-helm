@@ -80,3 +80,7 @@
 {{- define "namespace_annotation" -}}
 {{ printf "__meta_kubernetes_namespace_annotation_%s" (include "escape_label" .) }}
 {{- end }}
+
+{{- define "ec2_tag" -}}
+{{ printf "__meta_ec2_tag_%s" (include "escape_label" .) }}
+{{- end }}

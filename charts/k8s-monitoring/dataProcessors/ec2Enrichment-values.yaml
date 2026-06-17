@@ -1,0 +1,49 @@
+---
+# The ec2Enrichment processor copies AWS EC2 instance tags onto telemetry data as it flows
+# from features to destinations. It uses the `discovery.ec2` Alloy component to discover the
+# EC2 instances in a region and their tags (exposed as `__meta_ec2_tag_<tag name>` labels),
+# then attaches the requested tags to telemetry. It supports the label-based ecosystems:
+# Prometheus metrics, Loki logs, and Pyroscope profiles.
+#
+# Telemetry is matched to its source instance by its `node` label, which is compared against
+# the instance's private DNS name (`__meta_ec2_private_dns_name`). On Amazon EKS, the
+# Kubernetes node name defaults to the instance's private DNS name, so node-labeled telemetry
+# matches its backing EC2 instance.
+#
+# The `tags` setting is a map of `<telemetry label>: <EC2 tag name>`. The key is the label
+# added to the telemetry data; the value is the name of the EC2 instance tag to copy. For
+# example:
+#   tags:
+#     team: Team
+# copies the instance's `Team` tag to the `team` label.
+#
+# This processor uses the experimental Alloy components `prometheus.enrich`, `loki.enrich`,
+# and `pyroscope.enrich`, so any collector running it must set
+# `alloy.stabilityLevel: experimental`. The telemetry label name is sanitized to a valid
+# label name (e.g. `cost-center` becomes `cost_center`).
+#
+# AWS credentials are sourced from the standard AWS credential chain (IRSA, instance profile,
+# or environment variables). The instance or role used must have the `ec2:DescribeInstances`
+# and `ec2:DescribeAvailabilityZones` permissions.
+#
+# This data processor is considered experimental and subject to change.
+
+# -- The AWS region to discover EC2 instances in. If not set, the region is determined from
+# the EC2 instance metadata of the host running the collector.
+# @section -- General
+region: ""
+
+# -- The ARN of the role to assume when discovering EC2 instances. If not set, the default
+# credentials from the AWS credential chain are used.
+# @section -- General
+roleARN: ""
+
+# -- How often to refresh the list of discovered EC2 instances and their tags.
+# @section -- General
+refreshInterval: ""
+
+# -- EC2 instance tags to copy to telemetry data, as a map of
+# `<telemetry label>: <EC2 tag name>`. Applies to data carrying a `node` label that matches
+# an instance's private DNS name.
+# @section -- General
+tags: {}

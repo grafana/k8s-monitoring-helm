@@ -58,6 +58,14 @@ tests:
               expect:
                 value: 2
 
+            # EC2 enrichment: the ec2-tags data processor copies each node's EC2 `Team` tag
+            # onto node-labeled metrics. Both EC2 instances are tagged `Team=platform-test`,
+            # so both nodes' kube_node_info gain `team="platform-test"`.
+            - query: count(kube_node_info{cluster="$clusterName", job="integrations/kubernetes/kube-state-metrics", team="platform-test"})
+              type: promql
+              expect:
+                value: 2
+
             # Single Linux node
             - query: count(sum by (instance) (node_cpu_seconds_total{cluster="$clusterName", job="integrations/node_exporter"}))
               type: promql

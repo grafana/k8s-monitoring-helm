@@ -12,8 +12,26 @@ nodeGroups:
     instanceType: m5.large
     minSize: 1
     maxSize: 1
+    # Tag the EC2 instances so the ec2Enrichment data processor can copy the `Team` tag onto
+    # telemetry via discovery.ec2.
+    tags:
+      Team: platform-test
+    iam:
+      # discovery.ec2 reads instance tags from the EC2 DescribeInstances response, so the
+      # node role (used via IMDS) needs permission to describe instances and AZs.
+      attachPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - ec2:DescribeInstances
+              - ec2:DescribeAvailabilityZones
+            Resource: "*"
   - name: ng-windows
     instanceType: m5.large
     amiFamily: WindowsServer2022FullContainer
     minSize: 1
     maxSize: 1
+    # Tag the Windows node's EC2 instance too, so its node-labeled telemetry is enriched.
+    tags:
+      Team: platform-test

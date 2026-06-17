@@ -5,6 +5,7 @@
 *   Add `hostMetrics.linuxHosts.source` (`node-exporter` (default) or `alloy`). With `alloy`, Linux host metrics are collected directly by the assigned collector via `prometheus.exporter.unix`, requiring no Node Exporter deployment. This needs a privileged DaemonSet that mounts the host filesystem, configured with the new `presets: [linux-host-monitor, daemonset]`. The `nodeLabels` enrichment is not yet supported with `source: alloy`. (#2660) (@petewall)
 *   Introduce Data Processors, a method for transforming data between features and destinations. Initial processors include the `custom` processor.
 *   Add the `kubernetesEnrichment` data processor, which copies Kubernetes namespace and pod labels and annotations onto metrics, logs, traces, and profiles across all supported ecosystems. (@petewall)
+*   Add the `ec2Enrichment` data processor, which uses `discovery.ec2` to copy AWS EC2 instance tags onto Prometheus metrics, Loki logs, and Pyroscope profiles, matching telemetry to its instance by the `node` label. (#2678) (@petewall)
 *   Deprecate the `metricEnrichment` option on the Prometheus destination in favor of the `kubernetesEnrichment` data processor. The option remains functional. (@petewall)
 
 ## 4.1.6
