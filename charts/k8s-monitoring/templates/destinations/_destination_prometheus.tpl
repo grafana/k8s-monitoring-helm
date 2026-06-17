@@ -5,6 +5,7 @@
 otelcol.exporter.prometheus {{ include "helper.alloy_name" $.destinationName | quote }} {
   add_metric_suffixes = {{ .openTelemetryConversion.addMetricSuffixes }}
   resource_to_telemetry_conversion = {{ .openTelemetryConversion.resourceToTelemetryConversion }}
+  keep_identifying_resource_attributes = {{ .openTelemetryConversion.keepIdentifyingResourceAttributes }}
   forward_to = [prometheus.remote_write.{{ include "helper.alloy_name" $.destinationName }}.receiver]
 } // otelcol.exporter.prometheus "{{ include "helper.alloy_name" $.destinationName }}"
 
