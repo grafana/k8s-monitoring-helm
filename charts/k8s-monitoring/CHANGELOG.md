@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 4.1.6
 
 *   Fix the deployment notes printing an empty "It will:" section when no local features are enabled (e.g. when only using remote configuration or only deploying telemetry services) (#2711) (@petewall)
 *   Fix the OTLP destination `timeout` setting rendering `timeout` at the top level of the `otelcol.exporter.otlp`/`otelcol.exporter.otlphttp` component instead of inside the `client` block. Alloy 1.16.3+ rejects the misplaced attribute (`unrecognized attribute name "timeout"`), causing the collector to fail to start. (#2710) (@petewall)
