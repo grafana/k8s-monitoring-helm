@@ -927,8 +927,38 @@ data:
     } // declare "cluster_metrics"
     cluster_metrics "feature" {
       metrics_destinations = [
-        prometheus.remote_write.grafana_cloud_metrics.receiver,
+        prometheus.relabel.clustermetrics_stamp_metrics_prometheus.receiver,
       ]
+    }
+    prometheus.relabel "clustermetrics_stamp_metrics_prometheus" {
+      forward_to = [prometheus.enrich.ec2_tags_in_metrics_prometheus.receiver]
+      rule {
+        target_label = "selected_destinations"
+        replacement  = "grafana-cloud-metrics"
+      }
+    }
+    // Processor: ec2-tags (ec2Enrichment) — metrics/prometheus
+    prometheus.enrich "ec2_tags_in_metrics_prometheus" {
+      targets = discovery.relabel.ec2_tags_instances.output
+      target_match_label = "__meta_ec2_private_dns_name"
+      metrics_match_label = "node"
+      labels_to_copy = ["team"]
+      forward_to = [prometheus.relabel.ec2_tags_out_metrics_prometheus.receiver]
+    } // prometheus.enrich "ec2_tags_in_metrics_prometheus"
+    prometheus.relabel "ec2_tags_out_metrics_prometheus" {
+      forward_to = [prometheus.relabel.ec2_tags_grafana_cloud_metrics_gate_metrics_prometheus.receiver]
+    }
+    prometheus.relabel "ec2_tags_grafana_cloud_metrics_gate_metrics_prometheus" {
+      forward_to = [prometheus.remote_write.grafana_cloud_metrics.receiver]
+      rule {
+        source_labels = ["selected_destinations"]
+        regex         = "(^|.*,)grafana-cloud-metrics(,.*|$)"
+        action        = "keep"
+      }
+      rule {
+        action = "labeldrop"
+        regex  = "selected_destinations"
+      }
     }
     // Feature: Host Metrics
     declare "host_metrics" {
@@ -1468,6 +1498,17 @@ data:
         prometheus.remote_write.grafana_cloud_metrics.receiver,
       ]
     }
+    // Processor: ec2-tags (ec2Enrichment) — shared EC2 instance discovery
+    discovery.ec2 "ec2_tags_instances" {
+      region = "ap-northeast-2"
+    } // discovery.ec2 "ec2_tags_instances"
+    discovery.relabel "ec2_tags_instances" {
+      targets = discovery.ec2.ec2_tags_instances.targets
+      rule {
+        source_labels = ["__meta_ec2_tag_Team"]
+        target_label = "team"
+      }
+    } // discovery.relabel "ec2_tags_instances"
     
     
     
@@ -2732,6 +2773,7 @@ spec:
         - ALL
       seccompProfile:
         type: RuntimeDefault
+    stabilityLevel: experimental
   controller:
     nodeSelector:
       kubernetes.io/os: linux
