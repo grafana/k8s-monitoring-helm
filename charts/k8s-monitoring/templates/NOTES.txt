@@ -9,15 +9,22 @@ This chart will install the following components:
 {{- end }}
 {{- include "collectors.notes.deployments" . }}
 
-It will:
 {{- $isTranslating := false }}
+{{- $localFeatures := list }}
 {{- range $feature := (include "features.list.enabled" .) | fromYamlArray }}
   {{- if ne $feature "selfReporting" }}
-    {{- $task := include (printf "feature.%s.notes.task" $feature) (dict "Values" (index $.Values $feature)) | trim }}
-    {{- $destinations := include (printf "features.%s.destinations" $feature) $ | fromYamlArray }}
-    {{- $featureIsTranslating := eq (include (printf "features.%s.destinations.isTranslating" $feature) $) "true" }}
-* {{ $task }} and send data to {{ include "english_list" $destinations }}{{ if $featureIsTranslating }}{{ $isTranslating = true }}*{{ end }}.
+    {{- $localFeatures = append $localFeatures $feature }}
   {{- end }}
+{{- end }}
+{{- if $localFeatures }}
+
+It will:
+{{- range $feature := $localFeatures }}
+  {{- $task := include (printf "feature.%s.notes.task" $feature) (dict "Values" (index $.Values $feature)) | trim }}
+  {{- $destinations := include (printf "features.%s.destinations" $feature) $ | fromYamlArray }}
+  {{- $featureIsTranslating := eq (include (printf "features.%s.destinations.isTranslating" $feature) $) "true" }}
+* {{ $task }} and send data to {{ include "english_list" $destinations }}{{ if $featureIsTranslating }}{{ $isTranslating = true }}*{{ end }}.
+{{- end }}
 {{- end }}
 
 {{- range $feature := (include "features.list.enabled" .) | fromYamlArray }}
