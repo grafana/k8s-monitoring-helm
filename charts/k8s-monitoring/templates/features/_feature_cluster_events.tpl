@@ -3,8 +3,13 @@
 {{- define "features.clusterEvents.include" }}
 {{- if .Values.clusterEvents.enabled -}}
 {{- $destinations := include "features.clusterEvents.destinations" . | fromYamlArray }}
+{{- $clusterEventsValues := deepCopy $.Values.clusterEvents }}
+{{- if and (eq (include "features.clusterEvents.onlyOTLPDestinations" .) "true") (dig "autoConfigureOTLPLabels" true $.Values.clusterEvents) }}
+{{- $labels := merge (deepCopy ($clusterEventsValues.labels | default dict)) (dict "resources.k8s.object.kind" "kind" "resources.k8s.object.name" "name") }}
+{{- $_ := set $clusterEventsValues "labels" $labels }}
+{{- end }}
 // Feature: Cluster Events
-{{- include "feature.clusterEvents.module" (dict "Values" $.Values.clusterEvents "Files" $.Subcharts.clusterEvents.Files "Template" $.Template) }}
+{{- include "feature.clusterEvents.module" (dict "Values" $clusterEventsValues "Files" $.Subcharts.clusterEvents.Files "Template" $.Template) }}
 cluster_events "feature" {
   logs_destinations = [
     {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
@@ -29,6 +34,21 @@ cluster_events "feature" {
   {{- end -}}
 {{- end -}}
 {{- $isTranslating -}}
+{{- end -}}
+
+{{- define "features.clusterEvents.onlyOTLPDestinations" }}
+{{- $destinations := include "features.clusterEvents.destinations" . | fromYamlArray -}}
+{{- $onlyOTLP := false -}}
+{{- if not (empty $destinations) -}}
+  {{- $onlyOTLP = true -}}
+  {{- range $destination := $destinations -}}
+    {{- $destinationEcosystem := include "destination.getEcosystem" (deepCopy $ | merge (dict "destination" $destination)) -}}
+    {{- if ne $destinationEcosystem "otlp" -}}
+      {{- $onlyOTLP = false -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $onlyOTLP -}}
 {{- end -}}
 
 {{- define "features.clusterEvents.collector.values" }}{{- end -}}
