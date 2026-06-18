@@ -459,6 +459,9 @@ otelcol.processor.memory_limiter {{ include "helper.alloy_name" $.destinationNam
 
 {{- if eq .protocol "grpc" }}
 otelcol.exporter.otlp {{ include "helper.alloy_name" $.destinationName | quote }} {
+{{- if .timeout }}
+  timeout = {{ .timeout | quote }}
+{{- end }}
 {{- else if eq .protocol "http" }}
 otelcol.exporter.otlphttp {{ include "helper.alloy_name" $.destinationName | quote }} {
 {{- if and (ne .metrics.enabled false) .metrics.path }}
@@ -487,7 +490,7 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" $.destinationName | quo
 {{- end }}
 {{- end }}
   client {
-{{- if .timeout }}
+{{- if and .timeout (eq .protocol "http") }}
     timeout = {{ .timeout | quote }}
 {{- end }}
 {{- if .urlFrom }}
