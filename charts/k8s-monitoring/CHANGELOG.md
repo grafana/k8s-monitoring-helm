@@ -4,6 +4,7 @@
 
 *   Fix the OTLP destination `timeout` setting rendering inside the `client` block for `protocol: grpc`, which Alloy rejects. It now renders as a top-level argument for gRPC and inside `client` for HTTP. (#2710) (@petewall)
 *   Add `openTelemetryConversion.keepIdentifyingResourceAttributes` option to `otelcol.exporter.prometheus` component to optionally preserve `service.name`, `service.namespace`, and `service.instance.id` attributes as labels on `target_info` metric during OTLP to Prometheus conversion. (#2718) (@rlankfo)
+*   Automatically set the `resources.k8s.object.kind` and `resources.k8s.object.name` labels on Cluster Events when they are delivered exclusively to OTLP destinations, so the Grafana Cloud Kubernetes Monitoring app displays them without manual configuration. Set `clusterEvents.autoConfigureOTLPLabels: false` to opt out. (#2725) (@TylerHelmuth)
 
 ## 4.1.6
 
