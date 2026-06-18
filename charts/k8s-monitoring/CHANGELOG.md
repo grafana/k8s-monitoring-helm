@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-*   Add `optenTelemetryConversion.keepIdentifyingResourceAttributes` option to `otelcol.exporter.prometheus` component to optionally preserve `service.name`, `service.namespace`, and `service.instance.id` attributes as labels on `target_info` metric during OTLP to prometheus conversion. (@rlankfo)
+*   Add `openTelemetryConversion.keepIdentifyingResourceAttributes` option to `otelcol.exporter.prometheus` component to optionally preserve `service.name`, `service.namespace`, and `service.instance.id` attributes as labels on `target_info` metric during OTLP to prometheus conversion. (@rlankfo)
 
 ## 4.1.6
 
