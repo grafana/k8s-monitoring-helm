@@ -14,6 +14,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
+
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/serviceaccount.yaml
 apiVersion: v1
@@ -30,6 +31,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
+
 ---
 # Source: k8s-monitoring/templates/log-service-credentials.yaml
 apiVersion: v1
@@ -44,6 +46,7 @@ data:
   username: "MTIzNDU="
   password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
   tenantId: "MjAwMA=="
+
 ---
 # Source: k8s-monitoring/templates/alloy-events-config.yaml
 apiVersion: v1
@@ -267,6 +270,8 @@ data:
       level  = "info"
       format = "logfmt"
     }
+    
+
 ---
 # Source: k8s-monitoring/charts/alloy-events/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -545,6 +550,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-events
     namespace: default
+
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -567,6 +573,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-logs
     namespace: default
+
 ---
 # Source: k8s-monitoring/charts/alloy-events/templates/service.yaml
 apiVersion: v1
@@ -593,6 +600,7 @@ spec:
       port: 12345
       targetPort: 12345
       protocol: "TCP"
+
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/service.yaml
 apiVersion: v1
@@ -619,6 +627,7 @@ spec:
       port: 12345
       targetPort: 12345
       protocol: "TCP"
+
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/controllers/daemonset.yaml
 apiVersion: apps/v1
@@ -708,6 +717,7 @@ spec:
         - name: varlog
           hostPath:
             path: /var/log
+
 ---
 # Source: k8s-monitoring/charts/alloy-events/templates/controllers/deployment.yaml
 apiVersion: apps/v1

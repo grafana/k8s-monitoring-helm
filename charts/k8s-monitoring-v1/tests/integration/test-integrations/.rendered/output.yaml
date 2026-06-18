@@ -14,6 +14,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
+
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/serviceaccount.yaml
 apiVersion: v1
@@ -30,6 +31,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
+
 ---
 # Source: k8s-monitoring/charts/alloy/templates/serviceaccount.yaml
 apiVersion: v1
@@ -46,6 +48,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
+
 ---
 # Source: k8s-monitoring/charts/beyla/templates/serviceaccount.yaml
 apiVersion: v1
@@ -62,6 +65,7 @@ metadata:
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: rbac
 automountServiceAccountToken: true
+
 ---
 # Source: k8s-monitoring/charts/kepler/templates/serviceaccount.yaml
 apiVersion: v1
@@ -75,6 +79,7 @@ metadata:
     app.kubernetes.io/component: exporter
     app.kubernetes.io/version: "release-0.8.0"
     app.kubernetes.io/managed-by: Helm
+
 ---
 # Source: k8s-monitoring/charts/kube-state-metrics/templates/serviceaccount.yaml
 apiVersion: v1
@@ -1073,6 +1078,7 @@ data:
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
     # TYPE grafana_kubernetes_monitoring_build_info gauge
     grafana_kubernetes_monitoring_build_info{version="1.6.50", namespace="default", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,kubelet,kubeletResource,cadvisor,kepler,beyla,extraConfig", logs="enabled,events,pod_logs,extraConfig", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,kepler,beyla"} 1
+
 ---
 # Source: k8s-monitoring/templates/alloy-events-config.yaml
 apiVersion: v1
@@ -1311,6 +1317,8 @@ data:
       all_pods = discovery.relabel.pod_logs.output
       logs_destination = loki.process.logs_service.receiver
     }
+    
+
 ---
 # Source: k8s-monitoring/templates/beyla-config.yaml
 apiVersion: v1
@@ -1355,6 +1363,7 @@ data:
       - application_span
       path: /metrics
       port: 9090
+
 ---
 # Source: k8s-monitoring/charts/alloy-events/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1760,6 +1769,7 @@ rules:
   - apiGroups: [ "" ]
     resources: [ "pods", "services", "nodes" ]
     verbs: [ "list", "watch", "get" ]
+
 ---
 # Source: k8s-monitoring/charts/kepler/templates/rolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1933,6 +1943,8 @@ rules:
   resources:
     - volumeattachments
   verbs: ["list", "watch"]
+
+
 ---
 # Source: k8s-monitoring/charts/alloy-events/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1955,6 +1967,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-events
     namespace: default
+
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1977,6 +1990,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-logs
     namespace: default
+
 ---
 # Source: k8s-monitoring/charts/alloy/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1999,6 +2013,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy
     namespace: default
+
 ---
 # Source: k8s-monitoring/charts/beyla/templates/cluster-role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -2021,6 +2036,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: k8smon-beyla
+
 ---
 # Source: k8s-monitoring/charts/kepler/templates/rolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -2035,6 +2051,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-kepler
     namespace: default
+
 ---
 # Source: k8s-monitoring/charts/kube-state-metrics/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -2084,6 +2101,7 @@ spec:
       port: 12345
       targetPort: 12345
       protocol: "TCP"
+
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/service.yaml
 apiVersion: v1
@@ -2110,6 +2128,7 @@ spec:
       port: 12345
       targetPort: 12345
       protocol: "TCP"
+
 ---
 # Source: k8s-monitoring/charts/alloy/templates/cluster_service.yaml
 apiVersion: v1
@@ -2175,6 +2194,7 @@ spec:
       port: 9411
       targetPort: 9411
       protocol: TCP
+
 ---
 # Source: k8s-monitoring/charts/alloy/templates/service.yaml
 apiVersion: v1
@@ -2233,6 +2253,7 @@ spec:
       port: 9411
       targetPort: 9411
       protocol: TCP
+
 ---
 # Source: k8s-monitoring/charts/kepler/templates/service.yaml
 apiVersion: v1
@@ -2256,6 +2277,7 @@ spec:
   selector:
     app.kubernetes.io/name: kepler
     app.kubernetes.io/component: exporter
+
 ---
 # Source: k8s-monitoring/charts/kube-state-metrics/templates/service.yaml
 apiVersion: v1
@@ -2284,6 +2306,7 @@ spec:
   selector:    
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
+
 ---
 # Source: k8s-monitoring/charts/prometheus-node-exporter/templates/service.yaml
 apiVersion: v1
@@ -2300,6 +2323,8 @@ metadata:
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.10.2"
     release: k8smon
+  annotations:
+    prometheus.io/scrape: "true"
 spec:
   type: ClusterIP
   ports:
@@ -2310,6 +2335,7 @@ spec:
   selector:
     app.kubernetes.io/name: prometheus-node-exporter
     app.kubernetes.io/instance: k8smon
+
 ---
 # Source: k8s-monitoring/templates/grafana-agent-receiver-service.yaml
 apiVersion: v1
@@ -2366,6 +2392,7 @@ spec:
       port: 9411
       targetPort: 9411
       protocol: TCP
+
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/controllers/daemonset.yaml
 apiVersion: apps/v1
@@ -2455,6 +2482,7 @@ spec:
         - name: varlog
           hostPath:
             path: /var/log
+
 ---
 # Source: k8s-monitoring/charts/beyla/templates/daemon-set.yaml
 apiVersion: apps/v1
@@ -2523,6 +2551,7 @@ spec:
         - name: cgroup
           hostPath:
             path: /sys/fs/cgroup
+
 ---
 # Source: k8s-monitoring/charts/kepler/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -2657,6 +2686,7 @@ spec:
       tolerations:
         - effect: NoSchedule
           key: node-role.kubernetes.io/control-plane
+
 ---
 # Source: k8s-monitoring/charts/prometheus-node-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -2784,6 +2814,7 @@ spec:
         - name: root
           hostPath:
             path: /
+
 ---
 # Source: k8s-monitoring/charts/alloy-events/templates/controllers/deployment.yaml
 apiVersion: apps/v1
@@ -2870,6 +2901,7 @@ spec:
         - name: config
           configMap:
             name: k8smon-alloy-events
+
 ---
 # Source: k8s-monitoring/charts/kube-state-metrics/templates/deployment.yaml
 apiVersion: apps/v1
@@ -2966,6 +2998,7 @@ spec:
           key: kubernetes.io/arch
           operator: Equal
           value: arm64
+
 ---
 # Source: k8s-monitoring/charts/alloy/templates/controllers/statefulset.yaml
 apiVersion: apps/v1
