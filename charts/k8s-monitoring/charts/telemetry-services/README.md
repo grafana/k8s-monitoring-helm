@@ -24,6 +24,7 @@ telemetryServices:
 | Name | Email | Url |
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
+| TylerHelmuth | <tyler.helmuth@grafana.com> |  |
 <!-- textlint-enable terminology -->
 <!-- markdownlint-disable no-bare-urls -->
 <!-- markdownlint-disable list-marker-space -->

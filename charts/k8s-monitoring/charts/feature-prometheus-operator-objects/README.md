@@ -38,6 +38,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Name | Email | Url |
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
+| TylerHelmuth | <tyler.helmuth@grafana.com> |  |
 <!-- textlint-enable terminology -->
 <!-- markdownlint-disable no-bare-urls -->
 <!-- markdownlint-disable list-marker-space -->
