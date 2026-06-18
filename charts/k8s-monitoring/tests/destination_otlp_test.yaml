@@ -105,6 +105,23 @@ tests:
       - matchSnapshot:
           path: data["config.alloy"]
 
+  - it: allows you to set a timeout when using http
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: otlp
+          protocol: http
+          url: https://otlp.example.com
+          timeout: 30s
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]
+
   - it: allows you to set per-signal paths when using http
     set:
       cluster: {name: test-cluster}

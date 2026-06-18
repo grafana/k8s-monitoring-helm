@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Fix the OTLP destination `timeout` setting rendering inside the `client` block for `protocol: grpc`, which Alloy rejects. It now renders as a top-level argument for gRPC and inside `client` for HTTP. (#2710) (@petewall)
 *   Add `openTelemetryConversion.keepIdentifyingResourceAttributes` option to `otelcol.exporter.prometheus` component to optionally preserve `service.name`, `service.namespace`, and `service.instance.id` attributes as labels on `target_info` metric during OTLP to Prometheus conversion. (#2718) (@rlankfo)
 
 ## 4.1.6
