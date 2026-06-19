@@ -12,7 +12,6 @@ metadata:
     app.kubernetes.io/version: "1.10.0"
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
-
 ---
 # Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/serviceaccount.yaml
 apiVersion: v1
@@ -29,7 +28,6 @@ metadata:
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: rbac
 automountServiceAccountToken: true
-
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -478,7 +476,6 @@ data:
         enabled = true
       }
     }
-
 ---
 # Source: k8s-monitoring/templates/beyla-config.yaml
 apiVersion: v1
@@ -524,7 +521,6 @@ data:
       - application_host
       path: /metrics
       port: 9090
-
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -610,7 +606,6 @@ rules:
   - apiGroups: [ "" ]
     resources: [ "pods", "services", "nodes" ]
     verbs: [ "list", "watch", "get" ]
-
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -631,7 +626,6 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
-
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-objects.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -652,7 +646,6 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
-
 ---
 # Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/cluster-role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -675,7 +668,6 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: k8smon-beyla
-
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/leader-election.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -742,7 +734,6 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
-
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/service.yaml
 apiVersion: v1
@@ -770,7 +761,6 @@ spec:
   selector:
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-
 ---
 # Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/cache-service.yaml
 apiVersion: v1
@@ -794,7 +784,6 @@ spec:
       name: grpc
   selector:
     app.kubernetes.io/name: beyla-k8s-cache
-
 ---
 # Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/daemon-set.yaml
 apiVersion: apps/v1
@@ -869,7 +858,6 @@ spec:
         - name: cgroup
           hostPath:
             path: /sys/fs/cgroup
-
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/deployment.yaml
 apiVersion: apps/v1
@@ -941,7 +929,6 @@ spec:
             readOnlyRootFilesystem: true
       nodeSelector:
         kubernetes.io/os: linux
-
 ---
 # Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/cache-deployment.yaml
 apiVersion: apps/v1
@@ -1725,7 +1712,6 @@ roleRef:
   kind: Role
   name: k8smon-k8s-monitoring-add-finalizer
   apiGroup: rbac.authorization.k8s.io
-
 ---
 # Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1744,7 +1730,6 @@ roleRef:
   kind: Role
   name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
   apiGroup: rbac.authorization.k8s.io
-
 ---
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
 apiVersion: batch/v1
