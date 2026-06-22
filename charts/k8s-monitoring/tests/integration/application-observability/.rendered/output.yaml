@@ -175,9 +175,15 @@ data:
           context = "datapoint"
           statements = [
             `set(attributes["collector.id"], "` + constants.hostname + `")`,
-            `set(resource.attributes["source"], "spanmetrics") where scope.name == "spanmetricsconnector"`,
             `set(resource.attributes["service.instance.id"], resource.attributes["k8s.pod.name"]) where resource.attributes["service.instance.id"] == nil and resource.attributes["k8s.pod.name"] != nil`,
             `set(resource.attributes["service.instance.id"], resource.attributes["k8s.pod.uid"]) where resource.attributes["service.instance.id"] == nil and resource.attributes["k8s.pod.uid"] != nil`,
+          ]
+        }
+    
+        metric_statements {
+          context = "scope"
+          statements = [
+            `set(resource.attributes["source"], "spanmetrics") where name == "spanmetricsconnector"`,
           ]
         }
     

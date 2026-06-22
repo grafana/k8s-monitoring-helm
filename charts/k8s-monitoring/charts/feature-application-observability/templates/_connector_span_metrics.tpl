@@ -97,7 +97,6 @@ otelcol.processor.transform "span_metrics_transform" {
     context = "datapoint"
     statements = [
       `set(attributes["collector.id"], "` + constants.hostname + `")`,
-      `set(resource.attributes["source"], "spanmetrics") where scope.name == "spanmetricsconnector"`,
       `set(resource.attributes["service.instance.id"], resource.attributes["k8s.pod.name"]) where resource.attributes["service.instance.id"] == nil and resource.attributes["k8s.pod.name"] != nil`,
       `set(resource.attributes["service.instance.id"], resource.attributes["k8s.pod.uid"]) where resource.attributes["service.instance.id"] == nil and resource.attributes["k8s.pod.uid"] != nil`,
 {{- if .Values.connectors.spanMetrics.transforms.datapoint }}
@@ -105,6 +104,13 @@ otelcol.processor.transform "span_metrics_transform" {
 {{ $transform | quote | indent 6 }},
 {{- end }}
 {{- end }}
+    ]
+  }
+
+  metric_statements {
+    context = "scope"
+    statements = [
+      `set(resource.attributes["source"], "spanmetrics") where name == "spanmetricsconnector"`,
     ]
   }
 
