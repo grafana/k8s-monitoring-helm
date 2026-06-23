@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Add `openTelemetryConversion.keepIdentifyingResourceAttributes` option to Prometheus destinations to optionally preserve `service.name`, `service.namespace`, and `service.instance.id` as labels on `target_info` during OTLP to Prometheus conversion. (#2723) (@jereenv)
+
 ## 3.8.10
 
 *   Fix the deployment notes printing an empty "It will:" section when no local features are enabled (e.g. when only using remote configuration or only deploying telemetry services) (#2711) (@petewall)
