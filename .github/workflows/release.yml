@@ -4,11 +4,6 @@ name: Release Helm chart
 on:
   workflow_dispatch:
 
-env:
-  CR_INDEX_PATH: "${{ github.workspace }}/.cr-index"
-  CR_PACKAGE_PATH: "${{ github.workspace }}/.cr-release-packages"
-  CR_TOOL_PATH: "${{ github.workspace }}/.cr-tool"
-
 permissions: {}
 
 jobs:
@@ -32,7 +27,10 @@ jobs:
 
   release-chart:
     needs: verify-signatures
-    uses: grafana/helm-charts/.github/workflows/update-helm-repo.yaml@d7c4f4491dbe46d853833cd15a35159c28061f39
+    # Pinned to the hackathon branch: this version of the shared workflow packages, signs,
+    # pushes to GHCR, regenerates the helm repo index, and creates the canonical release on
+    # grafana/helm-charts. The source-repo `release` job below only links back to it.
+    uses: grafana/helm-charts/.github/workflows/update-helm-repo.yaml@hackathon-17-verify-all-the-charts
     permissions:
       contents: write
       id-token: write
@@ -47,33 +45,22 @@ jobs:
     runs-on: ubuntu-latest
     needs: release-chart
 
-    # These permissions are needed to assume roles from GitHub's OIDC.
+    # The shared workflow above packages the chart, pushes it to GHCR, and creates the
+    # canonical release on grafana/helm-charts. This job only needs to create a GitHub
+    # release on this repo (with CHANGELOG-based notes) that links back to that release,
+    # so plain contents:write on GITHUB_TOKEN is enough.
     permissions:
-      contents: read
-      id-token: write
+      contents: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
-          fetch-depth: 0
-          path: source
           persist-credentials: 'false'
-
-      - name: Configure Git
-        run: |
-          cd source
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-
-      - name: Set up Helm
-        uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2  # v5.0.0
-        with:
-          version: v4.1.4  # pin to 4.1.x; 4.2.x changes template output formatting (helm/helm#32132)
 
       - name: Parse Chart.yaml
         id: parse-chart
-        working-directory: source/charts/k8s-monitoring
+        working-directory: charts/k8s-monitoring
         run: |
           name=$(yq ".name" < Chart.yaml)
           version=$(yq ".version" < Chart.yaml)
@@ -82,16 +69,13 @@ jobs:
             prerelease=true
           fi
           {
-            echo "chartpath=charts/$(basename "$(pwd)")";
             echo "tagname=${name}-${version}";
-            echo "packagename=${name}-${version}";
             echo "version=${version}";
             echo "prerelease=${prerelease}";
           } >> "${GITHUB_OUTPUT}"
 
       - name: Extract release notes from CHANGELOG
         id: release-notes
-        working-directory: source
         env:
           VERSION: ${{ steps.parse-chart.outputs.version }}
           TAGNAME: ${{ steps.parse-chart.outputs.tagname }}
@@ -146,6 +130,8 @@ jobs:
             echo
             echo "---"
             echo
+            echo "Chart released at https://github.com/grafana/helm-charts/releases/tag/${TAGNAME}"
+            echo
             echo "Full changelog: [CHANGELOG.md](https://github.com/${GITHUB_REPOSITORY}/blob/${TAGNAME}/charts/k8s-monitoring/CHANGELOG.md)"
           } > "$notes_file"
 
@@ -154,60 +140,10 @@ jobs:
           cat "$notes_file"
           echo "-------------------------"
 
-      - name: Add dependency chart repos
-        env:
-          CHARTPATH: ${{ steps.parse-chart.outputs.chartpath }}
-        working-directory: source
-        run: |
-          # Skip the header line and make sure that tabs are expanded into spaces
-          deps=$(helm dependency list "${CHARTPATH}" | tail +2 | expand)
-          while read -r row; do
-            IFS=' ' read -ra parts <<< "$row"
-            name="${parts[0]}"
-            repo="${parts[2]}"
-            case "$repo" in
-              "https://"*) helm repo add "$name" "$repo" ;;
-              *) echo >&2 "Skipping dependency $name: unsupported schema for \"$repo\"" ;;
-            esac
-          done <<< "$deps"
-
-      - name: Get GitHub App token
-        id: get-github-app-token
-        uses: grafana/shared-workflows/actions/create-github-app-token@46f48da11e78ebdba7a8747ae456b11062fac83e  # create-github-app-token/v0.3.1
-        with:
-          github_app: kubernetes-monitoring-helm-chart
-
-      - name: Set the token
-        env:
-          APP_TOKEN: ${{ steps.get-github-app-token.outputs.token }}
-        run: echo "AUTHTOKEN=${APP_TOKEN}" >> "${GITHUB_ENV}"
-
-      - name: Install CR tool
-        env:
-          GITHUB_TOKEN: ${{ env.AUTHTOKEN }}
-        run: |
-          mkdir "${CR_TOOL_PATH}"
-          mkdir "${CR_PACKAGE_PATH}"
-          mkdir "${CR_INDEX_PATH}"
-          crVersion=$(gh release list --repo helm/chart-releaser --exclude-pre-releases --json tagName --jq '.[0].tagName' | sed 's/v//')
-          curl -sSLo cr.tar.gz "https://github.com/helm/chart-releaser/releases/download/v${crVersion}/chart-releaser_${crVersion}_linux_amd64.tar.gz"
-          tar -xzf cr.tar.gz -C "${CR_TOOL_PATH}"
-          rm -f cr.tar.gz
-
-      - name: Create Helm package
-        env:
-          CHARTPATH: ${{ steps.parse-chart.outputs.chartpath }}
-        working-directory: source
-        run: |
-          "${CR_TOOL_PATH}/cr" package "${CHARTPATH}" --config .github/configs/cr.yaml --package-path "${CR_PACKAGE_PATH}"
-          echo "Result of chart package:"
-          ls -l "${CR_PACKAGE_PATH}"
-
       - name: Make GitHub release
         env:
-          GH_TOKEN: ${{ env.AUTHTOKEN }}
+          GH_TOKEN: ${{ github.token }}
           TAGNAME: ${{ steps.parse-chart.outputs.tagname }}
-          PACKAGENAME: ${{ steps.parse-chart.outputs.packagename }}
           NOTES_PATH: ${{ steps.release-notes.outputs.notes_path }}
           PRERELEASE: ${{ steps.parse-chart.outputs.prerelease }}
         run: |
@@ -217,7 +153,6 @@ jobs:
           fi
           gh release create "${TAGNAME}" \
             --title "${TAGNAME}" \
-            --repo "grafana/k8s-monitoring-helm" \
+            --repo "${GITHUB_REPOSITORY}" \
             --notes-file "${NOTES_PATH}" \
-            ${prerelease_flag} \
-            "${CR_PACKAGE_PATH}/${PACKAGENAME}.tgz"
+            ${prerelease_flag}
