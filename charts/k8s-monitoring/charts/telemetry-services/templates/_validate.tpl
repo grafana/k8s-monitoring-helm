@@ -131,6 +131,11 @@ If a conflict is found, recommend either using the existing Node Exporter or dep
       {{- $msg = append $msg "    metricsSource:  <metrics destination name>" }}
       {{- $msg = append $msg (printf "Where <metrics destination name> is one of %s" (include "english_list_or" $featureDestinations)) }}
       {{- end }}
+      {{- $msg = append $msg "" }}
+      {{- $msg = append $msg "Or, to configure OpenCost's metrics source yourself and skip this guided setup, set:" }}
+      {{- $msg = append $msg "telemetryServices:" }}
+      {{- $msg = append $msg "  opencost:" }}
+      {{- $msg = append $msg "    metricsSource: custom" }}
       {{- fail (join "\n" $msg) }}
     {{- end }}
 
@@ -159,6 +164,11 @@ If a conflict is found, recommend either using the existing Node Exporter or dep
           {{- $msg = append $msg "      prometheus:" }}
           {{- $msg = append $msg "        external:" }}
           {{- $msg = append $msg (printf "          url: %s" $openCostMetricsUrl) }}
+          {{- $msg = append $msg "" }}
+          {{- $msg = append $msg "Or, to configure OpenCost's metrics source yourself and skip this guided setup, set:" }}
+          {{- $msg = append $msg "telemetryServices:" }}
+          {{- $msg = append $msg "  opencost:" }}
+          {{- $msg = append $msg "    metricsSource: custom" }}
           {{- fail (join "\n" $msg) }}
         {{- end }}
 
