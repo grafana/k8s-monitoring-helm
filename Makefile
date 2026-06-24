@@ -35,7 +35,9 @@ build: check-helm-version ## Build all charts
 
 ##@ Keys
 .PHONY: update-signing-keys
-update-signing-keys: ## Refresh signing keys in keys/ from 1Password (requires the op CLI)
+update-signing-keys: keys/grafana-helm-charts-pubkey.gpg ## Refresh signing keys in keys/ from 1Password (requires the op CLI)
+
+keys/grafana-helm-charts-pubkey.gpg:
 	op --account grafana.1password.com read "op://Helm Maintainers/Helm Chart Signing Key/gpg-public-key.asc" | gpg --dearmor > keys/grafana-helm-charts-pubkey.gpg
 
 ##@ Install
