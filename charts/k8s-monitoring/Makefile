@@ -271,6 +271,11 @@ build-features:
 		make -C $$chart build; \
 	done
 
+# Verify the signatures of signed Grafana chart dependencies.
+.PHONY: verify-signatures
+verify-signatures:
+	make -C charts/telemetry-services verify-signatures
+
 # Build targets
 .PHONY: build
 build: build-features values.schema.json templates/destinations/_destination_types.tpl collectors/upstream/alloy-values.yaml build-docs examples integration-test-checks platform-test-checks

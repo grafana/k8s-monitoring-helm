@@ -7,11 +7,14 @@ endif
 
 HAS_HELM_UNITTEST := $(shell $(HELM) plugin list | grep unittest 2> /dev/null)
 
+K8S_MANIFEST_TAIL_VERSION := $(shell yq '.dependencies[] | select(.name == "k8s-manifest-tail") | .version' Chart.yaml)
+GRAFANA_HELM_CHARTS_KEYRING := ../../../../keys/grafana-helm-charts-pubkey.gpg
+
 .SECONDEXPANSION:
 README.md: values.yaml Chart.yaml $$(wildcard README.md.gotmpl)
 	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --chart /chart > $@
 
-Chart.lock: Chart.yaml
+Chart.lock: Chart.yaml | verify-signatures
 	$(HELM) dependency update .
 	@touch Chart.lock # Ensure the timestamp is updated
 
@@ -24,6 +27,14 @@ clean:
 
 .PHONY: build
 build: README.md Chart.lock values.schema.json $(ALLOW_LISTS)
+
+.PHONY: verify-signatures
+verify-signatures: ## Verify the signature of the signed k8s-manifest-tail chart dependency
+	$(HELM) pull k8s-manifest-tail \
+		--repo https://grafana.github.io/helm-charts \
+		--version $(K8S_MANIFEST_TAIL_VERSION) \
+		--verify --keyring $(GRAFANA_HELM_CHARTS_KEYRING) \
+		--destination "$$(mktemp -d)"
 
 .PHONY: test
 test: build
