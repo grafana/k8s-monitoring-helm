@@ -72,6 +72,7 @@ verify-signatures: ## Verify the signatures of the signed chart dependencies
 test: build
 	$(HELM) repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	$(HELM) repo add kepler https://sustainable-computing-io.github.io/kepler-helm-chart
+	$(HELM) repo add opencost https://opencost.github.io/opencost-helm-chart
 
 	$(HELM) lint .
 	ct lint --lint-conf ../../.lintconf.yaml --helm-dependency-extra-args=--skip-refresh --charts .
