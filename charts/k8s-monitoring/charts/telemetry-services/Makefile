@@ -8,7 +8,11 @@ endif
 HAS_HELM_UNITTEST := $(shell $(HELM) plugin list | grep unittest 2> /dev/null)
 
 K8S_MANIFEST_TAIL_VERSION := $(shell yq '.dependencies[] | select(.name == "k8s-manifest-tail") | .version' Chart.yaml)
+KUBE_STATE_METRICS_VERSION := $(shell yq '.dependencies[] | select(.name == "kube-state-metrics") | .version' Chart.yaml)
+NODE_EXPORTER_VERSION := $(shell yq '.dependencies[] | select(.name == "prometheus-node-exporter") | .version' Chart.yaml)
+WINDOWS_EXPORTER_VERSION := $(shell yq '.dependencies[] | select(.name == "prometheus-windows-exporter") | .version' Chart.yaml)
 GRAFANA_HELM_CHARTS_KEYRING := ../../../../keys/grafana-helm-charts-pubkey.gpg
+PROMETHEUS_COMMUNITY_KEYRING := ../../../../keys/prometheus-community-pubkey.gpg
 
 .SECONDEXPANSION:
 README.md: values.yaml Chart.yaml $$(wildcard README.md.gotmpl)
@@ -29,11 +33,26 @@ clean:
 build: README.md Chart.lock values.schema.json $(ALLOW_LISTS)
 
 .PHONY: verify-signatures
-verify-signatures: ## Verify the signature of the signed k8s-manifest-tail chart dependency
+verify-signatures: ## Verify the signatures of the signed chart dependencies
 	$(HELM) pull k8s-manifest-tail \
 		--repo https://grafana.github.io/helm-charts \
 		--version $(K8S_MANIFEST_TAIL_VERSION) \
 		--verify --keyring $(GRAFANA_HELM_CHARTS_KEYRING) \
+		--destination "$$(mktemp -d)"
+	$(HELM) pull kube-state-metrics \
+		--repo https://prometheus-community.github.io/helm-charts \
+		--version $(KUBE_STATE_METRICS_VERSION) \
+		--verify --keyring $(PROMETHEUS_COMMUNITY_KEYRING) \
+		--destination "$$(mktemp -d)"
+	$(HELM) pull prometheus-node-exporter \
+		--repo https://prometheus-community.github.io/helm-charts \
+		--version $(NODE_EXPORTER_VERSION) \
+		--verify --keyring $(PROMETHEUS_COMMUNITY_KEYRING) \
+		--destination "$$(mktemp -d)"
+	$(HELM) pull prometheus-windows-exporter \
+		--repo https://prometheus-community.github.io/helm-charts \
+		--version $(WINDOWS_EXPORTER_VERSION) \
+		--verify --keyring $(PROMETHEUS_COMMUNITY_KEYRING) \
 		--destination "$$(mktemp -d)"
 
 .PHONY: test
