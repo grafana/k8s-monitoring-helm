@@ -13,8 +13,6 @@ repositories:
     url: https://prometheus-community.github.io/helm-charts
   - name: kepler
     url: https://sustainable-computing-io.github.io/kepler-helm-chart
-  - name: opencost
-    url: https://opencost.github.io/opencost-helm-chart
 
 helmDefaults:
   diffArgs:
