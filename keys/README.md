@@ -30,9 +30,9 @@ before you replace the key.
 Some dependencies are not signed with a GPG provenance file and therefore have
 no keyring here:
 
-- **opencost** is signed with keyless [cosign](https://docs.sigstore.dev/).
-  It is verified against the signing workflow's certificate identity rather
-  than a key, in the `verify-signatures` target of
-  `charts/k8s-monitoring/charts/telemetry-services/Makefile`. That chart depends
-  on the signed OCI artifact (`oci://ghcr.io/opencost/charts`) directly, so the
-  cosign check covers exactly the artifact that is pulled.
+-   **opencost** is signed with keyless [cosign](https://docs.sigstore.dev/).
+    It is verified against the signing workflow's certificate identity rather
+    than a key, in the `verify-signatures` target of
+    `charts/k8s-monitoring/charts/telemetry-services/Makefile`. That chart depends
+    on the signed OCI artifact (`oci://ghcr.io/opencost/charts`) directly, so the
+    cosign check covers exactly the artifact that is pulled.
