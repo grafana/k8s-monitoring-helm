@@ -18,8 +18,9 @@ costMetrics:
 ```
 
 This feature scrapes metrics from an OpenCost instance, but does not deploy OpenCost itself. The simplest way to deploy
-OpenCost alongside this feature is to use the `telemetryServices` section of the parent chart, which also wires up the
-required metrics source for you:
+OpenCost alongside this feature is to use the `telemetryServices` section of the parent chart. Setting
+`telemetryServices.opencost.metricsSource` to one of your metrics destinations turns on a guided setup that walks you
+through the rest of the required OpenCost values:
 
 ```yaml
 costMetrics:
@@ -30,6 +31,32 @@ telemetryServices:
     deploy: true
     metricsSource: <destination name>  # The metric destination OpenCost queries for required metrics
 ```
+
+With `metricsSource` set, the chart validates the rest of the OpenCost configuration during install and fails with the
+exact values to add if anything required is missing. Because OpenCost has to query a Prometheus-compatible endpoint for
+the cluster metrics it works from, you must also provide the query URL and a cluster ID that matches `cluster.name`:
+
+```yaml
+cluster:
+  name: my-cluster
+
+telemetryServices:
+  opencost:
+    deploy: true
+    metricsSource: <destination name>
+    opencost:
+      exporter:
+        defaultClusterId: my-cluster        # Must match `cluster.name`
+      prometheus:
+        external:
+          # The query endpoint of the destination named by `metricsSource`,
+          # e.g. https://<prometheus host>/api/prom or http://prometheus.svc:9090/api/v1/query
+          url: <query URL>
+```
+
+To skip the guided setup and configure OpenCost entirely yourself, set `telemetryServices.opencost.metricsSource: custom`
+and supply the OpenCost values directly. See the [OpenCost Helm chart](https://github.com/opencost/opencost-helm-chart/tree/main/charts/opencost)
+for the full set of options.
 
 If you are deploying OpenCost some other way, set `costMetrics.opencost.labelMatchers` and `costMetrics.opencost.namespace`
 so the feature can discover the OpenCost pods to scrape.

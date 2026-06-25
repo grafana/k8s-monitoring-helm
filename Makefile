@@ -33,6 +33,16 @@ clean: ## Clean all charts
 build: check-helm-version ## Build all charts
 	make -C charts/k8s-monitoring $@;
 
+##@ Keys
+.PHONY: update-signing-keys
+update-signing-keys: keys/grafana-helm-charts-pubkey.gpg keys/prometheus-community-pubkey.gpg ## Refresh signing keys in keys/ (Grafana key requires the op CLI)
+
+keys/grafana-helm-charts-pubkey.gpg:
+	op --account grafana.1password.com read "op://Helm Maintainers/Helm Chart Signing Key/gpg-public-key.asc" | gpg --dearmor > keys/grafana-helm-charts-pubkey.gpg
+
+keys/prometheus-community-pubkey.gpg:
+	curl -sL https://prometheus-community.github.io/helm-charts/pubkey.gpg | gpg --dearmor > keys/prometheus-community-pubkey.gpg
+
 ##@ Install
 .PHONY: install
 install: ## Install dependencies

@@ -36,7 +36,7 @@ telemetryServices:
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://grafana.github.io/helm-charts | k8s-manifest-tail(k8s-manifest-tail) | 0.1.4 |
+| https://grafana.github.io/helm-charts | k8s-manifest-tail(k8s-manifest-tail) | 0.1.5 |
 | https://opencost.github.io/opencost-helm-chart | opencost | 2.5.23 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 7.5.1 |
 | https://prometheus-community.github.io/helm-charts | node-exporter(prometheus-node-exporter) | 4.55.0 |
@@ -86,7 +86,7 @@ telemetryServices:
 | opencost.extraVolumes | list | `[{"emptyDir":{},"name":"configs"}]` | On GCP/GKE, OpenCost's GCP provider writes ${CONFIG_PATH}/gcp.json on startup. CONFIG_PATH defaults to /var/configs, which is not writable by the non-root container user, causing the pod to panic. Mount an emptyDir there so the default path is writable. This is preferred over setting CONFIG_PATH via extraEnv, which collides with the CONFIG_PATH the OpenCost chart sets when customPricing is enabled (duplicate env var). The upstream chart only mounts at /var/configs when cloud integration is enabled, so this does not conflict by default. |
 | opencost.metricsSource | string | `""` | The name of the metric destination where OpenCost will query for required metrics. Setting this will enable guided setup for required OpenCost parameters. To skip guided setup, set this to "custom". |
 | opencost.opencost.prometheus.existingSecretName | string | `""` | The name of the secret containing the username and password for the metrics service. This must be in the same namespace as the OpenCost deployment. |
-| opencost.opencost.prometheus.external.url | string | `""` | The URL for Prometheus queries. It should match externalServices.prometheus.host + "/api/prom" |
+| opencost.opencost.prometheus.external.url | string | `""` | The URL where OpenCost queries for the metrics it needs. Required when `metricsSource` is set to a metrics destination: the guided setup fails the install with the exact URL to use if this is left empty. It should point at the query endpoint of the destination named by `metricsSource` (e.g. that destination's URL with the remote-write path replaced by the query path, such as `/api/prom` or `/api/v1/query`). |
 | opencost.opencost.prometheus.password_key | string | `"password"` | The key for the password property in the secret. |
 | opencost.opencost.prometheus.username_key | string | `"username"` | The key for the username property in the secret. |
 
