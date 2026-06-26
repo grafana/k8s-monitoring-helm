@@ -40,7 +40,7 @@ an `Assisted-by:` commit message trailer.
 
 Examples:
 
-```
+```text
 Assisted-by: ChatGPT 5.2
 Assisted-by: Claude Opus 4.5
 ```
