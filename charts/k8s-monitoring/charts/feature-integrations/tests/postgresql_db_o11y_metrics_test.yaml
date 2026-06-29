@@ -145,6 +145,27 @@ tests:
         matchSnapshot:
           path: data["metrics.alloy"]
 
+  - it: honors top-level exclude_current_user
+    set:
+      testing: {enabled: true}
+      postgresql:
+        instances:
+          - name: top-level-excl-db
+            exporter:
+              dataSource:
+                host: top-level-excl-db.postgresql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            databaseObservability:
+              enabled: true
+              excludeCurrentUser: false
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
   - it: renders new db o11y options (statements_limit)
     set:
       testing: {enabled: true}

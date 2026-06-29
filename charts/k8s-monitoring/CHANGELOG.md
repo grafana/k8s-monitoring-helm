@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+*   Database Observability: add top-level `databaseObservability.excludeCurrentUser` for PostgreSQL (Alloy 1.17.0). The per-collector `databaseObservability.collectors.querySamples.excludeCurrentUser` is now deprecated but still honored when explicitly set. (@cristiangreco)
+*   Database Observability: stop rendering the now-deprecated `schema_details.cache_enabled` / `cache_size` / `cache_ttl` arguments for MySQL and PostgreSQL (Alloy 1.17.0 ignores them). The `cacheEnabled` / `cacheSize` / `cacheTTL` values keys are kept for backwards compatibility but documented as no-op. (@cristiangreco)
 *   Fix the Beyla `SecurityContextConstraints` on OpenShift to set `allowHostPorts: true`. Beyla runs with host networking when context propagation or the `network` preset is enabled, which OpenShift treats as host-port usage. Without it, the Beyla DaemonSet pods fail SCC admission with `Host ports are not allowed to be used`. (#2734) (@petewall)
 *   Fix the OTLP destination `timeout` setting rendering inside the `client` block for `protocol: grpc`, which Alloy rejects. It now renders as a top-level argument for gRPC and inside `client` for HTTP. (#2710) (@petewall)
 *   Add `openTelemetryConversion.keepIdentifyingResourceAttributes` option to `otelcol.exporter.prometheus` component to optionally preserve `service.name`, `service.namespace`, and `service.instance.id` attributes as labels on `target_info` metric during OTLP to Prometheus conversion. (#2718) (@rlankfo)
