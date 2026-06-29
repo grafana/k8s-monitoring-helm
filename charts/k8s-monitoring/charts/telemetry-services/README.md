@@ -41,7 +41,7 @@ telemetryServices:
 | https://prometheus-community.github.io/helm-charts | node-exporter(prometheus-node-exporter) | 4.55.0 |
 | https://prometheus-community.github.io/helm-charts | windows-exporter(prometheus-windows-exporter) | 0.12.7 |
 | https://sustainable-computing-io.github.io/kepler-helm-chart | kepler | 0.6.1 |
-| oci://ghcr.io/opencost/charts | opencost | 2.5.23 |
+| oci://ghcr.io/opencost/charts | opencost | 2.5.25 |
 <!-- markdownlint-enable no-bare-urls -->
 ## Values
 
