@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 4.1.7
 
 *   Database Observability: add top-level `databaseObservability.excludeCurrentUser` for PostgreSQL (Alloy 1.17.0). The per-collector `databaseObservability.collectors.querySamples.excludeCurrentUser` is now deprecated but still honored when explicitly set. (@cristiangreco)
 *   Database Observability: stop rendering the now-deprecated `schema_details.cache_enabled` / `cache_size` / `cache_ttl` arguments for MySQL and PostgreSQL (Alloy 1.17.0 ignores them). The `cacheEnabled` / `cacheSize` / `cacheTTL` values keys are kept for backwards compatibility but documented as no-op. (@cristiangreco)
