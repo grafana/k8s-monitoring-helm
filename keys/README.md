@@ -24,3 +24,15 @@ Published at <https://prometheus-community.github.io/helm-charts/pubkey.gpg>.
 Key fingerprint `E2F1 02EF A9AC D882 585B FE1A 2725 2B16 8248 743B`. The key
 does not expire. Confirm this fingerprint from a trusted, independent source
 before you replace the key.
+
+## Charts verified without a key file
+
+Some dependencies are not signed with a GPG provenance file and therefore have
+no keyring here:
+
+-   **opencost** is signed with keyless [cosign](https://docs.sigstore.dev/).
+    It is verified against the signing workflow's certificate identity rather
+    than a key, in the `verify-signatures` target of
+    `charts/k8s-monitoring/charts/telemetry-services/Makefile`. That chart depends
+    on the signed OCI artifact (`oci://ghcr.io/opencost/charts`) directly, so the
+    cosign check covers exactly the artifact that is pulled.

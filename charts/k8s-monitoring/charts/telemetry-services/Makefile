@@ -14,6 +14,15 @@ WINDOWS_EXPORTER_VERSION := $(shell yq '.dependencies[] | select(.name == "prome
 GRAFANA_HELM_CHARTS_KEYRING := ../../../../keys/grafana-helm-charts-pubkey.gpg
 PROMETHEUS_COMMUNITY_KEYRING := ../../../../keys/prometheus-community-pubkey.gpg
 
+# OpenCost signs its chart with keyless cosign rather than a GPG provenance file,
+# so it is verified against the signing workflow's certificate identity instead of
+# a keyring. This chart depends on the signed OCI artifact directly (see Chart.yaml).
+COSIGN ?= cosign
+OPENCOST_VERSION := $(shell yq '.dependencies[] | select(.name == "opencost") | .version' Chart.yaml)
+OPENCOST_OCI_CHART := ghcr.io/opencost/charts/opencost
+OPENCOST_COSIGN_IDENTITY := https://github.com/opencost/opencost-helm-chart/.github/workflows/publish.yml@refs/heads/main
+OPENCOST_COSIGN_ISSUER := https://token.actions.githubusercontent.com
+
 .SECONDEXPANSION:
 README.md: values.yaml Chart.yaml $$(wildcard README.md.gotmpl)
 	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --chart /chart > $@
@@ -54,6 +63,10 @@ verify-signatures: ## Verify the signatures of the signed chart dependencies
 		--version $(WINDOWS_EXPORTER_VERSION) \
 		--verify --keyring $(PROMETHEUS_COMMUNITY_KEYRING) \
 		--destination "$$(mktemp -d)"
+	$(COSIGN) verify $(OPENCOST_OCI_CHART):$(OPENCOST_VERSION) \
+		--certificate-identity $(OPENCOST_COSIGN_IDENTITY) \
+		--certificate-oidc-issuer $(OPENCOST_COSIGN_ISSUER) \
+		> /dev/null
 
 .PHONY: test
 test: build
