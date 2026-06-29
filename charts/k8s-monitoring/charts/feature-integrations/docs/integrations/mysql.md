@@ -125,9 +125,9 @@ integrations:
 | databaseObservability.collectors.querySamples.sampleMinDuration | string | `"0s"` | Minimum duration for query samples to be collected. Set to "0s" to disable filtering and collect all samples regardless of their duration. |
 | databaseObservability.collectors.querySamples.setupConsumersCheckInterval | string | `"1h"` | How frequently to check if setup_consumers are correctly enabled. |
 | databaseObservability.collectors.querySamples.waitEventMinDuration | string | `"1us"` | Minimum duration for a wait event to be collected. Set to "0s" to disable filtering and collect all wait events regardless of their duration. |
-| databaseObservability.collectors.schemaDetails.cacheEnabled | bool | `true` | Whether to enable caching of table definitions. |
-| databaseObservability.collectors.schemaDetails.cacheSize | int | `256` | Table definitions cache size. |
-| databaseObservability.collectors.schemaDetails.cacheTTL | string | `"10m"` | Table definitions cache TTL. |
+| databaseObservability.collectors.schemaDetails.cacheEnabled | bool | `true` | Deprecated. Kept for backwards compatibility. |
+| databaseObservability.collectors.schemaDetails.cacheSize | int | `256` | Deprecated. Kept for backwards compatibility. |
+| databaseObservability.collectors.schemaDetails.cacheTTL | string | `"10m"` | Deprecated. Kept for backwards compatibility. |
 | databaseObservability.collectors.schemaDetails.collectInterval | string | `"1m"` | How frequently to collect schemas and tables from information_schema. |
 | databaseObservability.collectors.schemaDetails.enabled | bool | `true` | Enable collection of schemas and tables from information_schema. |
 | databaseObservability.collectors.setupActors.autoUpdateSetupActors | bool | `false` | Whether to enable updates to performance_schema.setup_actors settings. Requires allowUpdatePerformanceSchemaSettings to also be enabled. |

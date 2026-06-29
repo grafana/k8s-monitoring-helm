@@ -97,10 +97,10 @@ integrations:
 | databaseObservability.collectors.querySamples.collectInterval | string | `"15s"` | How frequently to collect query samples from the database. |
 | databaseObservability.collectors.querySamples.disableQueryRedaction | bool | `false` | Collect unredacted SQL query text including parameters. |
 | databaseObservability.collectors.querySamples.enabled | bool | `true` | Enable collection of query samples. |
-| databaseObservability.collectors.querySamples.excludeCurrentUser | bool | `true` | Do not collect query samples for the current database user. |
-| databaseObservability.collectors.schemaDetails.cacheEnabled | bool | `true` | Whether to enable caching of table definitions. |
-| databaseObservability.collectors.schemaDetails.cacheSize | int | `256` | Table definitions cache size. |
-| databaseObservability.collectors.schemaDetails.cacheTTL | string | `"10m"` | Table definitions cache TTL. |
+| databaseObservability.collectors.querySamples.excludeCurrentUser | bool | `true` | Deprecated. Use the top-level `databaseObservability.excludeCurrentUser` instead. When set, this takes precedence over the top-level setting. |
+| databaseObservability.collectors.schemaDetails.cacheEnabled | bool | `true` | Deprecated. Kept for backwards compatibility. |
+| databaseObservability.collectors.schemaDetails.cacheSize | int | `256` | Deprecated. Kept for backwards compatibility. |
+| databaseObservability.collectors.schemaDetails.cacheTTL | string | `"10m"` | Deprecated. Kept for backwards compatibility. |
 | databaseObservability.collectors.schemaDetails.collectInterval | string | `"1m"` | How frequently to collect schemas and tables from information_schema. |
 | databaseObservability.collectors.schemaDetails.enabled | bool | `true` | Enable collection of schemas and tables from information_schema. |
 
@@ -109,6 +109,7 @@ integrations:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | databaseObservability.enabled | bool | `false` | Whether to gather table, schema, and query information from the database. Requires exporter to be enabled. |
+| databaseObservability.excludeCurrentUser | bool | `true` | Exclude the user that Alloy uses to connect to the database from monitoring. The resolved username is automatically appended to `excludeUsers`, if not already present. |
 | databaseObservability.excludeDatabases | list | `[]` | A list of databases to exclude from monitoring. |
 | databaseObservability.excludeUsers | list | `[]` | A list of users to exclude from monitoring. |
 
