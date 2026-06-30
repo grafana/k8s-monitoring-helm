@@ -36,6 +36,7 @@ telemetryServices:
 
 | Repository | Name | Version |
 |------------|------|---------|
+| https://grafana.github.io/helm-charts | beyla | 1.16.8 |
 | https://grafana.github.io/helm-charts | k8s-manifest-tail(k8s-manifest-tail) | 0.1.5 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 7.5.1 |
 | https://prometheus-community.github.io/helm-charts | node-exporter(prometheus-node-exporter) | 4.55.0 |
@@ -95,3 +96,12 @@ telemetryServices:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | windows-exporter.deploy | bool | `true` | Deploy Windows Exporter. Set to false if your cluster already has Windows Exporter deployed. |
+
+### Other Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| beyla.config.create | bool | `false` |  |
+| beyla.config.skipConfigMapCheck | bool | `true` |  |
+| beyla.enabled | bool | `false` |  |
+| beyla.k8sCache.replicas | int | `0` |  |
