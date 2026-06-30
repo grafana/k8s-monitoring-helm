@@ -501,6 +501,34 @@ telemetryServices:
     # @section -- Telemetry Services
     deploy: false
 
+# -- SDK Injector deploys the Grafana Kubernetes Injection Controller for Beyla SDK auto-instrumentation.
+# To see all valid settings, run `helm show values grafana/k8s-injection-controller`.
+# @default -- Disabled
+# @section -- SDK Injector
+sdkInjector:
+  # -- Deploy the SDK Injector.
+  # @section -- SDK Injector
+  enabled: false
+
+  # -- Set a proper name to avoid RELEASE-NAME-sdkInjector
+  # @ignored
+  nameOverride: k8s-injection-controller
+
+  namespace:
+    # -- Namespace where the SDK Injector is installed. Leave empty to use the Helm release namespace.
+    # @section -- SDK Injector
+    name: ""
+
+    # -- Render a Namespace object for `namespace.name`.
+    # @section -- SDK Injector
+    create: false
+
+  # -- Comma-separated allowlist of usernames permitted to create or update annotated injection ConfigMaps. By default,
+  # Kubernetes expands `$(POD_NAMESPACE)` to the namespace where the SDK Injector pod is running.
+  # We add grafana-k8s-monitoring-alloy-metrics as the service account allowed to write the config maps.
+  # @section -- SDK Injector
+  allowedConfigMapWriters: "system:serviceaccount:$(POD_NAMESPACE):grafana-k8s-monitoring-alloy-metrics,system:serviceaccount:$(POD_NAMESPACE):grafana-k8s-monitoring-alloy-metrics"
+
 # The Alloy Operator is a Kubernetes Operator that manages Alloy instances and their lifecycle.
 # To see all valid settings, please see the [Alloy Operator documentation](https://github.com/grafana/alloy-operator/tree/main/charts/alloy-operator).
 alloy-operator:

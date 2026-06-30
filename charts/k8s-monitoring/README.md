@@ -426,6 +426,7 @@ details:
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
 |  | telemetryServices(telemetry-services) | 1.0.0 |
 | https://grafana.github.io/helm-charts | alloy-operator | 0.5.11 |
+| https://grafana.github.io/helm-charts | sdkInjector(k8s-injection-controller) | 0.1.0 |
 <!-- markdownlint-enable no-bare-urls -->
 
 <!--alex disable host-hostess-->
@@ -620,6 +621,16 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | replaceComponent | list | `[]` | *Experimental*: Replace the body of a generated Alloy component with custom content. Each entry must match the `type` and `name` of a component that the chart would otherwise render (e.g. `prometheus.relabel "metricsService"`). The templated component must end with a `} // <type> "<name>"` close tag for replacement to find it, otherwise the render fails. Set `module: <name>` to scope the replacement to a component inside a `declare "<module>" { ... }` block. |
+
+### SDK Injector
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| sdkInjector | object | Disabled | SDK Injector deploys the Grafana Kubernetes Injection Controller for Beyla SDK auto-instrumentation. To see all valid settings, run `helm show values grafana/k8s-injection-controller`. |
+| sdkInjector.allowedConfigMapWriters | string | `"system:serviceaccount:$(POD_NAMESPACE):grafana-k8s-monitoring-alloy-metrics"` | Comma-separated allowlist of usernames permitted to create or update annotated injection ConfigMaps. By default, Kubernetes expands `$(POD_NAMESPACE)` to the namespace where the SDK Injector pod is running. |
+| sdkInjector.enabled | bool | `false` | Deploy the SDK Injector. |
+| sdkInjector.namespace.create | bool | `false` | Create a Namespace object for `namespace.name`. |
+| sdkInjector.namespace.name | string | `""` | Namespace where the SDK Injector is installed. Leave empty to use the Helm release namespace. |
 
 ### Features - Self-reporting
 
