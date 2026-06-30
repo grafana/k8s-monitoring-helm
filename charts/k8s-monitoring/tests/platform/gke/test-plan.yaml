@@ -15,10 +15,19 @@ subject:
 
 cluster:
   type: gke
-  zone: us-central1
+  # us-west1's default network has a Cloud NAT, letting private nodes pull public images.
+  zone: us-west1
   args:
     - --num-nodes=1
     - --labels source=k8s-monitoring-helm-platform-test
+    # Org policy (compute.vmExternalIpAccess) forbids external node IPs -> private nodes.
+    # No public control-plane IP; reached via the IAM-gated DNS endpoint
+    # (requires CLOUDSDK_CONTAINER_USE_DNS_ENDPOINT=true in .envrc / CI).
+    - --enable-ip-alias
+    - --enable-private-nodes
+    - --enable-private-endpoint
+    - --enable-master-authorized-networks
+    - --enable-dns-access
   appendRandomNumber: true
 
 dependencies:
