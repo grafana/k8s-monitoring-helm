@@ -628,7 +628,7 @@ details:
 |-----|------|---------|-------------|
 | sdkInjector | object | Disabled | SDK Injector deploys the Grafana Kubernetes Injection Controller for Beyla SDK auto-instrumentation. To see all valid settings, run `helm show values grafana/k8s-injection-controller`. |
 | sdkInjector.allowedConfigMapWriters | string | `"system:serviceaccount:$(POD_NAMESPACE):grafana-k8s-monitoring-alloy-metrics"` | Comma-separated allowlist of usernames permitted to create or update annotated injection ConfigMaps. By default, Kubernetes expands `$(POD_NAMESPACE)` to the namespace where the SDK Injector pod is running. |
-| sdkInjector.enabled | bool | `false` | Deploy the SDK Injector. |
+| sdkInjector.enabled | bool | `false` | Deploy the SDK Injector and render namespace-scoped RoleBindings granting Alloy collectors permission to write injection ConfigMaps. |
 | sdkInjector.namespace.create | bool | `false` | Create a Namespace object for `namespace.name`. |
 | sdkInjector.namespace.name | string | `""` | Namespace where the SDK Injector is installed. Leave empty to use the Helm release namespace. |
 
