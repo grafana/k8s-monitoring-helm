@@ -2,6 +2,43 @@
   {{- include "telemetryServices.validate.opencost" . }}
   {{- include "telemetryServices.validate.nodeExporter" . }}
   {{- include "telemetryServices.validate.beyla" . }}
+  {{- include "telemetryServices.validate.sdkInjector" . }}
+{{- end }}
+
+{{/*
+Validates the SDK Injector telemetry service.
+
+The SDK Injector only accepts injection ConfigMaps written by usernames in its allowlist
+(sdkInjector.allowedConfigMapWriters). If it is deployed with an empty allowlist, no collector can
+write the ConfigMaps it needs, so require the allowlist to be set and suggest the ServiceAccount of
+each enabled collector.
+*/}}
+{{- define "telemetryServices.validate.sdkInjector" }}
+{{- if .Values.telemetryServices.sdkInjector.deploy }}
+  {{- if eq .Values.telemetryServices.sdkInjector.allowedConfigMapWriters "" }}
+    {{- $writers := list }}
+    {{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
+      {{- $collectorContext := dict "Values" $.Values "Files" $.Files "Release" $.Release "Chart" $.Chart "collectorName" $collectorName }}
+      {{- $serviceAccountName := include "collector.alloy.serviceAccountName" $collectorContext }}
+      {{- $writers = append $writers (printf "system:serviceaccount:$(POD_NAMESPACE):%s" $serviceAccountName) }}
+    {{- end }}
+    {{- $msg := list "" "The SDK Injector requires an allowlist of usernames permitted to create or update annotated injection ConfigMaps." }}
+    {{- $msg = append $msg "Please set telemetryServices.sdkInjector.allowedConfigMapWriters to one or more (comma-separated) usernames." }}
+    {{- $msg = append $msg "" }}
+    {{- if $writers }}
+      {{- $msg = append $msg "For the currently enabled collectors, use:" }}
+      {{- $msg = append $msg "telemetryServices:" }}
+      {{- $msg = append $msg "  sdkInjector:" }}
+      {{- $msg = append $msg (printf "    allowedConfigMapWriters: %s" (join "," $writers)) }}
+    {{- else }}
+      {{- $msg = append $msg "For each collector, add its ServiceAccount:" }}
+      {{- $msg = append $msg "telemetryServices:" }}
+      {{- $msg = append $msg "  sdkInjector:" }}
+      {{- $msg = append $msg "    allowedConfigMapWriters: system:serviceaccount:$(POD_NAMESPACE):<release-name>-<collector-name>" }}
+    {{- end }}
+    {{- fail (join "\n" $msg) }}
+  {{- end }}
+{{- end }}
 {{- end }}
 
 {{/*

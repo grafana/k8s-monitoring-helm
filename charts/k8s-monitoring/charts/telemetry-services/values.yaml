@@ -242,20 +242,47 @@ k8s-manifest-tail:
   #  - name: OTEL_EXPORTER_OTLP_LOGS_PROTOCOL
   #    value: grpc
 
-# Beyla
+# Beyla, only used for its Kubernetes metadata cache for now.
 beyla:
   # -- Deploy Grafana Beyla's services. This controls *all* systems from the Grafana Beyla Helm chart: Beyla itself, and
   # the Beyla Kubernetes metadata cache.
+  # @section -- Beyla
   deploy: false
 
   # -- Enable Grafana Beyla. This should remain off until we remove Beyla from the autoInstrumentation feature.
+  # @section -- Beyla
   enabled: false
 
-  # @ignored
+  # @ignored - Prevent Beyla from creating a ConfigMap
   config:
     skipConfigMapCheck: true
     create: false
 
   # -- Options for the Grafana Beyla Kubernetes metadata cache.
+  # @section -- Beyla
   k8sCache:
     replicas: 0
+
+# SDK Injector deploys the Grafana Kubernetes Injection Controller for Beyla SDK auto-instrumentation.
+# To see all valid settings, run `helm show values grafana/k8s-injection-controller`.
+# @default -- Disabled
+# @section -- SDK Injector
+sdkInjector:
+  # SDK Injector deploys the Grafana Kubernetes Injection Controller for Beyla SDK auto-instrumentation.
+  # To see all valid settings, run `helm show values grafana/k8s-injection-controller`.
+  # @section -- SDK Injector
+  deploy: false
+
+  # -- Set a proper name to avoid RELEASE-NAME-sdkInjector
+  # @ignored
+  nameOverride: k8s-injection-controller
+
+  # @ignored - Utilize the release namespace
+  namespace:
+    name: ""
+    create: false
+
+  # -- Comma-separated allowlist of usernames permitted to create or update annotated injection ConfigMaps. By default,
+  # Kubernetes expands `$(POD_NAMESPACE)` to the namespace where the SDK Injector pod is running.
+  # @section -- SDK Injector
+  allowedConfigMapWriters: ""

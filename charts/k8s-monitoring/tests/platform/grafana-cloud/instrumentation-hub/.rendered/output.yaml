@@ -63,6 +63,74 @@ metadata:
     release: k8smon
 automountServiceAccountToken: false
 ---
+# Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-k8s-injection-controller
+  namespace: default
+  labels:
+    helm.sh/chart: sdkInjector-0.1.0
+    app.kubernetes.io/name: k8s-injection-controller
+    app.kubernetes.io/instance: k8smon
+    control-plane: controller-manager
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/webhook/serving-cert-secret.yaml
+# Persistence layer for the controller-managed webhook serving certificate. The
+# in-process cert rotator (see --enable-cert-rotation) populates ca.crt/ca.key/tls.crt/
+# tls.key here; it updates this Secret but never creates it, so the chart
+# pre-creates it empty. Only rendered when cert-manager is not in use.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: k8smon-k8s-injection-controller-serving-cert
+  namespace: default
+  labels:
+    helm.sh/chart: sdkInjector-0.1.0
+    app.kubernetes.io/name: k8s-injection-controller
+    app.kubernetes.io/instance: k8smon
+    control-plane: controller-manager
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+type: Opaque
+---
+# Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/sdk-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-k8s-injection-controller-sdk-config
+  namespace: default
+  labels:
+    helm.sh/chart: sdkInjector-0.1.0
+    app.kubernetes.io/name: k8s-injection-controller
+    app.kubernetes.io/instance: k8smon
+    control-plane: controller-manager
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+data:
+  # config.SDKInject document consumed by the controller via --config. The
+  # controller selects matching workloads but performs no mutation when this is
+  # absent (image_volume_root empty).
+  sdk-inject.yaml: |
+    debug: false
+    image_volume_root: ghcr.io/grafana/beyla/inject-sdk-image
+    image_version: "0.0.13"
+    injection_mode: auto
+    propagators:
+      - tracecontext
+      - baggage
+    export:
+      traces: true
+      metrics: true
+      logs: false
+    enabled_sdks:
+      - nodejs
+      - python
+      - java
+      - dotnet
+---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -344,6 +412,70 @@ rules:
     - volumeattachments
   verbs: ["list", "watch"]
 ---
+# Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/rbac/manager-rbac.yaml
+# Cluster-wide permissions: resolve pod owner chains, evict pods and trigger
+# workload rollouts so matching pods get re-admitted and instrumented.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8smon-k8s-injection-controller-manager-role
+  labels:
+    helm.sh/chart: sdkInjector-0.1.0
+    app.kubernetes.io/name: k8s-injection-controller
+    app.kubernetes.io/instance: k8smon
+    control-plane: controller-manager
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - delete
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  - deployments
+  - statefulsets
+  verbs:
+  - patch
+- apiGroups:
+  - apps
+  resources:
+  - replicasets
+  verbs:
+  - get
+  - list
+  - watch
+# Self-managed webhook cert: the in-process rotator watches the webhook
+# configurations and injects the caBundle. list/watch cannot be name-scoped;
+# the mutating writes are scoped by resourceNames to this release's configs.
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - mutatingwebhookconfigurations
+  - validatingwebhookconfigurations
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - mutatingwebhookconfigurations
+  - validatingwebhookconfigurations
+  resourceNames:
+  - k8smon-k8s-injection-controller-mutating-webhook
+  - k8smon-k8s-injection-controller-validating-webhook
+  verbs:
+  - update
+  - patch
+---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -429,6 +561,27 @@ subjects:
   name: k8smon-kube-state-metrics
   namespace: default
 ---
+# Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/rbac/manager-rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-k8s-injection-controller-manager-rolebinding
+  labels:
+    helm.sh/chart: sdkInjector-0.1.0
+    app.kubernetes.io/name: k8s-injection-controller
+    app.kubernetes.io/instance: k8smon
+    control-plane: controller-manager
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-k8s-injection-controller-manager-role
+subjects:
+- kind: ServiceAccount
+  name: k8smon-k8s-injection-controller
+  namespace: default
+---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/leader-election.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -474,6 +627,114 @@ rules:
       - create
       - patch
 ---
+# Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/rbac/configmap-reader-rbac.yaml
+# Grants the controller get/list/watch on ConfigMaps in the watched namespace
+# (where Beyla writes its injection-config ConfigMaps). The controller's
+# ConfigMap informer LISTs this namespace on startup, so it must be allowed
+# even when the watch namespace differs from the controller's own namespace.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: k8smon-k8s-injection-controller-configmap-reader
+  namespace: default
+  labels:
+    helm.sh/chart: sdkInjector-0.1.0
+    app.kubernetes.io/name: k8s-injection-controller
+    app.kubernetes.io/instance: k8smon
+    control-plane: controller-manager
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+---
+# Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/rbac/leader-election-rbac.yaml
+# Permissions to perform leader election in the controller's own namespace.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: k8smon-k8s-injection-controller-leader-election-role
+  namespace: default
+  labels:
+    helm.sh/chart: sdkInjector-0.1.0
+    app.kubernetes.io/name: k8s-injection-controller
+    app.kubernetes.io/instance: k8smon
+    control-plane: controller-manager
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+---
+# Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/rbac/manager-rbac.yaml
+# Self-managed webhook cert: the rotator persists the serving cert into a Secret
+# in the controller's own namespace. list/watch cannot be name-scoped (the
+# rotator's cache lists Secrets in this namespace); get/update are.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: k8smon-k8s-injection-controller-cert-rotator-role
+  namespace: default
+  labels:
+    helm.sh/chart: sdkInjector-0.1.0
+    app.kubernetes.io/name: k8s-injection-controller
+    app.kubernetes.io/instance: k8smon
+    control-plane: controller-manager
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  resourceNames:
+  - k8smon-k8s-injection-controller-serving-cert
+  verbs:
+  - get
+  - update
+---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/leader-election.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -494,6 +755,72 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
+---
+# Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/rbac/configmap-reader-rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: k8smon-k8s-injection-controller-configmap-reader
+  namespace: default
+  labels:
+    helm.sh/chart: sdkInjector-0.1.0
+    app.kubernetes.io/name: k8s-injection-controller
+    app.kubernetes.io/instance: k8smon
+    control-plane: controller-manager
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: k8smon-k8s-injection-controller-configmap-reader
+subjects:
+- kind: ServiceAccount
+  name: k8smon-k8s-injection-controller
+  namespace: default
+---
+# Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/rbac/leader-election-rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: k8smon-k8s-injection-controller-leader-election-rolebinding
+  namespace: default
+  labels:
+    helm.sh/chart: sdkInjector-0.1.0
+    app.kubernetes.io/name: k8s-injection-controller
+    app.kubernetes.io/instance: k8smon
+    control-plane: controller-manager
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: k8smon-k8s-injection-controller-leader-election-role
+subjects:
+- kind: ServiceAccount
+  name: k8smon-k8s-injection-controller
+  namespace: default
+---
+# Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/rbac/manager-rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: k8smon-k8s-injection-controller-cert-rotator-rolebinding
+  namespace: default
+  labels:
+    helm.sh/chart: sdkInjector-0.1.0
+    app.kubernetes.io/name: k8s-injection-controller
+    app.kubernetes.io/instance: k8smon
+    control-plane: controller-manager
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: k8smon-k8s-injection-controller-cert-rotator-role
+subjects:
+- kind: ServiceAccount
+  name: k8smon-k8s-injection-controller
+  namespace: default
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/service.yaml
 apiVersion: v1
@@ -600,6 +927,29 @@ spec:
   selector:
     app.kubernetes.io/name: node-exporter
     app.kubernetes.io/instance: k8smon
+---
+# Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/webhook/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-k8s-injection-controller-webhook
+  namespace: default
+  labels:
+    helm.sh/chart: sdkInjector-0.1.0
+    app.kubernetes.io/name: k8s-injection-controller
+    app.kubernetes.io/instance: k8smon
+    control-plane: controller-manager
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  ports:
+    - port: 443
+      protocol: TCP
+      targetPort: 9443
+  selector:
+    app.kubernetes.io/name: k8s-injection-controller
+    app.kubernetes.io/instance: k8smon
+    control-plane: controller-manager
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/node-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -937,6 +1287,234 @@ spec:
           readOnlyRootFilesystem: true
       nodeSelector:
         kubernetes.io/os: linux
+---
+# Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8smon-k8s-injection-controller
+  namespace: default
+  labels:
+    helm.sh/chart: sdkInjector-0.1.0
+    app.kubernetes.io/name: k8s-injection-controller
+    app.kubernetes.io/instance: k8smon
+    control-plane: controller-manager
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: k8s-injection-controller
+      app.kubernetes.io/instance: k8smon
+      control-plane: controller-manager
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+        # Roll the pod whenever the mounted SDK config changes.
+        checksum/sdk-config: fe7f2dca216f486ece1f27aefa0a4a7c4035566a67920cacd76fe20f816277e3
+        # Advertise the metrics endpoint for annotation-based Prometheus discovery.
+        prometheus.io/path: /metrics
+        prometheus.io/port: "8080"
+        prometheus.io/scrape: "true"
+      labels:
+        app.kubernetes.io/name: k8s-injection-controller
+        app.kubernetes.io/instance: k8smon
+        control-plane: controller-manager
+    spec:
+      serviceAccountName: k8smon-k8s-injection-controller
+      terminationGracePeriodSeconds: 10
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: manager
+          image: "ghcr.io/grafana/k8s-injection-controller:main"
+          imagePullPolicy: IfNotPresent
+          command:
+            - /manager
+          args:
+            - --health-probe-bind-address=:8081
+            - --leader-elect
+            - --webhook-cert-path=/tmp/k8s-webhook-server/serving-certs
+            - --enable-cert-rotation
+            - --webhook-cert-secret=k8smon-k8s-injection-controller-serving-cert
+            - --mutating-webhook-name=k8smon-k8s-injection-controller-mutating-webhook
+            - --validating-webhook-name=k8smon-k8s-injection-controller-validating-webhook
+            - --metrics-bind-address=:8080
+            - --metrics-secure=false
+            - --config=/etc/beyla-injector/sdk-inject.yaml
+          env:
+            # Dialed by the controller before its first eviction sweep so it
+            # waits for the webhook Service VIP to be programmed.
+            - name: WEBHOOK_SERVICE_ADDR
+              value: k8smon-k8s-injection-controller-webhook.default.svc:443
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: WATCH_NAMESPACE
+              value: "default"
+            - name: ALLOWED_CONFIGMAP_WRITERS
+              value: "system:serviceaccount:$(POD_NAMESPACE):k8smon-alloy"
+          ports:
+            - name: health
+              containerPort: 8081
+              protocol: TCP
+            - name: webhook-server
+              containerPort: 9443
+              protocol: TCP
+            - name: metrics
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+          resources:
+            limits:
+              cpu: 500m
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+          volumeMounts:
+            - name: webhook-certs
+              mountPath: /tmp/k8s-webhook-server/serving-certs
+              # Read-only in both modes. In self-signed mode the cert rotator
+              # writes the Secret via the API (not this dir); the kubelet projects
+              # it here. cert-controller never writes the cert dir itself.
+              readOnly: true
+            - name: sdk-config
+              mountPath: /etc/beyla-injector
+              readOnly: true
+      volumes:
+        - name: webhook-certs
+          # Mount the serving-cert Secret in both modes. cert-manager populates
+          # it in cert-manager mode; the in-process cert rotator populates it in
+          # self-signed mode. cert-controller writes only the Secret (via the
+          # API) and waits for the kubelet to project it onto disk here — it does
+          # NOT write the cert dir, so a writable emptyDir would never get a cert
+          # and the rotator's readiness gate would never fire.
+          secret:
+            secretName: k8smon-k8s-injection-controller-serving-cert
+        - name: sdk-config
+          configMap:
+            name: k8smon-k8s-injection-controller-sdk-config
+---
+# Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/webhook/webhook-configuration.yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: k8smon-k8s-injection-controller-mutating-webhook
+  labels:
+    helm.sh/chart: sdkInjector-0.1.0
+    app.kubernetes.io/name: k8s-injection-controller
+    app.kubernetes.io/instance: k8smon
+    control-plane: controller-manager
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+webhooks:
+- name: mpod-v1.beyla.grafana.com
+  admissionReviewVersions:
+  - v1
+  sideEffects: None
+  # A broken injector must never block pod creation.
+  failurePolicy: Ignore
+  clientConfig:
+    service:
+      name: k8smon-k8s-injection-controller-webhook
+      namespace: default
+      path: /mutate--v1-pod
+  namespaceSelector:
+    matchExpressions:
+    - key: kubernetes.io/metadata.name
+      operator: NotIn
+      values:
+        - kube-system
+        - kube-public
+        - kube-node-lease
+        - cert-manager
+        - monitoring
+        - local-path-storage
+        - grafana-alloy
+        - gke-connect
+        - gke-gmp-system
+        - gke-managed-cim
+        - gke-managed-filestorecsi
+        - gke-managed-metrics-server
+        - gke-managed-system
+        - gke-system
+        - gke-managed-volumepopulator
+        - gatekeeper-system
+        - default
+  rules:
+  - apiGroups:
+    - ""
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    resources:
+    - pods
+---
+# Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/webhook/webhook-configuration.yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: k8smon-k8s-injection-controller-validating-webhook
+  labels:
+    helm.sh/chart: sdkInjector-0.1.0
+    app.kubernetes.io/name: k8s-injection-controller
+    app.kubernetes.io/instance: k8smon
+    control-plane: controller-manager
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+webhooks:
+- name: vconfigmap-v1.beyla.grafana.com
+  admissionReviewVersions:
+  - v1
+  sideEffects: None
+  # Scoped to the single watched namespace, which is what makes failurePolicy
+  # Fail safe: a validator outage can only block ConfigMap writes there.
+  failurePolicy: Fail
+  clientConfig:
+    service:
+      name: k8smon-k8s-injection-controller-webhook
+      namespace: default
+      path: /validate--v1-configmap
+  namespaceSelector:
+    matchLabels:
+      kubernetes.io/metadata.name: default
+  matchConditions:
+  - name: exclude-kube-root-ca
+    expression: "object.metadata.name != 'kube-root-ca.crt'"
+  rules:
+  - apiGroups:
+    - ""
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - configmaps
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
