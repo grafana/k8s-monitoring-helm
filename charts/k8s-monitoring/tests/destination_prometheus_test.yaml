@@ -17,6 +17,24 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["config.alloy"]
+
+  - it: allows you to disable keepIdentifyingResourceAttributes
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: prometheus
+          url: https://prometheus.example.com
+          openTelemetryConversion:
+            keepIdentifyingResourceAttributes: false
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: keep_identifying_resource_attributes = false
 #
 #  - it: allows you to disable retry on HTTP 429
 #    set:
