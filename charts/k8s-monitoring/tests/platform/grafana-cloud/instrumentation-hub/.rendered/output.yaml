@@ -735,6 +735,22 @@ rules:
   - get
   - update
 ---
+# Source: k8s-monitoring/templates/sdk-injector-rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: k8smon-my-collector-sdk-injector
+  namespace: default
+  labels:
+    helm.sh/chart: k8s-monitoring-4.1.7
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: rbac
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "create", "update"]
+---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/leader-election.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -821,6 +837,26 @@ subjects:
 - kind: ServiceAccount
   name: k8smon-k8s-injection-controller
   namespace: default
+---
+# Source: k8s-monitoring/templates/sdk-injector-rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: k8smon-my-collector-sdk-injector
+  namespace: default
+  labels:
+    helm.sh/chart: k8s-monitoring-4.1.7
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: rbac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: k8smon-my-collector-sdk-injector
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-my-collector
+    namespace: default
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/service.yaml
 apiVersion: v1
