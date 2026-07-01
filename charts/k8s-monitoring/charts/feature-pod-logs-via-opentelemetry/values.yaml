@@ -72,3 +72,12 @@ otelAnnotations: false
 # -- Only gather new log lines since this was deployed. Do not gather historical log lines.
 # @section -- Volume Log Gathering
 onlyGatherNewLogLines: true
+
+# -- Align the `service.name` resource attribute with the
+# [OpenTelemetry Operator service name conventions](https://opentelemetry.io/docs/specs/semconv/non-normative/k8s-attributes/)
+# (which is what Grafana Beyla uses). When enabled, the detection chain becomes:
+# pod annotation `resource.opentelemetry.io/service.name` → pod label `app.kubernetes.io/instance` → pod label
+# `app.kubernetes.io/name` → owner workload name (Deployment, StatefulSet, etc.) → pod name → container name.
+# The `service.version` resource attribute is similarly detected from the `app.kubernetes.io/version` pod label.
+# @section -- Log Processing
+alignServiceNameWithOTelOperator: false

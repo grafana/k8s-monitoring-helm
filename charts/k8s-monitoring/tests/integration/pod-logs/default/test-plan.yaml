@@ -51,3 +51,8 @@ tests:
             # Gets Pod logs based on annotation job label
             - query: count_over_time({cluster="$CLUSTER", job="dev-pod", namespace="development"}[1h])
               type: logql
+
+            # alignServiceNameWithOTelOperator is enabled, so service_name is set to the Deployment name (prod-pods),
+            # not the container name (busybox).
+            - query: count_over_time({cluster="$CLUSTER", service_name="prod-pods", namespace="production"}[1h])
+              type: logql

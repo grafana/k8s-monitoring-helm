@@ -90,6 +90,45 @@ discovery.relabel "filtered_pods" {
     target_label = "tmp_container_runtime"
   }
 
+{{- if .Values.alignServiceNameWithOTelOperator }}
+  // Compute the workload (owner) name. For ReplicaSet-owned pods, strip the
+  // pod-template hash to recover the Deployment name (matches Beyla / OTel Operator).
+  rule {
+    source_labels = ["__meta_kubernetes_pod_controller_name"]
+    target_label = "__tmp_workload_name"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
+    regex = "ReplicaSet;(.+)-[^-]+"
+    replacement = "$1"
+    target_label = "__tmp_workload_name"
+  }
+
+  // explicitly set service_name. if not set, loki will automatically try to populate a default.
+  // see https://grafana.com/docs/loki/latest/get-started/labels/#default-labels-for-all-users
+  //
+  // choose the first value found from the following ordered list:
+  // - pod.annotation[resource.opentelemetry.io/service.name]
+  // - pod.label[app.kubernetes.io/instance]
+  // - pod.label[app.kubernetes.io/name]
+  // - k8s.workload.name (Deployment, StatefulSet, DaemonSet, CronJob, Job, ...)
+  // - k8s.pod.name
+  // - k8s.container.name
+  rule {
+    source_labels = [
+      {{ include "pod_annotation" "resource.opentelemetry.io/service.name" | quote }},
+      {{ include "pod_label" "app.kubernetes.io/instance" | quote }},
+      {{ include "pod_label" "app.kubernetes.io/name" | quote }},
+      "__tmp_workload_name",
+      "__meta_kubernetes_pod_name",
+      "__meta_kubernetes_pod_container_name",
+    ]
+    separator = ";"
+    regex = "^(?:;*)?([^;]+).*$"
+    replacement = "$1"
+    target_label = "service_name"
+  }
+{{- else }}
   // explicitly set service_name. if not set, loki will automatically try to populate a default.
   // see https://grafana.com/docs/loki/latest/get-started/labels/#default-labels-for-all-users
   //
@@ -108,6 +147,7 @@ discovery.relabel "filtered_pods" {
     replacement = "$1"
     target_label = "service_name"
   }
+{{- end }}
 
   // explicitly set service_namespace.
   //

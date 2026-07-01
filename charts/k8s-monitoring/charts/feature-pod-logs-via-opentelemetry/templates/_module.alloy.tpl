@@ -87,6 +87,24 @@ declare "pod_logs_via_opentelemetry" {
         from     = "namespace"
       }
 {{- end }}
+{{- if .Values.alignServiceNameWithOTelOperator }}
+      // Extracted for service.name / service.version detection. Deleted in the transform processor below.
+      label {
+        tag_name = "app.kubernetes.io/instance"
+        key      = "app.kubernetes.io/instance"
+        from     = "pod"
+      }
+      label {
+        tag_name = "app.kubernetes.io/name"
+        key      = "app.kubernetes.io/name"
+        from     = "pod"
+      }
+      label {
+        tag_name = "app.kubernetes.io/version"
+        key      = "app.kubernetes.io/version"
+        from     = "pod"
+      }
+{{- end }}
 {{- range $attribute, $label := .Values.labels }}
       label {
         tag_name = {{ $attribute | quote }}
@@ -140,6 +158,16 @@ declare "pod_logs_via_opentelemetry" {
         `delete_key(attributes, "k8s.container.restart_count")`,
         `delete_key(attributes, {{ .Values.annotationSelector | quote }})`,
 
+{{- if .Values.alignServiceNameWithOTelOperator }}
+        // Set service.name by choosing the first value found from the following ordered list:
+        // - pod.annotation[resource.opentelemetry.io/service.name] (set by the k8sattributes processor above)
+        // - pod.label[app.kubernetes.io/instance]
+        // - pod.label[app.kubernetes.io/name]
+        // - k8s.workload.name (Deployment, StatefulSet, DaemonSet, CronJob, Job, ...)
+        // - k8s.pod.name
+        // - k8s.container.name
+        `set(attributes["service.name"], attributes["app.kubernetes.io/instance"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["app.kubernetes.io/instance"] != nil and attributes["app.kubernetes.io/instance"] != ""`,
+{{- end }}
         `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["app.kubernetes.io/name"] != nil and attributes["app.kubernetes.io/name"] != ""`,
         `set(attributes["service.name"], attributes["k8s.deployment.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.deployment.name"] != nil and attributes["k8s.deployment.name"] != ""`,
         `set(attributes["service.name"], attributes["k8s.replicaset.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.replicaset.name"] != nil and attributes["k8s.replicaset.name"] != ""`,
@@ -155,6 +183,13 @@ declare "pod_logs_via_opentelemetry" {
         `set(attributes["service.version"], attributes["app.kubernetes.io/version"]) where attributes["service.version"] == nil`,
 
         `set(attributes["service.instance.id"], Concat([attributes["k8s.namespace.name"], attributes["k8s.pod.name"], attributes["k8s.container.name"]], ".")) where attributes["service.instance.id"] == nil`,
+{{- if .Values.alignServiceNameWithOTelOperator }}
+
+        // Remove the temporary pod label attributes used for service.name / service.version detection
+        `delete_key(attributes, "app.kubernetes.io/instance")`,
+        `delete_key(attributes, "app.kubernetes.io/name")`,
+        `delete_key(attributes, "app.kubernetes.io/version")`,
+{{- end }}
 {{- range $attribute, $value := .Values.staticAttributes }}
         `set(attributes[{{ $attribute | quote }}], {{ $value | quote }})`,
 {{- end }}
