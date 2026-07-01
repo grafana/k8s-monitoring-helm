@@ -45,7 +45,7 @@ each enabled collector.
 Validates the bundled Beyla telemetry service.
 
 For now, the Beyla subchart under telemetryServices is only meant to deploy the standalone Kubernetes metadata
-cache (k8sCache), not Beyla itself. Beyls should be deployed by the Auto-Instrumentation feature.
+cache (k8sCache), not Beyla itself. Beyla should be deployed by the Auto-Instrumentation feature.
 This check:
   1. Blocks enabling the Beyla agent here (telemetryServices.beyla.enabled), pointing users at the
      autoInstrumentation feature instead.
