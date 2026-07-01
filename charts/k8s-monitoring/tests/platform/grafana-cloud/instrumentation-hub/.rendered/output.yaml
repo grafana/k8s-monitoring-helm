@@ -17,11 +17,11 @@ automountServiceAccountToken: true
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: k8smon-beyla
+  name: k8smon-beyla-cache
   namespace: default
   labels:
     helm.sh/chart: beyla-1.16.8
-    app.kubernetes.io/name: beyla
+    app.kubernetes.io/name: beyla-cache
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "3.20.0"
     app.kubernetes.io/managed-by: Helm
@@ -239,10 +239,10 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: k8smon-beyla
+  name: k8smon-beyla-cache
   labels:
     helm.sh/chart: beyla-1.16.8
-    app.kubernetes.io/name: beyla
+    app.kubernetes.io/name: beyla-cache
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "3.20.0"
     app.kubernetes.io/managed-by: Helm
@@ -520,10 +520,10 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: k8smon-beyla
+  name: k8smon-beyla-cache
   labels:
     helm.sh/chart: beyla-1.16.8
-    app.kubernetes.io/name: beyla
+    app.kubernetes.io/name: beyla-cache
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "3.20.0"
     app.kubernetes.io/managed-by: Helm
@@ -531,12 +531,12 @@ metadata:
     app.kubernetes.io/component: rbac
 subjects:
   - kind: ServiceAccount
-    name: k8smon-beyla
+    name: k8smon-beyla-cache
     namespace: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: k8smon-beyla
+  name: k8smon-beyla-cache
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1215,7 +1215,7 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/part-of: beyla
     spec:
-      serviceAccountName: k8smon-beyla
+      serviceAccountName: k8smon-beyla-cache
       containers:
         - name: beyla-cache
           image: docker.io/grafana/beyla-k8s-cache:3.20.0
