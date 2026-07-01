@@ -1,6 +1,48 @@
 {{- define "telemetryServices.validate" }}
   {{- include "telemetryServices.validate.opencost" . }}
   {{- include "telemetryServices.validate.nodeExporter" . }}
+  {{- include "telemetryServices.validate.beyla" . }}
+{{- end }}
+
+{{/*
+Validates the bundled Beyla telemetry service.
+
+For now, the Beyla subchart under telemetryServices is only meant to deploy the standalone Kubernetes metadata
+cache (k8sCache), not Beyla itself. Beyls should be deployed by the Auto-Instrumentation feature.
+This check:
+  1. Blocks enabling the Beyla agent here (telemetryServices.beyla.enabled), pointing users at the
+     autoInstrumentation feature instead.
+  2. Prevents deploying two k8sCache instances when both this service and an enabled autoInstrumentation
+     feature would each create one.
+*/}}
+{{- define "telemetryServices.validate.beyla" }}
+{{- if .Values.telemetryServices.beyla.deploy }}
+  {{- if .Values.telemetryServices.beyla.enabled }}
+    {{- $msg := list "" "Deploying the Beyla agent via telemetryServices.beyla.enabled is not supported." }}
+    {{- $msg = append $msg "The telemetryServices Beyla service only deploys the standalone Kubernetes metadata cache (k8sCache)." }}
+    {{- $msg = append $msg "" }}
+    {{- $msg = append $msg "To deploy the Beyla agent, enable the Auto-Instrumentation feature instead:" }}
+    {{- $msg = append $msg "autoInstrumentation:" }}
+    {{- $msg = append $msg "  enabled: true" }}
+    {{- fail (join "\n" $msg) }}
+  {{- end }}
+
+  {{- $cacheReplicas := .Values.telemetryServices.beyla.k8sCache.replicas | int }}
+  {{- if (gt $cacheReplicas 0) }}
+    {{- $autoInstrumentationEnabled := .Values.autoInstrumentation.enabled }}
+    {{- $autoInstrumentationCacheReplicas := dig "beyla" "k8sCache" "replicas" 0 .Values.autoInstrumentation | int }}
+    {{- if and ($autoInstrumentationEnabled) (gt $autoInstrumentationCacheReplicas 0) }}
+      {{- $msg := list "" "Two Beyla instances are configured to deploy their Kubernetes metadata caches." }}
+      {{- $msg = append $msg "The Auto-Instrumentation feature already deploys a k8sCache, so the telemetryServices one is redundant." }}
+      {{- $msg = append $msg "" }}
+      {{- $msg = append $msg "Please turn off the telemetryServices Beyla cache:" }}
+      {{- $msg = append $msg "telemetryServices:" }}
+      {{- $msg = append $msg "  beyla:" }}
+      {{- $msg = append $msg "    deploy: false" }}
+      {{- fail (join "\n" $msg) }}
+    {{- end }}
+  {{- end }}
+{{- end }}
 {{- end }}
 
 {{/*
