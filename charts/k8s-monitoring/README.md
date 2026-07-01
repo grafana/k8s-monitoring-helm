@@ -627,8 +627,8 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | sdkInjector | object | Disabled | SDK Injector deploys the Grafana Kubernetes Injection Controller for Beyla SDK auto-instrumentation. To see all valid settings, run `helm show values grafana/k8s-injection-controller`. |
-| sdkInjector.allowedConfigMapWriters | string | `"system:serviceaccount:$(POD_NAMESPACE):grafana-k8s-monitoring-alloy-metrics"` | Comma-separated allowlist of usernames permitted to create or update annotated injection ConfigMaps. By default, Kubernetes expands `$(POD_NAMESPACE)` to the namespace where the SDK Injector pod is running. We add grafana-k8s-monitoring-alloy-metrics as the service account allowed to write the config maps. |
-| sdkInjector.enabled | bool | `false` | Deploy the SDK Injector and render namespace-scoped RoleBindings granting Alloy collectors permission to write injection ConfigMaps. |
+| sdkInjector.allowedConfigMapWriters | string | `"system:serviceaccount:$(POD_NAMESPACE):grafana-k8s-monitoring-beyla"` | Comma-separated allowlist of usernames permitted to create or update annotated injection ConfigMaps. Beyla is the writer of these ConfigMaps, so this must name the Beyla ServiceAccount. By default, Kubernetes expands `$(POD_NAMESPACE)` to the namespace where the SDK Injector pod is running; adjust it if Beyla runs in a different namespace, and adjust the ServiceAccount name if your release is not named `grafana-k8s-monitoring`. |
+| sdkInjector.enabled | bool | `false` | Deploy the SDK Injector and render a namespace-scoped RoleBinding granting the Beyla ServiceAccount permission to write injection ConfigMaps. |
 | sdkInjector.namespace.create | bool | `false` | Render a Namespace object for `namespace.name`. |
 | sdkInjector.namespace.name | string | `""` | Namespace where the SDK Injector is installed. Leave empty to use the Helm release namespace. |
 

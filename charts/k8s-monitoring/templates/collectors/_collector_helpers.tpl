@@ -84,16 +84,6 @@
   {{- end }}
 {{- end }}
 
-{{/* Inputs: Values (all values), collectorName (collector name), collectorValues (collector values, if not inside `.Values.collectors` map) */}}
-{{- define "collector.alloy.serviceAccountName" }}
-{{- $collectorValues := include "collector.alloy.values" . | fromYaml }}
-{{- if dig "serviceAccount" "create" true $collectorValues }}
-  {{- dig "serviceAccount" "name" "" $collectorValues | default (include "collector.alloy.fullname" .) }}
-{{- else }}
-  {{- dig "serviceAccount" "name" "" $collectorValues | default "default" }}
-{{- end }}
-{{- end }}
-
 {{- define "collector.alloy.labels" }}
 helm.sh/chart: {{ include "helper.chart" . }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}

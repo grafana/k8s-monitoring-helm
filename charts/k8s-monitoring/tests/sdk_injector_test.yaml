@@ -4,26 +4,17 @@ release:
   name: test-release
   namespace: observability
 templates:
-  - alloy.yaml
+  - beyla-config.yaml
   - extra-objects.yaml
 tests:
-  - it: creates namespace-scoped ConfigMap writer RBAC for Alloy collectors when enabled
+  - it: creates namespace-scoped ConfigMap writer RBAC for the Beyla ServiceAccount when enabled
     set:
       cluster: {name: test-cluster}
+      autoInstrumentation:
+        enabled: true
       sdkInjector:
         enabled: true
-      collectors:
-        alloy-monitoring:
-          extraConfig: "// Giving this Alloy something to do"
     asserts:
-      - containsDocument:
-          kind: Alloy
-          apiVersion: collectors.grafana.com/v1alpha1
-          name: test-release-alloy-monitoring
-        template: alloy.yaml
-      - notExists:
-          path: spec.rbac
-        template: alloy.yaml
       - documentSelector:
           path: kind
           value: Role
@@ -36,7 +27,7 @@ tests:
           value: Role
         equal:
           path: metadata.name
-          value: test-release-alloy-monitoring-sdk-injector
+          value: test-release-beyla-sdk-injector
         template: extra-objects.yaml
       - documentSelector:
           path: kind
@@ -67,7 +58,7 @@ tests:
           value: RoleBinding
         equal:
           path: metadata.name
-          value: test-release-alloy-monitoring-sdk-injector
+          value: test-release-beyla-sdk-injector
         template: extra-objects.yaml
       - documentSelector:
           path: kind
@@ -83,7 +74,7 @@ tests:
           path: subjects
           content:
             kind: ServiceAccount
-            name: test-release-alloy-monitoring
+            name: test-release-beyla
             namespace: observability
         template: extra-objects.yaml
       - documentSelector:
@@ -91,45 +82,29 @@ tests:
           value: RoleBinding
         equal:
           path: roleRef.name
-          value: test-release-alloy-monitoring-sdk-injector
+          value: test-release-beyla-sdk-injector
         template: extra-objects.yaml
 
-  - it: does not create ConfigMap writer RBAC when disabled
+  - it: does not create ConfigMap writer RBAC when the SDK Injector is disabled
     set:
       cluster: {name: test-cluster}
+      autoInstrumentation:
+        enabled: true
       sdkInjector:
         enabled: false
-      collectors:
-        alloy-monitoring:
-          extraConfig: "// Giving this Alloy something to do"
     asserts:
-      - containsDocument:
-          kind: Alloy
-          apiVersion: collectors.grafana.com/v1alpha1
-          name: test-release-alloy-monitoring
-        template: alloy.yaml
       - hasDocuments:
           count: 0
         template: extra-objects.yaml
 
-  - it: binds the ConfigMap writer Role to an explicitly configured Alloy service account
+  - it: does not create ConfigMap writer RBAC when auto-instrumentation is disabled
     set:
       cluster: {name: test-cluster}
+      autoInstrumentation:
+        enabled: false
       sdkInjector:
         enabled: true
-      collectors:
-        alloy-monitoring:
-          extraConfig: "// Giving this Alloy something to do"
-          serviceAccount:
-            name: custom-alloy
     asserts:
-      - documentSelector:
-          path: kind
-          value: RoleBinding
-        contains:
-          path: subjects
-          content:
-            kind: ServiceAccount
-            name: custom-alloy
-            namespace: observability
+      - hasDocuments:
+          count: 0
         template: extra-objects.yaml

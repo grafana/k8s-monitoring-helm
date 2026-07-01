@@ -506,7 +506,7 @@ telemetryServices:
 # @default -- Disabled
 # @section -- SDK Injector
 sdkInjector:
-  # -- Deploy the SDK Injector and render namespace-scoped RoleBindings granting Alloy collectors permission to write injection ConfigMaps.
+  # -- Deploy the SDK Injector and render a namespace-scoped RoleBinding granting the Beyla ServiceAccount permission to write injection ConfigMaps.
   # @section -- SDK Injector
   enabled: false
 
@@ -523,11 +523,12 @@ sdkInjector:
     # @section -- SDK Injector
     create: false
 
-  # -- Comma-separated allowlist of usernames permitted to create or update annotated injection ConfigMaps. By default,
-  # Kubernetes expands `$(POD_NAMESPACE)` to the namespace where the SDK Injector pod is running.
-  # We add grafana-k8s-monitoring-alloy-metrics as the service account allowed to write the config maps.
+  # -- Comma-separated allowlist of usernames permitted to create or update annotated injection ConfigMaps. Beyla is the
+  # writer of these ConfigMaps, so this must name the Beyla ServiceAccount. By default, Kubernetes expands
+  # `$(POD_NAMESPACE)` to the namespace where the SDK Injector pod is running; adjust it if Beyla runs in a different
+  # namespace, and adjust the ServiceAccount name if your release is not named `grafana-k8s-monitoring`.
   # @section -- SDK Injector
-  allowedConfigMapWriters: "system:serviceaccount:$(POD_NAMESPACE):grafana-k8s-monitoring-alloy-metrics"
+  allowedConfigMapWriters: "system:serviceaccount:$(POD_NAMESPACE):grafana-k8s-monitoring-beyla"
 
 # The Alloy Operator is a Kubernetes Operator that manages Alloy instances and their lifecycle.
 # To see all valid settings, please see the [Alloy Operator documentation](https://github.com/grafana/alloy-operator/tree/main/charts/alloy-operator).
