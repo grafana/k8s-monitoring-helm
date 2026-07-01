@@ -1,34 +1,32 @@
-{{- define "sdkInjector.beylaConfigMapWriterRoleName" -}}
-{{- printf "%s-sdk-injector" (include "beyla.fullname" .) | trunc 63 | trimSuffix "-" }}
+{{- define "sdkInjector.alloyConfigMapWriterRoleName" -}}
+{{- printf "%s-sdk-injector" (include "collector.alloy.fullname" .) | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Temporary SDK Injector RBAC shim.
 
-Beyla writes the annotated injection ConfigMaps that the SDK Injector's
-validating webhook gates; the SDK Injector then reads those ConfigMaps. This
-grants Beyla's ServiceAccount namespace-scoped permission to write them.
+This can be removed once the Alloy chart change lands that allows the SDK
+Injector ConfigMap writer RBAC flag to be set directly instead of rendering this
+via extraObjects.
 
-This can be removed once the Beyla chart change lands that allows the SDK
-Injector ConfigMap writer RBAC to be set directly instead of rendering this via
-extraObjects.
-
-The Role/RoleBinding are rendered in Beyla's namespace, which is where Beyla
-writes the ConfigMaps in the default (single-namespace) install. If Beyla and
-the SDK Injector are split across namespaces, this grant must follow the
-namespace the ConfigMaps are written into.
+Do not use Alloy `spec.rbac.rules` for this temporary permission. Without
+`spec.rbac.namespaces`, Alloy renders those rules as cluster-scoped RBAC; setting
+`spec.rbac.namespaces` would scope every Alloy RBAC rule, not just this SDK
+Injector ConfigMap writer rule. Rendering a separate Role/RoleBinding keeps only
+this permission scoped to the namespace where the Alloy collector is deployed.
 */}}
 {{- define "sdkInjector.extraObjects" -}}
 {{- $sdkInjector := index .Values "sdkInjector" | default dict }}
-{{- if and $sdkInjector.enabled .Values.autoInstrumentation.enabled }}
-{{- $beyla := .Subcharts.autoInstrumentation.Subcharts.beyla }}
+{{- if $sdkInjector.enabled }}
+{{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
+{{- $values := dict "Values" $.Values "Files" $.Files "Release" $.Release "Chart" $.Chart "collectorName" $collectorName }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ include "sdkInjector.beylaConfigMapWriterRoleName" $beyla }}
-  namespace: {{ include "beyla.namespace" $beyla }}
-  labels:{{ include "beyla.labels" $beyla | trim | nindent 4 }}
+  name: {{ include "sdkInjector.alloyConfigMapWriterRoleName" $values }}
+  namespace: {{ include "helper.namespace" $ }}
+  labels:{{ include "collector.alloy.labels" $values | trim | nindent 4 }}
     app.kubernetes.io/component: rbac
 rules:
   - apiGroups: [""]
@@ -38,17 +36,18 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ include "sdkInjector.beylaConfigMapWriterRoleName" $beyla }}
-  namespace: {{ include "beyla.namespace" $beyla }}
-  labels:{{ include "beyla.labels" $beyla | trim | nindent 4 }}
+  name: {{ include "sdkInjector.alloyConfigMapWriterRoleName" $values }}
+  namespace: {{ include "helper.namespace" $ }}
+  labels:{{ include "collector.alloy.labels" $values | trim | nindent 4 }}
     app.kubernetes.io/component: rbac
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: {{ include "sdkInjector.beylaConfigMapWriterRoleName" $beyla }}
+  name: {{ include "sdkInjector.alloyConfigMapWriterRoleName" $values }}
 subjects:
   - kind: ServiceAccount
-    name: {{ include "beyla.serviceAccountName" $beyla }}
-    namespace: {{ include "beyla.namespace" $beyla }}
+    name: {{ include "collector.alloy.serviceAccountName" $values }}
+    namespace: {{ include "helper.namespace" $ }}
+{{- end }}
 {{- end }}
 {{- end }}
