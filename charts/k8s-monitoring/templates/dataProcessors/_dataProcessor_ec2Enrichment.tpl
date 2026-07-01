@@ -30,8 +30,9 @@
 
 {{- /* Sanitized telemetry label names to copy from the discovered instances. */}}
 {{- define "dataProcessors.ec2Enrichment.tagsToCopy" -}}
-{{- $labels := list }}
-{{- range $label, $_ := default dict (dig "tags" dict .) }}{{ $labels = append $labels (include "escape_label" $label) }}{{ end }}
+{{- $tags := default dict (dig "tags" dict .) -}}
+{{- $labels := list -}}
+{{- range $label := keys $tags | sortAlpha }}{{ $labels = append $labels (include "escape_label" $label) }}{{ end }}
 {{- $labels | toJson }}
 {{- end -}}
 
