@@ -82,5 +82,5 @@
 {{- end }}
 
 {{- define "ec2_tag" -}}
-{{ printf "__meta_ec2_tag_%s" (include "escape_label" .) }}
+{{ printf "__meta_ec2_tag_%s" (regexReplaceAll "[^0-9A-Za-z_]" . "_") }}
 {{- end }}
