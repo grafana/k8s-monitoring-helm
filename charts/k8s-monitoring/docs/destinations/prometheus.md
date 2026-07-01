@@ -115,15 +115,15 @@ This defines the options for defining a destination for metrics that use the Pro
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| metricEnrichment.namespaceLabels | list | `[]` | Finds kubernetes namespace labels and adds them as labels to matching metrics. Applies to metrics that contain the following labels: `namespace`. Note that this can greatly increase the resource utilization of Alloy. |
-| metricEnrichment.podLabels | list | `[]` | Finds kubernetes pod labels and adds them as labels to matching pod metrics. Applies to metrics that contain the following labels: `namespace`, `pod`. Note that this can greatly increase the resource utilization of Alloy. |
+| metricEnrichment.namespaceLabels | list | `[]` | DEPRECATED: Please use the `kubernetesEnrichment` data processor instead. Finds kubernetes namespace labels and adds them as labels to matching metrics. Applies to metrics that contain the following labels: `namespace`. Note that this can greatly increase the resource utilization of Alloy. |
+| metricEnrichment.podLabels | list | `[]` | DEPRECATED: Please use the `kubernetesEnrichment` data processor instead. Finds kubernetes pod labels and adds them as labels to matching pod metrics. Applies to metrics that contain the following labels: `namespace`, `pod`. Note that this can greatly increase the resource utilization of Alloy. |
 
 ### OpenTelemetry Conversion
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | openTelemetryConversion.addMetricSuffixes | bool | `true` | Whether to add type and unit suffixes to metrics names. |
-| openTelemetryConversion.keepIdentifyingResourceAttributes | bool | `false` | Whether to keep `service.name`, `service.namespace`, and `service.instance.id` as labels on `target_info`. |
+| openTelemetryConversion.keepIdentifyingResourceAttributes | bool | `true` | Whether to keep `service.name`, `service.namespace`, and `service.instance.id` as labels on `target_info`. |
 | openTelemetryConversion.resourceToTelemetryConversion | bool | `false` | Whether to convert OTel resource attributes to Prometheus labels. |
 
 ### Queue Configuration

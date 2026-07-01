@@ -1,0 +1,105 @@
+# Kubernetes Enrichment Processor
+
+The Kubernetes enrichment processor copies Kubernetes namespace and pod labels and annotations onto telemetry data as
+it flows from features to destinations. It supports every `(telemetry type, ecosystem)` tuple, so a single processor
+can enrich Prometheus metrics, OTLP traces, Loki logs, Pyroscope profiles, and so on.
+
+Each setting is a map of `<telemetry label>: <Kubernetes label or annotation name>`: the key is the label (or OTLP
+resource attribute) added to the telemetry data, and the value is the label or annotation on the Kubernetes object to
+copy. For example, `podAnnotations: {owner: example.com/owner}` copies the pod's `example.com/owner` annotation to the
+`owner` label.
+
+Telemetry is matched to its source pod or namespace as follows:
+
+| Ecosystem    | Matching                                                                         |
+|--------------|----------------------------------------------------------------------------------|
+| `prometheus` | The metric's `namespace` and `pod` labels                                        |
+| `loki`       | The log entry's `namespace` and `pod` labels                                     |
+| `pyroscope`  | The profile's `namespace` and `pod` labels                                       |
+| `otlp`       | Kubernetes resource attributes (`k8s.pod.name` + `k8s.namespace.name`, `k8s.pod.ip`, `k8s.pod.uid`) or the sender's connection address |
+
+Namespace labels and annotations only require the namespace match; pod labels and annotations require both `namespace`
+and `pod` to be identified.
+
+This data processor is considered experimental and subject to change.
+
+<!-- textlint-disable terminology -->
+## Values
+
+### General
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| namespaceAnnotations | object | `{}` | Kubernetes namespace annotations to copy to telemetry data, as a map of `<telemetry label>: <namespace annotation name>`. Applies to data carrying a `namespace` label (or Kubernetes resource attributes for OTLP). |
+| namespaceLabels | object | `{}` | Kubernetes namespace labels to copy to telemetry data, as a map of `<telemetry label>: <namespace label name>`. Applies to data carrying a `namespace` label (or Kubernetes resource attributes for OTLP). |
+| podAnnotations | object | `{}` | Kubernetes pod annotations to copy to telemetry data, as a map of `<telemetry label>: <pod annotation name>`. Applies to data carrying `namespace` and `pod` labels (or Kubernetes resource attributes for OTLP). |
+| podLabels | object | `{}` | Kubernetes pod labels to copy to telemetry data, as a map of `<telemetry label>: <pod label name>`. Applies to data carrying `namespace` and `pod` labels (or Kubernetes resource attributes for OTLP). |
+<!-- textlint-enable terminology -->
+
+## Requirements
+
+-   The Prometheus metrics, Loki logs, and Pyroscope profiles pipelines use experimental Alloy components
+    ([prometheus.enrich](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.enrich/),
+    [loki.enrich](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.enrich/), and
+    [pyroscope.enrich](https://grafana.com/docs/alloy/latest/reference/components/pyroscope/pyroscope.enrich/)), so any
+    collector running those pipelines must set `alloy.stabilityLevel: experimental`. The chart validates this at
+    install time. The OTLP pipelines use the generally available
+    [otelcol.processor.k8sattributes](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.k8sattributes/)
+    component and work at any stability level.
+-   For the label-based ecosystems (`prometheus`, `loki`, `pyroscope`), the telemetry label name is sanitized to a
+    valid label name: dashes, dots, and slashes become underscores (for example, the telemetry label `cost-center`
+    becomes `cost_center`). OTLP resource attributes use the telemetry label name verbatim.
+-   OTLP enrichment requires a successful pod association: telemetry without Kubernetes resource attributes that does
+    not arrive directly from the pod's address is not enriched. Namespace labels and annotations are attached via the
+    associated pod.
+-   Pod-level enrichment for the label-based ecosystems requires the telemetry to carry both `namespace` and `pod`
+    labels. Note that the Pod Logs feature (`podLogsViaLoki`) moves the `pod` label to structured metadata by default,
+    which makes it unavailable for matching. To use pod labels or annotations with Pod Logs, keep `pod` as a stream
+    label:
+
+    ```yaml
+    podLogsViaLoki:
+      structuredMetadata:
+        pod: null
+    ```
+
+    Namespace-level enrichment only requires the `namespace` label and works with the default settings.
+-   Enrichment can greatly increase the resource utilization of the collector, since it watches the Kubernetes API for
+    pod (and namespace) metadata. To keep that cost down, the pod discovery is rendered once per collector and shared
+    by all of the processor's label-based pipelines on that collector.
+
+## Example
+
+This example defines a `k8s-metadata` processor that copies the `team` namespace label, the `cost-center` namespace
+annotation, and the `app.kubernetes.io/name` pod label onto cluster metrics and pod logs:
+
+```yaml
+dataProcessors:
+  k8s-metadata:
+    type: kubernetesEnrichment
+    namespaceLabels:
+      team: team
+    namespaceAnnotations:
+      cost-center: cost-center
+    podLabels:
+      app_name: app.kubernetes.io/name
+
+clusterMetrics:
+  enabled: true
+  dataProcessors: [k8s-metadata]
+
+podLogsViaLoki:
+  enabled: true
+  dataProcessors: [k8s-metadata]
+
+collectors:
+  alloy-metrics:
+    alloy:
+      stabilityLevel: experimental
+  alloy-logs:
+    alloy:
+      stabilityLevel: experimental
+```
+
+Metrics and logs that carry `namespace` (and `pod`) labels gain `team`, `cost_center`, and `app_name` labels with the
+values from their source namespace and pod.

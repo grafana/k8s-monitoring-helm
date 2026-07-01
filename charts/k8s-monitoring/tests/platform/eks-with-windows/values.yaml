@@ -26,9 +26,19 @@ destinations:
       name: grafana-cloud-credentials
       namespace: default
 
+dataProcessors:
+  # Copies the EC2 instance `Team` tag onto telemetry, matching each node's `node` label to
+  # its instance private DNS name via discovery.ec2.
+  ec2-tags:
+    type: ec2Enrichment
+    region: ap-northeast-2
+    tags:
+      team: Team
+
 clusterMetrics:
   enabled: true
   collector: alloy-metrics
+  dataProcessors: [ec2-tags]
 
 hostMetrics:
   enabled: true
@@ -67,6 +77,8 @@ integrations:
 collectors:
   alloy-metrics:
     presets: [clustered, statefulset]
+    alloy:
+      stabilityLevel: experimental  # Required for prometheus.enrich (ec2Enrichment processor)
 
   alloy-singleton:
     presets: [singleton]

@@ -107,6 +107,13 @@ otelcol.processor.transform "span_metrics_transform" {
     ]
   }
 
+  metric_statements {
+    context = "scope"
+    statements = [
+      `set(resource.attributes["source"], "spanmetrics") where name == "spanmetricsconnector"`,
+    ]
+  }
+
   output {
 {{- if and .metrics .Values.metrics.enabled }}
     metrics = {{ .metrics }}

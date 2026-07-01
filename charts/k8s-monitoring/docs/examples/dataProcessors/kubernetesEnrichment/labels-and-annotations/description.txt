@@ -1,0 +1,30 @@
+# Kubernetes Enrichment processor: Labels and Annotations
+
+This example uses the `kubernetesEnrichment` data processor to copy Kubernetes namespace and pod metadata onto
+telemetry data. Each entry maps `<telemetry label>: <Kubernetes label or annotation name>`. A single `k8s-metadata`
+processor copies:
+
+| Source            | Metadata                       | Resulting label / attribute             |
+| ----------------- | ------------------------------ | --------------------------------------- |
+| Namespace         | `team` label                   | `team`                                  |
+| Namespace         | `cost-center` annotation       | `cost_center` (OTLP: `cost-center`)     |
+| Pod               | `color` label                  | `color`                                 |
+| Pod               | `example.com/owner` annotation | `owner`                                 |
+
+Four features opt in to it via `dataProcessors: [k8s-metadata]`:
+
+| Telemetry | Feature                    | Ecosystem    | How metadata is attached                    |
+| --------- | -------------------------- | ------------ | ------------------------------------------- |
+| Metrics   | `clusterMetrics`           | `prometheus` | `prometheus.enrich` (experimental)          |
+| Logs      | `podLogsViaLoki`           | `loki`       | `loki.enrich` (experimental)                |
+| Traces    | `applicationObservability` | `otlp`       | `otelcol.processor.k8sattributes`           |
+| Profiles  | `profilesReceiver`         | `pyroscope`  | `pyroscope.enrich` (experimental)           |
+
+Metrics, logs, and profiles are matched to their source namespace via their `namespace` label, and to their source pod
+via their `namespace` and `pod` labels. OTLP traces are matched via Kubernetes resource attributes or the sender's
+connection address. Because the label-based enrichment components are experimental, the collector running them sets
+`alloy.stabilityLevel: experimental`.
+
+All four features run on a single `alloy` collector, which shows the processor's shared pod discovery: the
+`prometheus.enrich`, `loki.enrich`, and `pyroscope.enrich` stages all read targets from one
+`discovery.kubernetes`/`discovery.relabel` pair, so the Kubernetes API is only watched once per collector.

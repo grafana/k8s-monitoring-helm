@@ -313,23 +313,19 @@ declare "host_metrics" {
     // Set the instance label to the node name
     rule {
       source_labels = ["__meta_kubernetes_pod_node_name"]
-      action = "replace"
       target_label = "instance"
     }
 
-    // set the namespace label
     rule {
       source_labels = ["__meta_kubernetes_namespace"]
       target_label  = "namespace"
     }
 
-    // set the pod label
     rule {
       source_labels = ["__meta_kubernetes_pod_name"]
       target_label  = "pod"
     }
 
-    // set the container label
     rule {
       source_labels = ["__meta_kubernetes_pod_container_name"]
       target_label  = "container"
@@ -351,9 +347,13 @@ declare "host_metrics" {
       target_label  = "workload"
     }
 
-    // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+    // Set the app label.
+    //
+    // Choose the first value found from the following ordered list:
+    // - pod.label[app.kubernetes.io/name]
+    // - pod.label[k8s-app]
+    // - pod.label[app]
     rule {
-      action = "replace"
       source_labels = [
         "__meta_kubernetes_pod_label_app_kubernetes_io_name",
         "__meta_kubernetes_pod_label_k8s_app",
@@ -365,9 +365,13 @@ declare "host_metrics" {
       target_label = "app"
     }
 
-    // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
+    // Set the component label.
+    //
+    // Choose the first value found from the following ordered list:
+    // - pod.label[app.kubernetes.io/component]
+    // - pod.label[k8s-component]
+    // - pod.label[component]
     rule {
-      action = "replace"
       source_labels = [
         "__meta_kubernetes_pod_label_app_kubernetes_io_component",
         "__meta_kubernetes_pod_label_k8s_component",
@@ -378,11 +382,9 @@ declare "host_metrics" {
       target_label = "component"
     }
 
-    // set a source label
     rule {
-      action = "replace"
-      replacement = "kubernetes"
       target_label = "source"
+      replacement = "kubernetes"
     }
 
   } // discovery.relabel "node_exporter"
@@ -541,7 +543,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
 otelcol.exporter.prometheus "prometheus" {
   add_metric_suffixes = true
   resource_to_telemetry_conversion = false
-  keep_identifying_resource_attributes = false
+  keep_identifying_resource_attributes = true
   forward_to = [prometheus.remote_write.prometheus.receiver]
 } // otelcol.exporter.prometheus "prometheus"
 
