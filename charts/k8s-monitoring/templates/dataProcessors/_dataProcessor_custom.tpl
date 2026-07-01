@@ -1,5 +1,3 @@
-{{- define "secrets.list.custom-dataProcessor" }}{{ end -}}
-
 {{- /* Per-type validation hooks. The custom processor has nothing extra to validate. */}}
 {{- define "dataProcessors.custom.validate" }}{{ end -}}
 {{- define "dataProcessors.custom.validate.feature" }}{{ end -}}

@@ -23,7 +23,7 @@ This data processor is considered experimental and subject to change.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| refreshInterval | string | `""` | How often to refresh the list of discovered EC2 instances and their tags. |
+| refreshInterval | string | 60s | How often to refresh the list of discovered EC2 instances and their tags. |
 | region | string | `""` | The AWS region to discover EC2 instances in. If not set, the region is determined from the EC2 instance metadata of the host running the collector. |
 | roleARN | string | `""` | The ARN of the role to assume when discovering EC2 instances. If not set, the default credentials from the AWS credential chain are used. |
 | tags | object | `{}` | EC2 instance tags to copy to telemetry data, as a map of `<telemetry label>: <EC2 tag name>`. Applies to data carrying a `node` label that matches an instance's private DNS name. |

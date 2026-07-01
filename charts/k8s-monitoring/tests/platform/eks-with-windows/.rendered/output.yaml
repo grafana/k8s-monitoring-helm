@@ -940,8 +940,9 @@ data:
     // Processor: ec2-tags (ec2Enrichment) — metrics/prometheus
     prometheus.enrich "ec2_tags_in_metrics_prometheus" {
       targets = discovery.relabel.ec2_tags_instances.output
-      target_match_label = "__meta_ec2_private_dns_name"
-      metrics_match_label = "node"
+      target_to_metric_match = {
+        "__meta_ec2_private_dns_name" = "node",
+      }
       labels_to_copy = ["team"]
       forward_to = [prometheus.relabel.ec2_tags_out_metrics_prometheus.receiver]
     } // prometheus.enrich "ec2_tags_in_metrics_prometheus"

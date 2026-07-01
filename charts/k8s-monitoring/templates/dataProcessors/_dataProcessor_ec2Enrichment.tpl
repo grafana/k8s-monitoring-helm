@@ -1,5 +1,3 @@
-{{- define "secrets.list.ec2Enrichment-dataProcessor" }}{{ end -}}
-
 {{- /* Per-(type, ecosystem) support flags. EC2 enrichment applies to the label-based
        ecosystems only — discovery.ec2 enrichment is built on the experimental *.enrich
        components, and there is no discovery-driven OTLP equivalent. */}}
@@ -16,21 +14,21 @@
 {{- define "dataProcessors.ec2Enrichment.alloy.loki.logs.input" }}loki.enrich.{{ include "helper.alloy_name" .processorName }}_in_logs_loki.receiver{{ end -}}
 {{- define "dataProcessors.ec2Enrichment.alloy.pyroscope.profiles.input" }}pyroscope.enrich.{{ include "helper.alloy_name" .processorName }}_in_profiles_pyroscope.receiver{{ end -}}
 
-{{- /* Per-(ecosystem, type) config slices. Every label-based ecosystem shares one pipeline
-       shape built around the experimental *.enrich component. */}}
+{{- /* Per-(ecosystem, type) config slices. Each label-based ecosystem has its own enrich
+       stage because their *.enrich components take different matching arguments. */}}
 {{- define "dataProcessors.ec2Enrichment.alloy.prometheus.metrics.config" }}
-{{- include "dataProcessors.ec2Enrichment.alloy.enrichPipeline" (dict "processor" .processor "processorName" .processorName "type" "metrics" "ecosystem" "prometheus" "enrichComponent" "prometheus.enrich" "matchLabelArg" "metrics_match_label") }}
+{{- include "dataProcessors.ec2Enrichment.alloy.enrichMetrics" (dict "processor" .processor "processorName" .processorName) }}
 {{- end -}}
 {{- define "dataProcessors.ec2Enrichment.alloy.loki.logs.config" }}
-{{- include "dataProcessors.ec2Enrichment.alloy.enrichPipeline" (dict "processor" .processor "processorName" .processorName "type" "logs" "ecosystem" "loki" "enrichComponent" "loki.enrich" "matchLabelArg" "logs_match_label") }}
+{{- include "dataProcessors.ec2Enrichment.alloy.enrichLogs" (dict "processor" .processor "processorName" .processorName) }}
 {{- end -}}
 {{- define "dataProcessors.ec2Enrichment.alloy.pyroscope.profiles.config" }}
-{{- include "dataProcessors.ec2Enrichment.alloy.enrichPipeline" (dict "processor" .processor "processorName" .processorName "type" "profiles" "ecosystem" "pyroscope" "enrichComponent" "pyroscope.enrich" "matchLabelArg" "profiles_match_label") }}
+{{- include "dataProcessors.ec2Enrichment.alloy.enrichProfiles" (dict "processor" .processor "processorName" .processorName) }}
 {{- end -}}
 
 {{- /* Sanitized telemetry label names to copy from the discovered instances. */}}
 {{- define "dataProcessors.ec2Enrichment.tagsToCopy" -}}
-{{- $tags := default dict (dig "tags" dict .) -}}
+{{- $tags := default dict .tags -}}
 {{- $labels := list -}}
 {{- range $label := keys $tags | sortAlpha }}{{ $labels = append $labels (include "escape_label" $label) }}{{ end }}
 {{- $labels | toJson }}
@@ -88,27 +86,65 @@ discovery.relabel {{ $name | quote }} {
 } // discovery.relabel "{{ $name }}"
 {{- end }}
 
-{{- /* Enrichment pipeline for a label-based ecosystem. Telemetry is matched to its source
-       instance by comparing its `node` label to the instance's private DNS name, then the
-       requested tags are copied onto it. The enrich stage reads targets from the processor's
-       shared EC2 discovery, which the collectorComponents hook renders once per collector.
-       Built from the experimental *.enrich components, so collectors running this slice must
-       set `alloy.stabilityLevel: experimental`.
-       Inputs: processor, processorName, type, ecosystem,
-               enrichComponent (e.g. prometheus.enrich),
-               matchLabelArg (e.g. metrics_match_label) */}}
-{{- define "dataProcessors.ec2Enrichment.alloy.enrichPipeline" }}
+{{- /* Metrics enrichment via prometheus.enrich. Metrics are matched to their source instance
+       by comparing their `node` label to the instance's private DNS name, then the requested
+       tags are copied on. The enrich stage reads targets from the processor's shared EC2
+       discovery, which the collectorComponents hook renders once per collector. Built from the
+       experimental prometheus.enrich component, so collectors running this slice must set
+       `alloy.stabilityLevel: experimental`.
+       Inputs: processor, processorName */}}
+{{- define "dataProcessors.ec2Enrichment.alloy.enrichMetrics" }}
 {{- $p := include "helper.alloy_name" .processorName }}
-{{- $suffix := printf "%s_%s" .type .ecosystem }}
-{{- $outputSink := include "pipeline.alloy.outputSink.ref" (dict "processor" .processorName "type" .type "ecosystem" .ecosystem) }}
+{{- $outputSink := include "pipeline.alloy.outputSink.ref" (dict "processor" .processorName "type" "metrics" "ecosystem" "prometheus") }}
 {{- $discoveryRef := include "dataProcessors.ec2Enrichment.alloy.discovery.ref" (dict "processorName" .processorName) }}
-{{ .enrichComponent }} "{{ $p }}_in_{{ $suffix }}" {
+prometheus.enrich "{{ $p }}_in_metrics_prometheus" {
   targets = {{ $discoveryRef }}
-  target_match_label = "__meta_ec2_private_dns_name"
-  {{ .matchLabelArg }} = "node"
+  target_to_metric_match = {
+    "__meta_ec2_private_dns_name" = "node",
+  }
   labels_to_copy = {{ include "dataProcessors.ec2Enrichment.tagsToCopy" .processor }}
   forward_to = [{{ $outputSink }}]
-} // {{ .enrichComponent }} "{{ $p }}_in_{{ $suffix }}"
+} // prometheus.enrich "{{ $p }}_in_metrics_prometheus"
+{{- end }}
+
+{{- /* Logs enrichment via loki.enrich. Logs are matched to their source instance by comparing
+       their `node` label to the instance's private DNS name, then the requested tags are
+       copied on. The enrich stage reads targets from the processor's shared EC2 discovery,
+       which the collectorComponents hook renders once per collector. Built from the
+       experimental loki.enrich component, so collectors running this slice must set
+       `alloy.stabilityLevel: experimental`.
+       Inputs: processor, processorName */}}
+{{- define "dataProcessors.ec2Enrichment.alloy.enrichLogs" }}
+{{- $p := include "helper.alloy_name" .processorName }}
+{{- $outputSink := include "pipeline.alloy.outputSink.ref" (dict "processor" .processorName "type" "logs" "ecosystem" "loki") }}
+{{- $discoveryRef := include "dataProcessors.ec2Enrichment.alloy.discovery.ref" (dict "processorName" .processorName) }}
+loki.enrich "{{ $p }}_in_logs_loki" {
+  targets = {{ $discoveryRef }}
+  target_match_label = "__meta_ec2_private_dns_name"
+  logs_match_label = "node"
+  labels_to_copy = {{ include "dataProcessors.ec2Enrichment.tagsToCopy" .processor }}
+  forward_to = [{{ $outputSink }}]
+} // loki.enrich "{{ $p }}_in_logs_loki"
+{{- end }}
+
+{{- /* Profiles enrichment via pyroscope.enrich. Profiles are matched to their source instance
+       by comparing their `node` label to the instance's private DNS name, then the requested
+       tags are copied on. The enrich stage reads targets from the processor's shared EC2
+       discovery, which the collectorComponents hook renders once per collector. Built from the
+       experimental pyroscope.enrich component, so collectors running this slice must set
+       `alloy.stabilityLevel: experimental`.
+       Inputs: processor, processorName */}}
+{{- define "dataProcessors.ec2Enrichment.alloy.enrichProfiles" }}
+{{- $p := include "helper.alloy_name" .processorName }}
+{{- $outputSink := include "pipeline.alloy.outputSink.ref" (dict "processor" .processorName "type" "profiles" "ecosystem" "pyroscope") }}
+{{- $discoveryRef := include "dataProcessors.ec2Enrichment.alloy.discovery.ref" (dict "processorName" .processorName) }}
+pyroscope.enrich "{{ $p }}_in_profiles_pyroscope" {
+  targets = {{ $discoveryRef }}
+  target_match_label = "__meta_ec2_private_dns_name"
+  profiles_match_label = "node"
+  labels_to_copy = {{ include "dataProcessors.ec2Enrichment.tagsToCopy" .processor }}
+  forward_to = [{{ $outputSink }}]
+} // pyroscope.enrich "{{ $p }}_in_profiles_pyroscope"
 {{- end }}
 
 {{- /* Values-time validation for an ec2Enrichment processor definition. */}}

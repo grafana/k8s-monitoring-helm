@@ -52,7 +52,7 @@ tests:
       # Metrics are matched to their instance by node name and gain the tag labels.
       - matchRegex:
           path: data["config.alloy"]
-          pattern: 'prometheus\.enrich "ec2_tags_in_metrics_prometheus" \{\s*targets = discovery\.relabel\.ec2_tags_instances\.output\s*target_match_label = "__meta_ec2_private_dns_name"\s*metrics_match_label = "node"\s*labels_to_copy = \["cost_center","team"\]\s*forward_to = \[prometheus\.relabel\.ec2_tags_out_metrics_prometheus\.receiver\]'
+          pattern: 'prometheus\.enrich "ec2_tags_in_metrics_prometheus" \{\s*targets = discovery\.relabel\.ec2_tags_instances\.output\s*target_to_metric_match = \{\s*"__meta_ec2_private_dns_name" = "node",\s*\}\s*labels_to_copy = \["cost_center","team"\]\s*forward_to = \[prometheus\.relabel\.ec2_tags_out_metrics_prometheus\.receiver\]'
       # Output sink and destination gate are generated.
       - matchRegex:
           path: data["config.alloy"]
