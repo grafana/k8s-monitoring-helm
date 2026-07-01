@@ -1,7 +1,7 @@
 ---
 apiVersion: helm-chart-toolbox.grafana.com/v1
 kind: TestPlan
-name: gke
+name: gke-autopilot
 
 subject:
   releaseName: k8smon
@@ -13,9 +13,18 @@ subject:
 
 cluster:
   type: gke-autopilot
-  zone: us-central1
+  zone: us-west1
   args:
     - --labels source=k8s-monitoring-helm-platform-test
+    # Org policy (compute.vmExternalIpAccess) forbids external node IPs -> private nodes.
+    # No public control-plane IP; reached via the IAM-gated DNS endpoint
+    # (requires CLOUDSDK_CONTAINER_USE_DNS_ENDPOINT=true in .envrc / CI).
+    # Autopilot is always VPC-native (no --enable-ip-alias) and create-auto needs
+    # --enable-master-authorized-networks set explicitly with --enable-private-endpoint.
+    - --enable-private-nodes
+    - --enable-private-endpoint
+    - --enable-master-authorized-networks
+    - --enable-dns-access
   appendRandomNumber: true
 
 dependencies:
