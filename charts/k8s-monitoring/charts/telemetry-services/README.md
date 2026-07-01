@@ -105,15 +105,12 @@ telemetryServices:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | sdkInjector.allowedConfigMapWriters | string | `""` | Comma-separated allowlist of usernames permitted to create or update annotated injection ConfigMaps. By default, Kubernetes expands `$(POD_NAMESPACE)` to the namespace where the SDK Injector pod is running. |
+| sdkInjector.deploy | bool | `false` | Deploy the SDK Injector and render namespace-scoped RoleBindings granting Alloy collectors permission to write injection ConfigMaps. |
+| sdkInjector.namespace.create | bool | `false` | Render a Namespace object for `namespace.name`. |
+| sdkInjector.namespace.name | string | `""` | Namespace where the SDK Injector is installed. Leave empty to use the Helm release namespace. |
 
 ### Windows Exporter - Deployment settings
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | windows-exporter.deploy | bool | `true` | Deploy Windows Exporter. Set to false if your cluster already has Windows Exporter deployed. |
-
-### Other Values
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| sdkInjector.deploy | bool | `false` |  |
