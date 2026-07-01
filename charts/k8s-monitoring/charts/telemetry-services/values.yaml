@@ -241,3 +241,57 @@ k8s-manifest-tail:
   #    value: http://k8smon-alloy-receiver.default.svc:4317
   #  - name: OTEL_EXPORTER_OTLP_LOGS_PROTOCOL
   #    value: grpc
+
+# Beyla, only used for its Kubernetes metadata cache for now.
+beyla:
+  # -- Deploy Grafana Beyla's services. This controls *all* systems from the Grafana Beyla Helm chart: Beyla itself, and
+  # the Beyla Kubernetes metadata cache.
+  # @section -- Beyla
+  deploy: false
+
+  # -- Enable Grafana Beyla. This should remain off until we remove Beyla from the autoInstrumentation feature.
+  # @section -- Beyla
+  enabled: false
+
+  # -- Distinct name so this Beyla's ServiceAccount, ClusterRole, and ClusterRoleBinding do not collide with the
+  # Beyla deployed by the autoInstrumentation feature (which uses the default "beyla" name).
+  # @ignored
+  nameOverride: beyla-cache
+
+  # @ignored - Prevent Beyla from creating a ConfigMap
+  config:
+    skipConfigMapCheck: true
+    create: false
+
+  # -- Options for the Grafana Beyla Kubernetes metadata cache.
+  # @section -- Beyla
+  k8sCache:
+    replicas: 0
+
+# SDK Injector deploys the Grafana Kubernetes Injection Controller for Beyla SDK auto-instrumentation.
+# To see all valid settings, run `helm show values grafana/k8s-injection-controller`.
+# @default -- Disabled
+# @section -- SDK Injector
+sdkInjector:
+  # -- Deploy the SDK Injector and render namespace-scoped RoleBindings granting Alloy collectors permission to write injection ConfigMaps.
+  # @section -- SDK Injector
+  deploy: false
+
+  # -- Set a proper name to avoid RELEASE-NAME-sdkInjector
+  # @ignored
+  nameOverride: k8s-injection-controller
+
+  # Namespace where the SDK Injector is installed. By default it uses the Helm release namespace.
+  namespace:
+    # -- Namespace where the SDK Injector is installed. Leave empty to use the Helm release namespace.
+    # @section -- SDK Injector
+    name: ""
+
+    # -- Render a Namespace object for `namespace.name`.
+    # @section -- SDK Injector
+    create: false
+
+  # -- Comma-separated allowlist of usernames permitted to create or update annotated injection ConfigMaps. By default,
+  # Kubernetes expands `$(POD_NAMESPACE)` to the namespace where the SDK Injector pod is running.
+  # @section -- SDK Injector
+  allowedConfigMapWriters: ""

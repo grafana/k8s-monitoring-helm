@@ -1,0 +1,56 @@
+---
+cluster:
+  name: maximum-cluster
+
+collectorCommon:
+  alloy:
+    remoteConfig:
+      enabled: true
+      url: https://remote-config.example.com/alloy
+      auth:
+        type: basic
+        username: 12345
+        password: my-remote-cfg-password
+
+collectors:
+  alloy-daemonset:
+    presets: [xlarge, privileged, clustered, service-discovery, daemonset]
+    controller:
+      autoscaling:
+        vertical:
+          enabled: true
+          resourcePolicy:
+            containerPolicies:
+              - containerName: alloy
+                controlledResources: [cpu, memory]
+                controlledValues: RequestsAndLimits
+                maxAllowed:
+                  cpu: 4
+                  memory: 8Gi
+                minAllowed:
+                  cpu: 1
+                  memory: 2Gi
+
+  alloy-deployment:
+    presets: [xlarge, clustered, deployment]
+    controller:
+      autoscaling:
+        horizontal:
+          enabled: true
+          minReplicas: 1
+          maxReplicas: 5
+          targetCPUUtilizationPercentage: 75
+          targetMemoryUtilizationPercentage: 80
+
+# Add these if Kubernetes monitoring is enabled
+telemetryServices:
+  node-exporter:
+    deploy: true
+
+  kube-state-metrics:
+    deploy: true
+
+  beyla:
+    deploy: true
+    k8sCache:
+      replicas: 1

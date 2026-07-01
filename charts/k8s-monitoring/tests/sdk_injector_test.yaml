@@ -1,0 +1,172 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: SDK Injector
+release:
+  name: test-release
+  namespace: observability
+templates:
+  - alloy.yaml
+  - sdk-injector-rbac.yaml
+  - validations.yaml
+tests:
+  - it: creates namespace-scoped ConfigMap writer RBAC for Alloy collectors when enabled
+    set:
+      cluster: {name: test-cluster}
+      telemetryServices:
+        sdkInjector:
+          deploy: true
+          allowedConfigMapWriters: system:serviceaccount:$(POD_NAMESPACE):test-release-alloy-monitoring
+      collectors:
+        alloy-monitoring:
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - containsDocument:
+          kind: Alloy
+          apiVersion: collectors.grafana.com/v1alpha1
+          name: test-release-alloy-monitoring
+        template: alloy.yaml
+      - notExists:
+          path: spec.rbac
+        template: alloy.yaml
+      - documentSelector:
+          path: kind
+          value: Role
+        equal:
+          path: apiVersion
+          value: rbac.authorization.k8s.io/v1
+        template: sdk-injector-rbac.yaml
+      - documentSelector:
+          path: kind
+          value: Role
+        equal:
+          path: metadata.name
+          value: test-release-alloy-monitoring-sdk-injector
+        template: sdk-injector-rbac.yaml
+      - documentSelector:
+          path: kind
+          value: Role
+        equal:
+          path: metadata.namespace
+          value: observability
+        template: sdk-injector-rbac.yaml
+      - documentSelector:
+          path: kind
+          value: Role
+        contains:
+          path: rules
+          content:
+            apiGroups: [""]
+            resources: ["configmaps"]
+            verbs: ["get", "create", "update"]
+        template: sdk-injector-rbac.yaml
+      - documentSelector:
+          path: kind
+          value: RoleBinding
+        equal:
+          path: apiVersion
+          value: rbac.authorization.k8s.io/v1
+        template: sdk-injector-rbac.yaml
+      - documentSelector:
+          path: kind
+          value: RoleBinding
+        equal:
+          path: metadata.name
+          value: test-release-alloy-monitoring-sdk-injector
+        template: sdk-injector-rbac.yaml
+      - documentSelector:
+          path: kind
+          value: RoleBinding
+        equal:
+          path: metadata.namespace
+          value: observability
+        template: sdk-injector-rbac.yaml
+      - documentSelector:
+          path: kind
+          value: RoleBinding
+        contains:
+          path: subjects
+          content:
+            kind: ServiceAccount
+            name: test-release-alloy-monitoring
+            namespace: observability
+        template: sdk-injector-rbac.yaml
+      - documentSelector:
+          path: kind
+          value: RoleBinding
+        equal:
+          path: roleRef.name
+          value: test-release-alloy-monitoring-sdk-injector
+        template: sdk-injector-rbac.yaml
+
+  - it: does not create ConfigMap writer RBAC when disabled
+    set:
+      cluster: {name: test-cluster}
+      telemetryServices:
+        sdkInjector:
+          deploy: false
+      collectors:
+        alloy-monitoring:
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - containsDocument:
+          kind: Alloy
+          apiVersion: collectors.grafana.com/v1alpha1
+          name: test-release-alloy-monitoring
+        template: alloy.yaml
+      - hasDocuments:
+          count: 0
+        template: sdk-injector-rbac.yaml
+
+  - it: binds the ConfigMap writer Role to an explicitly configured Alloy service account
+    set:
+      cluster: {name: test-cluster}
+      telemetryServices:
+        sdkInjector:
+          deploy: true
+          allowedConfigMapWriters: system:serviceaccount:$(POD_NAMESPACE):test-release-alloy-monitoring
+      collectors:
+        alloy-monitoring:
+          extraConfig: "// Giving this Alloy something to do"
+          serviceAccount:
+            name: custom-alloy
+    asserts:
+      - documentSelector:
+          path: kind
+          value: RoleBinding
+        contains:
+          path: subjects
+          content:
+            kind: ServiceAccount
+            name: custom-alloy
+            namespace: observability
+        template: sdk-injector-rbac.yaml
+
+  - it: fails when deployed without an allowlist, suggesting each enabled collector's service account
+    template: validations.yaml
+    set:
+      cluster: {name: test-cluster}
+      telemetryServices:
+        sdkInjector:
+          deploy: true
+      collectors:
+        alloy-monitoring:
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The SDK Injector requires an allowlist of usernames permitted to create or update annotated injection ConfigMaps.
+            Please set telemetryServices.sdkInjector.allowedConfigMapWriters to one or more (comma-separated) usernames.
+
+            For the currently enabled collectors, use:
+            telemetryServices:
+              sdkInjector:
+                allowedConfigMapWriters: system:serviceaccount:$(POD_NAMESPACE):test-release-alloy-monitoring
+
+  - it: does not fail the allowlist check when the SDK Injector is not deployed
+    template: validations.yaml
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-monitoring:
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - notFailedTemplate: {}

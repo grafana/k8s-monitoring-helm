@@ -36,6 +36,8 @@ telemetryServices:
 
 | Repository | Name | Version |
 |------------|------|---------|
+| https://grafana.github.io/helm-charts | beyla | 1.16.8 |
+| https://grafana.github.io/helm-charts | sdkInjector(k8s-injection-controller) | 0.1.0 |
 | https://grafana.github.io/helm-charts | k8s-manifest-tail(k8s-manifest-tail) | 0.1.5 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 7.5.1 |
 | https://prometheus-community.github.io/helm-charts | node-exporter(prometheus-node-exporter) | 4.55.0 |
@@ -44,6 +46,14 @@ telemetryServices:
 | oci://ghcr.io/opencost/charts | opencost | 2.5.25 |
 <!-- markdownlint-enable no-bare-urls -->
 ## Values
+
+### Beyla
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| beyla.deploy | bool | `false` | Deploy Grafana Beyla's services. This controls *all* systems from the Grafana Beyla Helm chart: Beyla itself, and the Beyla Kubernetes metadata cache. |
+| beyla.enabled | bool | `false` | Enable Grafana Beyla. This should remain off until we remove Beyla from the autoInstrumentation feature. |
+| beyla.k8sCache | object | `{"replicas":0}` | Options for the Grafana Beyla Kubernetes metadata cache. |
 
 ### Global Settings
 
@@ -89,6 +99,15 @@ telemetryServices:
 | opencost.opencost.prometheus.external.url | string | `""` | The URL where OpenCost queries for the metrics it needs. Required when `metricsSource` is set to a metrics destination: the guided setup fails the install with the exact URL to use if this is left empty. It should point at the query endpoint of the destination named by `metricsSource` (e.g. that destination's URL with the remote-write path replaced by the query path, such as `/api/prom` or `/api/v1/query`). |
 | opencost.opencost.prometheus.password_key | string | `"password"` | The key for the password property in the secret. |
 | opencost.opencost.prometheus.username_key | string | `"username"` | The key for the username property in the secret. |
+
+### SDK Injector
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| sdkInjector.allowedConfigMapWriters | string | `""` | Comma-separated allowlist of usernames permitted to create or update annotated injection ConfigMaps. By default, Kubernetes expands `$(POD_NAMESPACE)` to the namespace where the SDK Injector pod is running. |
+| sdkInjector.deploy | bool | `false` | Deploy the SDK Injector and render namespace-scoped RoleBindings granting Alloy collectors permission to write injection ConfigMaps. |
+| sdkInjector.namespace.create | bool | `false` | Render a Namespace object for `namespace.name`. |
+| sdkInjector.namespace.name | string | `""` | Namespace where the SDK Injector is installed. Leave empty to use the Helm release namespace. |
 
 ### Windows Exporter - Deployment settings
 
