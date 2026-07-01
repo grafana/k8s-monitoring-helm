@@ -1,0 +1,270 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Processors - EC2 Enrichment
+templates:
+  - alloy-config.yaml
+  - validations.yaml
+tests:
+  - it: enriches Prometheus metrics with EC2 instance tags
+    template: alloy-config.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.example.com/api/v1/write
+      dataProcessors:
+        ec2-tags:
+          type: ec2Enrichment
+          region: us-east-1
+          roleARN: arn:aws:iam::123456789012:role/discovery
+          tags: {team: Team, cost-center: CostCenter}
+      clusterMetrics:
+        enabled: true
+        collector: alloy-metrics
+        dataProcessors: [ec2-tags]
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+          alloy: {stabilityLevel: experimental}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      # Feature module forwards into the stamper rather than straight to the destination.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.relabel "clustermetrics_stamp_metrics_prometheus"'
+      # The shared discovery polls EC2 and maps each requested tag to a sanitized label.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'discovery\.ec2 "ec2_tags_instances" \{\s*region = "us-east-1"\s*role_arn = "arn:aws:iam::123456789012:role/discovery"\s*\}'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'discovery\.relabel "ec2_tags_instances" \{\s*targets = discovery\.ec2\.ec2_tags_instances\.targets'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'source_labels = \["__meta_ec2_tag_Team"\]\s*target_label = "team"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'source_labels = \["__meta_ec2_tag_CostCenter"\]\s*target_label = "cost_center"'
+      # Metrics are matched to their instance by node name and gain the tag labels.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.enrich "ec2_tags_in_metrics_prometheus" \{\s*targets = discovery\.relabel\.ec2_tags_instances\.output\s*target_to_metric_match = \{\s*"__meta_ec2_private_dns_name" = "node",\s*\}\s*labels_to_copy = \["cost_center","team"\]\s*forward_to = \[prometheus\.relabel\.ec2_tags_out_metrics_prometheus\.receiver\]'
+      # Output sink and destination gate are generated.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.relabel "ec2_tags_out_metrics_prometheus"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.relabel "ec2_tags_prometheus_gate_metrics_prometheus"'
+
+  - it: omits optional discovery arguments when they are not set
+    template: alloy-config.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.example.com/api/v1/write
+      dataProcessors:
+        ec2-tags:
+          type: ec2Enrichment
+          tags: {team: Team}
+      clusterMetrics:
+        enabled: true
+        collector: alloy-metrics
+        dataProcessors: [ec2-tags]
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+          alloy: {stabilityLevel: experimental}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      # With no region/roleARN/refreshInterval, discovery.ec2 renders an empty body.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'discovery\.ec2 "ec2_tags_instances" \{\s*\}'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'region ='
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'role_arn ='
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'refresh_interval ='
+
+  - it: enriches Loki logs via loki.enrich
+    template: alloy-config.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.example.com/loki/api/v1/push
+      dataProcessors:
+        ec2-tags:
+          type: ec2Enrichment
+          tags: {team: Team}
+      podLogsViaLoki:
+        enabled: true
+        collector: alloy-logs
+        dataProcessors: [ec2-tags]
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+          alloy: {stabilityLevel: experimental}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'discovery\.ec2 "ec2_tags_instances"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'loki\.enrich "ec2_tags_in_logs_loki" \{\s*targets = discovery\.relabel\.ec2_tags_instances\.output\s*target_match_label = "__meta_ec2_private_dns_name"\s*logs_match_label = "node"\s*labels_to_copy = \["team"\]\s*forward_to = \[loki\.process\.ec2_tags_out_logs_loki\.receiver\]'
+
+  - it: enriches Pyroscope profiles via pyroscope.enrich
+    template: alloy-config.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        pyroscope:
+          type: pyroscope
+          url: http://pyroscope.example.com:4040
+      dataProcessors:
+        ec2-tags:
+          type: ec2Enrichment
+          tags: {team: Team}
+      profilesReceiver:
+        enabled: true
+        collector: alloy-receiver
+        dataProcessors: [ec2-tags]
+      collectors:
+        alloy-receiver:
+          presets: [deployment]
+          alloy:
+            stabilityLevel: experimental
+            extraPorts:
+              - name: profiles
+                port: 4040
+                targetPort: 4040
+                protocol: TCP
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'discovery\.ec2 "ec2_tags_instances"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'pyroscope\.enrich "ec2_tags_in_profiles_pyroscope" \{\s*targets = discovery\.relabel\.ec2_tags_instances\.output\s*target_match_label = "__meta_ec2_private_dns_name"\s*profiles_match_label = "node"\s*labels_to_copy = \["team"\]\s*forward_to = \[pyroscope\.relabel\.ec2_tags_out_profiles_pyroscope\.receiver\]'
+
+  - it: renders the EC2 discovery once per collector when multiple tuples share a processor
+    template: alloy-config.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.example.com/api/v1/write
+        loki:
+          type: loki
+          url: http://loki.example.com/loki/api/v1/push
+      dataProcessors:
+        ec2-tags:
+          type: ec2Enrichment
+          tags: {team: Team}
+      clusterMetrics:
+        enabled: true
+        collector: alloy-singleton
+        dataProcessors: [ec2-tags]
+      clusterEvents:
+        enabled: true
+        collector: alloy-singleton
+        dataProcessors: [ec2-tags]
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+      collectors:
+        alloy-singleton:
+          presets: [clustered, statefulset]
+          alloy: {stabilityLevel: experimental}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      # Both tuple pipelines render and read targets from the shared discovery.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.enrich "ec2_tags_in_metrics_prometheus" \{\s*targets = discovery\.relabel\.ec2_tags_instances\.output'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'loki\.enrich "ec2_tags_in_logs_loki" \{\s*targets = discovery\.relabel\.ec2_tags_instances\.output'
+      # The EC2 API poll is expensive, so exactly one discovery pair is rendered.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'discovery\.ec2 "ec2_tags_instances" \{'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: '(?s)discovery\.ec2 "ec2_tags_instances" \{.*discovery\.ec2 "ec2_tags_instances" \{'
+
+  - it: fails when an ec2Enrichment processor has no tags to enrich with
+    template: validations.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.example.com/api/v1/write
+      dataProcessors:
+        ec2-tags:
+          type: ec2Enrichment
+      clusterMetrics:
+        enabled: true
+        collector: alloy-metrics
+        dataProcessors: [ec2-tags]
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+          alloy: {stabilityLevel: experimental}
+    asserts:
+      - failedTemplate:
+          errorPattern: 'The processor "ec2-tags" does not have any tags to enrich with'
+
+  - it: fails when the collector is not using the experimental stability level
+    template: validations.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.example.com/api/v1/write
+      dataProcessors:
+        ec2-tags:
+          type: ec2Enrichment
+          tags: {team: Team}
+      clusterMetrics:
+        enabled: true
+        collector: alloy-metrics
+        dataProcessors: [ec2-tags]
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+    asserts:
+      - failedTemplate:
+          errorPattern: 'The processor "ec2-tags" requires Alloy to use the experimental stability level when enriching metrics'

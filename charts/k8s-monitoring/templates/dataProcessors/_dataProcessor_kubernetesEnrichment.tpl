@@ -1,5 +1,3 @@
-{{- define "secrets.list.kubernetesEnrichment-dataProcessor" }}{{ end -}}
-
 {{- /* Per-(type, ecosystem) support flags. Kubernetes enrichment applies to every tuple. */}}
 {{- define "dataProcessors.kubernetesEnrichment.supports_metrics_prometheus" }}true{{ end -}}
 {{- define "dataProcessors.kubernetesEnrichment.supports_metrics_otlp" }}true{{ end -}}
@@ -41,16 +39,16 @@
 {{- /* Sanitized telemetry label names to copy from namespace targets (labels + annotations). */}}
 {{- define "dataProcessors.kubernetesEnrichment.namespaceLabelsToCopy" -}}
 {{- $labels := list }}
-{{- range $label, $_ := default dict (dig "namespaceLabels" dict .) }}{{ $labels = append $labels (include "escape_label" $label) }}{{ end }}
-{{- range $label, $_ := default dict (dig "namespaceAnnotations" dict .) }}{{ $labels = append $labels (include "escape_label" $label) }}{{ end }}
+{{- range $label, $_ := (default dict .namespaceLabels) }}{{ $labels = append $labels (include "escape_label" $label) }}{{ end }}
+{{- range $label, $_ := (default dict .namespaceAnnotations) }}{{ $labels = append $labels (include "escape_label" $label) }}{{ end }}
 {{- $labels | toJson }}
 {{- end -}}
 
 {{- /* Sanitized telemetry label names to copy from pod targets (labels + annotations). */}}
 {{- define "dataProcessors.kubernetesEnrichment.podLabelsToCopy" -}}
 {{- $labels := list }}
-{{- range $label, $_ := default dict (dig "podLabels" dict .) }}{{ $labels = append $labels (include "escape_label" $label) }}{{ end }}
-{{- range $label, $_ := default dict (dig "podAnnotations" dict .) }}{{ $labels = append $labels (include "escape_label" $label) }}{{ end }}
+{{- range $label, $_ := (default dict .podLabels) }}{{ $labels = append $labels (include "escape_label" $label) }}{{ end }}
+{{- range $label, $_ := (default dict .podAnnotations) }}{{ $labels = append $labels (include "escape_label" $label) }}{{ end }}
 {{- $labels | toJson }}
 {{- end -}}
 
@@ -83,10 +81,10 @@ discovery.relabel.{{ include "helper.alloy_name" .processorName }}_pods.output
        Inputs: processor, processorName */}}
 {{- define "dataProcessors.kubernetesEnrichment.alloy.discovery" }}
 {{- $name := printf "%s_pods" (include "helper.alloy_name" .processorName) }}
-{{- $namespaceLabels := default dict (dig "namespaceLabels" dict .processor) }}
-{{- $namespaceAnnotations := default dict (dig "namespaceAnnotations" dict .processor) }}
-{{- $podLabels := default dict (dig "podLabels" dict .processor) }}
-{{- $podAnnotations := default dict (dig "podAnnotations" dict .processor) }}
+{{- $namespaceLabels := default dict .processor.namespaceLabels }}
+{{- $namespaceAnnotations := default dict .processor.namespaceAnnotations }}
+{{- $podLabels := default dict .processor.podLabels }}
+{{- $podAnnotations := default dict .processor.podAnnotations }}
 {{- $hasNamespaceEnrichment := or (not (empty $namespaceLabels)) (not (empty $namespaceAnnotations)) }}
 {{- $hasPodEnrichment := or (not (empty $podLabels)) (not (empty $podAnnotations)) }}
 discovery.kubernetes {{ $name | quote }} {
