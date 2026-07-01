@@ -101,7 +101,6 @@ telemetryServices:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| beyla.config.create | bool | `false` |  |
-| beyla.config.skipConfigMapCheck | bool | `true` |  |
-| beyla.enabled | bool | `false` |  |
-| beyla.k8sCache.replicas | int | `0` |  |
+| beyla.deploy | bool | `false` | Deploy Grafana Beyla's services. This controls *all* systems from the Grafana Beyla Helm chart: Beyla itself, and the Beyla Kubernetes metadata cache. |
+| beyla.enabled | bool | `false` | Enable Grafana Beyla. This should remain off until we remove Beyla from the autoInstrumentation feature. |
+| beyla.k8sCache | object | `{"replicas":0}` | Options for the Grafana Beyla Kubernetes metadata cache. |
