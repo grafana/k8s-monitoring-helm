@@ -1,0 +1,123 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Validations - SDK Injector
+templates:
+  - validations.yaml
+tests:
+  - it: fails when deployed with an empty allowlist, suggesting the enabled collector's ServiceAccount
+    release:
+      name: k8smon
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      clusterMetrics:
+        enabled: true
+        collector: alloy-metrics
+      telemetryServices:
+        kube-state-metrics:
+          deploy: true
+        sdkInjector:
+          deploy: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The SDK Injector requires an allowlist of usernames permitted to create or update annotated injection ConfigMaps.
+            Please set telemetryServices.sdkInjector.allowedConfigMapWriters to one or more (comma-separated) usernames.
+
+            For the currently enabled collectors, use:
+            telemetryServices:
+              sdkInjector:
+                allowedConfigMapWriters: system:serviceaccount:$(POD_NAMESPACE):k8smon-alloy-metrics
+
+  - it: suggests one ServiceAccount per enabled collector, comma-separated
+    release:
+      name: k8smon
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+        logs-service:
+          type: loki
+          url: http://loki.loki.svc:3100/loki/api/v1/push
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+      clusterMetrics:
+        enabled: true
+        collector: alloy-metrics
+      podLogsViaLoki:
+        enabled: true
+        collector: alloy-logs
+      telemetryServices:
+        kube-state-metrics:
+          deploy: true
+        sdkInjector:
+          deploy: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The SDK Injector requires an allowlist of usernames permitted to create or update annotated injection ConfigMaps.
+            Please set telemetryServices.sdkInjector.allowedConfigMapWriters to one or more (comma-separated) usernames.
+
+            For the currently enabled collectors, use:
+            telemetryServices:
+              sdkInjector:
+                allowedConfigMapWriters: system:serviceaccount:$(POD_NAMESPACE):k8smon-alloy-logs,system:serviceaccount:$(POD_NAMESPACE):k8smon-alloy-metrics
+
+  - it: does not fail when the allowlist is set
+    release:
+      name: k8smon
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      clusterMetrics:
+        enabled: true
+        collector: alloy-metrics
+      telemetryServices:
+        kube-state-metrics:
+          deploy: true
+        sdkInjector:
+          deploy: true
+          allowedConfigMapWriters: system:serviceaccount:$(POD_NAMESPACE):k8smon-alloy-metrics
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: does not fail when the SDK Injector is not deployed
+    release:
+      name: k8smon
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      clusterMetrics:
+        enabled: true
+        collector: alloy-metrics
+      telemetryServices:
+        kube-state-metrics:
+          deploy: true
+    asserts:
+      - notFailedTemplate: {}

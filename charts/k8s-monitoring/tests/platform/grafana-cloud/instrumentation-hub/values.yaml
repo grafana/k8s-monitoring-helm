@@ -1,0 +1,36 @@
+---
+cluster:
+  name: instrumentation-hub-test-cluster
+
+telemetryServices:
+  node-exporter:
+    deploy: true
+
+  kube-state-metrics:
+    deploy: true
+
+  beyla:
+    deploy: true
+    k8sCache:
+      replicas: 1
+
+  sdkInjector:
+    deploy: true
+    allowedConfigMapWriters: system:serviceaccount:$(POD_NAMESPACE):k8smon-my-collector
+
+collectorCommon:
+  alloy:
+    remoteConfig:
+      enabled: true
+      url: https://fleet-management-prod-008.grafana.net
+      auth:
+        type: basic
+        usernameKey: GRAFANA_CLOUD_FLEET_MGMT_USER
+        passwordKey: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
+      secret:
+        create: false
+        name: grafana-cloud-credentials
+
+collectors:
+  my-collector:
+    presets: [privileged, clustered, service-discovery, daemonset]
