@@ -11,6 +11,9 @@
     {{- if eq (include "collectors.hasExtraEnv" (deepCopy $ | merge (dict "collectorName" $collectorName "envVarName" "POD_NAME"))) "false" }}
       {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "POD_NAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.name")))) | fromYamlArray }}
     {{- end }}
+    {{- if and $.Values.cluster.name (eq (include "collectors.hasExtraEnv" (deepCopy $ | merge (dict "collectorName" $collectorName "envVarName" "CLUSTER_NAME"))) "false") }}
+      {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "CLUSTER_NAME" "value" $.Values.cluster.name)) | fromYamlArray }}
+    {{- end }}
     {{- if eq (include "collectors.hasExtraEnv" (deepCopy $ | merge (dict "collectorName" $collectorName "envVarName" "GCLOUD_RW_API_KEY"))) "false" }}
       {{- $remoteConfigValues := merge (dict "type" "remoteConfig") (get $collectorValues "remoteConfig") }}
       {{- if eq (include "secrets.usesKubernetesSecret" $remoteConfigValues ) "true" }}
