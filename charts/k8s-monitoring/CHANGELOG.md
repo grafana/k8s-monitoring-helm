@@ -5,6 +5,7 @@
 *   Change the default remote configuration `pollFrequency` from `5m` to `30s`. (@TylerHelmuth)
 *   Add `CLUSTER_NAME` environment variable to remote-config-enabled collectors alongside `NAMESPACE` and `POD_NAME`. (#2775) (@petewall)
 *   Fix OTLP destinations deriving the wrong service identity for metrics converted from a Prometheus scrape. The conversion sets `service.name` to the full `job` label (e.g. `namespace/workload` from Grafana Beyla), breaking service-to-logs correlation in Application Observability. A new normalization step after `otelcol.receiver.prometheus` prefers the explicit `service_name` label; OTLP-native telemetry is unaffected. (#2783) (@mbaykara)
+*   Fix OTLP destinations producing `;`-joined duplicate label values on `target_info` (e.g. `k8s_cluster_name="c;c"`) when a scrape target exposes its own `target_info` metric. Flat resource attributes from the conversion (`service_namespace`, `deployment_environment`, `deployment_environment_name`, `k8s_cluster_name`) are reconciled into their dotted equivalents and dropped when the values match. (#2786) (@mbaykara)
 
 ## 4.2.0
 

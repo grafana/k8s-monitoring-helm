@@ -22,6 +22,15 @@ allows you to disable retry on failure:
             // prefer that value and drop the duplicate.
             `set(attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
             `delete_key(attributes, "service_name") where attributes["service_name"] == attributes["service.name"]`,
+            // The same conversion turns other flat target_info labels into resource attributes.
+            // Promote them to their OpenTelemetry counterparts and drop the flat duplicates, so
+            // the OTLP endpoint does not receive two conflicting spellings of the same attribute.
+            `set(attributes["service.namespace"], attributes["service_namespace"]) where (attributes["service.namespace"] == nil or attributes["service.namespace"] == "") and attributes["service_namespace"] != nil and attributes["service_namespace"] != ""`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == attributes["service.namespace"]`,
+            `set(attributes["deployment.environment"], attributes["deployment_environment"]) where (attributes["deployment.environment"] == nil or attributes["deployment.environment"] == "") and attributes["deployment_environment"] != nil and attributes["deployment_environment"] != ""`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == attributes["deployment.environment"]`,
+            `set(attributes["deployment.environment.name"], attributes["deployment_environment_name"]) where (attributes["deployment.environment.name"] == nil or attributes["deployment.environment.name"] == "") and attributes["deployment_environment_name"] != nil and attributes["deployment_environment_name"] != ""`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == attributes["deployment.environment.name"]`,
           ]
         }
         metric_statements {
@@ -72,6 +81,11 @@ allows you to disable retry on failure:
             `delete_key(attributes, "container.image.repo_digests")`,
             `delete_key(attributes, "os.description")`,
             `delete_key(attributes, "os.build_id")`,
+            // Scrape targets that expose their own target_info metric (e.g. Grafana Beyla) can
+            // carry a flat k8s_cluster_name resource attribute, which conflicts with the
+            // k8s.cluster.name attribute set above and gets ";"-joined by the Prometheus OTLP
+            // endpoint. Drop the flat copy when the values match.
+            `delete_key(attributes, "k8s_cluster_name") where attributes["k8s_cluster_name"] == attributes["k8s.cluster.name"]`,
           ]
         }
 
@@ -234,6 +248,15 @@ allows you to set a timeout:
             // prefer that value and drop the duplicate.
             `set(attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
             `delete_key(attributes, "service_name") where attributes["service_name"] == attributes["service.name"]`,
+            // The same conversion turns other flat target_info labels into resource attributes.
+            // Promote them to their OpenTelemetry counterparts and drop the flat duplicates, so
+            // the OTLP endpoint does not receive two conflicting spellings of the same attribute.
+            `set(attributes["service.namespace"], attributes["service_namespace"]) where (attributes["service.namespace"] == nil or attributes["service.namespace"] == "") and attributes["service_namespace"] != nil and attributes["service_namespace"] != ""`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == attributes["service.namespace"]`,
+            `set(attributes["deployment.environment"], attributes["deployment_environment"]) where (attributes["deployment.environment"] == nil or attributes["deployment.environment"] == "") and attributes["deployment_environment"] != nil and attributes["deployment_environment"] != ""`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == attributes["deployment.environment"]`,
+            `set(attributes["deployment.environment.name"], attributes["deployment_environment_name"]) where (attributes["deployment.environment.name"] == nil or attributes["deployment.environment.name"] == "") and attributes["deployment_environment_name"] != nil and attributes["deployment_environment_name"] != ""`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == attributes["deployment.environment.name"]`,
           ]
         }
         metric_statements {
@@ -284,6 +307,11 @@ allows you to set a timeout:
             `delete_key(attributes, "container.image.repo_digests")`,
             `delete_key(attributes, "os.description")`,
             `delete_key(attributes, "os.build_id")`,
+            // Scrape targets that expose their own target_info metric (e.g. Grafana Beyla) can
+            // carry a flat k8s_cluster_name resource attribute, which conflicts with the
+            // k8s.cluster.name attribute set above and gets ";"-joined by the Prometheus OTLP
+            // endpoint. Drop the flat copy when the values match.
+            `delete_key(attributes, "k8s_cluster_name") where attributes["k8s_cluster_name"] == attributes["k8s.cluster.name"]`,
           ]
         }
 
@@ -447,6 +475,15 @@ allows you to set a timeout when using http:
             // prefer that value and drop the duplicate.
             `set(attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
             `delete_key(attributes, "service_name") where attributes["service_name"] == attributes["service.name"]`,
+            // The same conversion turns other flat target_info labels into resource attributes.
+            // Promote them to their OpenTelemetry counterparts and drop the flat duplicates, so
+            // the OTLP endpoint does not receive two conflicting spellings of the same attribute.
+            `set(attributes["service.namespace"], attributes["service_namespace"]) where (attributes["service.namespace"] == nil or attributes["service.namespace"] == "") and attributes["service_namespace"] != nil and attributes["service_namespace"] != ""`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == attributes["service.namespace"]`,
+            `set(attributes["deployment.environment"], attributes["deployment_environment"]) where (attributes["deployment.environment"] == nil or attributes["deployment.environment"] == "") and attributes["deployment_environment"] != nil and attributes["deployment_environment"] != ""`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == attributes["deployment.environment"]`,
+            `set(attributes["deployment.environment.name"], attributes["deployment_environment_name"]) where (attributes["deployment.environment.name"] == nil or attributes["deployment.environment.name"] == "") and attributes["deployment_environment_name"] != nil and attributes["deployment_environment_name"] != ""`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == attributes["deployment.environment.name"]`,
           ]
         }
         metric_statements {
@@ -497,6 +534,11 @@ allows you to set a timeout when using http:
             `delete_key(attributes, "container.image.repo_digests")`,
             `delete_key(attributes, "os.description")`,
             `delete_key(attributes, "os.build_id")`,
+            // Scrape targets that expose their own target_info metric (e.g. Grafana Beyla) can
+            // carry a flat k8s_cluster_name resource attribute, which conflicts with the
+            // k8s.cluster.name attribute set above and gets ";"-joined by the Prometheus OTLP
+            // endpoint. Drop the flat copy when the values match.
+            `delete_key(attributes, "k8s_cluster_name") where attributes["k8s_cluster_name"] == attributes["k8s.cluster.name"]`,
           ]
         }
 
@@ -660,6 +702,15 @@ allows you to set per-signal paths when using http:
             // prefer that value and drop the duplicate.
             `set(attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
             `delete_key(attributes, "service_name") where attributes["service_name"] == attributes["service.name"]`,
+            // The same conversion turns other flat target_info labels into resource attributes.
+            // Promote them to their OpenTelemetry counterparts and drop the flat duplicates, so
+            // the OTLP endpoint does not receive two conflicting spellings of the same attribute.
+            `set(attributes["service.namespace"], attributes["service_namespace"]) where (attributes["service.namespace"] == nil or attributes["service.namespace"] == "") and attributes["service_namespace"] != nil and attributes["service_namespace"] != ""`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == attributes["service.namespace"]`,
+            `set(attributes["deployment.environment"], attributes["deployment_environment"]) where (attributes["deployment.environment"] == nil or attributes["deployment.environment"] == "") and attributes["deployment_environment"] != nil and attributes["deployment_environment"] != ""`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == attributes["deployment.environment"]`,
+            `set(attributes["deployment.environment.name"], attributes["deployment_environment_name"]) where (attributes["deployment.environment.name"] == nil or attributes["deployment.environment.name"] == "") and attributes["deployment_environment_name"] != nil and attributes["deployment_environment_name"] != ""`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == attributes["deployment.environment.name"]`,
           ]
         }
         metric_statements {
@@ -710,6 +761,11 @@ allows you to set per-signal paths when using http:
             `delete_key(attributes, "container.image.repo_digests")`,
             `delete_key(attributes, "os.description")`,
             `delete_key(attributes, "os.build_id")`,
+            // Scrape targets that expose their own target_info metric (e.g. Grafana Beyla) can
+            // carry a flat k8s_cluster_name resource attribute, which conflicts with the
+            // k8s.cluster.name attribute set above and gets ";"-joined by the Prometheus OTLP
+            // endpoint. Drop the flat copy when the values match.
+            `delete_key(attributes, "k8s_cluster_name") where attributes["k8s_cluster_name"] == attributes["k8s.cluster.name"]`,
           ]
         }
 
@@ -875,6 +931,15 @@ allows you to use basic authentication:
             // prefer that value and drop the duplicate.
             `set(attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
             `delete_key(attributes, "service_name") where attributes["service_name"] == attributes["service.name"]`,
+            // The same conversion turns other flat target_info labels into resource attributes.
+            // Promote them to their OpenTelemetry counterparts and drop the flat duplicates, so
+            // the OTLP endpoint does not receive two conflicting spellings of the same attribute.
+            `set(attributes["service.namespace"], attributes["service_namespace"]) where (attributes["service.namespace"] == nil or attributes["service.namespace"] == "") and attributes["service_namespace"] != nil and attributes["service_namespace"] != ""`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == attributes["service.namespace"]`,
+            `set(attributes["deployment.environment"], attributes["deployment_environment"]) where (attributes["deployment.environment"] == nil or attributes["deployment.environment"] == "") and attributes["deployment_environment"] != nil and attributes["deployment_environment"] != ""`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == attributes["deployment.environment"]`,
+            `set(attributes["deployment.environment.name"], attributes["deployment_environment_name"]) where (attributes["deployment.environment.name"] == nil or attributes["deployment.environment.name"] == "") and attributes["deployment_environment_name"] != nil and attributes["deployment_environment_name"] != ""`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == attributes["deployment.environment.name"]`,
           ]
         }
         metric_statements {
@@ -925,6 +990,11 @@ allows you to use basic authentication:
             `delete_key(attributes, "container.image.repo_digests")`,
             `delete_key(attributes, "os.description")`,
             `delete_key(attributes, "os.build_id")`,
+            // Scrape targets that expose their own target_info metric (e.g. Grafana Beyla) can
+            // carry a flat k8s_cluster_name resource attribute, which conflicts with the
+            // k8s.cluster.name attribute set above and gets ";"-joined by the Prometheus OTLP
+            // endpoint. Drop the flat copy when the values match.
+            `delete_key(attributes, "k8s_cluster_name") where attributes["k8s_cluster_name"] == attributes["k8s.cluster.name"]`,
           ]
         }
 
@@ -1098,6 +1168,15 @@ allows you to use basic authentication with a numeric username:
             // prefer that value and drop the duplicate.
             `set(attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
             `delete_key(attributes, "service_name") where attributes["service_name"] == attributes["service.name"]`,
+            // The same conversion turns other flat target_info labels into resource attributes.
+            // Promote them to their OpenTelemetry counterparts and drop the flat duplicates, so
+            // the OTLP endpoint does not receive two conflicting spellings of the same attribute.
+            `set(attributes["service.namespace"], attributes["service_namespace"]) where (attributes["service.namespace"] == nil or attributes["service.namespace"] == "") and attributes["service_namespace"] != nil and attributes["service_namespace"] != ""`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == attributes["service.namespace"]`,
+            `set(attributes["deployment.environment"], attributes["deployment_environment"]) where (attributes["deployment.environment"] == nil or attributes["deployment.environment"] == "") and attributes["deployment_environment"] != nil and attributes["deployment_environment"] != ""`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == attributes["deployment.environment"]`,
+            `set(attributes["deployment.environment.name"], attributes["deployment_environment_name"]) where (attributes["deployment.environment.name"] == nil or attributes["deployment.environment.name"] == "") and attributes["deployment_environment_name"] != nil and attributes["deployment_environment_name"] != ""`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == attributes["deployment.environment.name"]`,
           ]
         }
         metric_statements {
@@ -1148,6 +1227,11 @@ allows you to use basic authentication with a numeric username:
             `delete_key(attributes, "container.image.repo_digests")`,
             `delete_key(attributes, "os.description")`,
             `delete_key(attributes, "os.build_id")`,
+            // Scrape targets that expose their own target_info metric (e.g. Grafana Beyla) can
+            // carry a flat k8s_cluster_name resource attribute, which conflicts with the
+            // k8s.cluster.name attribute set above and gets ";"-joined by the Prometheus OTLP
+            // endpoint. Drop the flat copy when the values match.
+            `delete_key(attributes, "k8s_cluster_name") where attributes["k8s_cluster_name"] == attributes["k8s.cluster.name"]`,
           ]
         }
 
@@ -1321,6 +1405,15 @@ allows you to use cluster.nameFrom:
             // prefer that value and drop the duplicate.
             `set(attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
             `delete_key(attributes, "service_name") where attributes["service_name"] == attributes["service.name"]`,
+            // The same conversion turns other flat target_info labels into resource attributes.
+            // Promote them to their OpenTelemetry counterparts and drop the flat duplicates, so
+            // the OTLP endpoint does not receive two conflicting spellings of the same attribute.
+            `set(attributes["service.namespace"], attributes["service_namespace"]) where (attributes["service.namespace"] == nil or attributes["service.namespace"] == "") and attributes["service_namespace"] != nil and attributes["service_namespace"] != ""`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == attributes["service.namespace"]`,
+            `set(attributes["deployment.environment"], attributes["deployment_environment"]) where (attributes["deployment.environment"] == nil or attributes["deployment.environment"] == "") and attributes["deployment_environment"] != nil and attributes["deployment_environment"] != ""`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == attributes["deployment.environment"]`,
+            `set(attributes["deployment.environment.name"], attributes["deployment_environment_name"]) where (attributes["deployment.environment.name"] == nil or attributes["deployment.environment.name"] == "") and attributes["deployment_environment_name"] != nil and attributes["deployment_environment_name"] != ""`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == attributes["deployment.environment.name"]`,
           ]
         }
         metric_statements {
@@ -1371,6 +1464,11 @@ allows you to use cluster.nameFrom:
             `delete_key(attributes, "container.image.repo_digests")`,
             `delete_key(attributes, "os.description")`,
             `delete_key(attributes, "os.build_id")`,
+            // Scrape targets that expose their own target_info metric (e.g. Grafana Beyla) can
+            // carry a flat k8s_cluster_name resource attribute, which conflicts with the
+            // k8s.cluster.name attribute set above and gets ";"-joined by the Prometheus OTLP
+            // endpoint. Drop the flat copy when the values match.
+            `delete_key(attributes, "k8s_cluster_name") where attributes["k8s_cluster_name"] == attributes["k8s.cluster.name"]`,
           ]
         }
 
@@ -1533,6 +1631,15 @@ creates the Alloy components for an OTLP destination:
             // prefer that value and drop the duplicate.
             `set(attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
             `delete_key(attributes, "service_name") where attributes["service_name"] == attributes["service.name"]`,
+            // The same conversion turns other flat target_info labels into resource attributes.
+            // Promote them to their OpenTelemetry counterparts and drop the flat duplicates, so
+            // the OTLP endpoint does not receive two conflicting spellings of the same attribute.
+            `set(attributes["service.namespace"], attributes["service_namespace"]) where (attributes["service.namespace"] == nil or attributes["service.namespace"] == "") and attributes["service_namespace"] != nil and attributes["service_namespace"] != ""`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == attributes["service.namespace"]`,
+            `set(attributes["deployment.environment"], attributes["deployment_environment"]) where (attributes["deployment.environment"] == nil or attributes["deployment.environment"] == "") and attributes["deployment_environment"] != nil and attributes["deployment_environment"] != ""`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == attributes["deployment.environment"]`,
+            `set(attributes["deployment.environment.name"], attributes["deployment_environment_name"]) where (attributes["deployment.environment.name"] == nil or attributes["deployment.environment.name"] == "") and attributes["deployment_environment_name"] != nil and attributes["deployment_environment_name"] != ""`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == attributes["deployment.environment.name"]`,
           ]
         }
         metric_statements {
@@ -1583,6 +1690,11 @@ creates the Alloy components for an OTLP destination:
             `delete_key(attributes, "container.image.repo_digests")`,
             `delete_key(attributes, "os.description")`,
             `delete_key(attributes, "os.build_id")`,
+            // Scrape targets that expose their own target_info metric (e.g. Grafana Beyla) can
+            // carry a flat k8s_cluster_name resource attribute, which conflicts with the
+            // k8s.cluster.name attribute set above and gets ";"-joined by the Prometheus OTLP
+            // endpoint. Drop the flat copy when the values match.
+            `delete_key(attributes, "k8s_cluster_name") where attributes["k8s_cluster_name"] == attributes["k8s.cluster.name"]`,
           ]
         }
 
