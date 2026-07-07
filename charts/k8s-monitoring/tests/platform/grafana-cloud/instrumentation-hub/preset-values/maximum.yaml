@@ -14,7 +14,7 @@ collectorCommon:
 
 collectors:
   alloy-daemonset:
-    presets: [xlarge, privileged, clustered, service-discovery, daemonset]
+    presets: [xlarge, privileged, clustered, service-discovery, filesystem-log-reader, daemonset]
     controller:
       autoscaling:
         vertical:
@@ -54,3 +54,8 @@ telemetryServices:
     deploy: true
     k8sCache:
       replicas: 1
+
+  sdkInjector:
+    deploy: true
+    # This must match the format: system:serviceaccount:$(POD_NAMESPACE):${ReleaseName}-${CollectorName}
+    allowedConfigMapWriters: system:serviceaccount:$(POD_NAMESPACE):grafana-cloud-alloy-daemonset

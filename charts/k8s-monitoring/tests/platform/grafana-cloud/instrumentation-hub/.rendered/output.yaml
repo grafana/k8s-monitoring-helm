@@ -135,27 +135,27 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: k8smon-my-collector
+  name: k8smon-alloy
   namespace: default
 data:
   config.alloy: |
-    remote.kubernetes.secret "my_collector_remote_cfg" {
+    remote.kubernetes.secret "alloy_remote_cfg" {
       name      = "grafana-cloud-credentials"
       namespace = "default"
-    } // remote.kubernetes.secret "my_collector_remote_cfg"
+    } // remote.kubernetes.secret "alloy_remote_cfg"
     
     remotecfg {
-      id = string.format("k8smon-%s-%s-%s-%s", "instrumentation-hub-test-cluster", "default", "my-collector", sys.env("K8S_NODE_NAME"))
+      id = string.format("k8smon-%s-%s-%s-%s", "instrumentation-hub-test-cluster", "default", "alloy", sys.env("K8S_NODE_NAME"))
       url = "https://fleet-management-prod-008.grafana.net"
       basic_auth {
-        username = convert.nonsensitive(remote.kubernetes.secret.my_collector_remote_cfg.data["GRAFANA_CLOUD_FLEET_MGMT_USER"])
-        password = remote.kubernetes.secret.my_collector_remote_cfg.data["GRAFANA_CLOUD_FLEET_MGMT_TOKEN"]
+        username = convert.nonsensitive(remote.kubernetes.secret.alloy_remote_cfg.data["GRAFANA_CLOUD_FLEET_MGMT_USER"])
+        password = remote.kubernetes.secret.alloy_remote_cfg.data["GRAFANA_CLOUD_FLEET_MGMT_TOKEN"]
       }
       tls_config {
         insecure_skip_verify = false
-        ca_pem = convert.nonsensitive(remote.kubernetes.secret.my_collector_remote_cfg.data["ca"])
-        cert_pem = convert.nonsensitive(remote.kubernetes.secret.my_collector_remote_cfg.data["cert"])
-        key_pem = remote.kubernetes.secret.my_collector_remote_cfg.data["key"]
+        ca_pem = convert.nonsensitive(remote.kubernetes.secret.alloy_remote_cfg.data["ca"])
+        cert_pem = convert.nonsensitive(remote.kubernetes.secret.alloy_remote_cfg.data["cert"])
+        key_pem = remote.kubernetes.secret.alloy_remote_cfg.data["key"]
       }
       poll_frequency = "30s"
       attributes = {
@@ -166,7 +166,7 @@ data:
         "service-discovery" = "true",
         "source" = "k8s-monitoring",
         "sourceVersion" = "4.2.0",
-        "workloadName" = "my-collector",
+        "workloadName" = "alloy",
         "workloadType" = "daemonset",
       }
     }
@@ -739,7 +739,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: k8smon-my-collector-sdk-injector
+  name: k8smon-alloy-sdk-injector
   namespace: default
   labels:
     helm.sh/chart: k8s-monitoring-4.2.0
@@ -842,7 +842,7 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: k8smon-my-collector-sdk-injector
+  name: k8smon-alloy-sdk-injector
   namespace: default
   labels:
     helm.sh/chart: k8s-monitoring-4.2.0
@@ -852,10 +852,10 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: k8smon-my-collector-sdk-injector
+  name: k8smon-alloy-sdk-injector
 subjects:
   - kind: ServiceAccount
-    name: k8smon-my-collector
+    name: k8smon-alloy
     namespace: default
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/service.yaml
@@ -1394,7 +1394,7 @@ spec:
             - name: WATCH_NAMESPACE
               value: "default"
             - name: ALLOWED_CONFIGMAP_WRITERS
-              value: "system:serviceaccount:$(POD_NAMESPACE):k8smon-my-collector"
+              value: "system:serviceaccount:$(POD_NAMESPACE):k8smon-alloy"
           ports:
             - name: health
               containerPort: 8081
@@ -1556,7 +1556,7 @@ webhooks:
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
-  name: k8smon-my-collector
+  name: k8smon-alloy
   namespace: default
   annotations:
     helm.sdk.operatorframework.io/uninstall-wait: "true"
@@ -1564,7 +1564,7 @@ spec:
   alloy:
     clustering:
       enabled: true
-      name: my-collector
+      name: alloy
     configMap:
       create: false
     extraEnv:
@@ -1583,6 +1583,9 @@ spec:
         secretKeyRef:
           key: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
           name: grafana-cloud-credentials
+    mounts:
+      dockercontainers: true
+      varlog: true
     resources: {}
     securityContext:
       allowPrivilegeEscalation: true
@@ -1621,7 +1624,7 @@ spec:
     type: daemonset
   crds:
     create: false
-  nameOverride: my-collector
+  nameOverride: alloy
 ---
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
 apiVersion: v1
@@ -1803,9 +1806,9 @@ spec:
             - /bin/bash
             - -ce
             - |
-              echo "Deleting Alloy instance: alloy/k8smon-my-collector..."
-              kubectl delete alloy/k8smon-my-collector --ignore-not-found=true --wait
-              kubectl wait --for=delete alloy/k8smon-my-collector --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-my-collector or it may not exist."
+              echo "Deleting Alloy instance: alloy/k8smon-alloy..."
+              kubectl delete alloy/k8smon-alloy --ignore-not-found=true --wait
+              kubectl wait --for=delete alloy/k8smon-alloy --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy or it may not exist."
 
               kubectl patch \
                 --namespace=default \

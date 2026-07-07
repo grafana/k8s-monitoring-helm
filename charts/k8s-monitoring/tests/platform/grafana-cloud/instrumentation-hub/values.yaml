@@ -16,7 +16,8 @@ telemetryServices:
 
   sdkInjector:
     deploy: true
-    allowedConfigMapWriters: system:serviceaccount:$(POD_NAMESPACE):k8smon-my-collector
+    # This must match the format: system:serviceaccount:$(POD_NAMESPACE):${ReleaseName}-${CollectorName}
+    allowedConfigMapWriters: system:serviceaccount:$(POD_NAMESPACE):k8smon-alloy
 
 collectorCommon:
   alloy:
@@ -32,5 +33,5 @@ collectorCommon:
         name: grafana-cloud-credentials
 
 collectors:
-  my-collector:
-    presets: [privileged, clustered, service-discovery, daemonset]
+  alloy:
+    presets: [privileged, clustered, service-discovery, filesystem-log-reader, daemonset]
