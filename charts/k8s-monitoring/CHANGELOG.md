@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Surface `deploy: false` defaults for `telemetryServices.beyla` and `telemetryServices.sdkInjector` in the top-level values, matching the other telemetry services. This prevents them from deploying unintentionally on Helm versions affected by a subchart value coalescing regression (helm/helm#32132). (#2781, #2782) (@petewall)
 *   Change the default remote configuration `pollFrequency` from `5m` to `30s`. (@TylerHelmuth)
 *   Add `CLUSTER_NAME` environment variable to remote-config-enabled collectors alongside `NAMESPACE` and `POD_NAME`. (#2775) (@petewall)
 

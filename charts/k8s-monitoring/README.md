@@ -657,11 +657,14 @@ details:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| telemetryServices.beyla.deploy | bool | `false` | Deploy Grafana Beyla's Kubernetes cache. |
+| telemetryServices.beyla.k8sCache.replicas | int | `0` | Number of replicas for the Beyla Kubernetes metadata cache. Set to a positive number to deploy the cache. |
 | telemetryServices.k8s-manifest-tail.deploy | bool | `false` | Deploy k8s-manifest-tail to watch and log Kubernetes manifest changes. |
 | telemetryServices.kepler.deploy | bool | `false` | Deploy [Kepler](https://sustainable-computing.io/) to gather energy usage metrics from the Kubernetes Cluster nodes. |
 | telemetryServices.kube-state-metrics.deploy | bool | `false` | Deploy kube-state-metrics to expose Kubernetes object metadata as Prometheus metrics. |
 | telemetryServices.node-exporter.deploy | bool | `false` | Deploy Node Exporter to gather Linux node hardware and OS metrics. |
 | telemetryServices.opencost.deploy | bool | `false` | Deploy OpenCost to calculate and expose Kubernetes cost allocation metrics. |
+| telemetryServices.sdkInjector.deploy | bool | `false` | Deploy the SDK Injector. |
 | telemetryServices.windows-exporter.deploy | bool | `false` | Deploy Windows Exporter to gather Windows node hardware and OS metrics. |
 
 ### Other Values
