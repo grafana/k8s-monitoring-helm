@@ -229,9 +229,6 @@ database_observability.mysql {{ include "helper.alloy_name" .name | quote }} {
     {{- with .databaseObservability.collectors.schemaDetails }}
   schema_details {
     collect_interval = {{ .collectInterval | quote }}
-    cache_enabled = {{ .cacheEnabled }}
-    cache_size = {{ .cacheSize }}
-    cache_ttl = {{ .cacheTTL | quote }}
   }
     {{- end }}
   {{- else }}

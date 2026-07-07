@@ -31,6 +31,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Name | Email | Url |
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
+| TylerHelmuth | <tyler.helmuth@grafana.com> |  |
 <!-- textlint-enable terminology -->
 <!-- markdownlint-disable no-bare-urls -->
 <!-- markdownlint-disable list-marker-space -->
@@ -42,7 +43,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://grafana.github.io/helm-charts | beyla | 1.16.7 |
+| https://grafana.github.io/helm-charts | beyla | 1.16.8 |
 <!-- markdownlint-enable list-marker-space -->
 <!-- markdownlint-enable no-bare-urls -->
 <!-- markdownlint-disable no-space-in-emphasis -->

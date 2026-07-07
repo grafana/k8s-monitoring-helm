@@ -69,14 +69,14 @@ remotecfg {
     cert_pem = convert.nonsensitive(remote.kubernetes.secret.alloy_metrics_remote_cfg.data["cert"])
     key_pem = remote.kubernetes.secret.alloy_metrics_remote_cfg.data["key"]
   }
-  poll_frequency = "5m"
+  poll_frequency = "30s"
   attributes = {
     "cluster" = "external-secrets-example-cluster",
     "namespace" = "default",
     "platform" = "kubernetes",
     "release" = "k8smon",
     "source" = "k8s-monitoring",
-    "sourceVersion" = "4.1.4",
+    "sourceVersion" = "4.2.0",
     "workloadName" = "alloy-metrics",
     "workloadType" = "statefulset",
   }
@@ -87,6 +87,7 @@ remotecfg {
 otelcol.exporter.prometheus "metrics_service" {
   add_metric_suffixes = true
   resource_to_telemetry_conversion = false
+  keep_identifying_resource_attributes = true
   forward_to = [prometheus.remote_write.metrics_service.receiver]
 } // otelcol.exporter.prometheus "metrics_service"
 

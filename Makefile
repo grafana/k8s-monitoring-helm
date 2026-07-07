@@ -1,6 +1,5 @@
 SHELL := /bin/bash
 
-CHARTS = $(shell ls --color=never charts)
 HELM_VERSION ?= $(shell helm version --short)
 HELM_MAJOR_VERSION = $(shell echo $(HELM_VERSION) | cut -d '.' -f 1 | sed -e 's/v//')
 HELM_MINOR_VERSION = $(shell echo $(HELM_VERSION) | cut -d '.' -f 2)
@@ -27,18 +26,22 @@ check-helm-version:
 .PHONY: clean
 clean: ## Clean all charts
 	rm -rf node_modules
-	set -e && \
-	for chart in $(CHARTS); do \
-		make -C charts/$$chart $@; \
-	done
+	make -C charts/k8s-monitoring $@;
 
 ##@ Build
 .PHONY: build
 build: check-helm-version ## Build all charts
-	set -e && \
-	for chart in $(CHARTS); do \
-		make -C charts/$$chart $@; \
-	done
+	make -C charts/k8s-monitoring $@;
+
+##@ Keys
+.PHONY: update-signing-keys
+update-signing-keys: keys/grafana-helm-charts-pubkey.gpg keys/prometheus-community-pubkey.gpg ## Refresh signing keys in keys/ (Grafana key requires the op CLI)
+
+keys/grafana-helm-charts-pubkey.gpg:
+	op --account grafana.1password.com read "op://Helm Maintainers/Helm Chart Signing Key/gpg-public-key.asc" | gpg --dearmor > keys/grafana-helm-charts-pubkey.gpg
+
+keys/prometheus-community-pubkey.gpg:
+	curl -sL https://prometheus-community.github.io/helm-charts/pubkey.gpg | gpg --dearmor > keys/prometheus-community-pubkey.gpg
 
 ##@ Install
 .PHONY: install
@@ -57,10 +60,7 @@ node_modules/.bin/textlint: package.json yarn.lock
 ##@ Tests
 .PHONY: test
 test: build lint ## Run tests for all charts
-	set -e && \
-	for chart in $(CHARTS); do \
-		make -C charts/$$chart $@; \
-	done
+	make -C charts/k8s-monitoring $@;
 
 .PHONY: lint
 lint: lint-alloy lint-shell lint-markdown lint-terraform lint-text lint-yaml lint-alex lint-misspell lint-actionlint lint-zizmor ## Run all linters
@@ -82,7 +82,7 @@ lint-shell: ## Lint shell scripts
 
 .PHONY: lint-markdown
 lint-markdown: node_modules/.bin/markdownlint-cli2 ## Lint markdown files
-	@node_modules/.bin/markdownlint-cli2 $(shell find . -name "*.md" ! -path "./version-4.0-development-plan/*" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./charts/**/data-alloy/*" ! -path "./charts/k8s-monitoring/docs/create-a-new-feature/*")
+	@node_modules/.bin/markdownlint-cli2 $(shell find . -name "*.md" ! -path "./.context/*" ! -path "./version-4.0-development-plan/*" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./charts/**/data-alloy/*" ! -path "./charts/k8s-monitoring/docs/create-a-new-feature/*")
 
 TERRAFORM_DIRS = $(shell find . -name 'vars.tf' -exec dirname {} \;)
 .PHONY: lint-terraform
@@ -113,10 +113,10 @@ lint-yaml: ## Lint yaml files
 
 .PHONY: lint-alex
 lint-alex: node_modules/.bin/alex ## Check for insensitive language
-	@node_modules/.bin/alex $(shell find . -type f -name "*.md" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./CODE_OF_CONDUCT.md" ! -name "CHANGELOG.md")
+	@node_modules/.bin/alex $(shell find . -type f -name "*.md" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./.context/*" ! -path "./CODE_OF_CONDUCT.md" ! -name "CHANGELOG.md")
 
 .PHONY: lint-misspell
-ALL_FILES_FOR_SPELLCHECK = $(shell find . -type f -name "*.md" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -name output.yaml -o -name .textlintrc \) )
+ALL_FILES_FOR_SPELLCHECK = $(shell find . -type f -name "*.md" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.context/*" -o -path "./.git/*" -o -name output.yaml -o -name .textlintrc \) )
 lint-misspell: ## Check for common misspellings
 	@if command -v misspell &> /dev/null; then \
 		misspell --error --locale US $(ALL_FILES_FOR_SPELLCHECK); \

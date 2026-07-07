@@ -1,0 +1,88 @@
+---
+cluster:
+  name: scrub-log-pii
+
+destinations:
+  # Loki-ecosystem destination. Receives the Loki-formatted logs from podLogsViaLoki.
+  loki:
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+
+  # OTLP-ecosystem destination, pointed at Loki's OTLP endpoint. Receives the
+  # OTLP-formatted logs from podLogsViaOpenTelemetry.
+  loki-otlp:
+    type: otlp
+    protocol: http
+    url: http://loki.loki.svc:3100/otlp
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+    metrics: {enabled: false}
+    logs: {enabled: true}
+    traces: {enabled: false}
+
+dataProcessors:
+  # A single custom processor that scrubs email addresses out of log records, in BOTH
+  # Loki and OTLP form. The chart forwards data into each pipeline's `input` and the
+  # pipeline forwards its result to the chart-generated output sink (documented name).
+  scrub-pii:
+    type: custom
+    logs:
+      loki:
+        enabled: true
+        input: loki.process.scrub_pii_loki.receiver
+        config: |
+          loki.process "scrub_pii_loki" {
+            stage.replace {
+              expression = "([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,})"
+              replace    = "[REDACTED-EMAIL]"
+            }
+            forward_to = [loki.process.scrub_pii_out_logs_loki.receiver]
+          }
+      otlp:
+        enabled: true
+        input: otelcol.processor.transform.scrub_pii_otlp.input
+        config: |
+          otelcol.processor.transform "scrub_pii_otlp" {
+            error_mode = "ignore"
+            log_statements {
+              context = "log"
+              statements = [
+                "replace_pattern(body, \"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\\\.[A-Za-z]{2,}\", \"[REDACTED-EMAIL]\")",
+              ]
+            }
+            output {
+              logs = [otelcol.processor.batch.scrub_pii_out_logs_otlp.input]
+            }
+          }
+
+# Loki-formatted pod logs, scrubbed, delivered to the Loki destination.
+podLogsViaLoki:
+  enabled: true
+  namespaces: [workload]
+
+  collector: alloy-logs
+  dataProcessors: [scrub-pii]
+
+# OTLP-formatted pod logs, scrubbed, delivered to the OTLP destination.
+podLogsViaOpenTelemetry:
+  enabled: true
+  namespaces: [workload]
+
+  collector: alloy-logs
+  dataProcessors: [scrub-pii]
+
+collectors:
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+    alloy:
+      stabilityLevel: public-preview
+    liveDebugging:
+      enabled: true

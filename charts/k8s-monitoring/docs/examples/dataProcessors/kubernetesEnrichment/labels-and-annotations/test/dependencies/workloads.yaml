@@ -1,0 +1,113 @@
+---
+# A namespace carrying the label and annotation that the kubernetesEnrichment processor copies.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: workload
+  labels:
+    team: ducks
+  annotations:
+    cost-center: finance
+---
+# A pod that continuously emits log lines, carrying the pod label and annotation that the
+# kubernetesEnrichment processor copies. podLogsViaLoki tails it; clusterMetrics reports it
+# via kube-state-metrics.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: log-source
+  namespace: workload
+  labels:
+    color: red
+  annotations:
+    example.com/owner: platform
+spec:
+  containers:
+    - name: busybox
+      image: busybox
+      args:
+        - /bin/sh
+        - -c
+        - |
+          while true; do
+            echo "level=INFO msg=\"kubernetes-enrichment log line\""
+            sleep 5
+          done
+---
+# --- Telemetry generator: a standalone Alloy instance (deployed via its own Helm chart, so
+# it does NOT depend on the k8s-monitoring chart's Alloy CRD) that produces both traces and
+# profiles and sends them into the chart's applicationObservability + profilesReceiver.
+# Its namespace carries the team label so the kubernetesEnrichment processor has namespace
+# metadata to attach to traces (via connection-based pod association) and profiles (via the
+# namespace label stamped on the scrape targets below). ---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: telemetry-generator
+  labels:
+    team: ducks
+  annotations:
+    cost-center: finance
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: grafana
+  namespace: telemetry-generator
+spec:
+  interval: 1m
+  url: https://grafana.github.io/helm-charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: telemetry-generator
+  namespace: telemetry-generator
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: alloy
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: telemetry-generator
+      interval: 1m
+  values:
+    controller:
+      type: deployment
+      replicas: 1
+    alloy:
+      configMap:
+        content: |-
+          // Traces: export Alloy's own internal traces over OTLP to the chart receiver.
+          tracing {
+            sampling_fraction = 1
+            write_to = [otelcol.exporter.otlp.traces.input]
+          }
+
+          otelcol.exporter.otlp "traces" {
+            client {
+              endpoint = "k8smon-alloy.default.svc:4317"
+              tls {
+                insecure = true
+                insecure_skip_verify = true
+              }
+            }
+          }
+
+          // Profiles: scrape this Alloy's own pprof endpoints and write to the chart receiver.
+          // The namespace label lets the kubernetesEnrichment processor match the profiles to
+          // their source namespace.
+          pyroscope.scrape "self" {
+            targets = [
+              {"__address__" = "localhost:12345", "service_name" = "telemetry-generator", "namespace" = "telemetry-generator"},
+            ]
+            forward_to = [pyroscope.write.chart.receiver]
+          }
+
+          pyroscope.write "chart" {
+            endpoint {
+              url = "http://k8smon-alloy.default.svc:4040"
+            }
+          }

@@ -1,0 +1,28 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: workload
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pii-log-generator
+  namespace: workload
+spec:
+  containers:
+    - name: busybox
+      image: busybox
+      args:
+        - /bin/sh
+        - -c
+        - |
+          echo "level=INFO Starting PII log generator"
+          while true; do
+            # A line containing an email address. The scrub-pii processor should replace
+            # the email with [REDACTED-EMAIL] before it reaches any destination.
+            echo "level=INFO action=login user_email=alice@example.com source=10.0.0.1"
+            # A line with no PII, to confirm normal logs still flow through.
+            echo "level=INFO action=heartbeat status=ok"
+            sleep 5
+          done

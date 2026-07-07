@@ -6,21 +6,29 @@
 
 {{- define "features.integrations.metrics.include" }}
 {{- $values := dict "Chart" $.Subcharts.integrations.Chart "Values" .Values.integrations "Files" $.Subcharts.integrations.Files "Release" $.Release }}
-{{- $destinations := include "features.integrations.destinations" . | fromYamlArray }}
+{{- $metricsDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "prometheus" "filter" $.Values.integrations.destinations) | fromYamlArray }}
+{{- $logsDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "logs" "ecosystem" "loki" "filter" $.Values.integrations.destinations) | fromYamlArray }}
 {{- $metricIntegrations := include "feature.integrations.configured.metrics" $values | fromYamlArray }}
 {{- $logOutputIntegrations := include "feature.integrations.configured.logOutput" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
 {{- range $integrationType := $metricIntegrations }}
 {{- include (printf "integrations.%s.module.metrics" $integrationType) $values | indent 0 }}
 {{ include "helper.alloy_name" $integrationType }}_integration "integration" {
   metrics_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
+    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "integrations" "destinationNames" $metricsDestinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
   ]
 {{- if has $integrationType $logOutputIntegrations }}
   logs_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
+    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "integrations" "destinationNames" $logsDestinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
   ]
 {{- end }}
 }
+{{- end }}
+{{- /* Emit the chart-owned pipeline boundary components once for the feature (not per integration), so the shared stamper/sinks/gates aren't duplicated. */}}
+{{- if $metricIntegrations }}
+{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "integrations" "destinationNames" $metricsDestinations "type" "metrics" "ecosystem" "prometheus") }}
+{{- end }}
+{{- if $logOutputIntegrations }}
+{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "integrations" "destinationNames" $logsDestinations "type" "logs" "ecosystem" "loki") }}
 {{- end }}
 {{- end }}
 
@@ -78,9 +86,9 @@
 
 {{- $metricIntegrations := include "feature.integrations.configured.metrics" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
 {{- $destinations := include "features.integrations.destinations" . | fromYamlArray }}
-{{/*{{- fail (printf "\n%s\n"  ($destinations | toYaml))}}*/}}
 {{- if $metricIntegrations }}
   {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "featureName" $featureName) }}
+  {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "integrations" "featureName" $featureName "type" "metrics" "ecosystem" "prometheus") }}
   {{- $collectorName := $.Values.integrations.collector }}
   {{- include "collectors.validate.clusteringEnabled" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName "featureName" $featureName) }}
 {{- end }}
@@ -88,6 +96,7 @@
 {{- $logOutputIntegrations := include "feature.integrations.configured.logOutput" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
 {{- if $logOutputIntegrations }}
   {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "featureName" $featureName) }}
+  {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "integrations" "featureName" $featureName "type" "logs" "ecosystem" "loki") }}
 {{- end }}
 
 {{- $podLogsEnabled := include "features.podLogsViaLoki.enabled" $ }}

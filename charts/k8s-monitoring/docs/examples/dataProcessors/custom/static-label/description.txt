@@ -1,0 +1,24 @@
+# Custom processor: Static Label (MLTP)
+
+This custom processor stamps a single static label, `region = "central"`, onto **every**
+telemetry type before it leaves the cluster — Metrics, Logs, Traces, and Profiles (MLTP).
+
+A single `static-label` processor declares one pipeline per ecosystem, and four different
+features opt in to it via `dataProcessors: [static-label]`:
+
+| Telemetry | Feature                   | Ecosystem    | How the label is added                |
+| --------- | ------------------------- | ------------ | ------------------------------------- |
+| Metrics   | `annotationAutodiscovery` | `prometheus` | `prometheus.relabel` rule             |
+| Logs      | `podLogsViaLoki`          | `loki`       | `loki.process` `stage.static_labels`  |
+| Traces    | `applicationObservability`| `otlp`       | `otelcol.processor.transform`         |
+| Profiles  | `profilesReceiver`        | `pyroscope`  | `pyroscope.relabel` rule              |
+
+```text
+  annotationAutodiscovery ─ metrics ─┐
+  podLogsViaLoki ─────────── logs ───┤   dataProcessors.static-label
+  applicationObservability ─ traces ─┤   (region = "central")      ──►  matching destination
+  profilesReceiver ───────── profiles┘
+```
+
+Each feature still delivers to the destination it would have selected on its own; the chart
+stamps `selected_destinations` going in and gates each destination on the way out.

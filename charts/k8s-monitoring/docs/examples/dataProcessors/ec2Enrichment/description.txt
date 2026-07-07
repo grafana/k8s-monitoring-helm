@@ -1,0 +1,25 @@
+# EC2 Enrichment data processor
+
+This example uses the `ec2Enrichment` data processor to copy AWS EC2 instance tags onto telemetry data. Each entry
+maps `<telemetry label>: <EC2 tag name>`. A single `ec2-tags` processor copies:
+
+| Source       | Tag    | Resulting label / attribute |
+| ------------ | ------ | --------------------------- |
+| EC2 instance | `Team` | `team`                      |
+
+The processor uses `discovery.ec2` to list instances in the `ap-northeast-2` region once per collector, then a shared
+`discovery.relabel` maps the `__meta_ec2_tag_Team` meta label to `team`.
+
+The processor matches telemetry to its source instance by comparing each series' `node` label against the instance's
+`__meta_ec2_private_dns_name`, so it can enrich any feature whose telemetry carries a `node` label. Today it supports
+these label-based ecosystems:
+
+| Telemetry | Ecosystem   | Enrich component               |
+| --------- | ----------- | ------------------------------ |
+| Metrics   | `prometheus` | `prometheus.enrich`           |
+| Logs      | `loki`       | `loki.enrich`                 |
+| Profiles  | `pyroscope`  | `pyroscope.enrich`            |
+
+Everything runs on a single `alloy` collector, which shows the processor's shared instance discovery: every enrich
+stage reads targets from one `discovery.ec2`/`discovery.relabel` pair, so the EC2 API is only queried once per
+collector.

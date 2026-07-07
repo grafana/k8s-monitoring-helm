@@ -1,0 +1,49 @@
+---
+# Linux Host Monitor preset
+
+# -- Grants Alloy the privileges needed to collect Linux host metrics directly using `prometheus.exporter.unix`,
+# without requiring a separate Node Exporter deployment. It mounts the host's root, proc, and sys filesystems, runs
+# privileged, and exposes the node name as the `NODE_NAME` environment variable. Use with
+# `hostMetrics.linuxHosts.source: alloy` and combine with the `daemonset` preset so Alloy runs on every node, e.g.
+# `presets: [linux-host-monitor, daemonset]`.
+# @section -- Alloy Configuration
+alloy:
+  mounts:
+    varlog: true
+    extra:
+      - name: host-root
+        mountPath: /host/root
+        readOnly: true
+      - name: host-proc
+        mountPath: /host/proc
+        readOnly: true
+      - name: host-sys
+        mountPath: /host/sys
+        readOnly: true
+  securityContext:
+    privileged: true
+    allowPrivilegeEscalation: true
+    capabilities:
+      add:
+        - SYS_TIME
+  extraEnv:
+    - name: NODE_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: spec.nodeName
+
+controller:
+  volumes:
+    extra:
+      - name: host-root
+        hostPath:
+          path: /
+          type: Directory
+      - name: host-proc
+        hostPath:
+          path: /proc
+          type: Directory
+      - name: host-sys
+        hostPath:
+          path: /sys
+          type: Directory

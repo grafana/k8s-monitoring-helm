@@ -1,0 +1,224 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Processors - Custom
+templates:
+  - alloy-config.yaml
+  - validations.yaml
+tests:
+  - it: routes a feature through a custom processor, then to its destination (Loki)
+    template: alloy-config.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.example.com/loki/api/v1/push
+      dataProcessors:
+        scrub:
+          type: custom
+          logs:
+            loki:
+              enabled: true
+              input: loki.process.scrub_loki.receiver
+              config: |
+                loki.process "scrub_loki" {
+                  stage.replace {
+                    expression = "secret"
+                    replace    = "***"
+                  }
+                  forward_to = [loki.process.scrub_out_logs_loki.receiver]
+                }
+      podLogsViaLoki:
+        enabled: true
+        collector: alloy-logs
+        dataProcessors: [scrub]
+      collectors:
+        alloy-logs: {presets: [filesystem-log-reader, daemonset]}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      # Feature module forwards into the stamper rather than straight to the destination.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'logs_destinations\s*=\s*\[\s*loki\.process\.podlogsvialoki_stamp_logs_loki\.receiver,'
+      # Stamper sets selected_destinations and forwards into the user's pipeline input.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'loki\.process "podlogsvialoki_stamp_logs_loki"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'selected_destinations = "loki"'
+      # The user's processor config is emitted.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'loki\.process "scrub_loki"'
+      # Output sink and destination gate are generated, gate forwards to the destination.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'loki\.process "scrub_out_logs_loki"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'loki\.relabel "scrub_loki_gate_logs_loki"'
+
+  - it: supports the same processor across two ecosystems for logs (Loki + OTLP)
+    template: alloy-config.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.example.com/loki/api/v1/push
+        loki-otlp:
+          type: otlp
+          protocol: http
+          url: http://loki.example.com/otlp
+          metrics: {enabled: false}
+          logs: {enabled: true}
+          traces: {enabled: false}
+      dataProcessors:
+        scrub:
+          type: custom
+          logs:
+            loki:
+              enabled: true
+              input: loki.process.scrub_loki.receiver
+              config: |
+                loki.process "scrub_loki" {
+                  forward_to = [loki.process.scrub_out_logs_loki.receiver]
+                }
+            otlp:
+              enabled: true
+              input: otelcol.processor.transform.scrub_otlp.input
+              config: |
+                otelcol.processor.transform "scrub_otlp" {
+                  output {
+                    logs = [otelcol.processor.batch.scrub_out_logs_otlp.input]
+                  }
+                }
+      podLogsViaLoki:
+        enabled: true
+        collector: alloy-logs
+        dataProcessors: [scrub]
+      podLogsViaOpenTelemetry:
+        enabled: true
+        collector: alloy-logs
+        dataProcessors: [scrub]
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+          alloy: {stabilityLevel: public-preview}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      # Loki ecosystem slice
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'loki\.process "scrub_loki"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'loki\.relabel "scrub_loki_gate_logs_loki"'
+      # OTLP ecosystem slice: resource-attribute stamper, user config, gate, and strip
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.processor\.transform "podlogsviaopentelemetry_stamp_logs_otlp"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.processor\.transform "scrub_otlp"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.processor\.filter "scrub_loki_otlp_gate_logs_otlp"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.processor\.transform "scrub_loki_otlp_gate_logs_otlp_strip"'
+
+  - it: leaves features without a processors chain unchanged (forwards straight to destination)
+    template: alloy-config.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.example.com/loki/api/v1/push
+      podLogsViaLoki:
+        enabled: true
+        collector: alloy-logs
+      collectors:
+        alloy-logs: {presets: [filesystem-log-reader, daemonset]}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      # No stamper is generated; the feature forwards directly to the destination receiver.
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'podlogsvialoki_stamp_logs_loki'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'logs_destinations\s*=\s*\[\s*loki\.write\.loki\.receiver,'
+
+  - it: fails when a feature references an unknown processor
+    template: validations.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.example.com/loki/api/v1/push
+      podLogsViaLoki:
+        enabled: true
+        collector: alloy-logs
+        dataProcessors: [does-not-exist]
+      collectors:
+        alloy-logs: {presets: [filesystem-log-reader, daemonset]}
+    asserts:
+      - failedTemplate:
+          errorMessage: 'Feature "Kubernetes Pod logs" references processor "does-not-exist" which is not defined under `dataProcessors:`.'
+
+  - it: fails when a processor does not support the feature's (type, ecosystem)
+    template: validations.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.example.com/loki/api/v1/push
+      dataProcessors:
+        metrics-only:
+          type: custom
+          metrics:
+            prometheus:
+              enabled: true
+              input: prometheus.relabel.x.receiver
+              config: ""
+      podLogsViaLoki:
+        enabled: true
+        collector: alloy-logs
+        dataProcessors: [metrics-only]
+      collectors:
+        alloy-logs: {presets: [filesystem-log-reader, daemonset]}
+    asserts:
+      - failedTemplate:
+          errorMessage: 'Feature "Kubernetes Pod logs" (type=logs, ecosystem=loki) requires processor "metrics-only" to support that (type, ecosystem), but it does not.'
+
+  - it: rejects an unknown processor type
+    template: validations.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.example.com/loki/api/v1/push
+      dataProcessors:
+        bad:
+          type: nonexistent-type
+      podLogsViaLoki:
+        enabled: true
+        collector: alloy-logs
+      collectors:
+        alloy-logs: {presets: [filesystem-log-reader, daemonset]}
+    asserts:
+      - failedTemplate: {}

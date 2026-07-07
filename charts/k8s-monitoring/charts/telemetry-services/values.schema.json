@@ -2,6 +2,39 @@
     "$schema": "http://json-schema.org/schema#",
     "type": "object",
     "properties": {
+        "beyla": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "type": "object",
+                    "properties": {
+                        "create": {
+                            "type": "boolean"
+                        },
+                        "skipConfigMapCheck": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "deploy": {
+                    "type": "boolean"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "k8sCache": {
+                    "type": "object",
+                    "properties": {
+                        "replicas": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "nameOverride": {
+                    "type": "string"
+                }
+            }
+        },
         "global": {
             "type": "object",
             "properties": {
@@ -249,6 +282,20 @@
                 "deploy": {
                     "type": "boolean"
                 },
+                "extraVolumes": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "emptyDir": {
+                                "type": "object"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
                 "metricsSource": {
                     "type": "string"
                 },
@@ -283,14 +330,28 @@
                                         "CLOUD_PROVIDER_API_KEY": {
                                             "type": "string"
                                         },
-                                        "CONFIG_PATH": {
-                                            "type": "string"
-                                        },
                                         "CURRENT_CLUSTER_ID_FILTER_ENABLED": {
                                             "type": "string"
                                         },
                                         "PROM_CLUSTER_ID_LABEL": {
                                             "type": "string"
+                                        }
+                                    }
+                                },
+                                "extraVolumeMounts": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "mountPath": {
+                                                "type": "string"
+                                            },
+                                            "name": {
+                                                "type": "string"
+                                            },
+                                            "readOnly": {
+                                                "type": "boolean"
+                                            }
                                         }
                                     }
                                 }
@@ -388,6 +449,31 @@
                                     "type": "boolean"
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "sdkInjector": {
+            "type": "object",
+            "properties": {
+                "allowedConfigMapWriters": {
+                    "type": "string"
+                },
+                "deploy": {
+                    "type": "boolean"
+                },
+                "nameOverride": {
+                    "type": "string"
+                },
+                "namespace": {
+                    "type": "object",
+                    "properties": {
+                        "create": {
+                            "type": "boolean"
+                        },
+                        "name": {
+                            "type": "string"
                         }
                     }
                 }

@@ -1,0 +1,93 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: kubernetes-enrichment
+
+subject:
+  releaseName: k8smon
+  path: ../../../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: dependencies/workloads.yaml
+  - preset: prometheus
+  - preset: loki
+  - preset: tempo
+  - preset: pyroscope
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+            - name: Loki
+              type: loki
+              url: http://loki.loki.svc:3100
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+            - name: Tempo
+              type: tempo
+              url: http://tempo.tempo.svc:3200
+            - name: Pyroscope
+              type: grafana-pyroscope-datasource
+              url: http://pyroscope.pyroscope.svc:4040
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: kubernetes-enrichment
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+            TEMPO_URL: http://tempo.tempo.svc:3200/api/search
+            PROFILECLI_URL: http://pyroscope.pyroscope.svc:4040
+
+          queries:
+            # Metrics: pod metrics in the workload namespace gain all four enriched labels.
+            - query: kube_pod_info{cluster="$CLUSTER", pod="log-source", namespace="workload", team="ducks", cost_center="finance", color="red", owner="platform"}
+              type: promql
+
+            # Metrics: pod metrics in other namespaces don't gain any enriched labels.
+            - query: kube_pod_info{cluster="$CLUSTER", namespace="kube-system", team="", cost_center="", color="", owner=""}
+              type: promql
+
+            # Metrics: non-pod metrics in the workload namespace gain the namespace metadata, but not the pod metadata.
+            - query: kube_namespace_status_phase{cluster="$CLUSTER", namespace="workload", team="ducks", cost_center="finance", color="", owner=""}
+              type: promql
+
+            # Logs: log lines from the workload pod gain all four enriched labels.
+            - query: count_over_time({cluster="$CLUSTER", namespace="workload", pod="log-source", team="ducks", cost_center="finance", color="red", owner="platform"}[1h])
+              type: logql
+
+            # Traces: spans from the telemetry generator are associated to their source pod via the
+            # sender's connection address and gain the generator namespace's team label.
+            - query: '{.k8s.cluster.name="$CLUSTER" && .team="ducks"}'
+              type: traceql
+
+            # Profiles: the generator stamps a namespace label on its profiles, so namespace
+            # enrichment attaches the team label.
+            - query: '{cluster="$CLUSTER", namespace="telemetry-generator", team="ducks"}'
+              type: pyroql
+
+            # DPM check
+            - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
+              type: promql
+              expect:
+                value: 1
+                operator: ==

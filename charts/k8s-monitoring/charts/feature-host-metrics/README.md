@@ -38,6 +38,33 @@ their default allow lists:
 | [Node Exporter](https://github.com/prometheus/node_exporter)                 | Linux Kubernetes nodes    | [default-allow-lists/node-exporter.yaml](./default-allow-lists/node-exporter.yaml), [default-allow-lists/node-exporter-integration.yaml](./default-allow-lists/node-exporter-integration.yaml) |
 | [Windows Exporter](https://github.com/prometheus-community/windows_exporter) | Windows Kubernetes nodes  | [default-allow-lists/windows-exporter.yaml](./default-allow-lists/windows-exporter.yaml)                                                                                                       |
 
+### Collecting Linux host metrics with Alloy
+
+By default, Linux host metrics are collected by scraping a [Node Exporter](https://github.com/prometheus/node_exporter)
+deployment, discovered either through `telemetryServices.node-exporter` or through the `labelMatchers`/`namespace`
+settings. Alternatively, set `hostMetrics.linuxHosts.source: alloy` to have the assigned collector gather host metrics
+directly using Alloy's built-in [`prometheus.exporter.unix`](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.unix/)
+component. This does not require a Node Exporter deployment.
+
+When using `source: alloy`, the assigned collector must be a privileged DaemonSet that mounts the host filesystem.
+Apply the `linux-host-monitor` preset (which grants the required privileges and host mounts) together with the
+`daemonset` preset (which runs the collector on every node):
+
+```yaml
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+    source: alloy
+
+collectors:
+  alloy-metrics:
+    presets: [linux-host-monitor, daemonset]
+```
+
+> **Note:** The `nodeLabels` enrichment is not yet supported when `source: alloy`, because it relies on Kubernetes
+> pod and node discovery metadata that is not present when collecting metrics locally with `prometheus.exporter.unix`.
+
 ## Metrics tuning and allow lists
 
 For any metric source, you can adjust the amount of metrics being scraped and their labels to limit the number of metrics delivered to your destinations. Many of the metric sources have a default allow list. The allow list for a metric source is designed to return a useful, but minimal set of metrics for typical use cases. Some metrics sources have an integration allow list, which contains even more metrics for diving into the details of the source itself.
@@ -88,6 +115,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Name | Email | Url |
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
+| TylerHelmuth | <tyler.helmuth@grafana.com> |  |
 <!-- textlint-enable terminology -->
 
 <!-- markdownlint-disable no-bare-urls -->
@@ -110,7 +138,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | energyMetrics.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Kepler. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | energyMetrics.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Kepler. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no __meta* labels are present. |
 | energyMetrics.jobLabel | string | `"integrations/kepler"` | The value for the job label. |
-| energyMetrics.labelMatchers | object | `{}` | Label matchers used to select the Kepler pods. If deploying from telemetry services, this will automatically be populated. |
+| energyMetrics.labelMatchers | object | `{}` | Label matchers used to select the Kepler pods. Required when connecting to an existing Kepler; if deploying from telemetry services, this will automatically be populated. |
 | energyMetrics.maxCacheSize | string | `100000` | Sets the max_cache_size for the prometheus.relabel component for Kepler. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
 | energyMetrics.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | energyMetrics.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
@@ -141,7 +169,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | linuxHosts.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for discovering Node Exporter pods. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | linuxHosts.extraMetricProcessingRules | string | `""` | Rule blocks to be added for processing Linux host metrics. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
 | linuxHosts.jobLabel | string | `"integrations/node_exporter"` | The value for the job label. |
-| linuxHosts.labelMatchers | object | `{}` | Labels used to select the Node Exporter pods. If deploying from telemetry services, this will automatically be populated. |
+| linuxHosts.labelMatchers | object | `{}` | Labels used to select the Node Exporter pods. Required when connecting to an existing Node Exporter; if deploying from telemetry services, this will automatically be populated. |
 | linuxHosts.maxCacheSize | string | `100000` | Sets the max_cache_size for the Node Exporter prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
 | linuxHosts.metricsTuning.dropMetricsForFilesystem | list | `["ramfs","tmpfs"]` | Drop metrics for the given filesystem types |
 | linuxHosts.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
@@ -152,6 +180,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | linuxHosts.scheme | string | `"http"` | The scrape scheme for Linux host metrics. |
 | linuxHosts.scrapeInterval | string | `60s` | How frequently to scrape Linux host metrics. Overrides `global.scrapeInterval`. |
 | linuxHosts.scrapeTimeout | string | `10s` | The timeout for scraping Linux host metrics. Overrides `global.scrapeTimeout`. |
+| linuxHosts.source | string | `"node-exporter"` | How to collect Linux host metrics. "node-exporter" scrapes a Node Exporter deployment (discovered via telemetryServices or labelMatchers). "alloy" collects host metrics directly using `prometheus.exporter.unix` on the assigned collector, which must be a privileged DaemonSet (use the "linux-host-monitor" and "daemonset" collector presets) and does not require a Node Exporter deployment. Note: the `nodeLabels` enrichment is not yet supported when source is "alloy". |
 
 ### Node Labels
 
@@ -174,7 +203,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | windowsHosts.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Windows Exporter. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | windowsHosts.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Windows Exporter metrics. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
 | windowsHosts.jobLabel | string | `"integrations/windows-exporter"` | The value for the job label. |
-| windowsHosts.labelMatchers | object | `{}` | Labels used to select the Windows Exporter pods. If deploying from telemetry services, this will automatically be  # populated. |
+| windowsHosts.labelMatchers | object | `{}` | Labels used to select the Windows Exporter pods. Required when connecting to an existing Windows Exporter; if deploying from telemetry services, this will automatically be populated. |
 | windowsHosts.maxCacheSize | string | `100000` | Sets the max_cache_size for the Windows Exporter prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
 | windowsHosts.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | windowsHosts.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |

@@ -1,0 +1,29 @@
+# Custom processor: Scrub Log PII
+
+This custom processor scrubs email addresses out of log lines before they leave the cluster.
+It demonstrates how a single processor can handle both Loki-formatted and OTLP-formatted logs:
+`podLogsViaLoki` produces Loki records and `podLogsViaOpenTelemetry` produces OTLP records.
+Each feature opts in to the same processor via `dataProcessors: [scrub-pii]`.
+
+After the processor runs, the chart fans the data back out to the destinations each feature
+would have selected on its own — the Loki path to the `loki` destination, the OTLP path to the
+`loki-otlp` destination.
+
+```text
+                                          dataProcessors.scrub-pii
+                                ┌──────────────────────────────────────┐
+                                │                                      │
+  podLogsViaLoki ───── Loki ──► │  loki.process "scrub_pii_loki"       │ ──► loki (destination)
+   (Loki logs)                  │  (stage.replace email → [REDACTED])  │
+                                │                                      │
+                                │  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+                                │                                      │
+  podLogsViaOpenTelemetry ─ OTLP ─► otelcol.processor.transform        │ ──► loki-otlp
+   (OTLP logs)                  │  "scrub_pii_otlp"                    │       (destination)
+                                │  (replace_pattern body email → ...)  │
+                                │                                      │
+                                └──────────────────────────────────────┘
+                                    chart stamps `selected_destinations`
+                                    on the way in, gates each destination
+                                    on the way out
+```

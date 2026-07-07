@@ -8,6 +8,11 @@ This example shows how to use volumes to enhance the abilities of metric scrapin
 utilize a Write-Ahead Log (WAL) to store metrics in case Alloy was unable to deliver metrics. Log gathering can utilize
 a volume to store log file positions, so Alloy remembers where to start reading logs from after a restart.
 
+Because the log file positions are persisted, this example also sets `onlyGatherNewLogLines: false`. With stored
+positions, Alloy resumes from the last-read offset after a restart instead of re-reading old logs, so it is safe to
+gather historical log lines. This avoids missing the first log entries from newly discovered containers, which is the
+trade-off of the `onlyGatherNewLogLines: true` default introduced in v4.
+
 ## Values
 
 <!-- textlint-disable terminology -->
@@ -40,6 +45,7 @@ hostMetrics:
 podLogsViaLoki:
   enabled: true
   collector: alloy-logs
+  onlyGatherNewLogLines: false
 
 collectors:
   alloy-metrics:

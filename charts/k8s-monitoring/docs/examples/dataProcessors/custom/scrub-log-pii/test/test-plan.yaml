@@ -1,0 +1,65 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: scrub-log-pii
+
+subject:
+  releaseName: k8smon
+  path: ../../../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  # A pod that continuously emits log lines containing an email address.
+  - file: dependencies/workloads.yaml
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Loki
+              type: loki
+              url: http://loki.loki.svc:3100
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+              isDefault: true
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: scrub-log-pii
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+
+          queries:
+            # The email address has been scrubbed to [REDACTED-EMAIL] by the processor.
+            - query: count_over_time({cluster="$CLUSTER", namespace="workload"} |= "[REDACTED-EMAIL]"[1h])
+              type: logql
+
+            # Non-PII lines still flow through the processor untouched.
+            - query: count_over_time({cluster="$CLUSTER", namespace="workload"} |= "action=heartbeat"[1h])
+              type: logql
+
+            # --- OTLP-ecosystem path (podLogsViaOpenTelemetry -> loki-otlp destination) ---
+            # Logs from the generator pod arrive (OTLP-ecosystem labels: k8s_cluster_name,
+            # k8s_namespace_name).
+            - query: count_over_time({k8s_cluster_name="$CLUSTER", k8s_namespace_name="workload"}[1h])
+              type: logql
+
+            # The email address has been scrubbed to [REDACTED-EMAIL] by the same processor,
+            # this time through the OTLP pipeline.
+            - query: count_over_time({k8s_cluster_name="$CLUSTER", k8s_namespace_name="workload"} |= "[REDACTED-EMAIL]"[1h])
+              type: logql

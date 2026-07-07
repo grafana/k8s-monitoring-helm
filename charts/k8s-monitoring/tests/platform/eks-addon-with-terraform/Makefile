@@ -1,3 +1,8 @@
+.PHONY: run-test
+run-test:
+	direnv allow .
+	direnv exec . sh -c '$(MAKE) clean all && helm-test .'
+
 .PHONY: clean
 clean:
 	rm -f deployments/test-variables.yaml deployments/grafana-cloud.yaml deployments/grafana-cloud-credentials.yaml vars.tf

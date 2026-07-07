@@ -4,6 +4,7 @@
   {{- include "validations.platform" . }}
 
   {{- include "destinations.validate" . -}}
+  {{- include "dataProcessors.validate" . -}}
   {{- include "collectors.validate.atLeastOneEnabled" . }}
   {{- include "collectors.validate.uniqueNames" . }}
 

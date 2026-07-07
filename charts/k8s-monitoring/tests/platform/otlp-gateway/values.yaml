@@ -19,30 +19,38 @@ destinations:
     traces: {enabled: true}
 
 integrations:
-  collector: alloy-metrics
   alloy:
     instances:
       - name: alloy
         labelSelectors:
-          app.kubernetes.io/name: ["alloy-metrics"]
+          app.kubernetes.io/name: ["alloy"]
+
+clusterMetrics:
+  enabled: true
+
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
 
 clusterEvents:
   enabled: true
-  collector: alloy-singleton
+  clustering: true
+
+  # These labels are required by the Grafana Cloud Kubernetes Monitoring system if these events are delivered via OTLP.
+  labels:
+    resources.k8s.object.kind: kind
+    resources.k8s.object.name: name
 
 podLogsViaLoki:
   enabled: true
-  collector: alloy-logs
-  structuredMetadata:
-    k8s.pod.name: null
-    pod: null
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
 
 collectors:
-  alloy-metrics:
-    presets: [clustered, statefulset]
-
-  alloy-singleton:
-    presets: [singleton]
-
-  alloy-logs:
-    presets: [filesystem-log-reader, daemonset]
+  alloy:
+    presets: [clustered, filesystem-log-reader, daemonset]

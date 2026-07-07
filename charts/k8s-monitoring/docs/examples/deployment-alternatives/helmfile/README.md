@@ -14,7 +14,8 @@ repositories:
   - name: kepler
     url: https://sustainable-computing-io.github.io/kepler-helm-chart
   - name: opencost
-    url: https://opencost.github.io/opencost-helm-chart
+    url: ghcr.io/opencost/charts
+    oci: true
 
 helmDefaults:
   diffArgs:

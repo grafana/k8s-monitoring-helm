@@ -1,3 +1,4 @@
+# yamllint disable rule:line-length
 ---
 apiVersion: helm-chart-toolbox.grafana.com/v1
 kind: TestPlan
@@ -21,6 +22,7 @@ dependencies:
   - preset: test-parameters
     namespace: toolbox
   - file: grafana-cloud-credentials.yaml
+  - file: event-generator.yaml
 
 tests:
   - type: query-test
@@ -38,11 +40,15 @@ tests:
               type: promql
 
             # Pod Logs are being delivered with the correct labels
-            - query: count_over_time({k8s_cluster_name="$clusterName", service_name!="integrations/kubernetes/eventhandler", k8s_namespace_name="default", k8s_pod_name="k8smon-alloy-metrics-0"}[1h])
+            - query: count_over_time({k8s_cluster_name="$clusterName", service_name="alloy", service_namespace="default", k8s_namespace_name="default", k8s_container_name="alloy", k8s_pod_name=~"k8smon-alloy-.*"}[1h])
               type: logql
 
             # Cluster Events are being delivered with the correct labels
             - query: count_over_time({k8s_cluster_name="$clusterName", service_name="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
+
+            # Cluster Events arrive with object kind/name translated for the K8s app (query #3, resources style)
+            - query: count_over_time({k8s_cluster_name="$clusterName", service_name="integrations/kubernetes/eventhandler", k8s_namespace_name="event-generator"} | resources_k8s_object_kind="Pod" [1h])
               type: logql
 
             # DPM check
@@ -51,6 +57,3 @@ tests:
               expect:
                 value: 1
                 operator: ==
-
-            - query: avg(count_over_time({k8s_cluster_name="$clusterName", service_name="alloy-logs"} [1m]))
-              type: logql

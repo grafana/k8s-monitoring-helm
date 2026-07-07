@@ -24,6 +24,7 @@ telemetryServices:
 | Name | Email | Url |
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
+| TylerHelmuth | <tyler.helmuth@grafana.com> |  |
 <!-- textlint-enable terminology -->
 <!-- markdownlint-disable no-bare-urls -->
 <!-- markdownlint-disable list-marker-space -->
@@ -35,14 +36,24 @@ telemetryServices:
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://grafana.github.io/helm-charts | k8s-manifest-tail(k8s-manifest-tail) | 0.1.4 |
-| https://opencost.github.io/opencost-helm-chart | opencost | 2.5.21 |
-| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 7.3.0 |
+| https://grafana.github.io/helm-charts | beyla | 1.16.8 |
+| https://grafana.github.io/helm-charts | sdkInjector(k8s-injection-controller) | 0.1.0 |
+| https://grafana.github.io/helm-charts | k8s-manifest-tail(k8s-manifest-tail) | 0.1.5 |
+| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 7.5.1 |
 | https://prometheus-community.github.io/helm-charts | node-exporter(prometheus-node-exporter) | 4.55.0 |
 | https://prometheus-community.github.io/helm-charts | windows-exporter(prometheus-windows-exporter) | 0.12.7 |
 | https://sustainable-computing-io.github.io/kepler-helm-chart | kepler | 0.6.1 |
+| oci://ghcr.io/opencost/charts | opencost | 2.5.25 |
 <!-- markdownlint-enable no-bare-urls -->
 ## Values
+
+### Beyla
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| beyla.deploy | bool | `false` | Deploy Grafana Beyla's services. This controls *all* systems from the Grafana Beyla Helm chart: Beyla itself, and the Beyla Kubernetes metadata cache. |
+| beyla.enabled | bool | `false` | Enable Grafana Beyla. This should remain off until we remove Beyla from the autoInstrumentation feature. |
+| beyla.k8sCache | object | `{"replicas":0}` | Options for the Grafana Beyla Kubernetes metadata cache. |
 
 ### Global Settings
 
@@ -55,6 +66,7 @@ telemetryServices:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | k8s-manifest-tail.deploy | bool | `false` | Deploy k8s-manifest-tail to watch and log Kubernetes manifest changes. |
+| k8s-manifest-tail.extraEnv | list | `[]` | Extra environment variables, required for setting the OTLP destination for the manifests. |
 
 ### Kepler
 
@@ -81,20 +93,24 @@ telemetryServices:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | opencost.deploy | bool | `false` | Deploy OpenCost. |
+| opencost.extraVolumes | list | `[{"emptyDir":{},"name":"configs"}]` | On GCP/GKE, OpenCost's GCP provider writes ${CONFIG_PATH}/gcp.json on startup. CONFIG_PATH defaults to /var/configs, which is not writable by the non-root container user, causing the pod to panic. Mount an emptyDir there so the default path is writable. This is preferred over setting CONFIG_PATH via extraEnv, which collides with the CONFIG_PATH the OpenCost chart sets when customPricing is enabled (duplicate env var). The upstream chart only mounts at /var/configs when cloud integration is enabled, so this does not conflict by default. |
 | opencost.metricsSource | string | `""` | The name of the metric destination where OpenCost will query for required metrics. Setting this will enable guided setup for required OpenCost parameters. To skip guided setup, set this to "custom". |
 | opencost.opencost.prometheus.existingSecretName | string | `""` | The name of the secret containing the username and password for the metrics service. This must be in the same namespace as the OpenCost deployment. |
-| opencost.opencost.prometheus.external.url | string | `""` | The URL for Prometheus queries. It should match externalServices.prometheus.host + "/api/prom" |
+| opencost.opencost.prometheus.external.url | string | `""` | The URL where OpenCost queries for the metrics it needs. Required when `metricsSource` is set to a metrics destination: the guided setup fails the install with the exact URL to use if this is left empty. It should point at the query endpoint of the destination named by `metricsSource` (e.g. that destination's URL with the remote-write path replaced by the query path, such as `/api/prom` or `/api/v1/query`). |
 | opencost.opencost.prometheus.password_key | string | `"password"` | The key for the password property in the secret. |
 | opencost.opencost.prometheus.username_key | string | `"username"` | The key for the username property in the secret. |
+
+### SDK Injector
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| sdkInjector.allowedConfigMapWriters | string | `""` | Comma-separated allowlist of usernames permitted to create or update annotated injection ConfigMaps. By default, Kubernetes expands `$(POD_NAMESPACE)` to the namespace where the SDK Injector pod is running. |
+| sdkInjector.deploy | bool | `false` | Deploy the SDK Injector and render namespace-scoped RoleBindings granting Alloy collectors permission to write injection ConfigMaps. |
+| sdkInjector.namespace.create | bool | `false` | Render a Namespace object for `namespace.name`. |
+| sdkInjector.namespace.name | string | `""` | Namespace where the SDK Injector is installed. Leave empty to use the Helm release namespace. |
 
 ### Windows Exporter - Deployment settings
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | windows-exporter.deploy | bool | `true` | Deploy Windows Exporter. Set to false if your cluster already has Windows Exporter deployed. |
-
-### Other Values
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| k8s-manifest-tail.extraEnv | list | `[]` | Extra environment variables, required for setting the OTLP destination for the manifests. @secton -- k8s-manifest-tail |

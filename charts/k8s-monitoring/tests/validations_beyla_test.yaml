@@ -1,0 +1,136 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Validations - Beyla telemetry service
+templates:
+  - validations.yaml
+tests:
+  - it: fails when the Beyla agent is enabled via telemetryServices, pointing at Auto-Instrumentation
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      clusterMetrics:
+        enabled: true
+        collector: alloy-metrics
+      telemetryServices:
+        kube-state-metrics:
+          deploy: true
+        beyla:
+          deploy: true
+          enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Deploying the Beyla agent via telemetryServices.beyla.enabled is not supported.
+            The telemetryServices Beyla service only deploys the standalone Kubernetes metadata cache (k8sCache).
+
+            To deploy the Beyla agent, enable the Auto-Instrumentation feature instead:
+            autoInstrumentation:
+              enabled: true
+
+  - it: fails when both Auto-Instrumentation and telemetryServices would deploy a k8sCache
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      autoInstrumentation:
+        enabled: true
+        collector: alloy-metrics
+        beyla:
+          k8sCache:
+            replicas: 1
+      telemetryServices:
+        beyla:
+          deploy: true
+          k8sCache:
+            replicas: 1
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Two Beyla instances are configured to deploy their Kubernetes metadata caches.
+            The Auto-Instrumentation feature already deploys a k8sCache, so the telemetryServices one is redundant.
+            
+            Please turn off the telemetryServices Beyla cache:
+            telemetryServices:
+              beyla:
+                deploy: false
+
+  - it: does not fail when only the telemetryServices Beyla k8sCache is deployed
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      clusterMetrics:
+        enabled: true
+        collector: alloy-metrics
+      telemetryServices:
+        kube-state-metrics:
+          deploy: true
+        beyla:
+          deploy: true
+          k8sCache:
+            replicas: 1
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: does not fail when Auto-Instrumentation is enabled but its k8sCache is disabled
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      autoInstrumentation:
+        enabled: true
+        collector: alloy-metrics
+        beyla:
+          k8sCache:
+            replicas: 0
+      telemetryServices:
+        beyla:
+          deploy: true
+          k8sCache:
+            replicas: 1
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: does not fail when the telemetryServices Beyla service is not deployed
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      autoInstrumentation:
+        enabled: true
+        collector: alloy-metrics
+        beyla:
+          k8sCache:
+            replicas: 1
+    asserts:
+      - notFailedTemplate: {}

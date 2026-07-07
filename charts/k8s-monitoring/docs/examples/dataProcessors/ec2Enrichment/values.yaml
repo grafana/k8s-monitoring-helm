@@ -1,0 +1,57 @@
+---
+cluster:
+  name: ec2-enrichment-example-cluster
+
+destinations:
+  localPrometheus:
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+    auth:
+      type: basic
+      username: promuser
+      password: prometheuspassword
+
+  localLoki:
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+
+dataProcessors:
+  # Copies the EC2 instance `Team` tag onto telemetry, matching each node's `node` label to
+  # its instance private DNS name via discovery.ec2.
+  ec2-tags:
+    type: ec2Enrichment
+    region: ap-northeast-2
+    tags:
+      team: Team
+
+hostMetrics:
+  enabled: true
+  dataProcessors: [ec2-tags]
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
+
+nodeLogs:
+  enabled: true
+  dataProcessors: [ec2-tags]
+
+podLogsViaLoki:
+  enabled: true
+
+collectors:
+  alloy:
+    presets: [clustered, filesystem-log-reader, daemonset]
+    alloy:
+      stabilityLevel: experimental  # Required for prometheus.enrich (ec2Enrichment processor)
+
+telemetryServices:
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true

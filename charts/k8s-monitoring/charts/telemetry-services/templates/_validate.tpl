@@ -1,6 +1,85 @@
 {{- define "telemetryServices.validate" }}
   {{- include "telemetryServices.validate.opencost" . }}
   {{- include "telemetryServices.validate.nodeExporter" . }}
+  {{- include "telemetryServices.validate.beyla" . }}
+  {{- include "telemetryServices.validate.sdkInjector" . }}
+{{- end }}
+
+{{/*
+Validates the SDK Injector telemetry service.
+
+The SDK Injector only accepts injection ConfigMaps written by usernames in its allowlist
+(sdkInjector.allowedConfigMapWriters). If it is deployed with an empty allowlist, no collector can
+write the ConfigMaps it needs, so require the allowlist to be set and suggest the ServiceAccount of
+each enabled collector.
+*/}}
+{{- define "telemetryServices.validate.sdkInjector" }}
+{{- if .Values.telemetryServices.sdkInjector.deploy }}
+  {{- if eq .Values.telemetryServices.sdkInjector.allowedConfigMapWriters "" }}
+    {{- $writers := list }}
+    {{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
+      {{- $collectorContext := dict "Values" $.Values "Files" $.Files "Release" $.Release "Chart" $.Chart "collectorName" $collectorName }}
+      {{- $serviceAccountName := include "collector.alloy.serviceAccountName" $collectorContext }}
+      {{- $writers = append $writers (printf "system:serviceaccount:$(POD_NAMESPACE):%s" $serviceAccountName) }}
+    {{- end }}
+    {{- $msg := list "" "The SDK Injector requires an allowlist of usernames permitted to create or update annotated injection ConfigMaps." }}
+    {{- $msg = append $msg "Please set telemetryServices.sdkInjector.allowedConfigMapWriters to one or more (comma-separated) usernames." }}
+    {{- $msg = append $msg "" }}
+    {{- if $writers }}
+      {{- $msg = append $msg "For the currently enabled collectors, use:" }}
+      {{- $msg = append $msg "telemetryServices:" }}
+      {{- $msg = append $msg "  sdkInjector:" }}
+      {{- $msg = append $msg (printf "    allowedConfigMapWriters: %s" (join "," $writers)) }}
+    {{- else }}
+      {{- $msg = append $msg "For each collector, add its ServiceAccount:" }}
+      {{- $msg = append $msg "telemetryServices:" }}
+      {{- $msg = append $msg "  sdkInjector:" }}
+      {{- $msg = append $msg "    allowedConfigMapWriters: system:serviceaccount:$(POD_NAMESPACE):<release-name>-<collector-name>" }}
+    {{- end }}
+    {{- fail (join "\n" $msg) }}
+  {{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
+Validates the bundled Beyla telemetry service.
+
+For now, the Beyla subchart under telemetryServices is only meant to deploy the standalone Kubernetes metadata
+cache (k8sCache), not Beyla itself. Beyla should be deployed by the Auto-Instrumentation feature.
+This check:
+  1. Blocks enabling the Beyla agent here (telemetryServices.beyla.enabled), pointing users at the
+     autoInstrumentation feature instead.
+  2. Prevents deploying two k8sCache instances when both this service and an enabled autoInstrumentation
+     feature would each create one.
+*/}}
+{{- define "telemetryServices.validate.beyla" }}
+{{- if .Values.telemetryServices.beyla.deploy }}
+  {{- if .Values.telemetryServices.beyla.enabled }}
+    {{- $msg := list "" "Deploying the Beyla agent via telemetryServices.beyla.enabled is not supported." }}
+    {{- $msg = append $msg "The telemetryServices Beyla service only deploys the standalone Kubernetes metadata cache (k8sCache)." }}
+    {{- $msg = append $msg "" }}
+    {{- $msg = append $msg "To deploy the Beyla agent, enable the Auto-Instrumentation feature instead:" }}
+    {{- $msg = append $msg "autoInstrumentation:" }}
+    {{- $msg = append $msg "  enabled: true" }}
+    {{- fail (join "\n" $msg) }}
+  {{- end }}
+
+  {{- $cacheReplicas := .Values.telemetryServices.beyla.k8sCache.replicas | int }}
+  {{- if (gt $cacheReplicas 0) }}
+    {{- $autoInstrumentationEnabled := .Values.autoInstrumentation.enabled }}
+    {{- $autoInstrumentationCacheReplicas := dig "beyla" "k8sCache" "replicas" 0 .Values.autoInstrumentation | int }}
+    {{- if and ($autoInstrumentationEnabled) (gt $autoInstrumentationCacheReplicas 0) }}
+      {{- $msg := list "" "Two Beyla instances are configured to deploy their Kubernetes metadata caches." }}
+      {{- $msg = append $msg "The Auto-Instrumentation feature already deploys a k8sCache, so the telemetryServices one is redundant." }}
+      {{- $msg = append $msg "" }}
+      {{- $msg = append $msg "Please turn off the telemetryServices Beyla cache:" }}
+      {{- $msg = append $msg "telemetryServices:" }}
+      {{- $msg = append $msg "  beyla:" }}
+      {{- $msg = append $msg "    deploy: false" }}
+      {{- fail (join "\n" $msg) }}
+    {{- end }}
+  {{- end }}
+{{- end }}
 {{- end }}
 
 {{/*
@@ -79,6 +158,35 @@ If a conflict is found, recommend either using the existing Node Exporter or dep
 {{- define "telemetryServices.validate.opencost" }}
 {{- if .Values.telemetryServices.opencost.deploy }}
   {{- $featureDestinations := include "features.costMetrics.destinations" . | fromYamlArray }}
+
+  {{/*
+  The chart mounts an emptyDir at /var/configs (OpenCost's default CONFIG_PATH) so the GCP provider
+  can write gcp.json on GKE. When cloud integration is enabled, the OpenCost chart already mounts its
+  own writable volume at /var/configs, so our extra mount collides (duplicate mountPath). In that case
+  the chart-managed volume is unnecessary and must be removed.
+  */}}
+  {{- $cloudIntegration := or (dig "opencost" "cloudIntegrationSecret" "" .Values.telemetryServices.opencost) (dig "opencost" "cloudIntegrationJSON" "" .Values.telemetryServices.opencost) }}
+  {{- if $cloudIntegration }}
+    {{- $varConfigsMount := false }}
+    {{- range $mount := (dig "opencost" "exporter" "extraVolumeMounts" (list) .Values.telemetryServices.opencost) }}
+      {{- if eq (dig "mountPath" "" $mount) "/var/configs" }}
+        {{- $varConfigsMount = true }}
+      {{- end }}
+    {{- end }}
+    {{- if $varConfigsMount }}
+      {{- $msg := list "" "OpenCost cloud integration is enabled, which mounts a writable volume at /var/configs." }}
+      {{- $msg = append $msg "This conflicts with the chart-managed /var/configs volume used to work around the GKE GCP provider." }}
+      {{- $msg = append $msg "Since cloud integration already makes /var/configs writable, remove the chart-managed volume:" }}
+      {{- $msg = append $msg "telemetryServices:" }}
+      {{- $msg = append $msg "  opencost:" }}
+      {{- $msg = append $msg "    extraVolumes: []" }}
+      {{- $msg = append $msg "    opencost:" }}
+      {{- $msg = append $msg "      exporter:" }}
+      {{- $msg = append $msg "        extraVolumeMounts: []" }}
+      {{- fail (join "\n" $msg) }}
+    {{- end }}
+  {{- end }}
+
   {{- if ne .Values.cluster.name .Values.telemetryServices.opencost.opencost.exporter.defaultClusterId }}
     {{- $msg := list "" "The OpenCost default cluster id should match the cluster name." }}
     {{- $msg = append $msg "Please set:" }}
@@ -102,6 +210,11 @@ If a conflict is found, recommend either using the existing Node Exporter or dep
       {{- $msg = append $msg "    metricsSource:  <metrics destination name>" }}
       {{- $msg = append $msg (printf "Where <metrics destination name> is one of %s" (include "english_list_or" $featureDestinations)) }}
       {{- end }}
+      {{- $msg = append $msg "" }}
+      {{- $msg = append $msg "Or, to configure OpenCost's metrics source yourself and skip this guided setup, set:" }}
+      {{- $msg = append $msg "telemetryServices:" }}
+      {{- $msg = append $msg "  opencost:" }}
+      {{- $msg = append $msg "    metricsSource: custom" }}
       {{- fail (join "\n" $msg) }}
     {{- end }}
 
@@ -130,6 +243,11 @@ If a conflict is found, recommend either using the existing Node Exporter or dep
           {{- $msg = append $msg "      prometheus:" }}
           {{- $msg = append $msg "        external:" }}
           {{- $msg = append $msg (printf "          url: %s" $openCostMetricsUrl) }}
+          {{- $msg = append $msg "" }}
+          {{- $msg = append $msg "Or, to configure OpenCost's metrics source yourself and skip this guided setup, set:" }}
+          {{- $msg = append $msg "telemetryServices:" }}
+          {{- $msg = append $msg "  opencost:" }}
+          {{- $msg = append $msg "    metricsSource: custom" }}
           {{- fail (join "\n" $msg) }}
         {{- end }}
 

@@ -1,0 +1,37 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Auto-Instrumentation - OpenShift SCC Creation
+templates:
+  - platform_specific/openshift/beyla-scc.yaml
+tests:
+  - it: should create a SecurityContextConstraints object for Beyla
+    set:
+      testing: {enabled: true}
+      global:
+        platform: openshift
+    documentSelector:
+      path: kind
+      value: SecurityContextConstraints
+    asserts:
+      - containsDocument:
+          apiVersion: security.openshift.io/v1
+          kind: SecurityContextConstraints
+          name: RELEASE-NAME-beyla
+      - equal:
+          path: allowHostNetwork
+          value: true
+      - equal:
+          path: allowHostPID
+          value: true
+      # Beyla runs with hostNetwork when context propagation or the network preset is
+      # enabled, which OpenShift treats as host-port usage. The SCC must allow host ports
+      # or the DaemonSet pods fail admission. (#2734)
+      - equal:
+          path: allowHostPorts
+          value: true
+
+  - it: should not create a SecurityContextConstraints when not on OpenShift
+    set:
+      testing: {enabled: true}
+    asserts:
+      - hasDocuments:
+          count: 0

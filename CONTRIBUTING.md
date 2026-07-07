@@ -133,6 +133,7 @@ required to work on this repository:
 -   [Helm](https://helm.sh/docs/intro/install/) - Minimum required version is 3.14.
 -   [Docker](https://docs.docker.com/get-started/get-docker/) - Used for running some tools in containers and required for `kind`.
 -   [chart-testing](https://github.com/helm/chart-testing) - Used for linting Helm charts.
+-   [Cosign](https://docs.sigstore.dev/cosign/system_config/installation/) - Used to verify the signature of the OpenCost chart dependency when building.
 -   [kind](https://kind.sigs.k8s.io/) - Used for creating local Kubernetes clusters for integration testing.
 -   [Grafana Alloy](https://github.com/grafana/alloy) - Used for linting the generated config files.
 -   [yamllint](https://yamllint.readthedocs.io/en/stable/index.html) - Used for linting YAML files.

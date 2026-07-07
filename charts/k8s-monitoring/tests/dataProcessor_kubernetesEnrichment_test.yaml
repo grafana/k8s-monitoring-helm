@@ -1,0 +1,406 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Processors - Kubernetes Enrichment
+templates:
+  - alloy-config.yaml
+  - validations.yaml
+tests:
+  - it: enriches Prometheus metrics with namespace and pod labels and annotations
+    template: alloy-config.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.example.com/api/v1/write
+      dataProcessors:
+        k8s-enrich:
+          type: kubernetesEnrichment
+          namespaceLabels: {team: team}
+          namespaceAnnotations: {cost-center: cost-center}
+          podLabels: {app_name: app.kubernetes.io/name}
+          podAnnotations: {owner: example.com/owner}
+      clusterMetrics:
+        enabled: true
+        collector: alloy-metrics
+        dataProcessors: [k8s-enrich]
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+          alloy: {stabilityLevel: experimental}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      # Feature module forwards into the stamper rather than straight to the destination.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.relabel "clustermetrics_stamp_metrics_prometheus"'
+      # Pod discovery attaches namespace metadata (namespace enrichment is wanted).
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'discovery\.kubernetes "k8s_enrich_pods" \{\s*role = "pod"\s*attach_metadata \{\s*namespace = true'
+      # The discovery relabel builds the composite namespace+pod match key and maps each
+      # requested label/annotation to a sanitized target label.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'source_labels = \["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"\]\s*regex = "\(\.\+;\.\+\)"\s*target_label = "__meta_kubernetes_namespace_pod"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'source_labels = \["__meta_kubernetes_pod_label_app_kubernetes_io_name"\]\s*target_label = "app_name"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'source_labels = \["__meta_kubernetes_pod_annotation_example_com_owner"\]\s*target_label = "owner"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'source_labels = \["__meta_kubernetes_namespace_label_team"\]\s*target_label = "team"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'source_labels = \["__meta_kubernetes_namespace_annotation_cost_center"\]\s*target_label = "cost_center"'
+      # Incoming metrics get the composite key, then flow through both enrich stages.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.relabel "k8s_enrich_in_metrics_prometheus" \{\s*rule \{\s*source_labels = \["namespace", "pod"\]'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.enrich "k8s_enrich_ns_metrics_prometheus" \{\s*targets = discovery\.relabel\.k8s_enrich_pods\.output\s*target_match_label = "__meta_kubernetes_namespace"\s*metrics_match_label = "namespace"\s*labels_to_copy = \["team","cost_center"\]'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.enrich "k8s_enrich_pod_metrics_prometheus" \{\s*targets = discovery\.relabel\.k8s_enrich_pods\.output\s*target_match_label = "__meta_kubernetes_namespace_pod"\s*labels_to_copy = \["app_name","owner"\]'
+      # The synthetic composite key is dropped before the output sink.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.relabel "k8s_enrich_cleanup_metrics_prometheus" \{\s*rule \{\s*action = "labeldrop"\s*regex = "__meta_kubernetes_namespace_pod"\s*\}\s*forward_to = \[prometheus\.relabel\.k8s_enrich_out_metrics_prometheus\.receiver\]'
+      # Output sink and destination gate are generated.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.relabel "k8s_enrich_out_metrics_prometheus"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.relabel "k8s_enrich_prometheus_gate_metrics_prometheus"'
+
+  - it: skips the pod stages when only namespace enrichment is configured
+    template: alloy-config.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.example.com/api/v1/write
+      dataProcessors:
+        k8s-enrich:
+          type: kubernetesEnrichment
+          namespaceLabels: {team: team}
+      clusterMetrics:
+        enabled: true
+        collector: alloy-metrics
+        dataProcessors: [k8s-enrich]
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+          alloy: {stabilityLevel: experimental}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      # No composite key, no pod enrich, no cleanup; namespace enrich forwards straight to the sink.
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: '__meta_kubernetes_namespace_pod'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'k8s_enrich_pod_metrics_prometheus'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'k8s_enrich_cleanup_metrics_prometheus'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.enrich "k8s_enrich_ns_metrics_prometheus" \{[^}]*forward_to = \[prometheus\.relabel\.k8s_enrich_out_metrics_prometheus\.receiver\]'
+
+  - it: uses a label selector when only pod labels are configured
+    template: alloy-config.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.example.com/api/v1/write
+      dataProcessors:
+        k8s-enrich:
+          type: kubernetesEnrichment
+          podLabels: {color: color, flavor: flavor}
+      clusterMetrics:
+        enabled: true
+        collector: alloy-metrics
+        dataProcessors: [k8s-enrich]
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+          alloy: {stabilityLevel: experimental}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'discovery\.kubernetes "k8s_enrich_pods" \{\s*role = "pod"\s*selectors \{\s*role = "pod"\s*label = "color,flavor"'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'attach_metadata'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'k8s_enrich_ns_metrics_prometheus'
+
+  - it: enriches Loki logs via loki.enrich
+    template: alloy-config.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.example.com/loki/api/v1/push
+      dataProcessors:
+        k8s-enrich:
+          type: kubernetesEnrichment
+          namespaceLabels: {team: team}
+          podLabels: {color: color}
+      podLogsViaLoki:
+        enabled: true
+        collector: alloy-logs
+        dataProcessors: [k8s-enrich]
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+          alloy: {stabilityLevel: experimental}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'discovery\.kubernetes "k8s_enrich_pods"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'loki\.relabel "k8s_enrich_in_logs_loki" \{\s*rule \{\s*source_labels = \["namespace", "pod"\]'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'loki\.enrich "k8s_enrich_ns_logs_loki" \{\s*targets = discovery\.relabel\.k8s_enrich_pods\.output\s*target_match_label = "__meta_kubernetes_namespace"\s*logs_match_label = "namespace"\s*labels_to_copy = \["team"\]'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'loki\.enrich "k8s_enrich_pod_logs_loki" \{\s*targets = discovery\.relabel\.k8s_enrich_pods\.output\s*target_match_label = "__meta_kubernetes_namespace_pod"\s*labels_to_copy = \["color"\]'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'loki\.relabel "k8s_enrich_cleanup_logs_loki" \{\s*rule \{\s*action = "labeldrop"\s*regex = "__meta_kubernetes_namespace_pod"\s*\}\s*max_cache_size = 100\s*forward_to = \[loki\.process\.k8s_enrich_out_logs_loki\.receiver\]'
+
+  - it: enriches Pyroscope profiles via pyroscope.enrich
+    template: alloy-config.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        pyroscope:
+          type: pyroscope
+          url: http://pyroscope.example.com:4040
+      dataProcessors:
+        k8s-enrich:
+          type: kubernetesEnrichment
+          namespaceLabels: {team: team}
+      profilesReceiver:
+        enabled: true
+        collector: alloy-receiver
+        dataProcessors: [k8s-enrich]
+      collectors:
+        alloy-receiver:
+          presets: [deployment]
+          alloy:
+            stabilityLevel: experimental
+            extraPorts:
+              - name: profiles
+                port: 4040
+                targetPort: 4040
+                protocol: TCP
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'discovery\.kubernetes "k8s_enrich_pods"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'pyroscope\.relabel "k8s_enrich_in_profiles_pyroscope"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'pyroscope\.enrich "k8s_enrich_ns_profiles_pyroscope" \{\s*targets = discovery\.relabel\.k8s_enrich_pods\.output\s*target_match_label = "__meta_kubernetes_namespace"\s*profiles_match_label = "namespace"\s*labels_to_copy = \["team"\]\s*forward_to = \[pyroscope\.relabel\.k8s_enrich_out_profiles_pyroscope\.receiver\]'
+
+  - it: enriches OTLP telemetry via otelcol.processor.k8sattributes at default stability
+    template: alloy-config.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        otlp-gateway:
+          type: otlp
+          url: http://gateway.example.com/otlp
+          metrics: {enabled: true}
+          logs: {enabled: true}
+          traces: {enabled: true}
+      dataProcessors:
+        k8s-enrich:
+          type: kubernetesEnrichment
+          namespaceLabels: {team: team}
+          podLabels: {app_name: app.kubernetes.io/name}
+          podAnnotations: {owner: example.com/owner}
+      applicationObservability:
+        enabled: true
+        collector: alloy-receiver
+        dataProcessors: [k8s-enrich]
+        receivers:
+          otlp:
+            grpc:
+              enabled: true
+      collectors:
+        alloy-receiver:
+          presets: [deployment]
+          alloy:
+            extraPorts:
+              - name: otlp-grpc
+                port: 4317
+                targetPort: 4317
+                protocol: TCP
+    asserts:
+      - isKind:
+          of: ConfigMap
+      # One k8sattributes pipeline per telemetry type.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.processor\.k8sattributes "k8s_enrich_in_metrics_otlp"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.processor\.k8sattributes "k8s_enrich_in_logs_otlp"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.processor\.k8sattributes "k8s_enrich_in_traces_otlp"'
+      # Attribute names keep the original keys.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'label \{\s*from = "pod"\s*key = "app\.kubernetes\.io/name"\s*tag_name = "app_name"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'annotation \{\s*from = "pod"\s*key = "example\.com/owner"\s*tag_name = "owner"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'label \{\s*from = "namespace"\s*key = "team"\s*tag_name = "team"'
+      # Pod association prefers explicit Kubernetes resource attributes.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'pod_association \{\s*source \{\s*from = "resource_attribute"\s*name = "k8s\.pod\.name"\s*\}\s*source \{\s*from = "resource_attribute"\s*name = "k8s\.namespace\.name"'
+      # Each pipeline forwards to its chart-generated output sink.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'traces = \[otelcol\.processor\.batch\.k8s_enrich_out_traces_otlp\.input\]'
+
+  - it: renders the pod discovery once per collector when multiple tuples share a processor
+    template: alloy-config.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.example.com/api/v1/write
+        loki:
+          type: loki
+          url: http://loki.example.com/loki/api/v1/push
+      dataProcessors:
+        k8s-enrich:
+          type: kubernetesEnrichment
+          namespaceLabels: {team: team}
+          podLabels: {color: color}
+      clusterMetrics:
+        enabled: true
+        collector: alloy-singleton
+        dataProcessors: [k8s-enrich]
+      clusterEvents:
+        enabled: true
+        collector: alloy-singleton
+        dataProcessors: [k8s-enrich]
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+      collectors:
+        alloy-singleton:
+          presets: [clustered, statefulset]
+          alloy: {stabilityLevel: experimental}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      # Both tuple pipelines render and read targets from the shared discovery.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.enrich "k8s_enrich_ns_metrics_prometheus" \{\s*targets = discovery\.relabel\.k8s_enrich_pods\.output'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'loki\.enrich "k8s_enrich_ns_logs_loki" \{\s*targets = discovery\.relabel\.k8s_enrich_pods\.output'
+      # The Kubernetes API watch is expensive, so exactly one discovery pair is rendered.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'discovery\.kubernetes "k8s_enrich_pods" \{'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: '(?s)discovery\.kubernetes "k8s_enrich_pods" \{.*discovery\.kubernetes "k8s_enrich_pods" \{'
+
+  - it: fails when a kubernetesEnrichment processor has nothing to enrich with
+    template: validations.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.example.com/api/v1/write
+      dataProcessors:
+        k8s-enrich:
+          type: kubernetesEnrichment
+      clusterMetrics:
+        enabled: true
+        collector: alloy-metrics
+        dataProcessors: [k8s-enrich]
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+          alloy: {stabilityLevel: experimental}
+    asserts:
+      - failedTemplate:
+          errorPattern: 'The processor "k8s-enrich" does not have anything to enrich with'
+
+  - it: fails when the collector is not using the experimental stability level
+    template: validations.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.example.com/api/v1/write
+      dataProcessors:
+        k8s-enrich:
+          type: kubernetesEnrichment
+          namespaceLabels: {team: team}
+      clusterMetrics:
+        enabled: true
+        collector: alloy-metrics
+        dataProcessors: [k8s-enrich]
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+    asserts:
+      - failedTemplate:
+          errorPattern: 'The processor "k8s-enrich" requires Alloy to use the experimental stability level when enriching metrics'

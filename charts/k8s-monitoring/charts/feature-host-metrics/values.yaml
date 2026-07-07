@@ -66,8 +66,16 @@ linuxHosts:
   # @section -- Linux Host
   enabled: false
 
-  # -- Labels used to select the Node Exporter pods. If deploying from telemetry services, this will automatically be
-  # populated.
+  # -- How to collect Linux host metrics. "node-exporter" scrapes a Node Exporter deployment (discovered via
+  # telemetryServices or labelMatchers). "alloy" collects host metrics directly using `prometheus.exporter.unix` on the
+  # assigned collector, which must be a privileged DaemonSet (use the "linux-host-monitor" and "daemonset" collector
+  # presets) and does not require a Node Exporter deployment. Note: the `nodeLabels` enrichment is not yet supported
+  # when source is "alloy".
+  # @section -- Linux Host
+  source: node-exporter
+
+  # -- Labels used to select the Node Exporter pods. Required when connecting to an existing Node Exporter; if deploying
+  # from telemetry services, this will automatically be populated.
   # @section -- Linux Host
   labelMatchers: {}
 
@@ -151,8 +159,8 @@ windowsHosts:
   # @section -- Windows Host
   namespace: ""
 
-  # -- Labels used to select the Windows Exporter pods. If deploying from telemetry services, this will automatically be
-  #  # populated.
+  # -- Labels used to select the Windows Exporter pods. Required when connecting to an existing Windows Exporter; if
+  # deploying from telemetry services, this will automatically be populated.
   # @section -- Windows Host
   labelMatchers: {}
 
@@ -223,8 +231,8 @@ energyMetrics:
   # @section -- Energy Metrics
   namespace: ""
 
-  # -- Label matchers used to select the Kepler pods. If deploying from telemetry services, this will automatically be
-  # populated.
+  # -- Label matchers used to select the Kepler pods. Required when connecting to an existing Kepler; if deploying from
+  # telemetry services, this will automatically be populated.
   # @section -- Energy Metrics
   labelMatchers: {}
 

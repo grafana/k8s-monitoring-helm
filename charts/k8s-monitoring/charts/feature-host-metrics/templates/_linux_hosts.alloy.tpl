@@ -14,132 +14,17 @@
 
 {{- define "feature.hostMetrics.linuxHosts.alloy" }}
 {{- if .Values.linuxHosts.enabled }}
-{{- $namespace := .Values.linuxHosts.namespace }}
-{{- if dig "node-exporter" "deploy" false (.telemetryServices | default dict) }}
-  {{- $namespace = (dig "node-exporter" "namespaceOverride" false (.telemetryServices | default dict) | default .Release.Namespace) }}
-{{- end }}
+{{- $source := .Values.linuxHosts.source | default "node-exporter" }}
 {{- $metricAllowList := include "feature.hostMetrics.linuxHosts.allowList" . | fromYamlArray }}
 {{- $metricDenyList := .Values.linuxHosts.metricsTuning.excludeMetrics }}
-{{- $labelSelectors := list }}
-{{- if .Values.linuxHosts.labelMatchers }}
-  {{- range $label, $value := .Values.linuxHosts.labelMatchers }}
-    {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $label $value) }}
-  {{- end }}
-{{- else if dig "node-exporter" "deploy" false (.telemetryServices | default dict) }}
-  {{- $labelSelectors = append $labelSelectors (printf "release=%s" .Release.Name) }}
-  {{- $labelSelectors = append $labelSelectors "app.kubernetes.io/name=node-exporter" }}
+{{- /* The only difference between the two sources is how the targets are discovered: an external Node Exporter
+       deployment, or an internal prometheus.exporter.unix run by Alloy. Both expose their targets as
+       discovery.relabel.node_exporter.output, which the shared scrape and metrics tuning below consume. */}}
+{{- if eq $source "alloy" }}
+{{- include "feature.hostMetrics.linuxHosts.discovery.viaAlloy" . }}
+{{- else }}
+{{- include "feature.hostMetrics.linuxHosts.discovery.viaNodeExporter" . }}
 {{- end }}
-
-// Linux hosts via Node Exporter
-discovery.kubernetes "node_exporter" {
-  role = "pod"
-  selectors {
-    role = "pod"
-    label = {{ $labelSelectors | join "," | quote }}
-  }
-{{- if $namespace }}
-  namespaces {
-    names = [{{ $namespace | quote }}]
-  }
-{{- end }}
-{{- include "feature.hostMetrics.attachNodeMetadata" . | trim | nindent 2 }}
-} // discovery.kubernetes "node_exporter"
-
-discovery.relabel "node_exporter" {
-  targets = discovery.kubernetes.node_exporter.targets
-
-  // keep only the specified metrics port name, and pods that are Running and ready
-  rule {
-    source_labels = [
-      "__meta_kubernetes_pod_container_init",
-      "__meta_kubernetes_pod_phase",
-      "__meta_kubernetes_pod_ready",
-    ]
-    separator = "@"
-    regex = "false@Running@true"
-    action = "keep"
-  }
-
-  // Set the instance label to the node name
-  rule {
-    source_labels = ["__meta_kubernetes_pod_node_name"]
-    action = "replace"
-    target_label = "instance"
-  }
-
-  // set the namespace label
-  rule {
-    source_labels = ["__meta_kubernetes_namespace"]
-    target_label  = "namespace"
-  }
-
-  // set the pod label
-  rule {
-    source_labels = ["__meta_kubernetes_pod_name"]
-    target_label  = "pod"
-  }
-
-  // set the container label
-  rule {
-    source_labels = ["__meta_kubernetes_pod_container_name"]
-    target_label  = "container"
-  }
-
-  // set a workload label
-  rule {
-    source_labels = [
-      "__meta_kubernetes_pod_controller_kind",
-      "__meta_kubernetes_pod_controller_name",
-    ]
-    separator = "/"
-    target_label  = "workload"
-  }
-  // remove the hash from the ReplicaSet
-  rule {
-    source_labels = ["workload"]
-    regex = "(ReplicaSet/.+)-.+"
-    target_label  = "workload"
-  }
-
-  // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
-  rule {
-    action = "replace"
-    source_labels = [
-      "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-      "__meta_kubernetes_pod_label_k8s_app",
-      "__meta_kubernetes_pod_label_app",
-    ]
-    separator = ";"
-    regex = "^(?:;*)?([^;]+).*$"
-    replacement = "$1"
-    target_label = "app"
-  }
-
-  // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
-  rule {
-    action = "replace"
-    source_labels = [
-      "__meta_kubernetes_pod_label_app_kubernetes_io_component",
-      "__meta_kubernetes_pod_label_k8s_component",
-      "__meta_kubernetes_pod_label_component",
-    ]
-    regex = "^(?:;*)?([^;]+).*$"
-    replacement = "$1"
-    target_label = "component"
-  }
-
-  // set a source label
-  rule {
-    action = "replace"
-    replacement = "kubernetes"
-    target_label = "source"
-  }
-
-{{- include "feature.hostMetrics.nodeDiscoveryRules" . | trim | nindent 2 }}
-{{- if .Values.linuxHosts.extraDiscoveryRules }}
-  {{- .Values.linuxHosts.extraDiscoveryRules | nindent 2 }}
-{{- end }}
-} // discovery.relabel "node_exporter"
 
 prometheus.scrape "node_exporter" {
   targets = discovery.relabel.node_exporter.output
@@ -150,6 +35,7 @@ prometheus.scrape "node_exporter" {
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
   scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
   convert_classic_histograms_to_nhcb = {{ .Values.global.convertClassicHistogramsToNhcb }}
+{{- if ne $source "alloy" }}
   scheme = {{ .Values.linuxHosts.scheme | quote }}
   {{- if .Values.linuxHosts.bearerTokenFile }}
   bearer_token_file = {{ .Values.linuxHosts.bearerTokenFile | quote }}
@@ -161,6 +47,7 @@ prometheus.scrape "node_exporter" {
   clustering {
     enabled = true
   }
+{{- end }}
 
 {{- if or $metricAllowList $metricDenyList .Values.linuxHosts.metricsTuning.dropMetricsForFilesystem .Values.linuxHosts.extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.node_exporter.receiver]

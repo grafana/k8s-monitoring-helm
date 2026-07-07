@@ -1,0 +1,21 @@
+---
+cluster:
+  name: host-metrics-example-cluster
+
+destinations:
+  prometheus:
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+    # Collect Linux host metrics directly with Alloy, instead of scraping a Node Exporter deployment.
+    source: alloy
+
+collectors:
+  alloy-metrics:
+    # The linux-host-monitor preset grants the privileges and host mounts needed to collect host metrics via
+    # prometheus.exporter.unix; the daemonset preset runs the collector on every node.
+    presets: [linux-host-monitor, daemonset]

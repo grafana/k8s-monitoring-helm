@@ -5,7 +5,7 @@
 
 # k8s-monitoring
 
-![Version: 4.1.4](https://img.shields.io/badge/Version-4.1.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.1.4](https://img.shields.io/badge/AppVersion-4.1.4-informational?style=flat-square)
+![Version: 4.2.0](https://img.shields.io/badge/Version-4.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.2.0](https://img.shields.io/badge/AppVersion-4.2.0-informational?style=flat-square)
 Capture all telemetry data from your Kubernetes cluster.
 
 ## Breaking change announcements
@@ -393,6 +393,7 @@ details:
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
 | rlankfo | <robert.lankford@grafana.com> |  |
+| TylerHelmuth | <tyler.helmuth@grafana.com> |  |
 <!-- textlint-enable terminology -->
 
 <!-- markdownlint-disable no-bare-urls -->
@@ -424,7 +425,7 @@ details:
 |  | profiling(feature-profiling) | 1.0.0 |
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
 |  | telemetryServices(telemetry-services) | 1.0.0 |
-| https://grafana.github.io/helm-charts | alloy-operator | 0.5.8 |
+| https://grafana.github.io/helm-charts | alloy-operator | 0.5.11 |
 <!-- markdownlint-enable no-bare-urls -->
 
 <!--alex disable host-hostess-->
@@ -435,20 +436,21 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | alloy-operator.deploy | bool | `true` | Deploy the Alloy Operator. |
-| alloy-operator.waitForAlloyRemoval.enabled | bool | `true` | Run Helm hooks to wait for all Alloy instances to be removed before uninstalling the Alloy Operator. This ensures that all Alloy instances are properly cleaned up before the operator is removed. |
-| alloy-operator.waitForAlloyRemoval.image | object | `{"digest":"","pullPolicy":"IfNotPresent","pullSecrets":[],"registry":"ghcr.io","repository":"grafana/helm-chart-toolbox-kubectl","tag":"0.1.2"}` | The image to use for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
-| alloy-operator.waitForAlloyRemoval.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node selector to use for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
-| alloy-operator.waitForAlloyRemoval.podAnnotations | object | `{}` | Annotations to apply to the Pod for the Helm Hook to wait for all Alloy instances to be removed before uninstalling the Alloy Operator |
-| alloy-operator.waitForAlloyRemoval.podLabels | object | `{"linkerd.io/inject":"disabled","sidecar.istio.io/inject":"false"}` | Labels to apply to the Pod for the Helm Hook to wait for all Alloy instances to be removed before uninstalling the Alloy Operator |
-| alloy-operator.waitForAlloyRemoval.resources | object | `{}` | Set the resource field for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
+| alloy-operator.waitForAlloyRemoval.enabled | bool | `true` | Run Helm hooks that ensure all Alloy instances are cleaned up before the Alloy Operator is removed. This enables two hooks that share the settings in this section: a post-install/post-upgrade hook that adds a finalizer to the Alloy Operator deployment, and a pre-delete hook that removes Alloy instances and the finalizer during uninstall. |
+| alloy-operator.waitForAlloyRemoval.image | object | `{"digest":"","pullPolicy":"IfNotPresent","pullSecrets":[],"registry":"ghcr.io","repository":"grafana/helm-chart-toolbox-kubectl","tag":"0.1.2"}` | The image to use for the Alloy removal Helm Hooks (both the post-install/post-upgrade add-finalizer hook and the pre-delete removal hook). |
+| alloy-operator.waitForAlloyRemoval.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node selector to use for the Alloy removal Helm Hooks (both the post-install/post-upgrade add-finalizer hook and the pre-delete removal hook). |
+| alloy-operator.waitForAlloyRemoval.podAnnotations | object | `{}` | Annotations to apply to the Pod for the Alloy removal Helm Hooks (both the post-install/post-upgrade add-finalizer hook and the pre-delete removal hook). |
+| alloy-operator.waitForAlloyRemoval.podLabels | object | `{"linkerd.io/inject":"disabled","sidecar.istio.io/inject":"false"}` | Labels to apply to the Pod for the Alloy removal Helm Hooks (both the post-install/post-upgrade add-finalizer hook and the pre-delete removal hook). |
+| alloy-operator.waitForAlloyRemoval.resources | object | `{}` | Set the resource field for the Alloy removal Helm Hooks (both the post-install/post-upgrade add-finalizer hook and the pre-delete removal hook). |
 | alloy-operator.waitForAlloyRemoval.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":4242,"seccompProfile":{"type":"RuntimeDefault"}}` | Default security context to apply to the container. This can also be set to `null` to remove the security context entirely. Also, `runAsUser` can be set to `null` to remove it. |
-| alloy-operator.waitForAlloyRemoval.tolerations | list | `[]` | Tolerations to apply to the Helm Hook that ensures that Alloy instances are removed during uninstall. |
+| alloy-operator.waitForAlloyRemoval.tolerations | list | `[]` | Tolerations to apply to the Alloy removal Helm Hooks (both the post-install/post-upgrade add-finalizer hook and the pre-delete removal hook). |
 
 ### Features - Annotation Autodiscovery
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | annotationAutodiscovery | object | Disabled | Annotation Autodiscovery enables gathering metrics from Kubernetes Pods and Services discovered by special annotations. Requires a destination that supports metrics. To see the valid options, please see the [Annotation Autodiscovery feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-annotation-autodiscovery). |
+| annotationAutodiscovery.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | annotationAutodiscovery.destinations | list | `[]` | The destinations where cluster metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | annotationAutodiscovery.enabled | bool | `false` | Enable gathering metrics from Kubernetes Pods and Services discovered by special annotations. |
 
@@ -457,6 +459,7 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | applicationObservability | object | Disabled | Application Observability. Requires destinations that supports metrics, logs, and traces. To see the valid options, please see the [Application Observability feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-application-observability). |
+| applicationObservability.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | applicationObservability.destinations | list | `[]` | The destinations where application data will be sent. If empty, all capable destinations will be used. |
 | applicationObservability.enabled | bool | `false` | Enable receiving Application Observability. |
 | applicationObservability.receivers | object | `{}` | The receivers used for receiving application data. |
@@ -466,6 +469,7 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | autoInstrumentation | object | Disabled | Auto-Instrumentation. Requires destinations that supports metrics, logs, and traces. To see the valid options, please see the [Auto-Instrumentation feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-auto-instrumentation). |
+| autoInstrumentation.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | autoInstrumentation.destinations | list | `[]` | The destinations where application data will be sent. If empty, all capable destinations will be used. |
 | autoInstrumentation.enabled | bool | `false` | Enable automatic instrumentation for applications. |
 
@@ -481,6 +485,7 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | clusterEvents | object | Disabled | Cluster events. Requires a destination that supports logs. To see the valid options, please see the [Cluster Events feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cluster-events). |
+| clusterEvents.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | clusterEvents.destinations | list | `[]` | The destinations where cluster events will be sent. If empty, all logs-capable destinations will be used. |
 | clusterEvents.enabled | bool | `false` | Enable gathering Kubernetes Cluster events. |
 
@@ -489,6 +494,7 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | clusterMetrics | object | Disabled | Cluster Monitoring enables observability and monitoring for your Kubernetes Cluster itself. Requires a destination that supports metrics. To see the valid options, please see the [Cluster Monitoring feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cluster-metrics). |
+| clusterMetrics.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | clusterMetrics.destinations | list | `[]` | The destinations where cluster metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | clusterMetrics.enabled | bool | `false` | Enable gathering Kubernetes Cluster metrics. |
 
@@ -497,8 +503,15 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | costMetrics | object | Disabled | Cost Metrics captures cost metrics from the Kubernetes cluster and its workloads. Requires a destination that supports metrics. To see the valid options, please see the [Cost Metrics feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cost-metrics). |
+| costMetrics.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | costMetrics.destinations | list | `[]` | The destinations where cluster metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | costMetrics.enabled | bool | `false` | Enable gathering Kubernetes Cost metrics. |
+
+### Data Processors
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| dataProcessors | object | `{}` | Optional processors that sit between features and destinations. A feature can opt in by listing a processor under its `dataProcessors:` key. Data from that feature flows through the processor's pipeline before reaching its destinations. See the [data processors documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/dataProcessors/README.md). |
 
 ### Destinations
 
@@ -532,6 +545,7 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | hostMetrics | object | Disabled | Host metrics enables observability and monitoring for your Kubernetes Nodes. Requires a destination that supports metrics. To see the valid options, please see the [Host Metrics feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-host-metrics). |
+| hostMetrics.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | hostMetrics.destinations | list | `[]` | The destinations where cluster metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | hostMetrics.enabled | bool | `false` | Enable gathering Kubernetes Host metrics. |
 
@@ -540,6 +554,7 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | integrations | object | No integrations enabled | Service Integrations enables gathering telemetry data for common services and applications deployed to Kubernetes. To see the valid options, please see the [Service Integrations documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-integrations). |
+| integrations.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | integrations.destinations | list | `[]` | The destinations where integration metrics will be sent. If empty, all metrics-capable destinations will be used. |
 
 ### Features - Kubernetes Manifests
@@ -547,6 +562,7 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | kubernetesManifests | object | Disabled | Kubernetes Manifests enables collecting Kubernetes resource manifest files and modifications as logs. **Experimental**: This feature is subject to change and may be altered or removed in a future release. Requires a logs destination and k8s-manifest-tail deployed via telemetryServices. |
+| kubernetesManifests.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | kubernetesManifests.destinations | list | `[]` | The destinations where Kubernetes manifest logs will be sent. If empty, all logs-capable destinations will be used. |
 | kubernetesManifests.enabled | bool | `false` | Enable collecting Kubernetes manifest files and modifications. |
 
@@ -555,6 +571,7 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | nodeLogs | object | Disabled | Node logs. Requires a destination that supports logs. To see the valid options, please see the [Node Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-node-logs). |
+| nodeLogs.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | nodeLogs.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
 | nodeLogs.enabled | bool | `false` | Enable gathering Kubernetes Cluster Node logs. |
 
@@ -563,6 +580,7 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | podLogsObjects | object | Disabled | PodLogs Objects Requires a destination that supports logs. To see the valid options, please see the [PodLogs Objects feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs-objects). |
+| podLogsObjects.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | podLogsObjects.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
 | podLogsObjects.enabled | bool | `false` | Enable gathering Kubernetes Pod logs via PodLogs objects. |
 
@@ -571,6 +589,7 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | podLogsViaKubernetesApi | object | Disabled | Pod logs via Kubernetes API. Requires a destination that supports logs. To see the valid options, please see the [Pod Logs via Kubernetes API feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs-via-kubernetes-api). |
+| podLogsViaKubernetesApi.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | podLogsViaKubernetesApi.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
 | podLogsViaKubernetesApi.enabled | bool | `false` | Enable gathering Kubernetes Pod logs. |
 
@@ -579,6 +598,7 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | podLogsViaLoki | object | Disabled | Pod logs in Loki format. Requires a destination that supports logs. To see the valid options, please see the [Pod Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs-via-loki). |
+| podLogsViaLoki.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | podLogsViaLoki.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
 | podLogsViaLoki.enabled | bool | `false` | Enable gathering Kubernetes Pod logs. |
 
@@ -587,6 +607,7 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | podLogsViaOpenTelemetry | object | Disabled | Pod logs in OpenTelemetry format. Requires a destination that supports logs. To see the valid options, please see the [Pod Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs-via-opentelemetry). |
+| podLogsViaOpenTelemetry.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | podLogsViaOpenTelemetry.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
 | podLogsViaOpenTelemetry.enabled | bool | `false` | Enable gathering Kubernetes Pod logs. |
 
@@ -595,6 +616,7 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | profilesReceiver | object | Disabled | Profiles Receiver enables receiving profiles from applications. Requires a destination that supports profiles. To see the valid options, please see the [Profiles Receiver feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-profiles-receiver). |
+| profilesReceiver.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | profilesReceiver.destinations | list | `[]` | The destinations where profiles will be sent. If empty, all profiles-capable destinations will be used. |
 | profilesReceiver.enabled | bool | `false` | Enable gathering profiles from applications. |
 
@@ -603,6 +625,7 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | profiling | object | Disabled | Profiling enables gathering profiles from applications. Requires a destination that supports profiles. To see the valid options, please see the [Profiling feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-profiling). |
+| profiling.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | profiling.destinations | list | `[]` | The destinations where profiles will be sent. If empty, all profiles-capable destinations will be used. |
 | profiling.enabled | bool | `false` | Enable gathering profiles from applications. |
 
@@ -611,6 +634,7 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | prometheusOperatorObjects | object | Disabled | Prometheus Operator Objects enables the gathering of metrics from objects like Probes, PodMonitors, and ServiceMonitors. Requires a destination that supports metrics. To see the valid options, please see the [Prometheus Operator Objects feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-prometheus-operator-objects). |
+| prometheusOperatorObjects.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | prometheusOperatorObjects.destinations | list | `[]` | The destinations where metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | prometheusOperatorObjects.enabled | bool | `false` | Enable gathering metrics from Prometheus Operator Objects. |
 
@@ -624,6 +648,7 @@ details:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| selfReporting.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | selfReporting.destinations | list | `[]` | The destinations where self-report metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | selfReporting.enabled | bool | `true` | Enable Self-reporting. |
 | selfReporting.scrapeInterval | string | 60s | How frequently to generate self-report metrics. This does utilize the global scrapeInterval setting. |
@@ -632,11 +657,14 @@ details:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| telemetryServices.beyla.deploy | bool | `false` | Deploy Grafana Beyla's Kubernetes cache. |
+| telemetryServices.beyla.k8sCache.replicas | int | `0` | Number of replicas for the Beyla Kubernetes metadata cache. Set to a positive number and set telemetryServices.beyla.deploy=true to deploy the cache. |
 | telemetryServices.k8s-manifest-tail.deploy | bool | `false` | Deploy k8s-manifest-tail to watch and log Kubernetes manifest changes. |
 | telemetryServices.kepler.deploy | bool | `false` | Deploy [Kepler](https://sustainable-computing.io/) to gather energy usage metrics from the Kubernetes Cluster nodes. |
 | telemetryServices.kube-state-metrics.deploy | bool | `false` | Deploy kube-state-metrics to expose Kubernetes object metadata as Prometheus metrics. |
 | telemetryServices.node-exporter.deploy | bool | `false` | Deploy Node Exporter to gather Linux node hardware and OS metrics. |
 | telemetryServices.opencost.deploy | bool | `false` | Deploy OpenCost to calculate and expose Kubernetes cost allocation metrics. |
+| telemetryServices.sdkInjector.deploy | bool | `false` | Deploy the SDK Injector. |
 | telemetryServices.windows-exporter.deploy | bool | `false` | Deploy Windows Exporter to gather Windows node hardware and OS metrics. |
 
 ### Other Values

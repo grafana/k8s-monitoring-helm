@@ -187,6 +187,7 @@ database_observability.postgres {{ include "helper.alloy_name" .name | quote }} 
   {{- if .databaseObservability.excludeUsers }}
   exclude_users = {{ .databaseObservability.excludeUsers | toJson }}
   {{- end }}
+  exclude_current_user = {{ .databaseObservability.excludeCurrentUser }}
 
   {{- $enabledCollectors := list }}
   {{- $disabledCollectors := list }}
@@ -220,7 +221,9 @@ database_observability.postgres {{ include "helper.alloy_name" .name | quote }} 
   query_samples {
     collect_interval = {{ .collectInterval | quote }}
     disable_query_redaction = {{ .disableQueryRedaction }}
+    {{- if not (kindIs "invalid" .excludeCurrentUser) }}
     exclude_current_user = {{ .excludeCurrentUser }}
+    {{- end }}
   }
     {{- end }}
   {{- else }}
@@ -231,9 +234,6 @@ database_observability.postgres {{ include "helper.alloy_name" .name | quote }} 
     {{- with .databaseObservability.collectors.schemaDetails }}
   schema_details {
     collect_interval = {{ .collectInterval | quote }}
-    cache_enabled = {{ .cacheEnabled }}
-    cache_size = {{ .cacheSize }}
-    cache_ttl = {{ .cacheTTL | quote }}
   }
     {{- end }}
   {{- else }}

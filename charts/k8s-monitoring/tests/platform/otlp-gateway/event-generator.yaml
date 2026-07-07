@@ -1,0 +1,51 @@
+---
+# A workload that reliably and continuously generates Kubernetes events, so the
+# Cluster Events feature always has something to capture during the test.
+#
+# The failing liveness probe (HTTP GET against a port where nothing is listening)
+# makes the kubelet emit a steady stream of `Unhealthy` Warning events every
+# `periodSeconds`, followed by `Killing` / `Started` / `BackOff` events as the
+# container is restarted. The Deployment and ReplicaSet also emit their own
+# events (`ScalingReplicaSet`, `SuccessfulCreate`). Together these exercise
+# events with `kind` of Pod, ReplicaSet, and Deployment.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: event-generator
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-generator
+  namespace: event-generator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: event-generator
+  template:
+    metadata:
+      labels:
+        app: event-generator
+    spec:
+      containers:
+        - name: event-generator
+          image: busybox:1.36
+          command: ["sleep", "infinity"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
+          # Nothing listens on this port, so every probe fails and the kubelet
+          # emits an `Unhealthy` event. failureThreshold: 1 restarts the
+          # container quickly, generating additional lifecycle events.
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 1

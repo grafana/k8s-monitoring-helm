@@ -15,10 +15,18 @@ subject:
 
 cluster:
   type: gke
-  zone: us-central1
+  zone: us-west1
   args:
     - --num-nodes=1
     - --labels source=k8s-monitoring-helm-platform-test
+    # Org policy (compute.vmExternalIpAccess) forbids external node IPs -> private nodes.
+    # No public control-plane IP; reached via the IAM-gated DNS endpoint
+    # (requires CLOUDSDK_CONTAINER_USE_DNS_ENDPOINT=true in .envrc / CI).
+    - --enable-ip-alias
+    - --enable-private-nodes
+    - --enable-private-endpoint
+    - --enable-master-authorized-networks
+    - --enable-dns-access
   appendRandomNumber: true
 
 dependencies:
@@ -38,7 +46,7 @@ tests:
             - configMapRef: {name: test-parameters}
           queries:
             # Features
-            - query: grafana_kubernetes_monitoring_build_info{cluster="$clusterName"}
+            - query: grafana_kubernetes_monitoring_build_info{cluster="$clusterName", platform="gke"}
               type: promql
             - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="clusterMetrics"}
               type: promql

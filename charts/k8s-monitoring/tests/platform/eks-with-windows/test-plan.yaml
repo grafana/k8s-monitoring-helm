@@ -33,7 +33,7 @@ tests:
             - configMapRef: {name: test-parameters}
           queries:
             # Features
-            - query: grafana_kubernetes_monitoring_build_info{cluster="$clusterName"}
+            - query: grafana_kubernetes_monitoring_build_info{cluster="$clusterName", platform="eks"}
               type: promql
             - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="clusterMetrics"}
               type: promql
@@ -54,6 +54,14 @@ tests:
             - query: machine_memory_bytes{cluster="$clusterName", job="integrations/kubernetes/cadvisor"}
               type: promql
             - query: count(kube_node_info{cluster="$clusterName", job="integrations/kubernetes/kube-state-metrics"})
+              type: promql
+              expect:
+                value: 2
+
+            # EC2 enrichment: the ec2-tags data processor copies each node's EC2 `Team` tag
+            # onto node-labeled metrics. Both EC2 instances are tagged `Team=platform-test`,
+            # so both nodes' kube_node_info gain `team="platform-test"`.
+            - query: count(kube_node_info{cluster="$clusterName", job="integrations/kubernetes/kube-state-metrics", team="platform-test"})
               type: promql
               expect:
                 value: 2

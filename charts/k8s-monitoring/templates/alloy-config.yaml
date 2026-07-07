@@ -8,7 +8,7 @@
 {{- end }}
 
 {{/* Save the top level object and add the collector name */}}
-{{- $values := dict "Values" $.Values "Chart" $.Chart "Files" $.Files "Release" $.Release "Subcharts" $.Subcharts "Template" $.Template "collectorName" $collectorName }}
+{{- $values := dict "Values" $.Values "Chart" $.Chart "Files" $.Files "Release" $.Release "Subcharts" $.Subcharts "Template" $.Template "Capabilities" $.Capabilities "collectorName" $collectorName }}
 {{- $collectorValues := include "collector.alloy.values" $values | fromYaml }}
 {{- $alloyConfig := "" }}
 {{- range $featureKey := include "features.list" . | fromYamlArray }}
@@ -16,6 +16,10 @@
   {{- if eq $collectorName $featureCollectorName }}
     {{ $alloyConfig = cat $alloyConfig (include (printf "features.%s.include" $featureKey) $values | trim | nindent 0) }}
   {{- end }}
+{{- end }}
+{{- $dataProcessorSharedComponents := include "dataProcessors.alloy.collectorComponents" (dict "Values" $.Values "config" $alloyConfig) | trim }}
+{{- if $dataProcessorSharedComponents }}
+  {{- $alloyConfig = cat $alloyConfig ($dataProcessorSharedComponents | nindent 0) }}
 {{- end }}
 {{- $alloyConfig = cat $alloyConfig (include "collectors.logging.alloy" $collectorValues | trim | nindent 0) }}
 {{- $alloyConfig = cat $alloyConfig (include "collectors.liveDebugging.alloy" $collectorValues | trim | nindent 0) }}

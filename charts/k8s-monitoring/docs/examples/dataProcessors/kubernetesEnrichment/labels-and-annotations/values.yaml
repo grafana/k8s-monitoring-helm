@@ -1,0 +1,102 @@
+---
+cluster:
+  name: kubernetes-enrichment
+
+destinations:
+  prometheus:
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+  loki:
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+  tempo:
+    type: otlp
+    url: tempo.tempo.svc:4317
+    tls:
+      insecure: true
+      insecureSkipVerify: true
+    metrics: {enabled: false}
+    logs: {enabled: false}
+    traces: {enabled: true}
+  pyroscope:
+    type: pyroscope
+    url: http://pyroscope.pyroscope.svc:4040
+
+dataProcessors:
+  # Copies Kubernetes metadata onto telemetry: the `team` namespace label, the
+  # `cost-center` namespace annotation, the `color` pod label, and the
+  # `example.com/owner` pod annotation. Each entry maps
+  # `<telemetry label>: <Kubernetes label or annotation name>`, so metrics, logs, and
+  # profiles gain `team`, `cost_center`, `color`, and `owner` labels (label-based
+  # ecosystems sanitize the telemetry label name); OTLP traces gain resource attributes
+  # under the telemetry label names.
+  k8s-metadata:
+    type: kubernetesEnrichment
+    namespaceLabels:
+      team: team
+    namespaceAnnotations:
+      cost-center: cost-center
+    podLabels:
+      color: color
+    podAnnotations:
+      owner: example.com/owner
+
+# Metrics
+clusterMetrics:
+  enabled: true
+  collector: alloy
+  dataProcessors: [k8s-metadata]
+
+# Logs
+podLogsViaLoki:
+  enabled: true
+  collector: alloy
+  dataProcessors: [k8s-metadata]
+  # By default, this feature moves the `pod` label to structured metadata. Keeping it as a
+  # stream label lets the kubernetesEnrichment processor match log entries to their source
+  # pod, which is required for copying pod labels and annotations.
+  structuredMetadata:
+    pod: null
+
+# Traces
+applicationObservability:
+  enabled: true
+  collector: alloy
+  dataProcessors: [k8s-metadata]
+  metrics: {enabled: false}
+  logs: {enabled: false}
+  traces: {enabled: true}
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+
+# Profiles
+profilesReceiver:
+  enabled: true
+  collector: alloy
+  dataProcessors: [k8s-metadata]
+
+collectors:
+  alloy:
+    presets: [clustered, filesystem-log-reader, daemonset]
+    alloy:
+      stabilityLevel: experimental  # Required for prometheus.enrich, loki.enrich, pyroscope.enrich
+      extraPorts:
+        - name: profiles
+          port: 4040
+          targetPort: 4040
+          protocol: TCP
+        - name: otlp-grpc
+          port: 4317
+          targetPort: 4317
+          protocol: TCP
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true

@@ -260,6 +260,11 @@ databaseObservability:
   # @section -- Database Observability
   excludeUsers: []
 
+  # -- Exclude the user that Alloy uses to connect to the database from monitoring. The resolved username is
+  # automatically appended to `excludeUsers`, if not already present.
+  # @section -- Database Observability
+  excludeCurrentUser: true
+
   # Cloud provider configuration for the database.
   # @section -- Database Observability
   cloudProvider:
@@ -323,9 +328,11 @@ databaseObservability:
       # -- Collect unredacted SQL query text including parameters.
       # @section -- Database Observability - Collectors
       disableQueryRedaction: false
-      # -- Do not collect query samples for the current database user.
+      # -- (bool) Deprecated. Use the top-level `databaseObservability.excludeCurrentUser` instead. When set, this
+      # takes precedence over the top-level setting.
+      # @default -- `true`
       # @section -- Database Observability - Collectors
-      excludeCurrentUser: true
+      excludeCurrentUser:
 
     # Collect schemas and tables from information_schema.
     schemaDetails:
@@ -335,13 +342,13 @@ databaseObservability:
       # -- How frequently to collect schemas and tables from information_schema.
       # @section -- Database Observability - Collectors
       collectInterval: 1m
-      # -- Whether to enable caching of table definitions.
+      # -- Deprecated. Kept for backwards compatibility.
       # @section -- Database Observability - Collectors
       cacheEnabled: true
-      # -- Table definitions cache size.
+      # -- Deprecated. Kept for backwards compatibility.
       # @section -- Database Observability - Collectors
       cacheSize: 256
-      # -- Table definitions cache TTL.
+      # -- Deprecated. Kept for backwards compatibility.
       # @section -- Database Observability - Collectors
       cacheTTL: 10m
 
