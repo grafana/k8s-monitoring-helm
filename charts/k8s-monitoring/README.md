@@ -658,7 +658,7 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | telemetryServices.beyla.deploy | bool | `false` | Deploy Grafana Beyla's Kubernetes cache. |
-| telemetryServices.beyla.k8sCache.replicas | int | `0` | Number of replicas for the Beyla Kubernetes metadata cache. Set to a positive number to deploy the cache. |
+| telemetryServices.beyla.k8sCache.replicas | int | `0` | Number of replicas for the Beyla Kubernetes metadata cache. Set to a positive number and set telemetryServices.beyla.deploy=true to deploy the cache. |
 | telemetryServices.k8s-manifest-tail.deploy | bool | `false` | Deploy k8s-manifest-tail to watch and log Kubernetes manifest changes. |
 | telemetryServices.kepler.deploy | bool | `false` | Deploy [Kepler](https://sustainable-computing.io/) to gather energy usage metrics from the Kubernetes Cluster nodes. |
 | telemetryServices.kube-state-metrics.deploy | bool | `false` | Deploy kube-state-metrics to expose Kubernetes object metadata as Prometheus metrics. |
