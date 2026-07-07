@@ -18,9 +18,38 @@
 {{- if eq (include "destinations.otlp.supports_metrics" .) "true" }}
 otelcol.receiver.prometheus {{ include "helper.alloy_name" $.destinationName | quote }} {
   output {
-    metrics = [{{ include "destinations.otlp.alloy.otlp.metrics.target" (dict "destination" . "destinationName" $.destinationName) | trim }}]
+    metrics = [otelcol.processor.transform.{{ include "helper.alloy_name" $.destinationName }}_scrape_normalize.input]
   }
 } // otelcol.receiver.prometheus "{{ include "helper.alloy_name" $.destinationName }}"
+
+// Repairs artifacts of the Prometheus-to-OTLP conversion performed by
+// otelcol.receiver.prometheus. Only metrics that came from a Prometheus scrape pass
+// through this component; OTLP-native telemetry enters the pipeline further down.
+otelcol.processor.transform {{ printf "%s_scrape_normalize" (include "helper.alloy_name" $.destinationName) | quote }} {
+  error_mode = {{ .processors.transform.errorMode | quote }}
+  metric_statements {
+    context = "resource"
+    statements = [
+      // The conversion sets service.name to the full Prometheus job label (e.g.
+      // "namespace/workload"). When the scrape target declares its identity explicitly
+      // with a service_name label on its own target_info metric (e.g. Grafana Beyla),
+      // prefer that value and drop the duplicate.
+      `set(attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
+      `delete_key(attributes, "service_name") where attributes["service_name"] == attributes["service.name"]`,
+    ]
+  }
+  metric_statements {
+    context = "datapoint"
+    statements = [
+      // Same correction for scrape targets that put service_name on every series
+      // instead of exposing a target_info metric.
+      `set(resource.attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
+    ]
+  }
+  output {
+    metrics = [{{ include "destinations.otlp.alloy.otlp.metrics.target" (dict "destination" . "destinationName" $.destinationName) | trim }}]
+  }
+} // otelcol.processor.transform "{{ include "helper.alloy_name" $.destinationName }}_scrape_normalize"
 {{- end }}
 {{- if eq (include "destinations.otlp.supports_logs" .) "true" }}
 otelcol.receiver.loki {{ include "helper.alloy_name" $.destinationName | quote }} {

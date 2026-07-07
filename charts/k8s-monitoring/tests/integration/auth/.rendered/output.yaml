@@ -835,9 +835,38 @@ data:
     // Destination: prometheus-otlp-basicauth (otlp)
     otelcol.receiver.prometheus "prometheus_otlp_basicauth" {
       output {
-        metrics = [otelcol.processor.attributes.prometheus_otlp_basicauth.input]
+        metrics = [otelcol.processor.transform.prometheus_otlp_basicauth_scrape_normalize.input]
       }
     } // otelcol.receiver.prometheus "prometheus_otlp_basicauth"
+    
+    // Repairs artifacts of the Prometheus-to-OTLP conversion performed by
+    // otelcol.receiver.prometheus. Only metrics that came from a Prometheus scrape pass
+    // through this component; OTLP-native telemetry enters the pipeline further down.
+    otelcol.processor.transform "prometheus_otlp_basicauth_scrape_normalize" {
+      error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          // The conversion sets service.name to the full Prometheus job label (e.g.
+          // "namespace/workload"). When the scrape target declares its identity explicitly
+          // with a service_name label on its own target_info metric (e.g. Grafana Beyla),
+          // prefer that value and drop the duplicate.
+          `set(attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
+          `delete_key(attributes, "service_name") where attributes["service_name"] == attributes["service.name"]`,
+        ]
+      }
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          // Same correction for scrape targets that put service_name on every series
+          // instead of exposing a target_info metric.
+          `set(resource.attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
+        ]
+      }
+      output {
+        metrics = [otelcol.processor.attributes.prometheus_otlp_basicauth.input]
+      }
+    } // otelcol.processor.transform "prometheus_otlp_basicauth_scrape_normalize"
     otelcol.processor.attributes "prometheus_otlp_basicauth" {
       action {
         key = "destination"
@@ -941,9 +970,38 @@ data:
     // Destination: prometheus-otlp-bearer-token (otlp)
     otelcol.receiver.prometheus "prometheus_otlp_bearer_token" {
       output {
-        metrics = [otelcol.processor.attributes.prometheus_otlp_bearer_token.input]
+        metrics = [otelcol.processor.transform.prometheus_otlp_bearer_token_scrape_normalize.input]
       }
     } // otelcol.receiver.prometheus "prometheus_otlp_bearer_token"
+    
+    // Repairs artifacts of the Prometheus-to-OTLP conversion performed by
+    // otelcol.receiver.prometheus. Only metrics that came from a Prometheus scrape pass
+    // through this component; OTLP-native telemetry enters the pipeline further down.
+    otelcol.processor.transform "prometheus_otlp_bearer_token_scrape_normalize" {
+      error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          // The conversion sets service.name to the full Prometheus job label (e.g.
+          // "namespace/workload"). When the scrape target declares its identity explicitly
+          // with a service_name label on its own target_info metric (e.g. Grafana Beyla),
+          // prefer that value and drop the duplicate.
+          `set(attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
+          `delete_key(attributes, "service_name") where attributes["service_name"] == attributes["service.name"]`,
+        ]
+      }
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          // Same correction for scrape targets that put service_name on every series
+          // instead of exposing a target_info metric.
+          `set(resource.attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
+        ]
+      }
+      output {
+        metrics = [otelcol.processor.attributes.prometheus_otlp_bearer_token.input]
+      }
+    } // otelcol.processor.transform "prometheus_otlp_bearer_token_scrape_normalize"
     otelcol.processor.attributes "prometheus_otlp_bearer_token" {
       action {
         key = "destination"
@@ -1046,9 +1104,38 @@ data:
     // Destination: prometheus-otlp-noauth (otlp)
     otelcol.receiver.prometheus "prometheus_otlp_noauth" {
       output {
-        metrics = [otelcol.processor.attributes.prometheus_otlp_noauth.input]
+        metrics = [otelcol.processor.transform.prometheus_otlp_noauth_scrape_normalize.input]
       }
     } // otelcol.receiver.prometheus "prometheus_otlp_noauth"
+    
+    // Repairs artifacts of the Prometheus-to-OTLP conversion performed by
+    // otelcol.receiver.prometheus. Only metrics that came from a Prometheus scrape pass
+    // through this component; OTLP-native telemetry enters the pipeline further down.
+    otelcol.processor.transform "prometheus_otlp_noauth_scrape_normalize" {
+      error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          // The conversion sets service.name to the full Prometheus job label (e.g.
+          // "namespace/workload"). When the scrape target declares its identity explicitly
+          // with a service_name label on its own target_info metric (e.g. Grafana Beyla),
+          // prefer that value and drop the duplicate.
+          `set(attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
+          `delete_key(attributes, "service_name") where attributes["service_name"] == attributes["service.name"]`,
+        ]
+      }
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          // Same correction for scrape targets that put service_name on every series
+          // instead of exposing a target_info metric.
+          `set(resource.attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
+        ]
+      }
+      output {
+        metrics = [otelcol.processor.attributes.prometheus_otlp_noauth.input]
+      }
+    } // otelcol.processor.transform "prometheus_otlp_noauth_scrape_normalize"
     otelcol.processor.attributes "prometheus_otlp_noauth" {
       action {
         key = "destination"
