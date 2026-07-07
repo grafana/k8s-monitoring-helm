@@ -1,9 +1,11 @@
 ---
-# Docs reference: * https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/installing_on_google_cloud/installing-gcp-customizations
+# publish: Internal is required — the org policy blocks external load balancers. The API is then
+# private, so the test runs from an in-VPC worker, and the cluster installs into the existing
+# `default` VPC/us-west1 subnet for Cloud NAT egress. See README.md.
+# Docs: https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/installing_on_google_cloud/installing-gcp-customizations
 additionalTrustBundlePolicy: Proxyonly
 apiVersion: v1
-# metadata:
-#  name: WILL BE REPLACED BY scripts/include/cluster/openshift.sh
+# metadata.name is set by helm-test at cluster creation.
 baseDomain: okd.grafana.petewall.net
 controlPlane:
   name: master
@@ -26,16 +28,20 @@ networking:
     - cidr: 10.128.0.0/14
       hostPrefix: 23
   machineNetwork:
-    - cidr: 10.0.0.0/16
+    # Must match the default us-west1 subnet (NAT-covered).
+    - cidr: 10.138.0.0/20
   networkType: OVNKubernetes
   serviceNetwork:
     - 172.30.0.0/16
 platform:
   gcp:
     projectID: grafana-k8s-monitoring
-    region: us-central1
+    region: us-west1
+    network: default
+    controlPlaneSubnet: default
+    computeSubnet: default
     userLabels:
       - key: source
         value: k8s-monitoring-helm-platform-test
-publish: External
+publish: Internal
 pullSecret: '{"auths":{"fake":{"auth":"aWQ6cGFzcwo="}}}'

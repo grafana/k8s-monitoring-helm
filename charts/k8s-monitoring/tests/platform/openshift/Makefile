@@ -1,7 +1,13 @@
+# Entrypoint for CI and local runs (see README.md). DIRENV=1 (default) wraps the run in direnv for
+# local 1Password credentials; CI uses `make run-test DIRENV=0` (env already populated by Vault + auth).
+DIRENV ?= 1
 .PHONY: run-test
 run-test:
-	direnv allow .
-	direnv exec . sh -c '$(MAKE) clean all && helm-test .'
+	@if [ "$(DIRENV)" = "1" ]; then \
+	  direnv allow . && direnv exec . ./run-test.sh; \
+	else \
+	  ./run-test.sh; \
+	fi
 
 .PHONY: clean
 clean:
