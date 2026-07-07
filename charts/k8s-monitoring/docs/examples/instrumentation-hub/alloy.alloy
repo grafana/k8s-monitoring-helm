@@ -1,0 +1,32 @@
+remote.kubernetes.secret "alloy_remote_cfg" {
+  name      = "grafana-cloud-credentials"
+  namespace = "default"
+} // remote.kubernetes.secret "alloy_remote_cfg"
+
+remotecfg {
+  id = string.format("k8smon-%s-%s-%s-%s", "instrumentation-hub-test-cluster", "default", "alloy", sys.env("K8S_NODE_NAME"))
+  url = "https://fleet-management-prod-008.grafana.net"
+  basic_auth {
+    username = convert.nonsensitive(remote.kubernetes.secret.alloy_remote_cfg.data["GRAFANA_CLOUD_FLEET_MGMT_USER"])
+    password = remote.kubernetes.secret.alloy_remote_cfg.data["GRAFANA_CLOUD_FLEET_MGMT_TOKEN"]
+  }
+  tls_config {
+    insecure_skip_verify = false
+    ca_pem = convert.nonsensitive(remote.kubernetes.secret.alloy_remote_cfg.data["ca"])
+    cert_pem = convert.nonsensitive(remote.kubernetes.secret.alloy_remote_cfg.data["cert"])
+    key_pem = remote.kubernetes.secret.alloy_remote_cfg.data["key"]
+  }
+  poll_frequency = "5m"
+  attributes = {
+    "cluster" = "instrumentation-hub-test-cluster",
+    "namespace" = "default",
+    "platform" = "kubernetes",
+    "release" = "k8smon",
+    "service-discovery" = "true",
+    "source" = "k8s-monitoring",
+    "sourceVersion" = "4.2.0",
+    "workloadName" = "alloy",
+    "workloadType" = "daemonset",
+  }
+}
+

@@ -9,16 +9,29 @@ telemetryServices:
   kube-state-metrics:
     deploy: true
 
+  beyla:
+    deploy: true
+    k8sCache:
+      replicas: 1
+
+  sdkInjector:
+    deploy: true
+    # This must match the format: system:serviceaccount:$(POD_NAMESPACE):${ReleaseName}-${CollectorName}
+    allowedConfigMapWriters: system:serviceaccount:$(POD_NAMESPACE):k8smon-alloy
+
 collectorCommon:
   alloy:
     remoteConfig:
       enabled: true
-      url: https://remote-config.example.com/alloy
+      url: https://fleet-management-prod-008.grafana.net
       auth:
         type: basic
-        username: 12345
-        password: my-remote-cfg-password
+        usernameKey: GRAFANA_CLOUD_FLEET_MGMT_USER
+        passwordKey: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
+      secret:
+        create: false
+        name: grafana-cloud-credentials
 
 collectors:
-  my-collector:
-    presets: [daemonset]
+  alloy:
+    presets: [privileged, clustered, service-discovery, filesystem-log-reader, daemonset]
