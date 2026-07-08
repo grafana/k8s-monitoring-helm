@@ -17,7 +17,7 @@
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| controller.dnsPolicy | string | `"ClusterFirstWithHostNet"` | See https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy. |
+| controller.dnsPolicy | string | `"ClusterFirstWithHostNet"` | See <https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy>. |
 | controller.hostNetwork | bool | `true` |  |
 | controller.hostPID | bool | `true` |  |
 <!-- textlint-enable terminology -->
@@ -40,7 +40,7 @@ alloy:
 controller:
   hostPID: true
   hostNetwork: true
-  # -- See https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy.
+  # -- See <https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy>.
   dnsPolicy: ClusterFirstWithHostNet
 ```
 <!-- textlint-enable terminology -->
