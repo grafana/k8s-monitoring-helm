@@ -16,6 +16,7 @@ cat > "${CREDS_TMPFS}"
 ln -sf "${CREDS_TMPFS}" "${CREDS_LINK}"
 
 # Destroy the cluster and remove secrets on exit; retry destroy (idempotent) so a hiccup can't leak it.
+# shellcheck disable=SC2317,SC2329  # cleanup runs via 'trap cleanup EXIT'
 cleanup() {
   set +e
   rm -f "${CREDS_TMPFS}" "${CREDS_LINK}" "${GCP_KEY_TMPFS}"

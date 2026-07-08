@@ -32,6 +32,7 @@ SSH_FLAGS=(--tunnel-through-iap
 
 log() { echo "[$(date +%H:%M:%S)] $*"; }
 
+# shellcheck disable=SC2317,SC2329  # cleanup runs via 'trap cleanup EXIT'
 cleanup() {
   log "Deleting worker VM ${VM}"
   gcloud compute instances delete "${VM}" --project="${PROJECT}" --zone="${ZONE}" --quiet >/dev/null 2>&1 || true
