@@ -39,11 +39,13 @@
 {{/* Inputs: . (root object), collectorName (string) */}}
 {{- define "destinations.alloy.rules" }}
 {{- range $destinationName, $destination := $.Values.destinations }}
-  {{- if eq $destination.type "prometheus" }}
-    {{- $defaultValues := (printf "destinations/%s-values.yaml" $destination.type) | $.Files.Get | fromYaml }}
-    {{- $destinationWithDefaults := mergeOverwrite $defaultValues $destination }}
-    {{- if and $destinationWithDefaults.rules $destinationWithDefaults.rules.enabled }}
-      {{- include "destinations.prometheus.rules.alloy" (deepCopy $ | merge (dict "destination" $destinationWithDefaults "destinationName" $destinationName "collectorName" $.collectorName)) | nindent 0 }}
+  {{- if $destination }}
+    {{- if eq $destination.type "prometheus" }}
+      {{- $defaultValues := (printf "destinations/%s-values.yaml" $destination.type) | $.Files.Get | fromYaml }}
+      {{- $destinationWithDefaults := mergeOverwrite $defaultValues $destination }}
+      {{- if and $destinationWithDefaults.rules $destinationWithDefaults.rules.enabled }}
+        {{- include "destinations.prometheus.rules.alloy" (deepCopy $ | merge (dict "destination" $destinationWithDefaults "destinationName" $destinationName "collectorName" $.collectorName)) | nindent 0 }}
+      {{- end }}
     {{- end }}
   {{- end }}
 {{- end }}

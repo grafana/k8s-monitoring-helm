@@ -101,7 +101,10 @@ schema-mods/destination.json: $(DESTINATION_SCHEMA_FILES)
 	@echo '    "destination-map": {' >> $@
 	@echo '      "type": "object",' >> $@
 	@echo '      "additionalProperties": {' >> $@
-	@echo '        "$$ref": "#/definitions/destination"' >> $@
+	@echo '        "anyOf": [' >> $@
+	@echo '          { "type": "null" },' >> $@
+	@echo '          { "$$ref": "#/definitions/destination" }' >> $@
+	@echo '        ]' >> $@
 	@echo '      }' >> $@
 	@echo '    },' >> $@
 	@count=0; \
@@ -292,7 +295,6 @@ ifdef HAS_SHELLSPEC
 else
 	docker run --platform linux/amd64 --rm --volume $(shell pwd):/src shellspec/shellspec -c /src/tests/example-checks -s /bin/sh
 endif
-
 
 .PHONY: misc-checks
 misc-checks: Chart.yaml

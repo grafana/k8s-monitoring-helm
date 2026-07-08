@@ -31,73 +31,75 @@
 {{- define "destinations.validate" }}
   {{- include "destinations.validate.uniqueNames" . }}
   {{- range $destinationName , $destination := .Values.destinations }}
-    {{- if (regexFind "[^-_a-zA-Z0-9]" $destinationName) }}
-      {{- $msg := list "" (printf "Destination \"%s\" has invalid characters in its name." $destinationName) }}
-      {{- $msg = append $msg "Please only use alphanumeric, underscores, or dashes." }}
-      {{- fail (join "\n" $msg) }}
-    {{- end }}
+    {{- if $destination }}
+      {{- if (regexFind "[^-_a-zA-Z0-9]" $destinationName) }}
+        {{- $msg := list "" (printf "Destination \"%s\" has invalid characters in its name." $destinationName) }}
+        {{- $msg = append $msg "Please only use alphanumeric, underscores, or dashes." }}
+        {{- fail (join "\n" $msg) }}
+      {{- end }}
 
-    {{- $types := (include "destinations.types" . ) | fromYamlArray }}
-    {{- if not $destination.type }}
-      {{- $msg := list "" (printf "Destination \"%s\" does not have a type." $destinationName) }}
-      {{- $msg = append $msg "Please set:" }}
-      {{- $msg = append $msg "destinations:" }}
-      {{- $msg = append $msg (printf "  %s:" $destinationName) }}
-      {{- $msg = append $msg (printf "    type: %s" (include "english_list_or" $types)) }}
-      {{- fail (join "\n" $msg) }}
-    {{- end }}
-
-    {{- if not (has $destination.type $types) }}
-      {{- $msg := list "" (printf "Destination \"%s\" is using an unknown type: %s" $destinationName $destination.type) }}
-      {{- $msg = append $msg "Please set:" }}
-      {{- $msg = append $msg "destinations:" }}
-      {{- $msg = append $msg (printf "  %s:" $destinationName) }}
-      {{- $msg = append $msg (printf "    type: %s" (include "english_list_or" $types)) }}
-      {{- fail (join "\n" $msg) }}
-    {{- end }}
-
-    {{- if eq (include "secrets.authType" $destination) "basic" }}
-      {{- if eq (include "secrets.usesSecret" (dict "object" $destination "key" "auth.username")) "false" }}
-        {{- $msg := list "" (printf "Destination \"%s\" is using basic auth but does not have a username." $destinationName) }}
+      {{- $types := (include "destinations.types" . ) | fromYamlArray }}
+      {{- if not $destination.type }}
+        {{- $msg := list "" (printf "Destination \"%s\" does not have a type." $destinationName) }}
         {{- $msg = append $msg "Please set:" }}
         {{- $msg = append $msg "destinations:" }}
         {{- $msg = append $msg (printf "  %s:" $destinationName) }}
-        {{- $msg = append $msg (printf "    type: %s" $destination.type) }}
-        {{- $msg = append $msg "    auth:" }}
-        {{- $msg = append $msg "      type: basic" }}
-        {{- $msg = append $msg "      username: my-username" }}
-        {{- $msg = append $msg "      password: my-password" }}
+        {{- $msg = append $msg (printf "    type: %s" (include "english_list_or" $types)) }}
         {{- fail (join "\n" $msg) }}
       {{- end }}
-      {{- if eq (include "secrets.usesSecret" (dict "object" $destination "key" "auth.password")) "false" }}
-        {{- $msg := list "" (printf "Destination \"%s\" is using basic auth but does not have a password." $destinationName) }}
+
+      {{- if not (has $destination.type $types) }}
+        {{- $msg := list "" (printf "Destination \"%s\" is using an unknown type: %s" $destinationName $destination.type) }}
         {{- $msg = append $msg "Please set:" }}
         {{- $msg = append $msg "destinations:" }}
         {{- $msg = append $msg (printf "  %s:" $destinationName) }}
-        {{- $msg = append $msg (printf "    type: %s" $destination.type) }}
-        {{- $msg = append $msg "    auth:" }}
-        {{- $msg = append $msg "      type: basic" }}
-        {{- $msg = append $msg "      username: my-username" }}
-        {{- $msg = append $msg "      password: my-password" }}
+        {{- $msg = append $msg (printf "    type: %s" (include "english_list_or" $types)) }}
         {{- fail (join "\n" $msg) }}
       {{- end }}
-    {{- end }}
 
-    {{/* OTLP destination validations */}}
-    {{- if (eq $destination.type "otlp") }}
-      {{- include "destinations.otlp.validate" (dict "Values" . "Destination" $destination "DestinationName" $destinationName) -}}
-    {{- end }}
+      {{- if eq (include "secrets.authType" $destination) "basic" }}
+        {{- if eq (include "secrets.usesSecret" (dict "object" $destination "key" "auth.username")) "false" }}
+          {{- $msg := list "" (printf "Destination \"%s\" is using basic auth but does not have a username." $destinationName) }}
+          {{- $msg = append $msg "Please set:" }}
+          {{- $msg = append $msg "destinations:" }}
+          {{- $msg = append $msg (printf "  %s:" $destinationName) }}
+          {{- $msg = append $msg (printf "    type: %s" $destination.type) }}
+          {{- $msg = append $msg "    auth:" }}
+          {{- $msg = append $msg "      type: basic" }}
+          {{- $msg = append $msg "      username: my-username" }}
+          {{- $msg = append $msg "      password: my-password" }}
+          {{- fail (join "\n" $msg) }}
+        {{- end }}
+        {{- if eq (include "secrets.usesSecret" (dict "object" $destination "key" "auth.password")) "false" }}
+          {{- $msg := list "" (printf "Destination \"%s\" is using basic auth but does not have a password." $destinationName) }}
+          {{- $msg = append $msg "Please set:" }}
+          {{- $msg = append $msg "destinations:" }}
+          {{- $msg = append $msg (printf "  %s:" $destinationName) }}
+          {{- $msg = append $msg (printf "    type: %s" $destination.type) }}
+          {{- $msg = append $msg "    auth:" }}
+          {{- $msg = append $msg "      type: basic" }}
+          {{- $msg = append $msg "      username: my-username" }}
+          {{- $msg = append $msg "      password: my-password" }}
+          {{- fail (join "\n" $msg) }}
+        {{- end }}
+      {{- end }}
 
-    {{/* Validate the rules.collector reference for destinations that opt into rule sync. */}}
-    {{- if and (dig "rules" "enabled" false $destination) (dig "rules" "collector" "" $destination) }}
-      {{- $rulesCollector := $destination.rules.collector }}
-      {{- $enabledCollectors := include "collectors.list.enabled" $ | fromYamlArray }}
-      {{- if not (has $rulesCollector $enabledCollectors) }}
-        {{- $msg := list "" (printf "Destination \"%s\" has rules.enabled=true, but rules.collector \"%s\" is not an enabled collector." $destinationName $rulesCollector) }}
-        {{- $msg = append $msg "Set rules.collector to one of the enabled collectors:" }}
-        {{- range $c := $enabledCollectors }}{{- $msg = append $msg (printf "  %s" $c) }}{{- end }}
-        {{- $msg = append $msg "or leave rules.collector unset to use the first enabled collector." }}
-        {{- fail (join "\n" $msg) }}
+      {{/* OTLP destination validations */}}
+      {{- if (eq $destination.type "otlp") }}
+        {{- include "destinations.otlp.validate" (dict "Values" . "Destination" $destination "DestinationName" $destinationName) -}}
+      {{- end }}
+
+      {{/* Validate the rules.collector reference for destinations that opt into rule sync. */}}
+      {{- if and (dig "rules" "enabled" false $destination) (dig "rules" "collector" "" $destination) }}
+        {{- $rulesCollector := $destination.rules.collector }}
+        {{- $enabledCollectors := include "collectors.list.enabled" $ | fromYamlArray }}
+        {{- if not (has $rulesCollector $enabledCollectors) }}
+          {{- $msg := list "" (printf "Destination \"%s\" has rules.enabled=true, but rules.collector \"%s\" is not an enabled collector." $destinationName $rulesCollector) }}
+          {{- $msg = append $msg "Set rules.collector to one of the enabled collectors:" }}
+          {{- range $c := $enabledCollectors }}{{- $msg = append $msg (printf "  %s" $c) }}{{- end }}
+          {{- $msg = append $msg "or leave rules.collector unset to use the first enabled collector." }}
+          {{- fail (join "\n" $msg) }}
+        {{- end }}
       {{- end }}
     {{- end }}
   {{- end }}

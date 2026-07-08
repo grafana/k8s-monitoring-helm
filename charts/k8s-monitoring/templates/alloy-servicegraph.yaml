@@ -1,4 +1,5 @@
 {{- range $destinationName, $destination := .Values.destinations }}
+{{- if $destination }}
 {{- if eq $destination.type "otlp" }}
   {{- $isServiceGraphsEnabled := include "destinations.otlp.isServiceGraphsEnabled" $destination }}
   {{- if eq $isServiceGraphsEnabled "true" }}
@@ -86,6 +87,7 @@ metadata:
   {{- end }}
   {{- end }}
 spec:{{ $alloySpec | trim | nindent 2 }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

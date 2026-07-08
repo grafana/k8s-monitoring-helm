@@ -24,18 +24,20 @@
 {{- end }}
 
 {{- range $destinationName, $destination := .Values.destinations }}
-  {{- if eq $destination.type "otlp" }}
-    {{/* Tail sampling Alloy instances */}}
-    {{- if eq (include "destinations.otlp.isTailSamplingEnabled" $destination) "true" }}
-      {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
-      {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-sampler" $destinationName)) | trunc $maxLength | trimSuffix "-" | lower }}
-      {{- $alloyNames = append $alloyNames $collectorName }}
-    {{- end }}
-    {{/* Service graph metrics Alloy instances */}}
-    {{- if eq (include "destinations.otlp.isServiceGraphsEnabled" $destination) "true" }}
-      {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
-      {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-servicegraph" $destinationName)) | trunc $maxLength | trimSuffix "-" | lower }}
-      {{- $alloyNames = append $alloyNames $collectorName }}
+  {{- if $destination }}
+    {{- if eq $destination.type "otlp" }}
+      {{/* Tail sampling Alloy instances */}}
+      {{- if eq (include "destinations.otlp.isTailSamplingEnabled" $destination) "true" }}
+        {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
+        {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-sampler" $destinationName)) | trunc $maxLength | trimSuffix "-" | lower }}
+        {{- $alloyNames = append $alloyNames $collectorName }}
+      {{- end }}
+      {{/* Service graph metrics Alloy instances */}}
+      {{- if eq (include "destinations.otlp.isServiceGraphsEnabled" $destination) "true" }}
+        {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
+        {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-servicegraph" $destinationName)) | trunc $maxLength | trimSuffix "-" | lower }}
+        {{- $alloyNames = append $alloyNames $collectorName }}
+      {{- end }}
     {{- end }}
   {{- end }}
 {{- end }}
