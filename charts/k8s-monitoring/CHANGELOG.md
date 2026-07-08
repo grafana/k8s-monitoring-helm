@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 4.2.1
+
 *   Add the `root`, `host-network`, `host-storage`, and `host-cgroup` collector presets and deprecate the `privileged` preset. `root` sets the privileged root `securityContext`, `host-network` sets `hostPID`/`hostNetwork`/`dnsPolicy`, and `host-storage`/`host-cgroup` mount host paths. `privileged` is unchanged and still works, but cannot be combined with these new presets. (#2796) (@TylerHelmuth)
 *   Collector presets now append their `alloy.mounts.extra` and `controller.volumes.extra` entries instead of overwriting, and the OpenShift `SecurityContextConstraints` allows host networking and ports when a collector sets `hostNetwork`. (#2796) (@TylerHelmuth)
 *   Add per-instance `extraDiscoveryRules` to the Service Integrations feature, allowing pre-scrape `discovery.relabel` rules — e.g. a `labelmap` from pod annotations — to enrich an integration's scraped metrics with custom labels while the `__meta_*` discovery labels are still present. Set on each integration instance (the targets it discovers are unique); available on all nine Kubernetes service-discovery integrations, with Istio set per sidecar and istiod. (@bradleypettit)
