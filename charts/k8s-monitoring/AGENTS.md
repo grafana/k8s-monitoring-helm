@@ -152,6 +152,7 @@ podLogsViaLoki:
 -   `custom` - Custom destination configuration
 -   `loki-stdout` - Send logs to stdout (debugging)
 -   `loki` - Send logs to Loki
+-   `nop` - Drop all telemetry (no storage; for measuring volume before choosing real destinations)
 -   `otlp` - Send to any OTLP endpoint (Tempo, Grafana Cloud, etc.)
 -   `prometheus` - Remote write to Prometheus-compatible endpoint
 -   `pyroscope` - Send profiles to Pyroscope
