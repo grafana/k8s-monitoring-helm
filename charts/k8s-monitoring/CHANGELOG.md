@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Add `hostNetwork: true` and `dnsPolicy: ClusterFirstWithHostNet` to the `privileged` collector preset, and update the collector OpenShift `SecurityContextConstraints` to allow host networking and host ports when a collector enables `hostNetwork`. This restores parity with the legacy grafana-cloud-onboarding chart so Beyla auto-instrumentation functions correctly. (#2796) (@TylerHelmuth)
 *   Add per-instance `extraDiscoveryRules` to the Service Integrations feature, allowing pre-scrape `discovery.relabel` rules — e.g. a `labelmap` from pod annotations — to enrich an integration's scraped metrics with custom labels while the `__meta_*` discovery labels are still present. Set on each integration instance (the targets it discovers are unique); available on all nine Kubernetes service-discovery integrations, with Istio set per sidecar and istiod. (@bradleypettit)
 *   Fix `kubeletResource.extraDiscoveryRules` and `kubeletProbes.extraDiscoveryRules` being silently dropped. (#2743) (@bradleypettit)
 *   Surface `deploy: false` defaults for `telemetryServices.beyla` and `telemetryServices.sdkInjector` in the top-level values, matching the other telemetry services. This prevents them from deploying unintentionally on Helm versions affected by a subchart value coalescing regression (helm/helm#32132). (#2781, #2782) (@petewall)

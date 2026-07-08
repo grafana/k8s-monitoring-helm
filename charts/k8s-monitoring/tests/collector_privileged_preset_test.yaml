@@ -1,0 +1,34 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Collectors - Privileged Preset
+templates:
+  - alloy.yaml
+tests:
+  - it: sets host networking on the controller for Beyla auto-instrumentation
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-daemon:
+          presets: [privileged]
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - equal:
+          path: spec.controller.hostPID
+          value: true
+      - equal:
+          path: spec.controller.hostNetwork
+          value: true
+      - equal:
+          path: spec.controller.dnsPolicy
+          value: ClusterFirstWithHostNet
+
+  - it: does not set host networking without the privileged preset
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-daemon:
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - notExists:
+          path: spec.controller.hostNetwork
+      - notExists:
+          path: spec.controller.dnsPolicy
