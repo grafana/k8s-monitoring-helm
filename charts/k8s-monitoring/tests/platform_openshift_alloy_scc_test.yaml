@@ -3,14 +3,14 @@ suite: Platform - OpenShift - Alloy Collector SCC
 templates:
   - templates/platform_specific/openshift/alloy-scc.yaml
 tests:
-  - it: allows host networking and host ports when the collector uses the privileged preset
+  - it: allows host networking and host ports when the collector uses the host-network preset
     set:
       cluster: {name: test-cluster}
       global:
         platform: openshift
       collectors:
         alloy-daemon:
-          presets: [privileged]
+          presets: [host-network]
           extraConfig: "// Giving this Alloy something to do"
     documentSelector:
       path: kind
@@ -19,7 +19,7 @@ tests:
       - equal:
           path: allowHostPID
           value: true
-      # The privileged preset runs the collector with hostNetwork, which OpenShift treats
+      # The host-network preset runs the collector with hostNetwork, which OpenShift treats
       # as host-port usage. The SCC must allow host networking and host ports or the pods
       # fail admission. (#2796)
       - equal:
@@ -29,7 +29,7 @@ tests:
           path: allowHostPorts
           value: true
 
-  - it: does not allow host networking or host ports without the privileged preset
+  - it: does not allow host networking or host ports without the host-network preset
     set:
       cluster: {name: test-cluster}
       global:

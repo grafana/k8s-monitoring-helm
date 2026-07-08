@@ -1585,6 +1585,12 @@ spec:
           name: grafana-cloud-credentials
     mounts:
       dockercontainers: true
+      extra:
+      - mountPath: /var/lib/alloy
+        name: alloy-storage
+        readOnly: false
+      - mountPath: /sys/fs/cgroup
+        name: cgroup
       varlog: true
     resources: {}
     securityContext:
@@ -1612,6 +1618,7 @@ spec:
       runAsUser: 0
       seccompProfile:
         type: RuntimeDefault
+    storagePath: /var/lib/alloy
   controller:
     dnsPolicy: ClusterFirstWithHostNet
     hostNetwork: true
@@ -1624,6 +1631,16 @@ spec:
     - effect: NoSchedule
       operator: Exists
     type: daemonset
+    volumes:
+      extra:
+      - hostPath:
+          path: /var/lib/alloy
+          type: DirectoryOrCreate
+        name: alloy-storage
+      - hostPath:
+          path: /sys/fs/cgroup
+          type: Directory
+        name: cgroup
   crds:
     create: false
   nameOverride: alloy

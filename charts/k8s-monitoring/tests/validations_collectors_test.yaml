@@ -63,3 +63,44 @@ tests:
             Multiple collectors resolve to the same Kubernetes resource name "alloymetrics": alloyMetrics, alloymetrics
             Collector names are normalized to lowercase DNS-1123 names when used as Kubernetes resource names, so they must be unique after normalization.
             Please rename all but one of these collectors.
+
+  - it: errors when the deprecated privileged preset is combined with a targeted host preset
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-daemon:
+          presets: [privileged, host-network]
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The alloy-daemon collector combines the deprecated "privileged" preset with the "root" or "host-network" preset.
+            The "privileged" preset is deprecated and cannot be combined with the "root" or "host-network" presets.
+            Replace "privileged" with "root" (which sets the same securityContext) and add the host presets you need. For example:
+            collectors:
+              alloy-daemon:
+                presets: [root, host-network, host-storage, host-cgroup]
+
+  - it: allows the deprecated privileged preset on its own
+    set:
+      cluster: {name: test-cluster}
+      profiling: {enabled: true, ebpf: {enabled: true}, collector: alloy-profiles}
+      destinations:
+        pyro: {type: pyroscope, url: http://pyroscope.pyroscope.svc:4040}
+      collectors:
+        alloy-profiles:
+          presets: [privileged, daemonset]
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: allows the deprecated privileged preset with the host-storage and host-cgroup presets
+    set:
+      cluster: {name: test-cluster}
+      profiling: {enabled: true, ebpf: {enabled: true}, collector: alloy-profiles}
+      destinations:
+        pyro: {type: pyroscope, url: http://pyroscope.pyroscope.svc:4040}
+      collectors:
+        alloy-profiles:
+          presets: [privileged, host-storage, host-cgroup, daemonset]
+    asserts:
+      - notFailedTemplate: {}

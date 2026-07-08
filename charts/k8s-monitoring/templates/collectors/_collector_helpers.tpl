@@ -122,6 +122,36 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{- $globalValues | toYaml }}
 {{- end }}
 
+{{- /* Returns the list found at .path (a list of keys) within .source, or an empty list. Output: a YAML array.
+       Inputs: .source (map), .path (list of string keys). */ -}}
+{{- define "collector.alloy.digPath" -}}
+{{- $node := .source -}}
+{{- range $key := .path -}}
+  {{- if kindIs "map" $node -}}
+    {{- $node = index $node $key -}}
+  {{- end -}}
+{{- end -}}
+{{- $node | default (list) | toYaml -}}
+{{- end }}
+
+{{- /* Builds a nested map from .path (a list of keys) wrapping .value. Output: YAML.
+       Inputs: .value (any), .path (list of string keys). */ -}}
+{{- define "collector.alloy.nestPath" -}}
+{{- $nested := .value -}}
+{{- range $key := reverse .path -}}
+  {{- $nested = dict $key $nested -}}
+{{- end -}}
+{{- $nested | toYaml -}}
+{{- end }}
+
+{{- /* The preset value lists that should be appended across presets rather than overwritten by Helm's merge.
+       Each entry is the key-path to a list. Add a path here to make another preset list additive. Output: a YAML
+       array of key-paths. */ -}}
+{{- define "collector.alloy.appendablePaths" -}}
+- ["alloy", "mounts", "extra"]
+- ["controller", "volumes", "extra"]
+{{- end }}
+
 {{- /* Gets the Alloy values. Input: $, .collectorName (string, collector name), .collectorValues (object) */ -}}
 {{- define "collector.alloy.values" }}
 {{- /* The default settings set for all Alloy instances by this chart */}}
@@ -136,6 +166,7 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
   {{- $userValues = (index $.Values.collectors .collectorName) }}
 {{- end }}
 {{- $presetValues := dict }}
+{{- $appendablePaths := include "collector.alloy.appendablePaths" . | fromYamlArray }}
 {{- if hasKey $userValues "presets" }}
   {{- range $preset := $userValues.presets }}
     {{- $files := $.Files.Glob (printf "collectors/presets/%s.yaml" $preset) }}
@@ -147,7 +178,17 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
       {{- fail (join "\n" $msg) }}
     {{- end }}
     {{- range $fileName, $_ := $files }}
-      {{- $presetValues = merge $presetValues ($.Files.Get $fileName | fromYaml) }}
+      {{- $presetFile := $.Files.Get $fileName | fromYaml }}
+      {{- /* Helm's merge overwrites lists, so for each appendable path concatenate this preset's entries onto what
+             earlier presets contributed. */}}
+      {{- range $path := $appendablePaths }}
+        {{- $incoming := include "collector.alloy.digPath" (dict "source" $presetFile "path" $path) | fromYamlArray }}
+        {{- if $incoming }}
+          {{- $existing := include "collector.alloy.digPath" (dict "source" $presetValues "path" $path) | fromYamlArray }}
+          {{- $presetValues = mergeOverwrite $presetValues (include "collector.alloy.nestPath" (dict "value" (concat $existing $incoming) "path" $path) | fromYaml) }}
+        {{- end }}
+      {{- end }}
+      {{- $presetValues = merge $presetValues $presetFile }}
     {{- end }}
   {{- end }}
 {{- end }}

@@ -1,0 +1,21 @@
+---
+# Host Storage preset
+
+# -- Persists Alloy's storage (Write-Ahead Log, positions files, etc.) to a hostPath volume. Using a hostPath for a
+# DaemonSet avoids the issues that come with PersistentVolumeClaim management.
+# @section -- Alloy Configuration
+alloy:
+  storagePath: /var/lib/alloy
+  mounts:
+    extra:
+      - name: alloy-storage
+        mountPath: /var/lib/alloy
+        readOnly: false
+
+controller:
+  volumes:
+    extra:
+      - name: alloy-storage
+        hostPath:
+          path: /var/lib/alloy
+          type: DirectoryOrCreate

@@ -11,14 +11,12 @@
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| alloy | object | `{"securityContext":{"allowPrivilegeEscalation":true,"privileged":true,"runAsGroup":0,"runAsUser":0}}` | Configures Alloy to run with elevated privileges, allowing it to access system resources and perform operations that require root access. |
+| alloy | object | `{"securityContext":{"allowPrivilegeEscalation":true,"privileged":true,"runAsGroup":0,"runAsUser":0}}` | DEPRECATED: use the `root` preset for the privileged `securityContext` and the `host-network` preset for `hostPID`. Configures Alloy to run with elevated privileges, allowing it to access system resources and perform operations that require root access. This preset cannot be combined with the `root` or `host-network` presets. |
 
 ### Other Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| controller.dnsPolicy | string | `"ClusterFirstWithHostNet"` | See <https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy>. |
-| controller.hostNetwork | bool | `true` |  |
 | controller.hostPID | bool | `true` |  |
 <!-- textlint-enable terminology -->
 
@@ -27,8 +25,9 @@
 ---
 # Privileged preset
 
-# -- Configures Alloy to run with elevated privileges, allowing it to access system resources and perform operations
-# that require root access.
+# -- DEPRECATED: use the `root` preset for the privileged `securityContext` and the `host-network` preset for
+# `hostPID`. Configures Alloy to run with elevated privileges, allowing it to access system resources and perform
+# operations that require root access. This preset cannot be combined with the `root` or `host-network` presets.
 # @section -- Alloy Configuration
 alloy:
   securityContext:
@@ -39,8 +38,5 @@ alloy:
 
 controller:
   hostPID: true
-  hostNetwork: true
-  # -- See <https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy>.
-  dnsPolicy: ClusterFirstWithHostNet
 ```
 <!-- textlint-enable terminology -->
