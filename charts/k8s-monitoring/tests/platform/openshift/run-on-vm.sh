@@ -19,7 +19,7 @@ ln -sf "${CREDS_TMPFS}" "${CREDS_LINK}"
 # shellcheck disable=SC2317,SC2329  # cleanup runs via 'trap cleanup EXIT'
 cleanup() {
   set +e
-  rm -f "${CREDS_TMPFS}" "${CREDS_LINK}" "${GCP_KEY_TMPFS}"
+  rm -f "${CREDS_TMPFS}" "${CREDS_LINK}"
   for d in "${TEST_DIRECTORY}"/*-installer-files; do
     [ -d "${d}" ] || continue
     echo "Destroying cluster in ${d}"
@@ -28,6 +28,7 @@ cleanup() {
       echo "destroy attempt ${attempt} failed; retrying in 30s"; sleep 30
     done
   done
+  rm -f "${GCP_KEY_TMPFS}"
 }
 trap cleanup EXIT
 
