@@ -3,6 +3,7 @@
 ## Unreleased
 
 *   Add per-instance `extraDiscoveryRules` to the Service Integrations feature, allowing pre-scrape `discovery.relabel` rules — e.g. a `labelmap` from pod annotations — to enrich an integration's scraped metrics with custom labels while the `__meta_*` discovery labels are still present. Set on each integration instance (the targets it discovers are unique); available on all nine Kubernetes service-discovery integrations, with Istio set per sidecar and istiod. (@bradleypettit)
+*   Fix `kubeletResource.extraDiscoveryRules` and `kubeletProbes.extraDiscoveryRules` being silently dropped. (#2743) (@bradleypettit)
 *   Surface `deploy: false` defaults for `telemetryServices.beyla` and `telemetryServices.sdkInjector` in the top-level values, matching the other telemetry services. This prevents them from deploying unintentionally on Helm versions affected by a subchart value coalescing regression (helm/helm#32132). (#2781, #2782) (@petewall)
 *   Change the default remote configuration `pollFrequency` from `5m` to `30s`. (@TylerHelmuth)
 *   Add `CLUSTER_NAME` environment variable to remote-config-enabled collectors alongside `NAMESPACE` and `POD_NAME`. (#2775) (@petewall)

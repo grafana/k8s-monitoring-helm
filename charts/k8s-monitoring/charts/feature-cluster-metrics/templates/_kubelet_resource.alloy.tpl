@@ -34,8 +34,8 @@ discovery.relabel "kubelet_resources" {
     target_label  = "__metrics_path__"
   }
 {{- end }}
-{{- if .Values.kubeletResource.extraRelabelingRules }}
-{{ .Values.kubeletResource.extraRelabelingRules | indent 2 }}
+{{- if .Values.kubeletResource.extraDiscoveryRules }}
+{{ .Values.kubeletResource.extraDiscoveryRules | indent 2 }}
 {{- end }}
 } // discovery.relabel "kubelet_resources"
 

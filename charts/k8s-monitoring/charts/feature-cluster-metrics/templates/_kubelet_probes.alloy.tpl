@@ -34,8 +34,8 @@ discovery.relabel "kubelet_probes" {
     target_label  = "__metrics_path__"
   }
 {{- end }}
-{{- if .Values.kubeletProbes.extraRelabelingRules }}
-{{ .Values.kubeletProbes.extraRelabelingRules | indent 2 }}
+{{- if .Values.kubeletProbes.extraDiscoveryRules }}
+{{ .Values.kubeletProbes.extraDiscoveryRules | indent 2 }}
 {{- end }}
 } // discovery.relabel "kubelet_probes"
 
