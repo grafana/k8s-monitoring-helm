@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+*   Infer `auth.type: basic` for remote configuration and destinations when a username and password are set but `auth.type` is not. (#2809) (@TylerHelmuth)
+
 ## 4.2.1
 
 *   Add the `root`, `host-network`, `host-storage`, and `host-cgroup` collector presets and deprecate the `privileged` preset. `root` sets the privileged root `securityContext`, `host-network` sets `hostPID`/`hostNetwork`/`dnsPolicy`, and `host-storage`/`host-cgroup` mount host paths. `privileged` is unchanged and still works, but cannot be combined with these new presets. (#2796) (@TylerHelmuth)
