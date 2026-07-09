@@ -95,6 +95,8 @@ jobs:
         dir: ${{ fromJson(needs.detect-changed-charts.outputs.test_charts) }}
       fail-fast: false
     if: ${{ needs.detect-changed-charts.outputs.test_charts != 'none' }}
+    env:
+      ALLOY_VERSION: v1.17.1
     steps:
       - name: Checkout code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
@@ -109,16 +111,24 @@ jobs:
       - name: Set up chart-testing
         uses: helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f  # v2.8.0
 
-      # Installing Grafana Alloy because we need it to lint the generated alloy config files.
-      # https://grafana.com/docs/alloy/latest/get-started/install/linux/
-      - name: Install Grafana Alloy
+      # Grafana Alloy is needed to lint the generated alloy config files.
+      - name: Cache Grafana Alloy
+        if: matrix.dir == 'charts/k8s-monitoring'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ~/.alloy
+          key: alloy-${{ env.ALLOY_VERSION }}-linux-amd64
+
+      - name: Set up Grafana Alloy
         if: matrix.dir == 'charts/k8s-monitoring'
         run: |
-          sudo mkdir -p /etc/apt/keyrings/
-          wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
-          echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee /etc/apt/sources.list.d/grafana.list
-          sudo apt-get update
-          sudo apt-get install -y alloy
+          if [ ! -x "${HOME}/.alloy/alloy" ]; then
+            mkdir -p "${HOME}/.alloy"
+            curl -fsSL -o /tmp/alloy.zip "https://github.com/grafana/alloy/releases/download/${ALLOY_VERSION}/alloy-linux-amd64.zip"
+            unzip -o /tmp/alloy.zip -d /tmp/alloy
+            install -m 0755 /tmp/alloy/alloy-linux-amd64 "${HOME}/.alloy/alloy"
+          fi
+          echo "${HOME}/.alloy" >> "${GITHUB_PATH}"
 
       - name: Run tests
         env:

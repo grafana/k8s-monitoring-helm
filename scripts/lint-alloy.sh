@@ -17,22 +17,18 @@ if [[ "$(command -v alloy || true)" = "" ]]; then
   exit 1
 fi
 
-# Initialize a flag variable
-STABILITY_LEVEL=generally-available
-
-statusCode=0
-failFast=no
-
 # Inject a component that utilizes Kubernetes discovery, so we know that the config will fail in a predictable way.
-k8sDiscovery='discovery.kubernetes "lint_config_component" { role = "nodes" }'
+export k8sDiscovery='discovery.kubernetes "lint_config_component" { role = "nodes" }'
 
-for file in "$@";
-do
+lint_file() {
+  local file="$1"
+
   # if the file doesn't exist skip it
   if [[ ! -f "${file}" ]]; then
-   continue
+    return 0
   fi
 
+  local STABILITY_LEVEL=generally-available
   if grep "${file}" -e "otelcol.receiver.filelog" >/dev/null; then
     STABILITY_LEVEL=public-preview
   fi
@@ -52,6 +48,7 @@ do
     STABILITY_LEVEL=experimental
   fi
 
+  local fmt_output fmtCode run_code run_output file_is_empty
   fmt_output=$(alloy fmt "${file}" 2>&1)
   fmtCode="$?"
   fmt_output=$(echo "${fmt_output}" | grep -v "Error: encountered errors during formatting")
@@ -68,36 +65,36 @@ do
     fi
   fi
 
-  # if the current code is 0, output the file name for logging purposes
+  # Buffer this file's output so parallel invocations don't interleave.
+  local report
   if [[ "${fmtCode}" == 0 ]] && [[ "${run_code}" == 0 ]]; then
-    echo -e "\\x1b[32m${file}\\x1b[0m: no issues found"
-  else
-    echo -e "\\x1b[31m${file}\\x1b[0m: issues found"
-
-    # output alloy fmt errors
-    if [[ "${fmtCode}" != 0 ]]; then
-      # loop each found issue
-      while IFS= read -r row; do
-        echo "  - ${row}"
-      done <<< "${fmt_output}"
-    fi
-
-    # output alloy run errors
-    if [[ "${run_code}" != 0 ]]; then
-      # loop each found issue
-      while IFS= read -r row; do
-        if [[ "${row}" =~ "Error: " ]]; then
-          echo "  - ${row}"
-        fi
-      done <<< "${run_output}"
-    fi
-
-    if [[ "${failFast}" == "yes" ]]; then
-      exit 1
-    elif [[ "${statusCode}" == 0 ]]; then
-      statusCode=1
-    fi
+    report=$(echo -e "\\x1b[32m${file}\\x1b[0m: no issues found")
+    echo "${report}"
+    return 0
   fi
-done
 
-exit $statusCode
+  report=$(echo -e "\\x1b[31m${file}\\x1b[0m: issues found")
+
+  # output alloy fmt errors
+  if [[ "${fmtCode}" != 0 ]]; then
+    while IFS= read -r row; do
+      report+=$'\n'"  - ${row}"
+    done <<< "${fmt_output}"
+  fi
+
+  # output alloy run errors
+  if [[ "${run_code}" != 0 ]]; then
+    while IFS= read -r row; do
+      if [[ "${row}" =~ "Error: " ]]; then
+        report+=$'\n'"  - ${row}"
+      fi
+    done <<< "${run_output}"
+  fi
+
+  echo "${report}"
+  return 1
+}
+export -f lint_file
+
+# Lint each file in parallel. xargs exits non-zero if any invocation fails.
+printf '%s\n' "$@" | xargs -r -P "$(nproc 2>/dev/null || echo 4)" -I {} bash -c 'lint_file "$@"' _ {}

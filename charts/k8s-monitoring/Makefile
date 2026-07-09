@@ -282,8 +282,14 @@ alloy_instances = $(shell \
 	@echo '```' >> $@
 	@echo '<!-- textlint-enable terminology -->' >> $@
 
+EXAMPLE_JOBS := $(shell nproc 2>/dev/null || echo 4)
+
 .PHONY: examples
-examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(PLATFORM_TEST_OUTPUT_FILES)
+examples:
+	$(MAKE) --jobs=$(EXAMPLE_JOBS) example-files
+
+.PHONY: example-files
+example-files: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(PLATFORM_TEST_OUTPUT_FILES)
 
 .PHONY: example-checks
 example-checks: $(EXAMPLE_OUTPUT_FILES)
