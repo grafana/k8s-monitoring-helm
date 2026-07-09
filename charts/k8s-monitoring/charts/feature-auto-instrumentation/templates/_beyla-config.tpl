@@ -39,5 +39,5 @@
   {{- end }}
 {{- end }}
 
-{{- merge $config $overrides | toYaml }}
+{{- merge $overrides $config | toYaml }}
 {{- end }}
