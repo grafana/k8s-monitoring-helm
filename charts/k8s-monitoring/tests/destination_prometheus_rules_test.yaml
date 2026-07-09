@@ -24,7 +24,7 @@ tests:
           path: data["config.alloy"]
           pattern: 'mimir\.rules\.kubernetes'
 
-  - it: renders mimir.rules.kubernetes when rules.enabled is true
+  - it: renders mimir.rules.kubernetes with namespaces when rules.enabled is true
     template: alloy-config.yaml
     set:
       cluster:
@@ -48,10 +48,66 @@ tests:
           pattern: 'mimir\.rules\.kubernetes "prometheus"'
       - matchRegex:
           path: data["config.alloy"]
-          pattern: 'rule_namespace \{\s*name = "default"'
+          pattern: 'rule_namespace_selector \{\s*match_expression {\s*key = "kubernetes\.io\/metadata.name"\s*operator = "In"\s*values = \["default","monitoring"\]'
+
+  - it: renders mimir.rules.kubernetes without namespace selector and rules.namespaces is empty
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.svc:9009/api/v1/push
+          rules:
+            enabled: true
+            namespaces: []
+        loki:
+          type: loki
+          url: http://loki.svc:3100/api/push
+      clusterEvents:
+        enabled: true
+      collectors: {alloy: {}}
+    asserts:
       - matchRegex:
           path: data["config.alloy"]
-          pattern: 'rule_namespace \{\s*name = "monitoring"'
+          pattern: 'mimir\.rules\.kubernetes "prometheus"'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'rule_namespace_selector \{\s*match_expression \{'
+
+  - it: renders mimir.rules.kubernetes with namespaceLabelSelector when rules.namespaceLabelSelector is set
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.svc:9009/api/v1/push
+          rules:
+            enabled: true
+            namespaces: [default]
+            namespaceLabelExpressions:
+              - key: "my-label"
+                operator: "In"
+                values: ["my-value"]
+        loki:
+          type: loki
+          url: http://loki.svc:3100/api/push
+      clusterEvents:
+        enabled: true
+      collectors: {alloy: {}}
+    asserts:
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'mimir\.rules\.kubernetes "prometheus"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'rule_namespace_selector \{\s*match_expression {\s*key = "kubernetes\.io\/metadata.name"\s*operator = "In"\s*values = \["default"\]'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'rule_namespace_selector \{\s*match_expression {\s*key = "kubernetes\.io\/metadata.name"\s*operator = "In"\s*values = \["default"\]\s*\}\s*match_expression {\s*key = "my-label"\s*operator = "In"\s*values = \["my-value"\]'
 
   - it: uses rules.address as the Ruler base URL when set, instead of url
     template: alloy-config.yaml

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+*   Fix `unrecognized block name "rule_namespace"` error when using the `rules.namespaces` field of the `prometheus` destination to limit the PrometheusRules object discovery to specific namespaces (#2802) (@sebasnabas)
+
 ## 4.2.1
 
 *   Add the `root`, `host-network`, `host-storage`, and `host-cgroup` collector presets and deprecate the `privileged` preset. `root` sets the privileged root `securityContext`, `host-network` sets `hostPID`/`hostNetwork`/`dnsPolicy`, and `host-storage`/`host-cgroup` mount host paths. `privileged` is unchanged and still works, but cannot be combined with these new presets. (#2796) (@TylerHelmuth)

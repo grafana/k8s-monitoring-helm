@@ -89,10 +89,10 @@ prometheus.enrich "{{ include "helper.alloy_name" $.destinationName }}_pod" {
 
 prometheus.remote_write {{ include "helper.alloy_name" $.destinationName | quote }} {
   endpoint {
-{{- if .urlFrom }} 
+{{- if .urlFrom }}
     url = {{ .urlFrom }}
 {{- else }}
-    url = {{ .url | quote }} 
+    url = {{ .url | quote }}
 {{- end }}
 {{- if .protobufMessage }}
     protobuf_message = {{ .protobufMessage | quote }}
@@ -417,14 +417,15 @@ mimir.rules.kubernetes {{ include "helper.alloy_name" $.destinationName | quote 
   proxy_url = {{ .proxyURL | quote }}
 {{- end }}
 
-{{- range $namespace := .rules.namespaces }}
-  rule_namespace {
-    name = {{ $namespace | quote }}
-  }
-{{- end }}
-
-{{- if or .rules.namespaceLabelSelectors .rules.namespaceLabelExpressions }}
+{{- if or .rules.namespaceLabelSelectors .rules.namespaceLabelExpressions .rules.namespaces }}
   rule_namespace_selector {
+{{- if .rules.namespaces }}
+    match_expression {
+      key = "kubernetes.io/metadata.name"
+      operator = "In"
+      values = {{ .rules.namespaces | toJson }}
+    }
+{{- end }}
 {{- if .rules.namespaceLabelSelectors }}
     match_labels = {
 {{- range $key, $value := .rules.namespaceLabelSelectors }}
