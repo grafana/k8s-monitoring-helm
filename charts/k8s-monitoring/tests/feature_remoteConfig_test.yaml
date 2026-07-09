@@ -69,3 +69,160 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["config.alloy"]
+
+  - it: defaults auth type to basic when username and password are provided without a type
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      collectors:
+        alloy-metrics:
+          remoteConfig:
+            enabled: true
+            url: https://fleet-management-prod-001.grafana.net
+            auth:
+              username: 123456
+              password: "It's a secret to everyone"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'basic_auth \{'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'username = convert.nonsensitive\(remote.kubernetes.secret.alloy_metrics_remote_cfg.data\["username"\]\)'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'password = remote.kubernetes.secret.alloy_metrics_remote_cfg.data\["password"\]'
+
+  - it: defaults auth type to basic with embedded credentials when no type is set
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      collectors:
+        alloy-metrics:
+          remoteConfig:
+            enabled: true
+            url: https://fleet-management-prod-001.grafana.net
+            secret:
+              embed: true
+            auth:
+              username: 123456
+              password: "It's a secret to everyone"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'basic_auth \{'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'username = "123456"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: "password = \"It's a secret to everyone\""
+
+  - it: defaults auth type to basic when username and password are provided via From references
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      collectors:
+        alloy-metrics:
+          remoteConfig:
+            enabled: true
+            url: https://fleet-management-prod-001.grafana.net
+            auth:
+              usernameFrom: sys.env("REMOTECFG_USERNAME")
+              passwordFrom: sys.env("REMOTECFG_PASSWORD")
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'basic_auth \{'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'username = sys.env\("REMOTECFG_USERNAME"\)'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'password = sys.env\("REMOTECFG_PASSWORD"\)'
+
+  - it: does not render basic_auth when only a username is provided without a type
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      collectors:
+        alloy-metrics:
+          remoteConfig:
+            enabled: true
+            url: https://fleet-management-prod-001.grafana.net
+            auth:
+              username: 123456
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'basic_auth \{'
+
+  - it: does not render basic_auth when no auth type or credentials are provided
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      collectors:
+        alloy-metrics:
+          remoteConfig:
+            enabled: true
+            url: https://fleet-management-prod-001.grafana.net
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'basic_auth \{'
+
+  - it: honors an explicit auth type of none even when credentials are provided
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      collectors:
+        alloy-metrics:
+          remoteConfig:
+            enabled: true
+            url: https://fleet-management-prod-001.grafana.net
+            auth:
+              type: none
+              username: 123456
+              password: "It's a secret to everyone"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'basic_auth \{'
+
+  - it: does not auto-default to basic for an external secret without an explicit auth type
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      collectors:
+        alloy-metrics:
+          remoteConfig:
+            enabled: true
+            url: https://fleet-management-prod-001.grafana.net
+            secret:
+              create: false
+              name: my-remote-cfg-secret
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'basic_auth \{'

@@ -1,0 +1,99 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Collectors - Notes - Remote Config inferred auth warning
+templates:
+  - NOTES.txt
+tests:
+  - it: warns when the auth type is inferred as basic from a username and password
+    set:
+      cluster: {name: ci-test-cluster}
+      collectors:
+        alloy-metrics:
+          remoteConfig:
+            enabled: true
+            url: https://fleet-management-prod-001.grafana.net
+            auth:
+              username: 123456
+              password: "It's a secret to everyone"
+    asserts:
+      - matchRegexRaw:
+          pattern: 'Inferring the remote configuration authentication type as "basic"'
+      - matchRegexRaw:
+          pattern: '\* alloy-metrics'
+
+  - it: warns when the auth type is inferred from From references
+    set:
+      cluster: {name: ci-test-cluster}
+      collectors:
+        alloy-metrics:
+          remoteConfig:
+            enabled: true
+            url: https://fleet-management-prod-001.grafana.net
+            auth:
+              usernameFrom: sys.env("REMOTECFG_USERNAME")
+              passwordFrom: sys.env("REMOTECFG_PASSWORD")
+    asserts:
+      - matchRegexRaw:
+          pattern: 'Inferring the remote configuration authentication type as "basic"'
+      - matchRegexRaw:
+          pattern: '\* alloy-metrics'
+
+  - it: does not warn when the auth type is explicitly set to basic
+    set:
+      cluster: {name: ci-test-cluster}
+      collectors:
+        alloy-metrics:
+          remoteConfig:
+            enabled: true
+            url: https://fleet-management-prod-001.grafana.net
+            auth:
+              type: basic
+              username: 123456
+              password: "It's a secret to everyone"
+    asserts:
+      - notMatchRegexRaw:
+          pattern: 'Inferring the remote configuration authentication type'
+
+  - it: does not warn when the auth type is explicitly set to none
+    set:
+      cluster: {name: ci-test-cluster}
+      collectors:
+        alloy-metrics:
+          remoteConfig:
+            enabled: true
+            url: https://fleet-management-prod-001.grafana.net
+            auth:
+              type: none
+              username: 123456
+              password: "It's a secret to everyone"
+    asserts:
+      - notMatchRegexRaw:
+          pattern: 'Inferring the remote configuration authentication type'
+
+  - it: does not warn when only a username is provided
+    set:
+      cluster: {name: ci-test-cluster}
+      collectors:
+        alloy-metrics:
+          remoteConfig:
+            enabled: true
+            url: https://fleet-management-prod-001.grafana.net
+            auth:
+              username: 123456
+    asserts:
+      - notMatchRegexRaw:
+          pattern: 'Inferring the remote configuration authentication type'
+
+  - it: does not warn when remote config is disabled
+    set:
+      cluster: {name: ci-test-cluster}
+      collectors:
+        alloy-metrics:
+          remoteConfig:
+            enabled: false
+            url: https://fleet-management-prod-001.grafana.net
+            auth:
+              username: 123456
+              password: "It's a secret to everyone"
+    asserts:
+      - notMatchRegexRaw:
+          pattern: 'Inferring the remote configuration authentication type'

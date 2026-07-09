@@ -61,7 +61,7 @@ Settings for each primary Alloy instance come from several potential sources, in
 | remoteConfig.auth.password | string | `""` | The password to use for the remote config server. |
 | remoteConfig.auth.passwordFrom | string | `""` | Raw config for accessing the password. |
 | remoteConfig.auth.passwordKey | string | `"password"` | The key for storing the password in the secret. |
-| remoteConfig.auth.type | string | `"none"` | The type of authentication to use for the remote config server. |
+| remoteConfig.auth.type | string | `""` | The type of authentication to use for the remote config server. When unset, defaults to `basic` if a username and password are provided, otherwise `none`. |
 | remoteConfig.auth.username | string | `""` | The username to use for the remote config server. |
 | remoteConfig.auth.usernameFrom | string | `""` | Raw config for accessing the password. |
 | remoteConfig.auth.usernameKey | string | `"username"` | The key for storing the username in the secret. |
