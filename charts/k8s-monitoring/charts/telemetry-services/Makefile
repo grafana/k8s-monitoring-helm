@@ -70,6 +70,7 @@ verify-signatures: ## Verify the signatures of the signed chart dependencies
 
 .PHONY: test
 test: build
+	$(HELM) repo add grafana https://grafana.github.io/helm-charts
 	$(HELM) repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	$(HELM) repo add kepler https://sustainable-computing-io.github.io/kepler-helm-chart
 	$(HELM) repo add opencost https://opencost.github.io/opencost-helm-chart
