@@ -23,6 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       changed_charts: ${{ steps.changed_charts.outputs.changed_charts }}
+      test_charts: ${{ steps.test_charts.outputs.test_charts }}
     steps:
       - name: Checkout code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
@@ -72,15 +73,28 @@ jobs:
             echo "changed_charts=$(echo "$changed_charts" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
           fi
 
+      - name: Expand test matrix
+        id: test_charts
+        env:
+          CHANGED: ${{ steps.changed_charts.outputs.changed_charts }}
+        run: |
+          test_charts=$(echo "${CHANGED:-[]}" | jq -r '.[]' | while IFS= read -r chart; do
+            echo "charts/${chart}"
+            if [ "$chart" == "k8s-monitoring" ]; then
+              find "charts/${chart}/charts" -mindepth 2 -maxdepth 2 -name Chart.yaml -exec dirname {} \;
+            fi
+          done | sort -u | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')
+          echo "test_charts=${test_charts}" >> "${GITHUB_OUTPUT}"
+
   run-tests:
     name: Testing
     needs: detect-changed-charts
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        dir: ${{ fromJson(needs.detect-changed-charts.outputs.changed_charts) }}
+        dir: ${{ fromJson(needs.detect-changed-charts.outputs.test_charts) }}
       fail-fast: false
-    if: ${{ needs.detect-changed-charts.outputs.changed_charts != 'none' }}
+    if: ${{ needs.detect-changed-charts.outputs.test_charts != 'none' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
@@ -98,6 +112,7 @@ jobs:
       # Installing Grafana Alloy because we need it to lint the generated alloy config files.
       # https://grafana.com/docs/alloy/latest/get-started/install/linux/
       - name: Install Grafana Alloy
+        if: matrix.dir == 'charts/k8s-monitoring'
         run: |
           sudo mkdir -p /etc/apt/keyrings/
           wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
@@ -107,8 +122,13 @@ jobs:
 
       - name: Run tests
         env:
-          CHART: ${{ matrix.dir }}
-        run: make -C "charts/${CHART}" test
+          DIR: ${{ matrix.dir }}
+        run: |
+          if [ "${DIR}" == "charts/k8s-monitoring" ]; then
+            make -C "${DIR}" test-self
+          else
+            make -C "${DIR}" test
+          fi
 
   check-generated-files:
     name: Check Generated Files

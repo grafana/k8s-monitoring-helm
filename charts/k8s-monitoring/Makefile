@@ -352,8 +352,9 @@ docs/collectors/presets/README.md: $(COLLECTOR_PRESET_FILES)
 build-docs: README.md AGENTS.md docs/Versions.md docs/collectors/presets/README.md $(COLLECTOR_DOCS_FILES) $(COLLECTOR_PRESET_DOCS_FILES) $(DESTINATION_DOCS_FILES) $(DATA_PROCESSOR_DOCS_FILES)
 
 # Test targets
-.PHONY: test unittest lint-helm lint-configs
-test: unittest lint-helm lint-configs example-checks misc-checks test-features
+.PHONY: test test-self unittest lint-helm lint-configs
+test: test-self test-features
+test-self: unittest lint-helm lint-configs example-checks misc-checks
 
 test-features:
 	set -e && \
