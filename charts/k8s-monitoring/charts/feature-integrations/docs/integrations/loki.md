@@ -8,6 +8,7 @@ This integration captures the metrics and logs to understand the health and perf
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for discovered targets of this integration instance. Applied pre-scrape against targets from Kubernetes service discovery, so all `__meta*` labels are present (e.g. `labelmap` from pod annotations). ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | fieldSelectors | list | `[]` | Discover Loki instances based on field selectors. |
 | labelSelectors | object | `{"app.kubernetes.io/name":["loki","enterprise-logs"]}` | Discover Loki instances based on label selectors. |
 | metrics.portName | string | `"http-metrics"` | Name of the port to scrape metrics from. |

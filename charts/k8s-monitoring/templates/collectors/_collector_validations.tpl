@@ -80,6 +80,22 @@
   {{- end }}
 {{- end }}
 
+{{/* Fails if the deprecated "privileged" preset is combined with the targeted presets that replace it. */}}
+{{- define "collectors.validate.deprecatedPrivilegedPreset" }}
+  {{- range $collectorName, $collector := (.Values.collectors | default dict) }}
+    {{- $presets := dig "presets" (list) ($collector | default dict) }}
+    {{- if and (has "privileged" $presets) (or (has "root" $presets) (has "host-network" $presets)) }}
+      {{- $msg := list "" (printf "The %s collector combines the deprecated \"privileged\" preset with the \"root\" or \"host-network\" preset." $collectorName) }}
+      {{- $msg = append $msg "The \"privileged\" preset is deprecated and cannot be combined with the \"root\" or \"host-network\" presets." }}
+      {{- $msg = append $msg "Replace \"privileged\" with \"root\" (which sets the same securityContext) and add the host presets you need. For example:" }}
+      {{- $msg = append $msg "collectors:" }}
+      {{- $msg = append $msg (printf "  %s:" $collectorName) }}
+      {{- $msg = append $msg "    presets: [root, host-network, host-storage, host-cgroup]" }}
+      {{- fail (join "\n" $msg) }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
 {{/* Fails if two collector keys normalize to the same Kubernetes-safe name (e.g. alloyMetrics and alloymetrics). */}}
 {{- define "collectors.validate.uniqueNames" }}
   {{- $byNormalized := dict }}

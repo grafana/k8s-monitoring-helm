@@ -250,8 +250,19 @@ tempo_integration_discovery {{ include "helper.alloy_name" .name | quote }} {
   port_name = {{ .metrics.portName | quote }}
 }
 
-tempo_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
+{{- if .extraDiscoveryRules }}
+discovery.relabel {{ printf "%s_extra" (include "helper.alloy_name" .name) | quote }} {
   targets = tempo_integration_discovery.{{ include "helper.alloy_name" .name }}.output
+{{ .extraDiscoveryRules | indent 2 }}
+}
+{{- end }}
+
+tempo_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
+{{- if .extraDiscoveryRules }}
+  targets = discovery.relabel.{{ printf "%s_extra" (include "helper.alloy_name" .name) }}.output
+{{- else }}
+  targets = tempo_integration_discovery.{{ include "helper.alloy_name" .name }}.output
+{{- end }}
   job_label = "integrations/tempo"
   clustering = true
 {{- if $metricAllowList }}

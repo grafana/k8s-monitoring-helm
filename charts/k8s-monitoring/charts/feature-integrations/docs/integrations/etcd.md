@@ -7,6 +7,7 @@
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for discovered targets of this integration instance. Applied pre-scrape against targets from Kubernetes service discovery, so all `__meta*` labels are present (e.g. `labelmap` from pod annotations). ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | fieldSelectors | list | `[]` | Discover etcd instances based on field selectors. |
 | labelSelectors | object | `{}` | Discover etcd instances based on label selectors. At least one is required. |
 | metrics.port | int | `2381` | The etcd metrics port number to scrape metrics from. Defined on the etcd pod with: `--listen-metrics-urls=http://127.0.0.1:2381` |

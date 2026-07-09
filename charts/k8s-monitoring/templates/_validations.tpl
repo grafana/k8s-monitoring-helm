@@ -7,6 +7,7 @@
   {{- include "dataProcessors.validate" . -}}
   {{- include "collectors.validate.atLeastOneEnabled" . }}
   {{- include "collectors.validate.uniqueNames" . }}
+  {{- include "collectors.validate.deprecatedPrivilegedPreset" . }}
 
   {{- /* Feature Config Influence */}}
   {{- $updatedValues := $.Values }}

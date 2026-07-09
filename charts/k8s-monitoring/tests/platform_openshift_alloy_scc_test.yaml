@@ -1,0 +1,49 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Platform - OpenShift - Alloy Collector SCC
+templates:
+  - templates/platform_specific/openshift/alloy-scc.yaml
+tests:
+  - it: allows host networking and host ports when the collector uses the host-network preset
+    set:
+      cluster: {name: test-cluster}
+      global:
+        platform: openshift
+      collectors:
+        alloy-daemon:
+          presets: [host-network]
+          extraConfig: "// Giving this Alloy something to do"
+    documentSelector:
+      path: kind
+      value: SecurityContextConstraints
+    asserts:
+      - equal:
+          path: allowHostPID
+          value: true
+      # The host-network preset runs the collector with hostNetwork, which OpenShift treats
+      # as host-port usage. The SCC must allow host networking and host ports or the pods
+      # fail admission. (#2796)
+      - equal:
+          path: allowHostNetwork
+          value: true
+      - equal:
+          path: allowHostPorts
+          value: true
+
+  - it: does not allow host networking or host ports without the host-network preset
+    set:
+      cluster: {name: test-cluster}
+      global:
+        platform: openshift
+      collectors:
+        alloy-daemon:
+          extraConfig: "// Giving this Alloy something to do"
+    documentSelector:
+      path: kind
+      value: SecurityContextConstraints
+    asserts:
+      - equal:
+          path: allowHostNetwork
+          value: false
+      - equal:
+          path: allowHostPorts
+          value: false

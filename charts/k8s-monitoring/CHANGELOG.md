@@ -3,9 +3,18 @@
 ## Unreleased
 
 *   Add the `nop` destination, which drops all telemetry sent to it. (#1461) (@TylerHelmuth)
+
+## 4.2.1
+
+*   Add the `root`, `host-network`, `host-storage`, and `host-cgroup` collector presets and deprecate the `privileged` preset. `root` sets the privileged root `securityContext`, `host-network` sets `hostPID`/`hostNetwork`/`dnsPolicy`, and `host-storage`/`host-cgroup` mount host paths. `privileged` is unchanged and still works, but cannot be combined with these new presets. (#2796) (@TylerHelmuth)
+*   Collector presets now append their `alloy.mounts.extra` and `controller.volumes.extra` entries instead of overwriting, and the OpenShift `SecurityContextConstraints` allows host networking and ports when a collector sets `hostNetwork`. (#2796) (@TylerHelmuth)
+*   Add per-instance `extraDiscoveryRules` to the Service Integrations feature, allowing pre-scrape `discovery.relabel` rules — e.g. a `labelmap` from pod annotations — to enrich an integration's scraped metrics with custom labels while the `__meta_*` discovery labels are still present. Set on each integration instance (the targets it discovers are unique); available on all nine Kubernetes service-discovery integrations, with Istio set per sidecar and istiod. (@bradleypettit)
+*   Fix `kubeletResource.extraDiscoveryRules` and `kubeletProbes.extraDiscoveryRules` being silently dropped. (#2743) (@bradleypettit)
 *   Surface `deploy: false` defaults for `telemetryServices.beyla` and `telemetryServices.sdkInjector` in the top-level values, matching the other telemetry services. This prevents them from deploying unintentionally on Helm versions affected by a subchart value coalescing regression (helm/helm#32132). (#2781, #2782) (@petewall)
 *   Change the default remote configuration `pollFrequency` from `5m` to `30s`. (@TylerHelmuth)
 *   Add `CLUSTER_NAME` environment variable to remote-config-enabled collectors alongside `NAMESPACE` and `POD_NAME`. (#2775) (@petewall)
+*   Fix OTLP destinations deriving the wrong service identity for metrics converted from a Prometheus scrape. The conversion sets `service.name` to the full `job` label (e.g. `namespace/workload` from Grafana Beyla), breaking service-to-logs correlation in Application Observability. A new normalization step after `otelcol.receiver.prometheus` prefers the explicit `service_name` label; OTLP-native telemetry is unaffected. (#2783) (@mbaykara)
+*   Fix OTLP destinations producing `;`-joined duplicate label values on `target_info` (e.g. `k8s_cluster_name="c;c"`) when a scrape target exposes its own `target_info` metric. Flat resource attributes from the conversion (`service_namespace`, `deployment_environment`, `deployment_environment_name`, `k8s_cluster_name`) are reconciled into their dotted equivalents and dropped when the values match. (#2786) (@mbaykara)
 
 ## 4.2.0
 

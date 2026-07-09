@@ -18,9 +18,47 @@
 {{- if eq (include "destinations.otlp.supports_metrics" .) "true" }}
 otelcol.receiver.prometheus {{ include "helper.alloy_name" $.destinationName | quote }} {
   output {
-    metrics = [{{ include "destinations.otlp.alloy.otlp.metrics.target" (dict "destination" . "destinationName" $.destinationName) | trim }}]
+    metrics = [otelcol.processor.transform.{{ include "helper.alloy_name" $.destinationName }}_scrape_normalize.input]
   }
 } // otelcol.receiver.prometheus "{{ include "helper.alloy_name" $.destinationName }}"
+
+// Repairs artifacts of the Prometheus-to-OTLP conversion performed by
+// otelcol.receiver.prometheus. Only metrics that came from a Prometheus scrape pass
+// through this component; OTLP-native telemetry enters the pipeline further down.
+otelcol.processor.transform {{ printf "%s_scrape_normalize" (include "helper.alloy_name" $.destinationName) | quote }} {
+  error_mode = {{ .processors.transform.errorMode | quote }}
+  metric_statements {
+    context = "resource"
+    statements = [
+      // The conversion sets service.name to the full Prometheus job label (e.g.
+      // "namespace/workload"). When the scrape target declares its identity explicitly
+      // with a service_name label on its own target_info metric (e.g. Grafana Beyla),
+      // prefer that value and drop the duplicate.
+      `set(attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
+      `delete_key(attributes, "service_name") where attributes["service_name"] == attributes["service.name"]`,
+      // The same conversion turns other flat target_info labels into resource attributes.
+      // Promote them to their OpenTelemetry counterparts and drop the flat duplicates, so
+      // the OTLP endpoint does not receive two conflicting spellings of the same attribute.
+      `set(attributes["service.namespace"], attributes["service_namespace"]) where (attributes["service.namespace"] == nil or attributes["service.namespace"] == "") and attributes["service_namespace"] != nil and attributes["service_namespace"] != ""`,
+      `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == attributes["service.namespace"]`,
+      `set(attributes["deployment.environment"], attributes["deployment_environment"]) where (attributes["deployment.environment"] == nil or attributes["deployment.environment"] == "") and attributes["deployment_environment"] != nil and attributes["deployment_environment"] != ""`,
+      `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == attributes["deployment.environment"]`,
+      `set(attributes["deployment.environment.name"], attributes["deployment_environment_name"]) where (attributes["deployment.environment.name"] == nil or attributes["deployment.environment.name"] == "") and attributes["deployment_environment_name"] != nil and attributes["deployment_environment_name"] != ""`,
+      `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == attributes["deployment.environment.name"]`,
+    ]
+  }
+  metric_statements {
+    context = "datapoint"
+    statements = [
+      // Same correction for scrape targets that put service_name on every series
+      // instead of exposing a target_info metric.
+      `set(resource.attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
+    ]
+  }
+  output {
+    metrics = [{{ include "destinations.otlp.alloy.otlp.metrics.target" (dict "destination" . "destinationName" $.destinationName) | trim }}]
+  }
+} // otelcol.processor.transform "{{ include "helper.alloy_name" $.destinationName }}_scrape_normalize"
 {{- end }}
 {{- if eq (include "destinations.otlp.supports_logs" .) "true" }}
 otelcol.receiver.loki {{ include "helper.alloy_name" $.destinationName | quote }} {
@@ -84,6 +122,11 @@ otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | q
 {{- range $resourceAttribute := $resourceAttributesToRemove }}
       `delete_key(attributes, {{ $resourceAttribute | quote }})`,
 {{- end }}
+      // Scrape targets that expose their own target_info metric (e.g. Grafana Beyla) can
+      // carry a flat k8s_cluster_name resource attribute, which conflicts with the
+      // k8s.cluster.name attribute set above and gets ";"-joined by the Prometheus OTLP
+      // endpoint. Drop the flat copy when the values match.
+      `delete_key(attributes, "k8s_cluster_name") where attributes["k8s_cluster_name"] == attributes["k8s.cluster.name"]`,
 {{- range $transform := .processors.transform.metrics.resource }}
 {{ $transform | quote | indent 6 }},
 {{- end }}

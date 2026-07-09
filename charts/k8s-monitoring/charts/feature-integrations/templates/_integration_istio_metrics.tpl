@@ -111,6 +111,9 @@ discovery.relabel {{ printf "%s_sidecar" (include "helper.alloy_name" .name) | q
     source_labels = ["__meta_kubernetes_pod_name"]
     target_label  = "pod"
   }
+{{- if .sidecarMetrics.extraDiscoveryRules }}
+{{ .sidecarMetrics.extraDiscoveryRules | indent 2 }}
+{{- end }}
 }
 
 prometheus.scrape {{ printf "%s_sidecar" (include "helper.alloy_name" .name) | quote }} {
@@ -196,6 +199,9 @@ discovery.relabel {{ printf "%s_istiod" (include "helper.alloy_name" .name) | qu
     action        = "replace"
     source_labels = ["__meta_kubernetes_pod_name"]
   }
+{{- if .istiodMetrics.extraDiscoveryRules }}
+{{ .istiodMetrics.extraDiscoveryRules | indent 2 }}
+{{- end }}
 }
 
 prometheus.scrape {{ printf "%s_istiod" (include "helper.alloy_name" .name) | quote }} {

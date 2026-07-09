@@ -1,0 +1,56 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Collectors - Privileged and Root Presets
+templates:
+  - alloy.yaml
+tests:
+  - it: privileged sets the root securityContext and shares the host PID namespace
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-daemon:
+          presets: [privileged]
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - equal:
+          path: spec.alloy.securityContext.privileged
+          value: true
+      - equal:
+          path: spec.alloy.securityContext.allowPrivilegeEscalation
+          value: true
+      - equal:
+          path: spec.alloy.securityContext.runAsUser
+          value: 0
+      - equal:
+          path: spec.alloy.securityContext.runAsGroup
+          value: 0
+      - equal:
+          path: spec.controller.hostPID
+          value: true
+
+  - it: root sets only the privileged root securityContext
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-daemon:
+          presets: [root]
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - equal:
+          path: spec.alloy.securityContext.privileged
+          value: true
+      - equal:
+          path: spec.alloy.securityContext.allowPrivilegeEscalation
+          value: true
+      - equal:
+          path: spec.alloy.securityContext.runAsUser
+          value: 0
+      - equal:
+          path: spec.alloy.securityContext.runAsGroup
+          value: 0
+      # Host access is provided by the host-* presets, not root.
+      - notExists:
+          path: spec.controller.hostPID
+      - notExists:
+          path: spec.controller.hostNetwork
+      - notExists:
+          path: spec.controller.dnsPolicy

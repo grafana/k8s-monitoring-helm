@@ -44,6 +44,6 @@ collectorCommon:
 
 collectors:
   alloy:
-    presets: [privileged, clustered, service-discovery, filesystem-log-reader, daemonset]
+    presets: [root, host-network, host-storage, host-cgroup, clustered, service-discovery, filesystem-log-reader, daemonset]
 ```
 <!-- textlint-enable terminology -->

@@ -1,0 +1,87 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Collectors - Host Presets
+templates:
+  - alloy.yaml
+tests:
+  - it: host-network shares the host PID and network namespaces
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-daemon:
+          presets: [host-network]
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - equal:
+          path: spec.controller.hostPID
+          value: true
+      - equal:
+          path: spec.controller.hostNetwork
+          value: true
+      - equal:
+          path: spec.controller.dnsPolicy
+          value: ClusterFirstWithHostNet
+
+  - it: host-storage mounts a hostPath volume for Alloy storage
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-daemon:
+          presets: [host-storage]
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - equal:
+          path: spec.alloy.storagePath
+          value: /var/lib/alloy
+      - contains:
+          path: spec.alloy.mounts.extra
+          content: {name: alloy-storage, mountPath: /var/lib/alloy, readOnly: false}
+      - contains:
+          path: spec.controller.volumes.extra
+          content: {name: alloy-storage, hostPath: {path: /var/lib/alloy, type: DirectoryOrCreate}}
+
+  - it: host-storage and host-cgroup append their extra mounts and volumes instead of clobbering
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-daemon:
+          presets: [host-storage, host-cgroup]
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - lengthEqual:
+          path: spec.alloy.mounts.extra
+          count: 2
+      - contains:
+          path: spec.alloy.mounts.extra
+          content: {name: alloy-storage, mountPath: /var/lib/alloy, readOnly: false}
+      - contains:
+          path: spec.alloy.mounts.extra
+          content: {name: cgroup, mountPath: /sys/fs/cgroup}
+      - lengthEqual:
+          path: spec.controller.volumes.extra
+          count: 2
+      - contains:
+          path: spec.controller.volumes.extra
+          content: {name: alloy-storage, hostPath: {path: /var/lib/alloy, type: DirectoryOrCreate}}
+      - contains:
+          path: spec.controller.volumes.extra
+          content: {name: cgroup, hostPath: {path: /sys/fs/cgroup, type: Directory}}
+
+  - it: user-supplied extra mounts override the preset list rather than appending
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-daemon:
+          presets: [host-storage, host-cgroup]
+          extraConfig: "// Giving this Alloy something to do"
+          alloy:
+            mounts:
+              extra:
+                - name: user-mount
+                  mountPath: /user/path
+    asserts:
+      - lengthEqual:
+          path: spec.alloy.mounts.extra
+          count: 1
+      - contains:
+          path: spec.alloy.mounts.extra
+          content: {name: user-mount, mountPath: /user/path}

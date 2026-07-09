@@ -8,6 +8,7 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | istiodMetrics.enabled | bool | `true` | Whether to enable metrics collection from Istiod. |
+| istiodMetrics.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for discovered Istiod targets. These relabeling rules are applied pre-scrape against the targets from Kubernetes service discovery, so all `__meta*` labels are still present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | istiodMetrics.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Istiod. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
 | istiodMetrics.labelSelectors | object | `{}` | Additional Kubernetes label selectors applied to the Istiod service. |
 | istiodMetrics.maxCacheSize | string | `100000` | Sets the max_cache_size for prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
@@ -30,6 +31,7 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | sidecarMetrics.enabled | bool | `true` | Whether to enable metrics collection from Istio sidecar containers. |
+| sidecarMetrics.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for discovered Istio sidecar targets. These relabeling rules are applied pre-scrape against the targets from Kubernetes service discovery, so all `__meta*` labels are still present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | sidecarMetrics.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Istio sidecar metrics. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
 | sidecarMetrics.labelSelectors | object | `{}` | Label selectors to be used when choosing pods with the Istio sidecar. |
 | sidecarMetrics.maxCacheSize | string | `100000` | Sets the max_cache_size for prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
