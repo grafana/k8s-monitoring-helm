@@ -1,0 +1,89 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Destinations - Notes - Inferred auth warning
+templates:
+  - NOTES.txt
+tests:
+  - it: warns when a destination's auth type is inferred as basic
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: prometheus
+          url: https://prometheus.example.com
+          auth:
+            username: my-username
+            password: my-password
+    asserts:
+      - matchRegexRaw:
+          pattern: 'Inferring the authentication type as "basic"'
+      - matchRegexRaw:
+          pattern: '\* test'
+
+  - it: warns when the auth type is inferred from From references
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: prometheus
+          url: https://prometheus.example.com
+          auth:
+            usernameFrom: sys.env("USERNAME")
+            passwordFrom: sys.env("PASSWORD")
+    asserts:
+      - matchRegexRaw:
+          pattern: 'Inferring the authentication type as "basic"'
+      - matchRegexRaw:
+          pattern: '\* test'
+
+  - it: does not warn when the auth type is explicitly set to basic
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: prometheus
+          url: https://prometheus.example.com
+          auth:
+            type: basic
+            username: my-username
+            password: my-password
+    asserts:
+      - notMatchRegexRaw:
+          pattern: 'Inferring the authentication type'
+
+  - it: does not warn when the auth type is explicitly set to none
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: prometheus
+          url: https://prometheus.example.com
+          auth:
+            type: none
+            username: my-username
+            password: my-password
+    asserts:
+      - notMatchRegexRaw:
+          pattern: 'Inferring the authentication type'
+
+  - it: does not warn when only a username is provided
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: prometheus
+          url: https://prometheus.example.com
+          auth:
+            username: my-username
+    asserts:
+      - notMatchRegexRaw:
+          pattern: 'Inferring the authentication type'
