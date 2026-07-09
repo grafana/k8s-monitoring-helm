@@ -11,13 +11,14 @@ clean: ;
 .PHONY: all
 all: ../k8s-monitoring-application.yaml
 
-BRANCH_NAME ?= $(shell git rev-parse --abbrev-ref HEAD)
+TARGET_REVISION ?= $(shell git rev-parse --abbrev-ref HEAD)
+export TARGET_REVISION
 
 # Declare the target as phony to ensure it always runs
 .PHONY: ../k8s-monitoring-application.yaml
 ../k8s-monitoring-application.yaml:
-	@echo "Setting targetRevision to $(BRANCH_NAME)"
-	@yq eval '.spec.source.targetRevision = "$(BRANCH_NAME)"' $@ > temp.yaml
+	@echo "Setting targetRevision to $${TARGET_REVISION}"
+	@yq eval '.spec.source.targetRevision = strenv(TARGET_REVISION)' $@ > temp.yaml
 	@cp temp.yaml $@
 	@rm temp.yaml
 
