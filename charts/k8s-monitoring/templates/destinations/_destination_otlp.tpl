@@ -544,13 +544,13 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" $.destinationName | quo
 {{- if .proxyURL }}
     proxy_url = {{ .proxyURL | quote }}
 {{- end }}
-{{- if eq .auth.type "basic" }}
+{{- if eq (include "secrets.authType" .) "basic" }}
     auth = otelcol.auth.basic.{{ include "helper.alloy_name" $.destinationName }}.handler
-{{- else if eq .auth.type "bearerToken" }}
+{{- else if eq (include "secrets.authType" .) "bearerToken" }}
     auth = otelcol.auth.bearer.{{ include "helper.alloy_name" $.destinationName }}.handler
-{{- else if eq .auth.type "oauth2" }}
+{{- else if eq (include "secrets.authType" .) "oauth2" }}
     auth = otelcol.auth.oauth2.{{ include "helper.alloy_name" $.destinationName }}.handler
-{{- else if eq .auth.type "sigv4" }}
+{{- else if eq (include "secrets.authType" .) "sigv4" }}
     auth = otelcol.auth.sigv4.{{ include "helper.alloy_name" $.destinationName }}.handler
 {{- end }}
 {{- if or (eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "tenantId")) "true") .extraHeaders .extraHeadersFrom }}

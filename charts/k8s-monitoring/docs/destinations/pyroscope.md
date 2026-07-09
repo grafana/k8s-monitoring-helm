@@ -65,7 +65,7 @@ This defines the options for defining a destination for profiles that use the Py
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| auth.type | string | `"none"` | The type of authentication to do. Options are "none" (default), "basic", "bearerToken". |
+| auth.type | string | `""` | The type of authentication to do. Options are "none", "basic", "bearerToken". When unset, defaults to "basic" if a username and password are provided, otherwise "none". |
 
 ### General
 

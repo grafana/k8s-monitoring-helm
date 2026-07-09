@@ -1,0 +1,137 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Destinations - Inferred basic auth
+templates:
+  - alloy-config.yaml
+tests:
+  - it: infers basic auth for a prometheus destination when username and password are set without a type
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: prometheus
+          url: https://prometheus.example.com
+          auth:
+            username: my-username
+            password: my-password
+    asserts:
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'basic_auth \{'
+
+  - it: infers basic auth for a loki destination when username and password are set without a type
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: loki
+          url: https://loki.example.com
+          auth:
+            username: my-username
+            password: my-password
+    asserts:
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'basic_auth \{'
+
+  - it: infers basic auth for a pyroscope destination when username and password are set without a type
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: pyroscope
+          url: https://pyroscope.example.com
+          auth:
+            username: my-username
+            password: my-password
+    asserts:
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'basic_auth \{'
+
+  - it: infers basic auth for an otlp destination when username and password are set without a type
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: otlp
+          url: https://otlp.example.com
+          auth:
+            username: my-username
+            password: my-password
+    asserts:
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.auth\.basic\.'
+
+  - it: infers basic auth from usernameFrom and passwordFrom references
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: prometheus
+          url: https://prometheus.example.com
+          auth:
+            usernameFrom: sys.env("USERNAME")
+            passwordFrom: sys.env("PASSWORD")
+    asserts:
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'basic_auth \{'
+
+  - it: honors an explicit auth type of none even when credentials are provided
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: prometheus
+          url: https://prometheus.example.com
+          auth:
+            type: none
+            username: my-username
+            password: my-password
+    asserts:
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'basic_auth \{'
+
+  - it: does not infer basic auth when only a username is provided
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: prometheus
+          url: https://prometheus.example.com
+          auth:
+            username: my-username
+    asserts:
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'basic_auth \{'
+
+  - it: does not infer basic auth when no credentials are provided
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: prometheus
+          url: https://prometheus.example.com
+    asserts:
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'basic_auth \{'
