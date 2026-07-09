@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+*   Add the `nop` destination, which drops all telemetry sent to it. (#1461) (@TylerHelmuth)
+
 ## 4.2.2
 
 *   Add `attachNamespaceMetadata` option to the Pod Logs (via Loki and via Kubernetes API) features. When enabled, namespace labels are attached to pod discovery targets and made available as `__meta_kubernetes_namespace_label_*`. (@petewall, @tdudas)
