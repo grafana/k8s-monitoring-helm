@@ -64,7 +64,10 @@ remotecfg {
 {{- if .proxyFromEnvironment }}
   proxy_from_environment = {{ .proxyFromEnvironment }}
 {{- end }}
-{{- if eq (include "secrets.authType" .) "basic" }}
+{{- $hasUsername := or (.auth).username (.auth).usernameFrom }}
+{{- $hasPassword := or (.auth).password (.auth).passwordFrom }}
+{{- $authTypeUnset := not (.auth).type }}
+{{- if or (eq (.auth).type "basic") (and $authTypeUnset $hasUsername $hasPassword) }}
   basic_auth {
     username = {{ include "secrets.read" (dict "object" . "key" "auth.username" "nonsensitive" true) }}
     password = {{ include "secrets.read" (dict "object" . "key" "auth.password") }}

@@ -85,7 +85,7 @@ This defines the options for defining a destination for metrics that use the Pro
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| auth.type | string | `"none"` | The type of authentication to do. Options are "none" (default), "basic", "bearerToken", "oauth2", "sigv4". |
+| auth.type | string | `""` | The type of authentication to do. Options are "none", "basic", "bearerToken", "oauth2", "sigv4". When unset, defaults to "basic" if a username and password are provided, otherwise "none". |
 
 ### General
 
