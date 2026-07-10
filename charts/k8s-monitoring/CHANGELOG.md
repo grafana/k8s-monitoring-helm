@@ -1,8 +1,10 @@
 # Changelog
 
-## Unreleased
+## 4.3.0
 
 *   Add the `nop` destination, which drops all telemetry sent to it. (#1461) (@TylerHelmuth)
+
+## Unreleased
 
 ## 4.2.2
 
