@@ -7,6 +7,13 @@ endif
 
 HAS_HELM_UNITTEST := $(shell $(HELM) plugin list | grep unittest 2> /dev/null)
 HAS_SHELLSPEC := $(shell command -v shellspec;)
+HAS_YQ := $(shell command -v yq 2>/dev/null)
+
+ifeq ($(HAS_YQ),)
+YQ = docker run --platform linux/amd64 --rm --volume $(shell pwd):/workdir -w /workdir mikefarah/yq
+else
+YQ = yq
+endif
 
 CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
 CHART_YAML_FILES = $(shell find templates -name "*.yaml")
@@ -16,7 +23,7 @@ FEATURE_CHARTS = $(shell find charts -name Chart.yaml -mindepth 2 -maxdepth 2 -e
 SCHEMA_MODS_JSON_FILES = $(shell find schema-mods -name "*.json")
 SCHEMA_MODS_JQ_FILES = $(shell find schema-mods -name "*.jq")
 
-ALLOY_OPERATOR_VERSION := $(shell yq '.dependencies[] | select(.name == "alloy-operator") | .version' Chart.yaml)
+ALLOY_OPERATOR_VERSION := $(shell $(YQ) '.dependencies[] | select(.name == "alloy-operator") | .version' Chart.yaml)
 GRAFANA_HELM_CHARTS_KEYRING := ../../keys/grafana-helm-charts-pubkey.gpg
 charts/alloy-operator-$(ALLOY_OPERATOR_VERSION).tgz: Chart.lock
 collectors/upstream/alloy-values.yaml: charts/alloy-operator-$(ALLOY_OPERATOR_VERSION).tgz
@@ -187,7 +194,7 @@ AGENTS.md: AGENTS.md.gotmpl $(FEATURE_CHARTS) $(DESTINATION_VALUES_FILES) $(INTE
 	@FEATURES_LIST=""; \
 	for chart in $(FEATURE_CHARTS); do \
 		name=$$(basename $$chart); \
-		desc=$$(yq '.description // "No description"' $$chart/Chart.yaml 2>/dev/null || echo "No description"); \
+		desc=$$($(YQ) '.description // "No description"' $$chart/Chart.yaml 2>/dev/null || echo "No description"); \
 		FEATURES_LIST="$$FEATURES_LIST\n-   \`$$name\` - $$desc"; \
 	done; \
 	awk -v features="$$FEATURES_LIST" '{ \
@@ -246,10 +253,10 @@ PLATFORM_TEST_VALUES_FILES := $(filter-out $(NON_RENDERED_PLATFORM_TEST_VALUES_F
 PLATFORM_TEST_OUTPUT_FILES := $(PLATFORM_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
 
 alloy_configs = $(shell \
-	DIR="$(shell dirname $(1))/" yq e '.collectors | keys | .[] | env(DIR) + . + ".alloy"' $(1) \
+	DIR="$(shell dirname $(1))/" $(YQ) e '.collectors | keys | .[] | env(DIR) + . + ".alloy"' $(1) \
 )
 alloy_instances = $(shell \
-	DIR="$(shell dirname $(1))/" yq e '.collectors | keys | .[] | env(DIR) + . + ".yaml"' $(1) \
+	DIR="$(shell dirname $(1))/" $(YQ) e '.collectors | keys | .[] | env(DIR) + . + ".yaml"' $(1) \
 )
 
 %/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
@@ -260,7 +267,7 @@ alloy_instances = $(shell \
 	$(HELM) template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
 
 %.alloy: $$(dir $$@)output.yaml
-	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-$(notdir $(basename $@))") | .data["config.alloy"]' $< > $@
+	$(YQ) 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-$(notdir $(basename $@))") | .data["config.alloy"]' $< > $@
 
 %/README.md: %/values.yaml $$(wildcard %/description.txt)
 	@echo '<!--' > $@

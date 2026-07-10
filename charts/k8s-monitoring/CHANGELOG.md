@@ -7,6 +7,7 @@
 *   Fix `unrecognized block name "rule_namespace"` error when using the `rules.namespaces` field of the `prometheus` destination to limit the PrometheusRules object discovery to specific namespaces (#2802) (@sebasnabas)
 *   Fix `autoInstrumentation.beyla.service.targetPort` not propagating to the generated Beyla config ports, which previously required setting the port in three places. (#2811) (@TylerHelmuth)
 *   Update Beyla to 1.16.10 (@TylerHelmuth)
+*   Add `host-tracefs` collector preset where `host-cgroup` is used.
 
 ## 4.2.1
 

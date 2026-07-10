@@ -1,0 +1,18 @@
+---
+# Host Tracefs preset
+
+# -- Mounts the host's tracing filesystem into Alloy, allowing it to attach eBPF tracepoints.
+# @section -- Alloy Configuration
+alloy:
+  mounts:
+    extra:
+      - name: tracefs
+        mountPath: /sys/kernel/tracing
+
+controller:
+  volumes:
+    extra:
+      - name: tracefs
+        hostPath:
+          path: /sys/kernel/tracing
+          type: Directory
