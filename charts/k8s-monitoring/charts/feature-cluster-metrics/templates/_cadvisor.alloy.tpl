@@ -87,7 +87,7 @@ prometheus.relabel "cadvisor" {
   rule {
     source_labels = ["__name__","container"]
     separator = "@"
-    regex = "(container_cpu_.*|container_fs_.*|container_memory_.*)@"
+    regex = "(container_cpu_.*|container_fs_.*|container_memory_.*|container_pressure_.*)@"
     action = "drop"
   }
 {{- end }}
@@ -96,7 +96,7 @@ prometheus.relabel "cadvisor" {
   rule {
     source_labels = ["__name__","image"]
     separator = "@"
-    regex = "(container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*)@"
+    regex = "(container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*|container_pressure_.*)@"
     action = "drop"
   }
 {{- end }}
