@@ -7,6 +7,7 @@
 *   Fix `unrecognized block name "rule_namespace"` error when using the `rules.namespaces` field of the `prometheus` destination to limit the PrometheusRules object discovery to specific namespaces (#2802) (@sebasnabas)
 *   Fix `autoInstrumentation.beyla.service.targetPort` not propagating to the generated Beyla config ports, which previously required setting the port in three places. (#2811) (@TylerHelmuth)
 *   Update Beyla to 1.16.10 (@TylerHelmuth)
+*   Update Alloy Operator to 0.6.1, kube-state-metrics to 7.8.1, Node Exporter to 4.56.0, and OpenCost to 2.5.26 (@petewall)
 
 ## 4.2.1
 
