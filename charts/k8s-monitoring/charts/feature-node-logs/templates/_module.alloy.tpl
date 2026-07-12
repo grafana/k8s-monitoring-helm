@@ -20,6 +20,13 @@ declare "node_logs" {
       target_label = "unit"
     }
 
+    rule {
+      action = "replace"
+      source_labels = ["__journal_priority_keyword"]
+      replacement = "$1"
+      target_label = "priority_keyword"
+    }
+
     // the service_name label will be set automatically in loki if not set, and the unit label
     // will not allow service_name to be set automatically.
     rule {
@@ -76,6 +83,47 @@ declare "node_logs" {
         "source" = "journal",
         // default level to unknown
         level = "UNKNOWN",
+      }
+    }
+
+    // Use journald priority metadata as the log level.
+    stage.match {
+      selector = "{level=\"UNKNOWN\", priority_keyword!=\"\"}"
+
+      stage.replace {
+        source = "priority_keyword"
+        expression = "(?i)^(debug)$"
+        replace = "DEBUG"
+      }
+
+      stage.replace {
+        source = "priority_keyword"
+        expression = "(?i)^(info|notice)$"
+        replace = "INFO"
+      }
+
+      stage.replace {
+        source = "priority_keyword"
+        expression = "(?i)^(warning|warn)$"
+        replace = "WARN"
+      }
+
+      stage.replace {
+        source = "priority_keyword"
+        expression = "(?i)^(error|err)$"
+        replace = "ERROR"
+      }
+
+      stage.replace {
+        source = "priority_keyword"
+        expression = "(?i)^(alert|critical|crit|emerg|emergency|fatal)$"
+        replace = "CRIT"
+      }
+
+      stage.labels {
+        values = {
+          level = "priority_keyword",
+        }
       }
     }
 

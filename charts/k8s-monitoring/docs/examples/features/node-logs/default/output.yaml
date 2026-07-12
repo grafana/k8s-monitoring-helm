@@ -12,6 +12,7 @@ metadata:
     app.kubernetes.io/version: "1.10.0"
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
+
 ---
 # Source: k8s-monitoring/templates/destination_secret.yaml
 apiVersion: v1
@@ -53,6 +54,13 @@ data:
           target_label = "unit"
         }
     
+        rule {
+          action = "replace"
+          source_labels = ["__journal_priority_keyword"]
+          replacement = "$1"
+          target_label = "priority_keyword"
+        }
+    
         // the service_name label will be set automatically in loki if not set, and the unit label
         // will not allow service_name to be set automatically.
         rule {
@@ -84,6 +92,47 @@ data:
             "source" = "journal",
             // default level to unknown
             level = "UNKNOWN",
+          }
+        }
+    
+        // Use journald priority metadata as the log level.
+        stage.match {
+          selector = "{level=\"UNKNOWN\", priority_keyword!=\"\"}"
+    
+          stage.replace {
+            source = "priority_keyword"
+            expression = "(?i)^(debug)$"
+            replace = "DEBUG"
+          }
+    
+          stage.replace {
+            source = "priority_keyword"
+            expression = "(?i)^(info|notice)$"
+            replace = "INFO"
+          }
+    
+          stage.replace {
+            source = "priority_keyword"
+            expression = "(?i)^(warning|warn)$"
+            replace = "WARN"
+          }
+    
+          stage.replace {
+            source = "priority_keyword"
+            expression = "(?i)^(error|err)$"
+            replace = "ERROR"
+          }
+    
+          stage.replace {
+            source = "priority_keyword"
+            expression = "(?i)^(alert|critical|crit|emerg|emergency|fatal)$"
+            replace = "CRIT"
+          }
+    
+          stage.labels {
+            values = {
+              level = "priority_keyword",
+            }
           }
         }
     
@@ -215,6 +264,7 @@ data:
       name      = "loki-k8smon-k8s-monitoring"
       namespace = "default"
     } // remote.kubernetes.secret "loki"
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -299,6 +349,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-objects.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -319,6 +370,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/leader-election.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -385,6 +437,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/service.yaml
 apiVersion: v1
@@ -412,6 +465,7 @@ spec:
   selector:
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/deployment.yaml
 apiVersion: apps/v1
@@ -483,6 +537,7 @@ spec:
             readOnlyRootFilesystem: true
       nodeSelector:
         kubernetes.io/os: linux
+
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
@@ -606,6 +661,7 @@ roleRef:
   kind: Role
   name: k8smon-k8s-monitoring-add-finalizer
   apiGroup: rbac.authorization.k8s.io
+
 ---
 # Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -624,6 +680,7 @@ roleRef:
   kind: Role
   name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
   apiGroup: rbac.authorization.k8s.io
+
 ---
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
 apiVersion: batch/v1
