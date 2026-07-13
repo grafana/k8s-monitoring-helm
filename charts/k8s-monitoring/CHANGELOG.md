@@ -3,11 +3,13 @@
 ## Unreleased
 
 *   Fix Beyla auto-instrumentation discarding the default `discovery` targets (`instrument`/`exclude_instrument`) when a user set any other field under `discovery`, such as `exclude_otel_instrumented_services`. The defaults are now applied per-field, so a partial `discovery` config no longer stops Beyla from discovering services. (#2332) (@petewall)
+*   Add `host-tracefs` collector preset.
 *   Remove empty `image` and `container` labels from cAdvisor's `container_pressure_.*` metrics (#2561) (@petewall)
 *   Infer `auth.type: basic` for remote configuration and destinations when a username and password are set but `auth.type` is not. (#2809) (@TylerHelmuth)
 *   Fix `unrecognized block name "rule_namespace"` error when using the `rules.namespaces` field of the `prometheus` destination to limit the PrometheusRules object discovery to specific namespaces (#2802) (@sebasnabas)
 *   Fix `autoInstrumentation.beyla.service.targetPort` not propagating to the generated Beyla config ports, which previously required setting the port in three places. (#2811) (@TylerHelmuth)
 *   Update Beyla to 1.16.10 (@TylerHelmuth)
+*   Update Alloy Operator to 0.6.1, kube-state-metrics to 7.8.1, Node Exporter to 4.56.0, and OpenCost to 2.5.26 (@petewall)
 
 ## 4.2.1
 
