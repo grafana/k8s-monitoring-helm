@@ -303,47 +303,6 @@ declare "node_logs" {
       }
     }
 
-    // Use journald priority metadata as the log level.
-    stage.match {
-      selector = "{level=\"UNKNOWN\", priority_keyword!=\"\"}"
-
-      stage.replace {
-        source = "priority_keyword"
-        expression = "(?i)^(debug)$"
-        replace = "DEBUG"
-      }
-
-      stage.replace {
-        source = "priority_keyword"
-        expression = "(?i)^(info|notice)$"
-        replace = "INFO"
-      }
-
-      stage.replace {
-        source = "priority_keyword"
-        expression = "(?i)^(warning|warn)$"
-        replace = "WARN"
-      }
-
-      stage.replace {
-        source = "priority_keyword"
-        expression = "(?i)^(error|err)$"
-        replace = "ERROR"
-      }
-
-      stage.replace {
-        source = "priority_keyword"
-        expression = "(?i)^(alert|critical|crit|emerg|emergency|fatal)$"
-        replace = "CRIT"
-      }
-
-      stage.labels {
-        values = {
-          level = "priority_keyword",
-        }
-      }
-    }
-
     // Attempt to determine the log level, most k8s workers are either in logfmt or klog formats
     // check to see if the log line matches the klog format (https://github.com/kubernetes/klog)
     stage.match {
@@ -410,6 +369,47 @@ declare "node_logs" {
       stage.labels {
         values = {
           level = "",
+        }
+      }
+    }
+
+    // Use journald priority metadata as the log level.
+    stage.match {
+      selector = "{level=\"UNKNOWN\", priority_keyword!=\"\"}"
+
+      stage.replace {
+        source = "priority_keyword"
+        expression = "(?i)^(debug)$"
+        replace = "DEBUG"
+      }
+
+      stage.replace {
+        source = "priority_keyword"
+        expression = "(?i)^(info|notice)$"
+        replace = "INFO"
+      }
+
+      stage.replace {
+        source = "priority_keyword"
+        expression = "(?i)^(warning|warn)$"
+        replace = "WARN"
+      }
+
+      stage.replace {
+        source = "priority_keyword"
+        expression = "(?i)^(error|err)$"
+        replace = "ERROR"
+      }
+
+      stage.replace {
+        source = "priority_keyword"
+        expression = "(?i)^(alert|critical|crit|emerg|emergency|fatal)$"
+        replace = "CRIT"
+      }
+
+      stage.labels {
+        values = {
+          level = "priority_keyword",
         }
       }
     }
