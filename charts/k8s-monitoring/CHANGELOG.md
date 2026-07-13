@@ -3,6 +3,7 @@
 ## Unreleased
 
 *   Add `attachNamespaceMetadata` option to the Pod Logs (via Loki and via Kubernetes API) features. When enabled, namespace labels are attached to pod discovery targets and made available as `__meta_kubernetes_namespace_label_*`. (@petewall, @tdudas)
+*   Add `host-tracefs` collector preset.
 *   Remove empty `image` and `container` labels from cAdvisor's `container_pressure_.*` metrics (#2561) (@petewall)
 *   Infer `auth.type: basic` for remote configuration and destinations when a username and password are set but `auth.type` is not. (#2809) (@TylerHelmuth)
 *   Fix `unrecognized block name "rule_namespace"` error when using the `rules.namespaces` field of the `prometheus` destination to limit the PrometheusRules object discovery to specific namespaces (#2802) (@sebasnabas)
