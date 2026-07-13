@@ -17,15 +17,8 @@ if [[ "$(command -v alloy || true)" = "" ]]; then
   exit 1
 fi
 
-if [[ "$#" -eq 0 ]]; then
-  exit 0
-fi
-
-PARALLELISM="${LINT_ALLOY_PARALLELISM:-$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)}"
-
 # Inject a component that utilizes Kubernetes discovery, so we know that the config will fail in a predictable way.
 k8sDiscovery='discovery.kubernetes "lint_config_component" { role = "nodes" }'
-export k8sDiscovery
 
 lint_alloy_file() {
   local file="$1"
@@ -85,10 +78,21 @@ lint_alloy_file() {
   printf '%s\n' "${buffer}"
   return 1
 }
-export -f lint_alloy_file
+
+# Internal entrypoint used by the parallel dispatcher below to lint a single file.
+if [[ "${1:-}" == "--lint-one" ]]; then
+  lint_alloy_file "$2"
+  exit "$?"
+fi
+
+if [[ "$#" -eq 0 ]]; then
+  exit 0
+fi
+
+PARALLELISM="${LINT_ALLOY_PARALLELISM:-$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)}"
 
 # Lint each file in parallel. xargs exits non-zero if any invocation reports issues.
-if ! printf '%s\0' "$@" | xargs -0 -P "${PARALLELISM}" -I{} bash -c 'lint_alloy_file "$@"' _ {}; then
+if ! printf '%s\0' "$@" | xargs -0 -P "${PARALLELISM}" -I{} "$0" --lint-one {}; then
   exit 1
 fi
 exit 0
