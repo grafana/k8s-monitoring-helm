@@ -218,7 +218,10 @@ jobs:
       - name: Regenerate files
         env:
           CHART: ${{ matrix.dir }}
-        run: make -C "charts/${CHART}" clean build
+        run: |
+          make -C "charts/${CHART}" clean
+          make -C "charts/${CHART}" build-features
+          make -C "charts/${CHART}" -j"$(nproc)" build
 
       - name: Check for changes in generated files
         env:
