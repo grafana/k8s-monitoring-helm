@@ -21,11 +21,18 @@
 {{- if and (eq (dig "preset" "" $beylaMap) "network") (not (hasKey $config "network")) }}
   {{- $overrides = merge $overrides (dict "network" (dict "enable" true)) }}
 {{- end }}
-{{- if and (eq (dig "preset" "" $beylaMap) "application") (not (hasKey $config "discovery")) }}
-  {{- $services := list (dict "k8s_namespace" "*") }}
-  {{- $excludeServices := list (dict "exe_path" "{*alloy*,*otelcol*,*beyla*}") }}
-  {{- $discovery := dict "instrument" $services "exclude_instrument" $excludeServices }}
-  {{- $overrides = merge $overrides (dict "discovery" $discovery) }}
+{{- if eq (dig "preset" "" $beylaMap) "application" }}
+  {{- $userDiscovery := dig "discovery" dict $config }}
+  {{- $discoveryDefaults := dict }}
+  {{- if and (not (hasKey $userDiscovery "instrument")) (not (hasKey $userDiscovery "services")) }}
+    {{- $_ := set $discoveryDefaults "instrument" (list (dict "k8s_namespace" "*")) }}
+  {{- end }}
+  {{- if and (not (hasKey $userDiscovery "exclude_instrument")) (not (hasKey $userDiscovery "exclude_services")) }}
+    {{- $_ := set $discoveryDefaults "exclude_instrument" (list (dict "exe_path" "{*alloy*,*otelcol*,*beyla*}")) }}
+  {{- end }}
+  {{- if $discoveryDefaults }}
+    {{- $overrides = merge $overrides (dict "discovery" $discoveryDefaults) }}
+  {{- end }}
 {{- end }}
 {{- if and (dig "applicationObservability" "enabled" false $valuesMap) (dig "deliverTracesToApplicationObservability" false $beylaMap) }}
   {{- $endpoint := "" }}

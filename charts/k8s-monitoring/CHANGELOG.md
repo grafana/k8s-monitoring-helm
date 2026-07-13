@@ -4,6 +4,7 @@
 
 *   Fix `unrecognized block name "rule_namespace"` error when using the `rules.namespaces` field of the `prometheus` destination to limit the PrometheusRules object discovery to specific namespaces (#2802) (@sebasnabas)
 *   Fix `autoInstrumentation.beyla.service.targetPort` not propagating to the generated Beyla config ports, which previously required setting the port in three places. (#2811) (@TylerHelmuth)
+*   Fix Beyla auto-instrumentation discarding the default `discovery` targets (`instrument`/`exclude_instrument`) when a user set any other field under `discovery`, such as `exclude_otel_instrumented_services`. The defaults are now applied per-field, so a partial `discovery` config no longer stops Beyla from discovering services. (#2332) (@petewall)
 
 ## 4.2.1
 
