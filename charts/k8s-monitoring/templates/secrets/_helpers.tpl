@@ -1,8 +1,17 @@
 {{/* Helper function to return the auth type, defaulting to none */}}
+{{/* When the type is unset, infers "basic" if both a username and a password are provided. */}}
 {{/* Inputs: . (user of the secret, needs name, secret, auth) */}}
-{{- define "secrets.authType" }}
-{{- if hasKey . "auth" }}{{ .auth.type | default "none" }}{{ else }}none{{ end }}
-{{- end }}
+{{- define "secrets.authType" -}}
+{{- if not (hasKey . "auth") -}}
+none
+{{- else if .auth.type -}}
+{{ .auth.type }}
+{{- else if and (or .auth.username .auth.usernameFrom) (or .auth.password .auth.passwordFrom) -}}
+basic
+{{- else -}}
+none
+{{- end -}}
+{{- end -}}
 
 {{/* Helper function to determine the secret type */}}
 {{/* Inputs: . (user of the secret, needs name, secret, auth) */}}

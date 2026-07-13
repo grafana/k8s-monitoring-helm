@@ -14,6 +14,33 @@
 {{/* Entry point for collector-level warnings. Add new collector warning notes here. */}}
 {{- define "collectors.notes.warnings" }}
 {{- include "collectors.notes.istio" . }}
+{{- include "collectors.notes.remoteConfigInferredAuth" . }}
+{{- end }}
+
+{{/* Warns when a collector's remote configuration authentication type is being inferred as "basic". */}}
+{{- define "collectors.notes.remoteConfigInferredAuth" }}
+{{- $affected := list }}
+{{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
+  {{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
+  {{- if dig "remoteConfig" "enabled" false $collectorValues }}
+    {{- $auth := dig "remoteConfig" "auth" dict $collectorValues }}
+    {{- $hasUsername := or $auth.username $auth.usernameFrom }}
+    {{- $hasPassword := or $auth.password $auth.passwordFrom }}
+    {{- if and (not $auth.type) $hasUsername $hasPassword }}
+      {{- $affected = append $affected $collectorName }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- if $affected }}
+
+⚠️ Inferring the remote configuration authentication type as "basic" because a username and password were provided
+without an explicit "remoteConfig.auth.type"
+
+Affected collector(s):
+{{- range $name := $affected }}
+* {{ $name }}
+{{- end }}
+{{- end }}
 {{- end }}
 
 {{/*
