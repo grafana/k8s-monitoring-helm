@@ -1,0 +1,42 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Pod Logs via Loki - Namespace Metadata
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should not add the attach_metadata block by default
+    set:
+      testing: {enabled: true}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: attach_metadata
+
+  - it: should attach namespace metadata when attachNamespaceMetadata is enabled
+    set:
+      testing: {enabled: true}
+      attachNamespaceMetadata: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'attach_metadata \{\s*namespace = true\s*\}'
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should attach both namespace and node metadata when both are enabled
+    set:
+      testing: {enabled: true}
+      attachNamespaceMetadata: true
+      nodeLabels:
+        nodePool: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'attach_metadata \{\s*namespace = true\s*node = true\s*\}'
+      - matchSnapshot:
+          path: data["module.alloy"]

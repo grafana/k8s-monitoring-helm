@@ -48,7 +48,13 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | annotationSelector | string | `"logs.grafana.com/pods.enabled"` | Pod annotation to use for controlling log discovery. If a pod has this annotation, it will either enable or disable gathering of logs, depending on the value of the discoveryMethod. |
+| attachNamespaceMetadata | bool | `false` | Attach namespace metadata to pod discovery targets. When enabled, all namespace labels are available as log labels via `__meta_kubernetes_namespace_label_*`. |
 | discoveryMethod | string | `"all"` | Controls the behavior of discovering pods for logs. Possible values: `all`, `annotation`. When set to "all", every pod (filtered by the namespace and label selectors) will have their logs gathered. When set to "annotation", only pods with the annotation selector set to something other than "false", "no" or "skip" will have their logs gathered. |
+| excludeNamespaces | list | `[]` | Do not capture logs from any pods in these namespaces. |
+| extraDiscoveryRules | string | `""` | Rules to filter pods for log gathering. Only used for "volumes" or "kubernetesApi" gather methods. |
+| labelSelectors | object | `{}` | Filter the list of discovered pods and services by labels. Only for the "volumes" gather method. Example: `labelSelectors: { 'app': 'myapp' }` will only discover pods with the label `app=myapp`. Example: `labelSelectors: { 'app': ['myapp', 'myotherapp'] }` will only discover pods with the label `app=myapp` or `app=myotherapp`. |
+| namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
+| nodeSelectors | object | `{}` | Filter the list of discovered nodes by labels. Only for the "volumes" gather method. Example: `nodeSelectors: { 'kubernetes.io/os': 'linux' }` |
 
 ### Log Processing
 
@@ -60,16 +66,6 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | labels | object | `{"app_kubernetes_io_name":"app.kubernetes.io/name"}` | Log labels to set with values copied from the Kubernetes Pod labels. Format: `<log_label>: <kubernetes_label>`. |
 | staticLabels | object | `{}` | Log labels to set with static values. |
 | staticLabelsFrom | object | `{}` | Log labels to set with static values, not quoted so it can reference config components. |
-
-### Pod Discovery
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| excludeNamespaces | list | `[]` | Do not capture logs from any pods in these namespaces. |
-| extraDiscoveryRules | string | `""` | Rules to filter pods for log gathering. Only used for "volumes" or "kubernetesApi" gather methods. |
-| labelSelectors | object | `{}` | Filter the list of discovered pods and services by labels. Only for the "volumes" gather method. Example: `labelSelectors: { 'app': 'myapp' }` will only discover pods with the label `app=myapp`. Example: `labelSelectors: { 'app': ['myapp', 'myotherapp'] }` will only discover pods with the label `app=myapp` or `app=myotherapp`. |
-| namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
-| nodeSelectors | object | `{}` | Filter the list of discovered nodes by labels. Only for the "volumes" gather method. Example: `nodeSelectors: { 'kubernetes.io/os': 'linux' }` |
 
 ### Processing settings
 
