@@ -7,13 +7,6 @@ endif
 
 HAS_HELM_UNITTEST := $(shell $(HELM) plugin list | grep unittest 2> /dev/null)
 HAS_SHELLSPEC := $(shell command -v shellspec;)
-HAS_YQ := $(shell command -v yq 2>/dev/null)
-
-ifeq ($(HAS_YQ),)
-YQ = docker run --platform linux/amd64 --rm --volume $(shell pwd):/workdir -w /workdir mikefarah/yq
-else
-YQ = yq
-endif
 
 CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
 CHART_YAML_FILES = $(shell find templates -name "*.yaml")
