@@ -90,7 +90,7 @@
       {{- $msg = append $msg "Replace \"privileged\" with \"root\" (which sets the same securityContext) and add the host presets you need. For example:" }}
       {{- $msg = append $msg "collectors:" }}
       {{- $msg = append $msg (printf "  %s:" $collectorName) }}
-      {{- $msg = append $msg "    presets: [root, host-network, host-storage, host-cgroup]" }}
+      {{- $msg = append $msg "    presets: [root, host-network, host-storage, host-cgroup, host-tracefs]" }}
       {{- fail (join "\n" $msg) }}
     {{- end }}
   {{- end }}
