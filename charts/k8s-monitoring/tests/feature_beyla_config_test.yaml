@@ -42,6 +42,102 @@ tests:
               path: /metrics
               port: 9090
 
+  - it: keeps default discovery targets when user sets a partial discovery config
+    set:
+      cluster: {name: beyla-config-cluster}
+      autoInstrumentation:
+        enabled: true
+        beyla:
+          config:
+            data:
+              discovery:
+                exclude_otel_instrumented_services: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: data["beyla-config.yml"]
+          value: |-
+            attributes:
+              kubernetes:
+                cluster_name: beyla-config-cluster
+                enable: true
+            discovery:
+              exclude_instrument:
+              - exe_path: '{*alloy*,*otelcol*,*beyla*}'
+              exclude_otel_instrumented_services: true
+              instrument:
+              - k8s_namespace: '*'
+            filter:
+              network:
+                k8s_dst_owner_name:
+                  not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
+                k8s_src_owner_name:
+                  not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
+            internal_metrics:
+              prometheus:
+                path: /internal/metrics
+                port: 9090
+            prometheus_export:
+              features:
+              - application
+              - network
+              - application_service_graph
+              - application_span
+              - application_host
+              path: /metrics
+              port: 9090
+
+  - it: does not add default discovery targets when user fully defines discovery
+    set:
+      cluster: {name: beyla-config-cluster}
+      autoInstrumentation:
+        enabled: true
+        beyla:
+          config:
+            data:
+              discovery:
+                instrument:
+                  - k8s_pod_labels:
+                      instrument: beyla
+                exclude_instrument:
+                  - k8s_namespace: kube-system
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: data["beyla-config.yml"]
+          value: |-
+            attributes:
+              kubernetes:
+                cluster_name: beyla-config-cluster
+                enable: true
+            discovery:
+              exclude_instrument:
+              - k8s_namespace: kube-system
+              instrument:
+              - k8s_pod_labels:
+                  instrument: beyla
+            filter:
+              network:
+                k8s_dst_owner_name:
+                  not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
+                k8s_src_owner_name:
+                  not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
+            internal_metrics:
+              prometheus:
+                path: /internal/metrics
+                port: 9090
+            prometheus_export:
+              features:
+              - application
+              - network
+              - application_service_graph
+              - application_span
+              - application_host
+              path: /metrics
+              port: 9090
+
   - it: does not set otel_traces_export endpoint automatically when flag is disabled
     set:
       cluster: {name: beyla-config-cluster}
