@@ -108,7 +108,9 @@ jobs:
       - name: Run tests
         env:
           CHART: ${{ matrix.dir }}
-        run: make -C "charts/${CHART}" test
+        run: |
+          make -C "charts/${CHART}" -j"$(nproc)" examples
+          make -C "charts/${CHART}" test
 
   check-generated-files:
     name: Check Generated Files
