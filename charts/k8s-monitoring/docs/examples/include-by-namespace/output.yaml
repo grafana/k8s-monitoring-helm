@@ -2999,6 +2999,8 @@ data:
         cluster_name: include-by-namespace-test
         enable: true
     discovery:
+      exclude_instrument:
+      - exe_path: '{*alloy*,*otelcol*,*beyla*}'
       services:
       - k8s_namespace: alpha
       - k8s_namespace: bravo
@@ -3036,7 +3038,7 @@ data:
   self-reporting-metric.prom: |+
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="4.2.1", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="4.2.2", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="annotationAutodiscovery", version="1.0.0"} 1
@@ -3607,7 +3609,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 828a1f8a902849ae9e1dd55a1f03eacbe69329e4de68ecb2ea5dddf669327597
+        checksum/config: f12c8ce1d1e01aabb15bb77d9de204427ff57d9d68c6ce4c885be446756e12ad
         k8s.grafana.com/job: default/beyla
         k8s.grafana.com/logs.job: integrations/beyla
       labels:
@@ -4459,7 +4461,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-4.2.1
+    helm.sh/chart: k8s-monitoring-4.2.2
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -4512,7 +4514,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-4.2.1
+    helm.sh/chart: k8s-monitoring-4.2.2
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded

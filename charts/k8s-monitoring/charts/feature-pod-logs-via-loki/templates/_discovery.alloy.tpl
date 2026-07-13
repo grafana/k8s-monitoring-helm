@@ -38,7 +38,25 @@ discovery.kubernetes "pods" {
       label = {{ $nodeSelectors | join "," | quote }}
     }
 {{- end }}
-{{- include "feature.podLogsViaLoki.attachNodeMetadata" . | indent 2 }}
+{{- $attachNodeMetadata := false -}}
+{{- $attachNodeMetadata = or $attachNodeMetadata (not (empty .Values.nodeSelectors)) -}}
+{{- $attachNodeMetadata = or $attachNodeMetadata .Values.nodeLabels.nodePool -}}
+{{- $attachNodeMetadata = or $attachNodeMetadata .Values.nodeLabels.region -}}
+{{- $attachNodeMetadata = or $attachNodeMetadata .Values.nodeLabels.availabilityZone -}}
+{{- $attachNodeMetadata = or $attachNodeMetadata .Values.nodeLabels.nodeRole -}}
+{{- $attachNodeMetadata = or $attachNodeMetadata .Values.nodeLabels.nodeOS -}}
+{{- $attachNodeMetadata = or $attachNodeMetadata .Values.nodeLabels.nodeArchitecture -}}
+{{- $attachNodeMetadata = or $attachNodeMetadata .Values.nodeLabels.instanceType -}}
+{{- if or .Values.attachNamespaceMetadata $attachNodeMetadata }}
+  attach_metadata {
+  {{- if .Values.attachNamespaceMetadata }}
+    namespace = true
+  {{- end }}
+  {{- if $attachNodeMetadata }}
+    node = true
+  {{- end }}
+  }
+{{- end }}
 } // discovery.kubernetes "pods"
 
 discovery.relabel "filtered_pods" {

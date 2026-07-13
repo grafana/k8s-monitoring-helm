@@ -5,22 +5,22 @@ global:
   namespaceOverride: ""
 
 # -- Only capture logs from pods in these namespaces (`[]` means all namespaces).
-# @section -- Pod Discovery
+# @section -- Discovery Settings
 namespaces: []
 
 # -- Do not capture logs from any pods in these namespaces.
-# @section -- Pod Discovery
+# @section -- Discovery Settings
 excludeNamespaces: []
 
 # -- Filter the list of discovered nodes by labels. Only for the "volumes" gather method.
 # Example: `nodeSelectors: { 'kubernetes.io/os': 'linux' }`
-# @section -- Pod Discovery
+# @section -- Discovery Settings
 nodeSelectors: {}
 
 # -- Filter the list of discovered pods and services by labels. Only for the "volumes" gather method.
 # Example: `labelSelectors: { 'app': 'myapp' }` will only discover pods with the label `app=myapp`.
 # Example: `labelSelectors: { 'app': ['myapp', 'myotherapp'] }` will only discover pods with the label `app=myapp` or `app=myotherapp`.
-# @section -- Pod Discovery
+# @section -- Discovery Settings
 labelSelectors: {}
 
 # -- Controls the behavior of discovering pods for logs. Possible values: `all`, `annotation`.
@@ -37,8 +37,13 @@ discoveryMethod: "all"
 annotationSelector: "logs.grafana.com/pods.enabled"
 
 # -- Rules to filter pods for log gathering. Only used for "volumes" or "kubernetesApi" gather methods.
-# @section -- Pod Discovery
+# @section -- Discovery Settings
 extraDiscoveryRules: ""
+
+# -- Attach namespace metadata to pod discovery targets. When enabled, all namespace labels
+# are available as log labels via `__meta_kubernetes_namespace_label_*`.
+# @section -- Discovery Settings
+attachNamespaceMetadata: false
 
 # Configures which node labels to attach to the logs
 nodeLabels:
