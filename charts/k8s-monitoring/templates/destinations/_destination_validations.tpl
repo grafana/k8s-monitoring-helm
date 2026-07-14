@@ -30,7 +30,8 @@
 {{/* Inputs: . (Values) */}}
 {{- define "destinations.validate" }}
   {{- include "destinations.validate.uniqueNames" . }}
-  {{- range $destinationName , $destination := .Values.destinations }}
+  {{- /* Disabled destinations are excluded from all telemetry data flows, so skip their validation. */}}
+  {{- range $destinationName , $destination := (include "destinations.getEnabled" .Values.destinations | fromYaml) }}
     {{- if (regexFind "[^-_a-zA-Z0-9]" $destinationName) }}
       {{- $msg := list "" (printf "Destination \"%s\" has invalid characters in its name." $destinationName) }}
       {{- $msg = append $msg "Please only use alphanumeric, underscores, or dashes." }}

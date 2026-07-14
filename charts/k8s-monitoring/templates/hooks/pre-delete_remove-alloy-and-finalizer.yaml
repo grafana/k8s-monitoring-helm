@@ -27,7 +27,7 @@
   {{- $alloyNames = append $alloyNames (include "collector.alloy.fullname" $values) }}
 {{- end }}
 
-{{- range $destinationName, $destination := .Values.destinations }}
+{{- range $destinationName, $destination := (include "destinations.getEnabled" .Values.destinations | fromYaml) }}
   {{- if eq $destination.type "otlp" }}
     {{/* Tail sampling Alloy instances */}}
     {{- if eq (include "destinations.otlp.isTailSamplingEnabled" $destination) "true" }}

@@ -72,6 +72,7 @@ This defines the options for defining a destination for profiles that use the Py
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | clusterLabels | list | `["cluster","k8s.cluster.name"]` | Labels to be set with the cluster name as the value. |
+| disabled | bool | `false` | Set to `true` to disable this destination. Disabled destinations are excluded from all telemetry data flows, which is useful for removing a destination that was defined in a shared or parent values file. |
 | extraHeaders | object | `{}` | Extra headers to be set when sending data. All values are treated as strings and automatically quoted. |
 | extraHeadersFrom | object | `{}` | Extra headers to be set when sending data through a dynamic reference. All values are treated as raw strings and not quoted. |
 | extraLabels | object | `{}` | Extra labels to be added to all profiles before delivering to the destination. All values are treated as strings and automatically quoted. |

@@ -1,5 +1,5 @@
 {{- if eq $.Values.global.platform "openshift" }}
-{{- range $destinationName, $destination := .Values.destinations }}
+{{- range $destinationName, $destination := (include "destinations.getEnabled" .Values.destinations | fromYaml) }}
 {{- if eq $destination.type "otlp" }}
   {{- $isSamplingEnabled := include "destinations.otlp.isTailSamplingEnabled" $destination }}
   {{- if eq $isSamplingEnabled "true" }}

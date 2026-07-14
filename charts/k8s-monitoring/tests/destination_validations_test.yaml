@@ -50,6 +50,21 @@ tests:
               a-destination-with-an-invalid-type:
                 type: custom, loki-stdout, loki, nop, otlp, prometheus, or pyroscope
 
+  - it: skips validation for disabled destinations
+    set:
+      cluster: {name: test-cluster}
+      clusterMetrics: {enabled: true}
+      telemetryServices: {kube-state-metrics: {deploy: true}}
+      collectors: {alloy-metrics: {alloy: {clustering: {enabled: true}}}}
+      destinations:
+        metricsService:
+          type: prometheus
+          url: http://prometheus.example.com/api/prom
+        a-disabled-destination-with-no-type:
+          disabled: true
+    asserts:
+      - notFailedTemplate: {}
+
   - it: allows destination names with alphanumeric, underscores, and dashes
     set:
       cluster: {name: test-cluster}

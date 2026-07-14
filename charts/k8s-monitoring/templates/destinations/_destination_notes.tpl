@@ -5,7 +5,7 @@ so users are aware authentication was enabled implicitly.
 */}}
 {{- define "destinations.notes.inferredAuth" }}
 {{- $affected := list }}
-{{- range $destinationName, $destination := .Values.destinations }}
+{{- range $destinationName, $destination := (include "destinations.getEnabled" .Values.destinations | fromYaml) }}
   {{- if and (not (dig "auth" "type" "" $destination)) (eq (include "secrets.authType" $destination) "basic") }}
     {{- $affected = append $affected $destinationName }}
   {{- end }}

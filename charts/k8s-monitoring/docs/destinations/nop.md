@@ -3,6 +3,13 @@
 <!-- textlint-disable terminology -->
 ## Values
 
+### General
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| disabled | bool | `false` | Set to `true` to disable this destination. Disabled destinations are excluded from all telemetry data flows, which is useful for removing a destination that was defined in a shared or parent values file. |
+| name | string | `""` | The name for this no-op destination. |
+
 ### Logs
 
 | Key | Type | Default | Description |
@@ -16,12 +23,6 @@
 |-----|------|---------|-------------|
 | metrics | object | `{"enabled":true}` | Drop all metrics sent to this destination. |
 | metrics.enabled | bool | `true` | Whether this destination will accept and drop metrics. |
-
-### General
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| name | string | `""` | The name for this no-op destination. |
 
 ### Profiles
 

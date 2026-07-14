@@ -75,6 +75,7 @@ This defines the options for defining a destination for logs that use the Loki p
 | batchSize | string | `""` | Maximum batch size of logs to accumulate before sending. |
 | batchWait | string | `""` | Maximum amount of time to wait before sending a batch. |
 | clusterLabels | list | `["cluster","k8s.cluster.name"]` | Labels to be set with the cluster name as the value. |
+| disabled | bool | `false` | Set to `true` to disable this destination. Disabled destinations are excluded from all telemetry data flows, which is useful for removing a destination that was defined in a shared or parent values file. |
 | extraHeaders | object | `{}` | Extra headers to be set when sending data. All values are treated as strings and automatically quoted. |
 | extraHeadersFrom | object | `{}` | Extra headers to be set when sending data through a dynamic reference. All values are treated as raw strings and not quoted. |
 | extraLabels | object | `{}` | Custom labels to be added to all logs and events. All values are treated as strings and automatically quoted. |

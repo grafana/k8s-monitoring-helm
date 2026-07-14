@@ -73,6 +73,7 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | clusterLabels | list | `["cluster","k8s.cluster.name"]` | Labels to be set with the cluster name as the value. |
+| disabled | bool | `false` | Set to `true` to disable this destination. Disabled destinations are excluded from all telemetry data flows, which is useful for removing a destination that was defined in a shared or parent values file. |
 | extraHeaders | object | `{}` | Extra headers to be set when sending data. All values are treated as strings and automatically quoted. |
 | extraHeadersFrom | object | `{}` | Extra headers to be set when sending data through a dynamic reference. All values are treated as raw strings and not quoted. |
 | logs.path | string | `""` | A custom path to append to the URL when sending logs. Only used when `protocol` is `http`. Overrides the default `/v1/logs` path. For example, set `path: v2/log/otlp` to send logs to `<url>/v2/log/otlp`. |
