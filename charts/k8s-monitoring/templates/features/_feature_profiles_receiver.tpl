@@ -38,7 +38,7 @@ profiles_receiver "feature" {
   {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" "profilesReceiver") }}
   {{- $collectorValues := (include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml) }}
   {{- $extraPorts := deepCopy (dig "alloy" "extraPorts" list $collectorValues) }}
-  {{- if eq (include "collectors.hasExtraPort" (deepCopy $ | merge (dict "collectorName" $collectorName "portNumber" $.Values.profilesReceiver.port))) "false" }}
+  {{- if eq (include "collectors.hasExtraPort" (dict "collectorValues" $collectorValues "portNumber" $.Values.profilesReceiver.port)) "false" }}
     {{- $extraPorts = append $extraPorts (dict "name" "profiles" "port" $.Values.profilesReceiver.port "targetPort" $.Values.profilesReceiver.port "protocol" "TCP") }}
   {{- end -}}
   {{- $values = $values | merge (dict "collectors" (dict $collectorName (dict "alloy" (dict "extraPorts" $extraPorts)))) }}
@@ -50,13 +50,18 @@ profiles_receiver "feature" {
 
 {{- define "features.profilesReceiver.validate" }}
 {{- if .Values.profilesReceiver.enabled -}}
-{{- $featureKey := "profilesReceiver" }}
-{{- $featureName := "Profiles Receiver" }}
-{{- $destinations := include "features.profilesReceiver.destinations" . | fromYamlArray }}
-{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "profiles" "ecosystem" "pyroscope" "featureName" $featureName) }}
-{{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "profilesReceiver" "featureName" $featureName "type" "profiles" "ecosystem" "pyroscope") }}
-{{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
-{{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}
-{{- include "collectors.requireExtraPort" (dict "Values" $.Values "collectorName" $collectorName "featureName" $featureName "portNumber" $.Values.profilesReceiver.port "portName" "profiles" "portProtocol" "TCP") }}
+  {{- $featureKey := "profilesReceiver" }}
+  {{- $featureName := "Profiles Receiver" }}
+
+  {{/* Destination validations */}}
+  {{- $destinations := include "features.profilesReceiver.destinations" . | fromYamlArray }}
+  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "profiles" "ecosystem" "pyroscope" "featureName" $featureName) }}
+  {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "profilesReceiver" "featureName" $featureName "type" "profiles" "ecosystem" "pyroscope") }}
+
+  {{/* Collector validations */}}
+  {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
+  {{- $collectorValues := (include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml) }}
+  {{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}
+  {{- include "collectors.requireExtraPort" (dict "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.profilesReceiver.port "portName" "profiles" "portProtocol" "TCP") }}
 {{- end -}}
 {{- end -}}
