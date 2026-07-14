@@ -4,6 +4,7 @@
 
 ## 4.3.0
 
+*   Add a `presets` attribute to the remote configuration (`remotecfg`) collector attributes, containing the comma-separated list of the collector's presets. (@petewall)
 *   Add the ability to set the resolver and timeout for `processors.serviceGraphMetrics` in OTLP destinations, choosing how the load balancing exporter routes traces to the service graph Alloy instances. (@petewall)
 *   Update the SDK Injector (k8s-injection-controller) to 0.2.1. Its container image now defaults to the pinned chart appVersion (`0.2.0`) instead of the `main` tag. (@TylerHelmuth)
 *   Align `service.name`/`service.namespace` detection on logs (new opt-in `alignServiceNameWithOTelSemConv` flag) and profiles with the [OpenTelemetry Kubernetes semantic conventions](https://opentelemetry.io/docs/specs/semconv/non-normative/k8s-attributes/) that Grafana Beyla uses, so telemetry correlates across metrics, logs, traces, and profiles for the same workload. (#2547) (@petewall)
