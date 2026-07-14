@@ -15,6 +15,10 @@
 {{- if ((index .Values.global "image") | default dict).pullPolicy }}
   {{- $imagePullPolicy = (index .Values.global "image").pullPolicy }}
 {{- end }}
+{{- $imageRegistry := $jobSettings.image.registry }}
+{{- if ((index .Values.global "image") | default dict).registry }}
+  {{- $imageRegistry = (index .Values.global "image").registry }}
+{{- end }}
 ---
 apiVersion: batch/v1
 kind: Job
@@ -61,9 +65,9 @@ spec:
         - name: add-finalizers
           {{- with $jobSettings.image }}
             {{- if .digest }}
-          image: "{{ dig "image" "registry" .registry $.Values.global }}/{{ .repository }}@{{ .digest }}"
+          image: "{{ $imageRegistry }}/{{ .repository }}@{{ .digest }}"
             {{- else }}
-          image: "{{ dig "image" "registry" .registry $.Values.global }}/{{ .repository }}:{{ .tag }}"
+          image: "{{ $imageRegistry }}/{{ .repository }}:{{ .tag }}"
             {{- end }}
           {{- end }}
           imagePullPolicy: {{ $imagePullPolicy }}

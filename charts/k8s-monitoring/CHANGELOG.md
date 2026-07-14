@@ -2,8 +2,7 @@
 
 ## Unreleased
 
-*   Fix standardize on upper-case in level labels (#2844) (@saruprim)
-*   Add missing extra metric processing rules for Istio metrics integration (@1azunna)
+*   Add support for global image settings. `global.image.registry`, `global.image.pullPolicy`, and `global.image.pullSecrets` are now documented and schema-validated, and apply to the Alloy instances, the Alloy Operator, and the Alloy removal hooks. The flat `global.imageRegistry`, `global.imagePullPolicy`, and `global.imagePullSecrets` keys used by dependent charts (kube-state-metrics, Node Exporter, Windows Exporter) are also documented. (#2498) (@TylerHelmuth)
 
 ## 4.2.2
 
