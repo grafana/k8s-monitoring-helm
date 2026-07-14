@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+*   Add support for global image settings. `global.image.registry`, `global.image.pullPolicy`, and `global.image.pullSecrets` are now documented and schema-validated, and apply to the Alloy instances, the Alloy Operator, and the Alloy removal hooks. The flat `global.imageRegistry`, `global.imagePullPolicy`, and `global.imagePullSecrets` keys used by dependent charts (kube-state-metrics, Node Exporter, Windows Exporter) are also documented. (#2498) (@TylerHelmuth)
+
 ## 4.2.2
 
 *   Add `attachNamespaceMetadata` option to the Pod Logs (via Loki and via Kubernetes API) features. When enabled, namespace labels are attached to pod discovery targets and made available as `__meta_kubernetes_namespace_label_*`. (@petewall, @tdudas)

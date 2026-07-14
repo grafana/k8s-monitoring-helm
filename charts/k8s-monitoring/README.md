@@ -530,6 +530,12 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | global.convertClassicHistogramsToNhcb | bool | `false` | Whether to convert classic histograms to native histograms with custom buckets (NHCB) at scrape time. Requires scrapeNativeHistograms to be true, send_native_histograms on the destination, and Remote Write v2 (remoteWriteProtocol: 2). |
+| global.image.pullPolicy | string | `""` | Global image pull policy for the Alloy, Alloy Operator, and Alloy removal hook images. |
+| global.image.pullSecrets | list | `[]` | Global image pull secrets for the Alloy, Alloy Operator, Beyla, and Alloy removal hook images. |
+| global.image.registry | string | `""` | Global image registry to use for the Alloy, Alloy Operator, and Beyla images. |
+| global.imagePullPolicy | string | `""` | Global image pull policy for dependent charts that follow the flat `global.imagePullPolicy` convention. Most bundled dependencies do not honor a global pull policy; set `image.pullPolicy` on the individual service instead. |
+| global.imagePullSecrets | list | `[]` | Global image pull secrets used by dependent charts that follow the flat `global.imagePullSecrets` convention (kube-state-metrics, Node Exporter, Windows Exporter). |
+| global.imageRegistry | string | `""` | Global image registry used by dependent charts that follow the flat `global.imageRegistry` convention (kube-state-metrics, Node Exporter, Windows Exporter). |
 | global.kubernetesAPIService | string | `""` | The Kubernetes service. Change this if your cluster DNS is configured differently than the default. |
 | global.maxCacheSize | int | `100000` | Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) This should be at least 2x-5x your largest scrape target or samples appended rate. |
 | global.namespaceOverride | string | `""` | Override the namespace for namespaced resources created by this chart and its feature subcharts. |
