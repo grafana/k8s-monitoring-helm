@@ -1,0 +1,58 @@
+---
+cluster:
+  name: nop-destination-test
+
+destinations:
+  # A no-op destination accepts every signal and drops it. Because it is the only
+  # destination defined, all enabled features send their data here and nothing is
+  # stored or forwarded anywhere. Use this to measure telemetry volume from Alloy's
+  # own metrics before committing to real destinations, then swap this out.
+  dev-null:
+    type: nop
+
+# Metrics
+clusterMetrics:
+  enabled: true
+  collector: alloy-metrics
+
+# Logs
+podLogsViaLoki:
+  enabled: true
+  collector: alloy-logs
+
+# Traces (plus application metrics and logs)
+applicationObservability:
+  enabled: true
+  collector: alloy-receiver
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+
+# Profiles
+profilesReceiver:
+  enabled: true
+  collector: alloy-receiver
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+
+  alloy-receiver:
+    alloy:
+      extraPorts:
+        - name: otlp-grpc
+          port: 4317
+          targetPort: 4317
+          protocol: TCP
+        - name: profiles
+          port: 4040
+          targetPort: 4040
+          protocol: TCP
