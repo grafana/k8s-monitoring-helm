@@ -30,9 +30,9 @@ lint_alloy_file() {
 
   # Raise the stability level to match the least stable component used in the config.
   local stability_level=generally-available
-  if grep -qE "otelcol.exporter.debug|prometheus.enrich|loki.enrich|pyroscope.enrich" "${file}"; then
+  if grep -qF -e "otelcol.exporter.debug" -e "prometheus.enrich" -e "loki.enrich" -e "pyroscope.enrich" "${file}"; then
     stability_level=experimental
-  elif grep -qE "otelcol.receiver.filelog|otelcol.storage.file" "${file}"; then
+  elif grep -qF -e "otelcol.receiver.filelog" -e "otelcol.storage.file" "${file}"; then
     stability_level=public-preview
   fi
 
