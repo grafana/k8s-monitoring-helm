@@ -53,37 +53,37 @@ application_observability "feature" {
   {{- $collectorValues := (include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml) }}
   {{- $extraPorts := deepCopy (dig "alloy" "extraPorts" list $collectorValues) }}
   {{- if $.Values.applicationObservability.receivers.otlp.grpc.enabled }}
-    {{- if eq (include "collectors.hasExtraPort" (deepCopy $ | merge (dict "collectorName" $collectorName "portNumber" $.Values.applicationObservability.receivers.otlp.grpc.port))) "false" }}
+    {{- if eq (include "collectors.hasExtraPort" (dict "collectorValues" $collectorValues "portNumber" $.Values.applicationObservability.receivers.otlp.grpc.port)) "false" }}
       {{- $extraPorts = append $extraPorts (dict "name" "otlp-grpc" "port" $.Values.applicationObservability.receivers.otlp.grpc.port "targetPort" $.Values.applicationObservability.receivers.otlp.grpc.port "protocol" "TCP" "appProtocol" "grpc") }}
     {{- end -}}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.otlp.http.enabled }}
-    {{- if eq (include "collectors.hasExtraPort" (deepCopy $ | merge (dict "collectorName" $collectorName "portNumber" $.Values.applicationObservability.receivers.otlp.http.port))) "false" }}
+    {{- if eq (include "collectors.hasExtraPort" (dict "collectorValues" $collectorValues "portNumber" $.Values.applicationObservability.receivers.otlp.http.port)) "false" }}
       {{- $extraPorts = append $extraPorts (dict "name" "otlp-http" "port" $.Values.applicationObservability.receivers.otlp.http.port "targetPort" $.Values.applicationObservability.receivers.otlp.http.port "protocol" "TCP" "appProtocol" "http") }}
     {{- end -}}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.zipkin.enabled }}
-    {{- if eq (include "collectors.hasExtraPort" (deepCopy $ | merge (dict "collectorName" $collectorName "portNumber" $.Values.applicationObservability.receivers.zipkin.port))) "false" }}
+    {{- if eq (include "collectors.hasExtraPort" (dict "collectorValues" $collectorValues "portNumber" $.Values.applicationObservability.receivers.zipkin.port)) "false" }}
       {{- $extraPorts = append $extraPorts (dict "name" "zipkin" "port" $.Values.applicationObservability.receivers.zipkin.port "targetPort" $.Values.applicationObservability.receivers.zipkin.port "protocol" "TCP" "appProtocol" "http") }}
     {{- end -}}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.grpc.enabled }}
-    {{- if eq (include "collectors.hasExtraPort" (deepCopy $ | merge (dict "collectorName" $collectorName "portNumber" $.Values.applicationObservability.receivers.jaeger.grpc.port))) "false" }}
+    {{- if eq (include "collectors.hasExtraPort" (dict "collectorValues" $collectorValues "portNumber" $.Values.applicationObservability.receivers.jaeger.grpc.port)) "false" }}
       {{- $extraPorts = append $extraPorts (dict "name" "jaeger-grpc" "port" $.Values.applicationObservability.receivers.jaeger.grpc.port "targetPort" $.Values.applicationObservability.receivers.jaeger.grpc.port "protocol" "TCP" "appProtocol" "grpc") }}
     {{- end -}}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftBinary.enabled }}
-    {{- if eq (include "collectors.hasExtraPort" (deepCopy $ | merge (dict "collectorName" $collectorName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port))) "false" }}
+    {{- if eq (include "collectors.hasExtraPort" (dict "collectorValues" $collectorValues "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port)) "false" }}
       {{- $extraPorts = append $extraPorts (dict "name" "jaeger-binary" "port" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port "targetPort" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port "protocol" "UDP") }}
     {{- end -}}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftCompact.enabled }}
-    {{- if eq (include "collectors.hasExtraPort" (deepCopy $ | merge (dict "collectorName" $collectorName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port))) "false" }}
+    {{- if eq (include "collectors.hasExtraPort" (dict "collectorValues" $collectorValues "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port)) "false" }}
       {{- $extraPorts = append $extraPorts (dict "name" "jaeger-compact" "port" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port "targetPort" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port "protocol" "UDP") }}
     {{- end -}}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftHttp.enabled }}
-    {{- if eq (include "collectors.hasExtraPort" (deepCopy $ | merge (dict "collectorName" $collectorName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port))) "false" }}
+    {{- if eq (include "collectors.hasExtraPort" (dict "collectorValues" $collectorValues "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port)) "false" }}
       {{- $extraPorts = append $extraPorts (dict "name" "jaeger-http" "port" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port "targetPort" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port "protocol" "TCP" "appProtocol" "http") }}
     {{- end -}}
   {{- end -}}
@@ -119,27 +119,28 @@ application_observability "feature" {
 
   {{/* Collector validations */}}
   {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
+  {{- $collectorValues := (include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml) }}
   {{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}
   {{- if $.Values.applicationObservability.receivers.otlp.grpc.enabled }}
-    {{- include "collectors.requireExtraPort" (dict "Values" $.Values "collectorName" $collectorName "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.otlp.grpc.port "portName" "otlp-grpc" "portProtocol" "TCP") }}
+    {{- include "collectors.requireExtraPort" (dict "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.otlp.grpc.port "portName" "otlp-grpc" "portProtocol" "TCP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.otlp.http.enabled }}
-    {{- include "collectors.requireExtraPort" (dict "Values" $.Values "collectorName" $collectorName "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.otlp.http.port "portName" "otlp-http" "portProtocol" "TCP") }}
+    {{- include "collectors.requireExtraPort" (dict "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.otlp.http.port "portName" "otlp-http" "portProtocol" "TCP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.zipkin.enabled }}
-    {{- include "collectors.requireExtraPort" (dict "Values" $.Values "collectorName" $collectorName "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.zipkin.port "portName" "zipkin" "portProtocol" "TCP") }}
+    {{- include "collectors.requireExtraPort" (dict "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.zipkin.port "portName" "zipkin" "portProtocol" "TCP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.grpc.enabled }}
-    {{- include "collectors.requireExtraPort" (dict "Values" $.Values "collectorName" $collectorName "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.grpc.port "portName" "jaeger-grpc" "portProtocol" "TCP") }}
+    {{- include "collectors.requireExtraPort" (dict "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.grpc.port "portName" "jaeger-grpc" "portProtocol" "TCP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftBinary.enabled }}
-    {{- include "collectors.requireExtraPort" (dict "Values" $.Values "collectorName" $collectorName "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port "portName" "jaeger-binary" "portProtocol" "UDP") }}
+    {{- include "collectors.requireExtraPort" (dict "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port "portName" "jaeger-binary" "portProtocol" "UDP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftCompact.enabled }}
-    {{- include "collectors.requireExtraPort" (dict "Values" $.Values "collectorName" $collectorName "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port "portName" "jaeger-compact" "portProtocol" "UDP") }}
+    {{- include "collectors.requireExtraPort" (dict "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port "portName" "jaeger-compact" "portProtocol" "UDP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftHttp.enabled }}
-    {{- include "collectors.requireExtraPort" (dict "Values" $.Values "collectorName" $collectorName "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port "portName" "jaeger-http" "portProtocol" "TCP") }}
+    {{- include "collectors.requireExtraPort" (dict "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port "portName" "jaeger-http" "portProtocol" "TCP") }}
   {{- end -}}
   {{- include "feature.applicationObservability.validate" (dict "Values" $.Values.applicationObservability) }}
   {{- end -}}
