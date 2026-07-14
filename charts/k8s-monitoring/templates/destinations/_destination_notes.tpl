@@ -6,8 +6,10 @@ so users are aware authentication was enabled implicitly.
 {{- define "destinations.notes.inferredAuth" }}
 {{- $affected := list }}
 {{- range $destinationName, $destination := .Values.destinations }}
-  {{- if and (not (dig "auth" "type" "" $destination)) (eq (include "secrets.authType" $destination) "basic") }}
-    {{- $affected = append $affected $destinationName }}
+  {{- if not $destination.disabled }}
+    {{- if and (not (dig "auth" "type" "" $destination)) (eq (include "secrets.authType" $destination) "basic") }}
+      {{- $affected = append $affected $destinationName }}
+    {{- end }}
   {{- end }}
 {{- end }}
 {{- if $affected }}

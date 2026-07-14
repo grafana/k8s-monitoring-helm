@@ -4,19 +4,22 @@
 {{- $destinations := list }}
 {{- $backupDestinations := list }}
 {{- range $destinationName, $destination := .destinations }}
-  {{- /* Does this destination support the telemetry data type? */}}
-  {{- if eq (include (printf "destinations.%s.supports_%s" $destination.type $.type) $destination) "true" }}
-    {{- if empty $.filter }}
-      {{- /* Is this destination in the ecosystem? */}}
-      {{- if eq $.ecosystem (include (printf "destinations.%s.ecosystem" $destination.type) .) }}
-        {{- $destinations = append $destinations $destinationName }}
-      {{- else }}
-        {{- $backupDestinations = append $backupDestinations $destinationName }}
-      {{- end }}
+  {{- /* Skip destinations that have been disabled. */}}
+  {{- if not $destination.disabled }}
+    {{- /* Does this destination support the telemetry data type? */}}
+    {{- if eq (include (printf "destinations.%s.supports_%s" $destination.type $.type) $destination) "true" }}
+      {{- if empty $.filter }}
+        {{- /* Is this destination in the ecosystem? */}}
+        {{- if eq $.ecosystem (include (printf "destinations.%s.ecosystem" $destination.type) .) }}
+          {{- $destinations = append $destinations $destinationName }}
+        {{- else }}
+          {{- $backupDestinations = append $backupDestinations $destinationName }}
+        {{- end }}
 
-    {{- /* Did the data source choose this destination? */}}
-    {{- else if has $destinationName $.filter }}
-      {{- $destinations = append $destinations $destinationName }}
+      {{- /* Did the data source choose this destination? */}}
+      {{- else if has $destinationName $.filter }}
+        {{- $destinations = append $destinations $destinationName }}
+      {{- end }}
     {{- end }}
   {{- end }}
 {{- end }}

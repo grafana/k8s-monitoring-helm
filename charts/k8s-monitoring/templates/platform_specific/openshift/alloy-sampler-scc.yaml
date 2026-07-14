@@ -1,5 +1,6 @@
 {{- if eq $.Values.global.platform "openshift" }}
 {{- range $destinationName, $destination := .Values.destinations }}
+{{- if not $destination.disabled }}
 {{- if eq $destination.type "otlp" }}
   {{- $isSamplingEnabled := include "destinations.otlp.isTailSamplingEnabled" $destination }}
   {{- if eq $isSamplingEnabled "true" }}
@@ -86,6 +87,7 @@ subjects:
 - kind: ServiceAccount
   name: {{ $alloyFullName }}
   namespace: {{ include "helper.namespace" $ }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

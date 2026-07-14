@@ -31,6 +31,8 @@
 {{- define "destinations.validate" }}
   {{- include "destinations.validate.uniqueNames" . }}
   {{- range $destinationName , $destination := .Values.destinations }}
+    {{- /* Disabled destinations are excluded from all telemetry data flows, so skip their validation. */}}
+    {{- if not $destination.disabled }}
     {{- if (regexFind "[^-_a-zA-Z0-9]" $destinationName) }}
       {{- $msg := list "" (printf "Destination \"%s\" has invalid characters in its name." $destinationName) }}
       {{- $msg = append $msg "Please only use alphanumeric, underscores, or dashes." }}
@@ -99,6 +101,7 @@
         {{- $msg = append $msg "or leave rules.collector unset to use the first enabled collector." }}
         {{- fail (join "\n" $msg) }}
       {{- end }}
+    {{- end }}
     {{- end }}
   {{- end }}
 {{- end }}
