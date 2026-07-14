@@ -70,3 +70,23 @@ tests:
                     port: 4317
                     protocol: TCP
                     targetPort: 4317
+      # The otel-receiver preset already opens 4317 and 4318, so enabling the OTLP receivers must not
+      # duplicate those ports.
+      - documentIndex: 0
+        equal:
+          path: "data.presetPorts"
+          value: |-
+            collectors:
+              alloy-receiver:
+                alloy:
+                  extraPorts:
+                  - appProtocol: grpc
+                    name: otlp-grpc
+                    port: 4317
+                    protocol: TCP
+                    targetPort: 4317
+                  - appProtocol: http
+                    name: otlp-http
+                    port: 4318
+                    protocol: TCP
+                    targetPort: 4318

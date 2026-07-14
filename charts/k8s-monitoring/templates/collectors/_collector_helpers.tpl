@@ -1,7 +1,8 @@
-{{/* Inputs: Values (all values), collectorName (collector name), portNumber */}}
+{{/* Inputs: collectorValues (collector name), portNumber */}}
 {{- define "collectors.hasExtraPort" -}}
+{{- $extraPorts := deepCopy (dig "alloy" "extraPorts" list .collectorValues) }}
 {{- $found := "false" -}}
-{{- range $portEntry := (dig .collectorName "alloy" "extraPorts" (list) .Values.collectors) -}}
+{{- range $portEntry := $extraPorts -}}
   {{- if eq (int $portEntry.targetPort) (int $.portNumber) }}
     {{- $found = "true" -}}
   {{- end }}
@@ -50,8 +51,8 @@
 {{- $newList | toYaml -}}
 {{- end }}
 
-{{/* Inputs: Values (all values), collectorName (collector name), featureName (feature name), portNumber, portName, portProtocol */}}
-{{- define "collectors.requireExtraPort" -}}
+{{/* Inputs: collectorValues (collector values), featureName (feature name), portNumber, portName, portProtocol */}}
+{{- define "collectors.requireExtraPort" }}
 {{- if eq (include "collectors.hasExtraPort" .) "false" }}
   {{- $msg := list "" }}
   {{- $msg = append $msg (printf "The %s feature requires that port %d to be open on the %s collector." .featureName (.portNumber | int) .collectorName ) }}
