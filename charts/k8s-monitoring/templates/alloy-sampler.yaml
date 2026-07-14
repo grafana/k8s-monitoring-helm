@@ -1,5 +1,4 @@
-{{- range $destinationName, $destination := .Values.destinations }}
-{{- if not $destination.disabled }}
+{{- range $destinationName, $destination := (include "destinations.getEnabled" .Values.destinations | fromYaml) }}
 {{- if eq $destination.type "otlp" }}
   {{- $isSamplingEnabled := include "destinations.otlp.isTailSamplingEnabled" $destination }}
   {{- if eq $isSamplingEnabled "true" }}
@@ -60,7 +59,6 @@ metadata:
   {{- end }}
   {{- end }}
 spec:{{ $alloySpec | trim | nindent 2 }}
-{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

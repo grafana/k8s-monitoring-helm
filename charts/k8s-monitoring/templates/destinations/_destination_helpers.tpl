@@ -1,25 +1,34 @@
+{{/* Inputs: . (the map of destinations) */}}
+{{/* Outputs: The map of destinations, excluding any that set `disabled: true` */}}
+{{- define "destinations.getEnabled" }}
+{{- $enabledDestinations := dict }}
+{{- range $destinationName, $destination := . }}
+  {{- if not $destination.disabled }}
+    {{- $_ := set $enabledDestinations $destinationName $destination }}
+  {{- end }}
+{{- end }}
+{{- $enabledDestinations | toYaml }}
+{{- end }}
+
 {{/* Inputs: destinations (map of destinations), type (string), ecosystem (string), filter (list of destination names) */}}
 {{/* Outputs: array of destination names that match the type, ecosystem, and filter */}}
 {{- define "destinations.get" }}
 {{- $destinations := list }}
 {{- $backupDestinations := list }}
-{{- range $destinationName, $destination := .destinations }}
-  {{- /* Skip destinations that have been disabled. */}}
-  {{- if not $destination.disabled }}
-    {{- /* Does this destination support the telemetry data type? */}}
-    {{- if eq (include (printf "destinations.%s.supports_%s" $destination.type $.type) $destination) "true" }}
-      {{- if empty $.filter }}
-        {{- /* Is this destination in the ecosystem? */}}
-        {{- if eq $.ecosystem (include (printf "destinations.%s.ecosystem" $destination.type) .) }}
-          {{- $destinations = append $destinations $destinationName }}
-        {{- else }}
-          {{- $backupDestinations = append $backupDestinations $destinationName }}
-        {{- end }}
-
-      {{- /* Did the data source choose this destination? */}}
-      {{- else if has $destinationName $.filter }}
+{{- range $destinationName, $destination := (include "destinations.getEnabled" .destinations | fromYaml) }}
+  {{- /* Does this destination support the telemetry data type? */}}
+  {{- if eq (include (printf "destinations.%s.supports_%s" $destination.type $.type) $destination) "true" }}
+    {{- if empty $.filter }}
+      {{- /* Is this destination in the ecosystem? */}}
+      {{- if eq $.ecosystem (include (printf "destinations.%s.ecosystem" $destination.type) .) }}
         {{- $destinations = append $destinations $destinationName }}
+      {{- else }}
+        {{- $backupDestinations = append $backupDestinations $destinationName }}
       {{- end }}
+
+    {{- /* Did the data source choose this destination? */}}
+    {{- else if has $destinationName $.filter }}
+      {{- $destinations = append $destinations $destinationName }}
     {{- end }}
   {{- end }}
 {{- end }}

@@ -27,21 +27,19 @@
   {{- $alloyNames = append $alloyNames (include "collector.alloy.fullname" $values) }}
 {{- end }}
 
-{{- range $destinationName, $destination := .Values.destinations }}
-  {{- if not $destination.disabled }}
-    {{- if eq $destination.type "otlp" }}
-      {{/* Tail sampling Alloy instances */}}
-      {{- if eq (include "destinations.otlp.isTailSamplingEnabled" $destination) "true" }}
-        {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
-        {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-sampler" $destinationName)) | trunc $maxLength | trimSuffix "-" | lower }}
-        {{- $alloyNames = append $alloyNames $collectorName }}
-      {{- end }}
-      {{/* Service graph metrics Alloy instances */}}
-      {{- if eq (include "destinations.otlp.isServiceGraphsEnabled" $destination) "true" }}
-        {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
-        {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-servicegraph" $destinationName)) | trunc $maxLength | trimSuffix "-" | lower }}
-        {{- $alloyNames = append $alloyNames $collectorName }}
-      {{- end }}
+{{- range $destinationName, $destination := (include "destinations.getEnabled" .Values.destinations | fromYaml) }}
+  {{- if eq $destination.type "otlp" }}
+    {{/* Tail sampling Alloy instances */}}
+    {{- if eq (include "destinations.otlp.isTailSamplingEnabled" $destination) "true" }}
+      {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
+      {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-sampler" $destinationName)) | trunc $maxLength | trimSuffix "-" | lower }}
+      {{- $alloyNames = append $alloyNames $collectorName }}
+    {{- end }}
+    {{/* Service graph metrics Alloy instances */}}
+    {{- if eq (include "destinations.otlp.isServiceGraphsEnabled" $destination) "true" }}
+      {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
+      {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-servicegraph" $destinationName)) | trunc $maxLength | trimSuffix "-" | lower }}
+      {{- $alloyNames = append $alloyNames $collectorName }}
     {{- end }}
   {{- end }}
 {{- end }}
