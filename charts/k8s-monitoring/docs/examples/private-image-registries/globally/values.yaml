@@ -24,19 +24,18 @@ destinations:
           - name: always_sample-policy
             type: always_sample
 
-# Dependent charts use two methods for global image registry and pull secrets
-# so we need to define it both ways.
+# Dependent charts use two conventions for global image settings, so we define it both ways.
 global:
-  # Required for Alloy, Alloy Operator and Beyla
+  # Nested convention: applies to Alloy, the Alloy Operator, the Alloy removal hooks, and Beyla.
   image:
     registry: my.registry.com
     pullPolicy: Always
     pullSecrets:
       - name: my-registry-creds
 
-  # Required for kube-state-metrics, Node Exporter and Windows Exporter
+  # Flat convention: registry and pull secrets for kube-state-metrics, Node Exporter, and Windows Exporter.
+  # These charts do not honor a global image pull policy; set image.pullPolicy per-service if you need one.
   imageRegistry: my.registry.com
-  imagePullPolicy: Always
   imagePullSecrets:
     - name: my-registry-creds
 
