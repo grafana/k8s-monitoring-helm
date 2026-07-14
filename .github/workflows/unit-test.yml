@@ -17,6 +17,10 @@ on:
 
 permissions: {}
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   detect-changed-charts:
     name: Detect Changed Charts
@@ -67,13 +71,39 @@ jobs:
 
           if [ -z "$changed_charts" ]; then
             echo "No changes detected in charts"
+            echo "changed_charts=none" >> "${GITHUB_OUTPUT}"
           else
             echo "Changed charts: $changed_charts"
             echo "changed_charts=$(echo "$changed_charts" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
           fi
 
-  run-tests:
-    name: Testing
+  unittest:
+    name: Unit Test
+    needs: detect-changed-charts
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dir: ${{ fromJson(needs.detect-changed-charts.outputs.changed_charts) }}
+      fail-fast: false
+    if: ${{ needs.detect-changed-charts.outputs.changed_charts != 'none' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        with:
+          persist-credentials: 'false'
+
+      - name: Set up Helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310  # v5.0.1
+        with:
+          version: v4.1.4  # pin to 4.1.x; 4.2.x changes template output formatting (helm/helm#32132)
+
+      - name: Run unit tests
+        env:
+          CHART: ${{ matrix.dir }}
+        run: make -C "charts/${CHART}" unittest
+
+  lint-helm:
+    name: Lint Helm
     needs: detect-changed-charts
     runs-on: ubuntu-latest
     strategy:
@@ -95,6 +125,31 @@ jobs:
       - name: Set up chart-testing
         uses: helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f  # v2.8.0
 
+      - name: Lint Helm charts and check examples
+        env:
+          CHART: ${{ matrix.dir }}
+        run: make -C "charts/${CHART}" -j"$(nproc)" lint-helm example-checks misc-checks
+
+  lint-configs:
+    name: Lint Alloy Configs
+    needs: detect-changed-charts
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dir: ${{ fromJson(needs.detect-changed-charts.outputs.changed_charts) }}
+      fail-fast: false
+    if: ${{ needs.detect-changed-charts.outputs.changed_charts != 'none' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        with:
+          persist-credentials: 'false'
+
+      - name: Set up Helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310  # v5.0.1
+        with:
+          version: v4.1.4  # pin to 4.1.x; 4.2.x changes template output formatting (helm/helm#32132)
+
       # Installing Grafana Alloy because we need it to lint the generated alloy config files.
       # https://grafana.com/docs/alloy/latest/get-started/install/linux/
       - name: Install Grafana Alloy
@@ -105,10 +160,38 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y alloy
 
-      - name: Run tests
+      - name: Lint generated Alloy configs
         env:
           CHART: ${{ matrix.dir }}
-        run: make -C "charts/${CHART}" test
+        run: make -C "charts/${CHART}" -j"$(nproc)" lint-configs
+
+  test-features:
+    name: Test Feature Charts
+    needs: detect-changed-charts
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dir: ${{ fromJson(needs.detect-changed-charts.outputs.changed_charts) }}
+      fail-fast: false
+    if: ${{ needs.detect-changed-charts.outputs.changed_charts != 'none' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        with:
+          persist-credentials: 'false'
+
+      - name: Set up Helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310  # v5.0.1
+        with:
+          version: v4.1.4  # pin to 4.1.x; 4.2.x changes template output formatting (helm/helm#32132)
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f  # v2.8.0
+
+      - name: Test feature charts
+        env:
+          CHART: ${{ matrix.dir }}
+        run: make -C "charts/${CHART}" test-features
 
   check-generated-files:
     name: Check Generated Files
@@ -136,7 +219,10 @@ jobs:
       - name: Regenerate files
         env:
           CHART: ${{ matrix.dir }}
-        run: make -C "charts/${CHART}" clean build
+        run: |
+          make -C "charts/${CHART}" clean
+          make -C "charts/${CHART}" build-features
+          make -C "charts/${CHART}" -j"$(nproc)" build
 
       - name: Check for changes in generated files
         env:
