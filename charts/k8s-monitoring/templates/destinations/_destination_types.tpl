@@ -3,6 +3,7 @@
 - custom
 - loki-stdout
 - loki
+- nop
 - otlp
 - prometheus
 - pyroscope

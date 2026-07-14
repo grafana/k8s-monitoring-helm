@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.3.0
+
+*   Add the `nop` destination, which drops all telemetry sent to it. (#1461) (@TylerHelmuth)
+
 ## Unreleased
 
 *   Add the `otel-receiver` collector preset, which opens the standard OTLP receiver ports on the collector (4317 for OTLP gRPC and 4318 for OTLP HTTP). (@petewall)
