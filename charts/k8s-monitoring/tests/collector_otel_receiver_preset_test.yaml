@@ -1,0 +1,22 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Collectors - OTel Receiver Preset
+templates:
+  - alloy.yaml
+tests:
+  - it: otel-receiver opens the OTLP gRPC and HTTP ports
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-receiver:
+          presets: [otel-receiver]
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - lengthEqual:
+          path: spec.alloy.extraPorts
+          count: 2
+      - contains:
+          path: spec.alloy.extraPorts
+          content: {name: otlp-grpc, port: 4317, targetPort: 4317, protocol: TCP, appProtocol: grpc}
+      - contains:
+          path: spec.alloy.extraPorts
+          content: {name: otlp-http, port: 4318, targetPort: 4318, protocol: TCP, appProtocol: http}

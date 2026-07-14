@@ -148,6 +148,7 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
        Each entry is the key-path to a list. Add a path here to make another preset list additive. Output: a YAML
        array of key-paths. */ -}}
 {{- define "collector.alloy.appendablePaths" -}}
+- ["alloy", "extraPorts"]
 - ["alloy", "mounts", "extra"]
 - ["controller", "volumes", "extra"]
 {{- end }}
