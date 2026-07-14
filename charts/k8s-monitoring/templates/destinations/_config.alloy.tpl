@@ -38,7 +38,7 @@
      owns rule synchronization with the Mimir Ruler API. */}}
 {{/* Inputs: . (root object), collectorName (string) */}}
 {{- define "destinations.alloy.rules" }}
-{{- range $destinationName, $destination := $.Values.destinations }}
+{{- range $destinationName, $destination := (include "destinations.getEnabled" $.Values.destinations | fromYaml) }}
   {{- if eq $destination.type "prometheus" }}
     {{- $defaultValues := (printf "destinations/%s-values.yaml" $destination.type) | $.Files.Get | fromYaml }}
     {{- $destinationWithDefaults := mergeOverwrite $defaultValues $destination }}
