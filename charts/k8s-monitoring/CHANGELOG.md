@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.3.0
+
+*   Add the `nop` destination, which drops all telemetry sent to it. (#1461) (@TylerHelmuth)
+
 ## Unreleased
 
 *   Fix standardize on upper-case in level labels (#2844) (@saruprim)
