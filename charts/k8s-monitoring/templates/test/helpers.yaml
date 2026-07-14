@@ -19,4 +19,12 @@ data:
   overwriteExisting: {{ include "collectors.set_extra_env" (dict "envList" (list (dict "name" "PORT" "value" "8080")) "name" "PORT" "value" "9090" "overwrite" true) | fromYamlArray | toJson | quote }}
   noOverwriteExisting: {{ include "collectors.set_extra_env" (dict "envList" (list (dict "name" "PORT" "value" "8080")) "name" "PORT" "value" "9090" "overwrite" false) | fromYamlArray | toJson | quote }}
   insertIntoEmpty: {{ include "collectors.set_extra_env" (dict "envList" (list) "name" "PORT" "value" "8080" "overwrite" false) | fromYamlArray | toJson | quote }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-destinations-get-enabled
+data:
+  {{- $destinations := dict "enabledDest" (dict "type" "prometheus") "disabledDest" (dict "type" "prometheus" "disabled" true) }}
+  enabledNames: {{ include "destinations.getEnabled" $destinations | fromYaml | keys | sortAlpha | toJson | quote }}
 {{- end }}

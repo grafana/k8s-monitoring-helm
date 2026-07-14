@@ -1,11 +1,11 @@
 # Changelog
 
-## 4.3.0
-
-*   Add the `nop` destination, which drops all telemetry sent to it. (#1461) (@TylerHelmuth)
-
 ## Unreleased
 
+## 4.3.0
+
+*   Allow a destination to be disabled by setting `disabled: true`. Disabled destinations are excluded from all destination lists, secrets, and generated Alloy instances, which makes it possible to remove a destination that was defined in a shared or parent values file. (#2800) (@petewall)
+*   Add the `nop` destination, which drops all telemetry sent to it. (#1461) (@TylerHelmuth)
 *   Add the `otel-receiver` collector preset, which opens the standard OTLP receiver ports on the collector (4317 for OTLP gRPC and 4318 for OTLP HTTP). (@petewall)
 *   Add support for global image settings. `global.image.registry`, `global.image.pullPolicy`, and `global.image.pullSecrets` are now documented and schema-validated, and apply to the Alloy instances, the Alloy Operator, and the Alloy removal hooks. The flat `global.imageRegistry`, `global.imagePullPolicy`, and `global.imagePullSecrets` keys used by dependent charts (kube-state-metrics, Node Exporter, Windows Exporter) are also documented. (#2498) (@TylerHelmuth)
 

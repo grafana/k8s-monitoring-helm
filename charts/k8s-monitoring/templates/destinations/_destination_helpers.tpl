@@ -1,9 +1,21 @@
+{{/* Inputs: . (the map of destinations) */}}
+{{/* Outputs: The map of destinations, excluding any that set `disabled: true` */}}
+{{- define "destinations.getEnabled" }}
+{{- $enabledDestinations := dict }}
+{{- range $destinationName, $destination := . }}
+  {{- if not $destination.disabled }}
+    {{- $_ := set $enabledDestinations $destinationName $destination }}
+  {{- end }}
+{{- end }}
+{{- $enabledDestinations | toYaml }}
+{{- end }}
+
 {{/* Inputs: destinations (map of destinations), type (string), ecosystem (string), filter (list of destination names) */}}
 {{/* Outputs: array of destination names that match the type, ecosystem, and filter */}}
 {{- define "destinations.get" }}
 {{- $destinations := list }}
 {{- $backupDestinations := list }}
-{{- range $destinationName, $destination := .destinations }}
+{{- range $destinationName, $destination := (include "destinations.getEnabled" .destinations | fromYaml) }}
   {{- /* Does this destination support the telemetry data type? */}}
   {{- if eq (include (printf "destinations.%s.supports_%s" $destination.type $.type) $destination) "true" }}
     {{- if empty $.filter }}
