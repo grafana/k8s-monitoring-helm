@@ -145,6 +145,20 @@ declare "pod_logs_via_opentelemetry" {
         `resource.attributes[{{ .Values.annotationSelector | quote }}] == "false"`,
         `resource.attributes[{{ .Values.annotationSelector | quote }}] == "no"`,
         `resource.attributes[{{ .Values.annotationSelector | quote }}] == "skip"`,
+{{- range $attribute, $value := .Values.filters.annotations }}
+{{- if kindIs "invalid" $value }}
+        `resource.attributes[{{ $attribute | quote }}] != nil`,
+{{- else }}
+        `resource.attributes[{{ $attribute | quote }}] == {{ $value | quote }}`,
+{{- end }}
+{{- end }}
+{{- range $attribute, $value := .Values.filters.labels }}
+{{- if kindIs "invalid" $value }}
+        `resource.attributes[{{ $attribute | quote }}] != nil`,
+{{- else }}
+        `resource.attributes[{{ $attribute | quote }}] == {{ $value | quote }}`,
+{{- end }}
+{{- end }}
       ]
     }
     output {

@@ -1,0 +1,120 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Pod Logs via OpenTelemetry - Filters
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should drop logs when a surfaced annotation attribute is present (explicit null)
+    set:
+      testing: {enabled: true}
+      annotations:
+        inject_java: instrumentation.opentelemetry.io/inject-java
+      filters:
+        annotations:
+          inject_java: null
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'resource\.attributes\["inject_java"\] != nil'
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should treat an empty value the same as null (presence)
+    set:
+      testing: {enabled: true}
+      annotations:
+        inject_java: instrumentation.opentelemetry.io/inject-java
+      filters:
+        annotations:
+          inject_java:
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'resource\.attributes\["inject_java"\] != nil'
+
+  - it: should drop logs when a surfaced annotation attribute equals a value
+    set:
+      testing: {enabled: true}
+      annotations:
+        inject_java: instrumentation.opentelemetry.io/inject-java
+      filters:
+        annotations:
+          inject_java: "true"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'resource\.attributes\["inject_java"\] == "true"'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'resource\.attributes\["inject_java"\] != nil'
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should drop logs on a value match for a label-surfaced attribute
+    set:
+      testing: {enabled: true}
+      labels:
+        skip_logs: logs.grafana.com/skip
+      filters:
+        labels:
+          skip_logs: "yes"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'resource\.attributes\["skip_logs"\] == "yes"'
+
+  - it: should quote a non-string value when building the equality rule
+    set:
+      testing: {enabled: true}
+      annotations:
+        inject_java: instrumentation.opentelemetry.io/inject-java
+      filters:
+        annotations:
+          inject_java: false
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'resource\.attributes\["inject_java"\] == "false"'
+
+  - it: should build drop rules from both annotation and label filters, mixing presence and value
+    set:
+      testing: {enabled: true}
+      annotations:
+        inject_java: instrumentation.opentelemetry.io/inject-java
+      labels:
+        skip_logs: logs.grafana.com/skip
+      filters:
+        annotations:
+          inject_java: "true"
+        labels:
+          skip_logs: null
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'resource\.attributes\["inject_java"\] == "true"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'resource\.attributes\["skip_logs"\] != nil'
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should not add custom drop rules when filters is empty
+    set:
+      testing: {enabled: true}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'resource\.attributes\["inject_java"\]'

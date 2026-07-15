@@ -89,6 +89,11 @@ data:
             key      = "logs.grafana.com/pods.enabled"
             from     = "pod"
           }
+          annotation {
+            tag_name = "inject_java"
+            key      = "instrumentation.opentelemetry.io/inject-java"
+            from     = "pod"
+          }
           // Extracted into temporary attributes for service.name / service.version detection, then deleted in the
           // transform processor below. Temporary names are used so the cleanup never deletes an `app.kubernetes.io/*`
           // attribute the user extracted.
@@ -131,6 +136,7 @@ data:
             `resource.attributes["logs.grafana.com/pods.enabled"] == "false"`,
             `resource.attributes["logs.grafana.com/pods.enabled"] == "no"`,
             `resource.attributes["logs.grafana.com/pods.enabled"] == "skip"`,
+            `resource.attributes["inject_java"] == "true"`,
           ]
         }
         output {
