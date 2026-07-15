@@ -79,7 +79,6 @@ destinations:
     processors:
       serviceGraphMetrics:
         enabled: true
-        loadBalancerResolver: static
         collector:
           controller:
             replicas: 3

@@ -13,7 +13,7 @@
     {{- /* The "dns" and "static" resolvers address the Alloy pods by DNS, which requires the governing Service to be
            headless so it returns individual pod IPs (and, for a StatefulSet, per-pod records). The "kubernetes"
            resolver reads EndpointSlices directly and works with the default ClusterIP Service. */}}
-    {{- $resolver := dig "loadBalancerResolver" "kubernetes" $destination.processors.serviceGraphMetrics }}
+    {{- $resolver := dig "loadBalancer" "resolver" "kubernetes" $destination.processors.serviceGraphMetrics }}
     {{- if or (eq $resolver "dns") (eq $resolver "static") }}
       {{- $collectorValues = mergeOverwrite $collectorValues (dict "service" (dict "clusterIP" "None")) }}
     {{- end }}

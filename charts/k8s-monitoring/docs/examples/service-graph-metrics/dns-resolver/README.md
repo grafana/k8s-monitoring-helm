@@ -22,7 +22,8 @@ headless Service DNS** (every few seconds) to the current set of pod IPs:
 processors:
   serviceGraphMetrics:
     enabled: true
-    loadBalancerResolver: dns
+    loadBalancer:
+      resolver: dns
 ```
 
 The trade-offs compared to the default:
