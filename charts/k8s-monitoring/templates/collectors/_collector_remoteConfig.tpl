@@ -105,9 +105,11 @@ remotecfg {
 {{- $attributes = merge $attributes (dict "namespace" (include "helper.namespace" $)) }}
 {{- $attributes = merge $attributes (dict "workloadName" $.collectorName) }}
 {{- $attributes = merge $attributes (dict "workloadType" $collectorValues.controller.type) }}
+{{- if .presetsAttribute }}
 {{- $presets := join "," ($collectorValues.presets | default list) }}
 {{- if $presets }}
   {{- $attributes = merge $attributes (dict "presets" $presets) }}
+{{- end }}
 {{- end }}
 {{- $attributes = mergeOverwrite $attributes .extraAttributes }}
   attributes = {
