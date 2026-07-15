@@ -6,6 +6,7 @@
 
 *   Fix standardize on upper-case in level labels (#2844) (@saruprim)
 *   Add missing extra metric processing rules for Istio metrics integration (@1azunna)
+*   Align `service.name`/`service.namespace` detection on logs (new opt-in `alignServiceNameWithOTelSemConv` flag) and profiles with the [OpenTelemetry Kubernetes semantic conventions](https://opentelemetry.io/docs/specs/semconv/non-normative/k8s-attributes/) that Grafana Beyla uses, so telemetry correlates across metrics, logs, traces, and profiles for the same workload. (#2547) (@petewall)
 *   Allow a destination to be disabled by setting `disabled: true`. Disabled destinations are excluded from all destination lists, secrets, and generated Alloy instances, which makes it possible to remove a destination that was defined in a shared or parent values file. (#2800) (@petewall)
 *   Add the `nop` destination, which drops all telemetry sent to it. (#1461) (@TylerHelmuth)
 *   Add the `otel-receiver` collector preset, which opens the standard OTLP receiver ports on the collector (4317 for OTLP gRPC and 4318 for OTLP HTTP). (@petewall)
