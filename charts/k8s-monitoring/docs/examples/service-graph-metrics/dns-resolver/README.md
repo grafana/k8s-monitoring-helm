@@ -6,14 +6,14 @@
 
 This example builds on the [default service graph metrics example](../default), which explains how service graph metrics
 are generated and why the receiver uses an `otelcol.exporter.loadbalancing` component to route every span of a trace to
-the same grapher. Read that first — this example only changes **how the load balancer discovers the grapher pods**.
+the same grapher.
 
 ## `kubernetes` (default) vs. `dns`
 
 The default `kubernetes` resolver opens a **watch on the Kubernetes API server** for the graphers' EndpointSlices, so it
-learns about pods appearing and disappearing almost instantly. The cost is that every load balancer holds an open watch,
-and the receiver is a DaemonSet — so on a large cluster there is one watch per node. At that scale the watches can put
-significant load on the API server.
+learns about pods appearing and disappearing almost instantly. The cost is that every load balancer holds an open watch.
+If the Alloy instance receiving the application traces has many replicas, this can lead to significant load on the
+Kubernetes cluster's API server.
 
 The `dns` resolver avoids the API server entirely. Instead of watching, it **periodically resolves the graphers'
 headless Service DNS** (every few seconds) to the current set of pod IPs:
@@ -72,7 +72,7 @@ destinations:
     processors:
       serviceGraphMetrics:
         enabled: true
-        loadBalancerResolver: dns
+        loadBalancerResolver: dns  # <-- The key change from the default
         collector:
           controller:
             replicas: 3

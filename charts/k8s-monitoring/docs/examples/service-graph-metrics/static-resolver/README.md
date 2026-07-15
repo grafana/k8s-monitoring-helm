@@ -6,15 +6,16 @@
 
 This example builds on the [default service graph metrics example](../default), which explains how service graph metrics
 are generated and why the receiver uses an `otelcol.exporter.loadbalancing` component to route every span of a trace to
-the same grapher. Read that first — this example only changes **how the load balancer discovers the grapher pods**.
+the same grapher.
 
 ## `kubernetes` (default) vs. `static`
 
-The default `kubernetes` resolver opens a **watch on the Kubernetes API server** for the graphers' EndpointSlices to
-discover the pods dynamically. Because the receiver is a DaemonSet, that is one watch per node, which can put significant
-load on the API server of a large cluster.
+The default `kubernetes` resolver opens a **watch on the Kubernetes API server** for the graphers' EndpointSlices, so it
+learns about pods appearing and disappearing almost instantly. The cost is that every load balancer holds an open watch.
+If the Alloy instance receiving the application traces has many replicas, this can lead to significant load on the
+Kubernetes cluster's API server.
 
-The `static` resolver does no discovery at all. The grapher runs as a StatefulSet, which gives each pod a stable,
+The `static` resolver does no discovery at all. The grapher must run as a StatefulSet, which gives each pod a stable,
 ordinal hostname (`...-0`, `...-1`, ...), so the chart can compute the **complete list of backends ahead of time** from
 the configured replica count and bake it straight into the config:
 
@@ -78,7 +79,7 @@ destinations:
     processors:
       serviceGraphMetrics:
         enabled: true
-        loadBalancerResolver: static
+        loadBalancerResolver: static  # <-- The key change from the default
         collector:
           controller:
             replicas: 3
