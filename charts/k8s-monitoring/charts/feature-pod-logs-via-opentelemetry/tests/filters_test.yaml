@@ -3,109 +3,107 @@ suite: Feature - Pod Logs via OpenTelemetry - Filters
 templates:
   - test/configmap.yaml
 tests:
-  - it: should drop logs when a surfaced annotation attribute is present (explicit null)
+  - it: should drop logs when a pod annotation is present (explicit null)
     set:
       testing: {enabled: true}
-      annotations:
-        inject_java: instrumentation.opentelemetry.io/inject-java
       filters:
         annotations:
-          inject_java: null
+          instrumentation.opentelemetry.io/inject-java: null
     asserts:
       - isKind:
           of: ConfigMap
       - matchRegex:
           path: data["module.alloy"]
-          pattern: 'resource\.attributes\["inject_java"\] != nil'
+          pattern: 'key      = "instrumentation.opentelemetry.io/inject-java"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'resource\.attributes\["k8s_monitoring\.tmp\.filter\.annotations\.instrumentation\.opentelemetry\.io/inject-java"\] != nil'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'delete_key\(attributes, "k8s_monitoring\.tmp\.filter\.annotations\.instrumentation\.opentelemetry\.io/inject-java"\)'
       - matchSnapshot:
           path: data["module.alloy"]
 
   - it: should treat an empty value the same as null (presence)
     set:
       testing: {enabled: true}
-      annotations:
-        inject_java: instrumentation.opentelemetry.io/inject-java
       filters:
         annotations:
-          inject_java:
+          instrumentation.opentelemetry.io/inject-java:
     asserts:
       - isKind:
           of: ConfigMap
       - matchRegex:
           path: data["module.alloy"]
-          pattern: 'resource\.attributes\["inject_java"\] != nil'
+          pattern: 'resource\.attributes\["k8s_monitoring\.tmp\.filter\.annotations\.instrumentation\.opentelemetry\.io/inject-java"\] != nil'
 
-  - it: should drop logs when a surfaced annotation attribute equals a value
+  - it: should drop logs when a pod annotation equals a value
     set:
       testing: {enabled: true}
-      annotations:
-        inject_java: instrumentation.opentelemetry.io/inject-java
       filters:
         annotations:
-          inject_java: "true"
+          instrumentation.opentelemetry.io/inject-java: "true"
     asserts:
       - isKind:
           of: ConfigMap
       - matchRegex:
           path: data["module.alloy"]
-          pattern: 'resource\.attributes\["inject_java"\] == "true"'
+          pattern: 'resource\.attributes\["k8s_monitoring\.tmp\.filter\.annotations\.instrumentation\.opentelemetry\.io/inject-java"\] == "true"'
       - notMatchRegex:
           path: data["module.alloy"]
-          pattern: 'resource\.attributes\["inject_java"\] != nil'
+          pattern: 'resource\.attributes\["k8s_monitoring\.tmp\.filter\.annotations\.instrumentation\.opentelemetry\.io/inject-java"\] != nil'
       - matchSnapshot:
           path: data["module.alloy"]
 
-  - it: should drop logs on a value match for a label-surfaced attribute
+  - it: should drop logs on a value match for a pod label
     set:
       testing: {enabled: true}
-      labels:
-        skip_logs: logs.grafana.com/skip
       filters:
         labels:
-          skip_logs: "yes"
+          team: platform
     asserts:
       - isKind:
           of: ConfigMap
       - matchRegex:
           path: data["module.alloy"]
-          pattern: 'resource\.attributes\["skip_logs"\] == "yes"'
+          pattern: 'key      = "team"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'resource\.attributes\["k8s_monitoring\.tmp\.filter\.labels\.team"\] == "platform"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'delete_key\(attributes, "k8s_monitoring\.tmp\.filter\.labels\.team"\)'
 
   - it: should quote a non-string value when building the equality rule
     set:
       testing: {enabled: true}
-      annotations:
-        inject_java: instrumentation.opentelemetry.io/inject-java
       filters:
         annotations:
-          inject_java: false
+          instrumentation.opentelemetry.io/inject-java: false
     asserts:
       - isKind:
           of: ConfigMap
       - matchRegex:
           path: data["module.alloy"]
-          pattern: 'resource\.attributes\["inject_java"\] == "false"'
+          pattern: 'resource\.attributes\["k8s_monitoring\.tmp\.filter\.annotations\.instrumentation\.opentelemetry\.io/inject-java"\] == "false"'
 
   - it: should build drop rules from both annotation and label filters, mixing presence and value
     set:
       testing: {enabled: true}
-      annotations:
-        inject_java: instrumentation.opentelemetry.io/inject-java
-      labels:
-        skip_logs: logs.grafana.com/skip
       filters:
         annotations:
-          inject_java: "true"
+          instrumentation.opentelemetry.io/inject-java: "true"
         labels:
-          skip_logs: null
+          team:
     asserts:
       - isKind:
           of: ConfigMap
       - matchRegex:
           path: data["module.alloy"]
-          pattern: 'resource\.attributes\["inject_java"\] == "true"'
+          pattern: 'resource\.attributes\["k8s_monitoring\.tmp\.filter\.annotations\.instrumentation\.opentelemetry\.io/inject-java"\] == "true"'
       - matchRegex:
           path: data["module.alloy"]
-          pattern: 'resource\.attributes\["skip_logs"\] != nil'
+          pattern: 'resource\.attributes\["k8s_monitoring\.tmp\.filter\.labels\.team"\] != nil'
       - matchSnapshot:
           path: data["module.alloy"]
 
@@ -117,4 +115,4 @@ tests:
           of: ConfigMap
       - notMatchRegex:
           path: data["module.alloy"]
-          pattern: 'resource\.attributes\["inject_java"\]'
+          pattern: 'k8s_monitoring\.tmp\.filter\.'

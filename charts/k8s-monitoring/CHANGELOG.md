@@ -9,7 +9,7 @@
 *   Add the `nop` destination, which drops all telemetry sent to it. (#1461) (@TylerHelmuth)
 *   Add the `otel-receiver` collector preset, which opens the standard OTLP receiver ports on the collector (4317 for OTLP gRPC and 4318 for OTLP HTTP). (@petewall)
 *   Add support for global image settings. `global.image.registry`, `global.image.pullPolicy`, and `global.image.pullSecrets` are now documented and schema-validated, and apply to the Alloy instances, the Alloy Operator, and the Alloy removal hooks. The flat `global.imageRegistry`, `global.imagePullPolicy`, and `global.imagePullSecrets` keys used by dependent charts (kube-state-metrics, Node Exporter, Windows Exporter) are also documented. (#2498) (@TylerHelmuth)
-*   Add a `filters` option to the Pod Logs via OpenTelemetry feature for dropping pod logs based on the pod's annotations or labels. Set `filters.annotations` or `filters.labels` to a map of annotation/label name (as configured in the corresponding `annotations`/`labels` values) to the value that should drop the log, or `null` to drop whenever the annotation/label is present. A pod's logs are dropped if any configured filter matches. (#2846) (@TylerHelmuth)
+*   Add a `filters` option to the Pod Logs via OpenTelemetry feature for dropping pod logs based on the pod's annotations or labels. Set `filters.annotations` or `filters.labels` to a map of Kubernetes annotation/label key to the value that should drop the log, or `null` to drop whenever the annotation/label is present. A pod's logs are dropped if any configured filter matches. (#2846) (@TylerHelmuth)
 
 ## 4.2.2
 

@@ -54,11 +54,6 @@ declare "pod_logs_via_opentelemetry" {
         key      = "logs.grafana.com/pods.enabled"
         from     = "pod"
       }
-      annotation {
-        tag_name = "inject_java"
-        key      = "instrumentation.opentelemetry.io/inject-java"
-        from     = "pod"
-      }
       // Extracted into temporary attributes for service.name / service.version detection, then deleted in the
       // transform processor below. Temporary names are used so the cleanup never deletes an `app.kubernetes.io/*`
       // attribute the user extracted.
@@ -87,6 +82,11 @@ declare "pod_logs_via_opentelemetry" {
         key      = "color"
         from     = "namespace"
       }
+      annotation {
+        tag_name = "k8s_monitoring.tmp.filter.annotations.instrumentation.opentelemetry.io/inject-java"
+        key      = "instrumentation.opentelemetry.io/inject-java"
+        from     = "pod"
+      }
     }
 
     output {
@@ -101,7 +101,7 @@ declare "pod_logs_via_opentelemetry" {
         `resource.attributes["logs.grafana.com/pods.enabled"] == "false"`,
         `resource.attributes["logs.grafana.com/pods.enabled"] == "no"`,
         `resource.attributes["logs.grafana.com/pods.enabled"] == "skip"`,
-        `resource.attributes["inject_java"] == "true"`,
+        `resource.attributes["k8s_monitoring.tmp.filter.annotations.instrumentation.opentelemetry.io/inject-java"] == "true"`,
       ]
     }
     output {
@@ -116,6 +116,7 @@ declare "pod_logs_via_opentelemetry" {
       statements = [
         `delete_key(attributes, "k8s.container.restart_count")`,
         `delete_key(attributes, "logs.grafana.com/pods.enabled")`,
+        `delete_key(attributes, "k8s_monitoring.tmp.filter.annotations.instrumentation.opentelemetry.io/inject-java")`,
         // Set service.name by choosing the first value found from the following ordered list:
         // - pod.annotation[resource.opentelemetry.io/service.name] (set by the k8sattributes processor above)
         // - pod.label[app.kubernetes.io/instance]
