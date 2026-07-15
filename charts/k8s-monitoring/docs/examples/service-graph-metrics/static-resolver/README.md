@@ -35,8 +35,7 @@ The trade-offs compared to the default:
 -   **No API-server load and no DNS polling for membership.** The backend list is fixed, so there is nothing to watch or
     re-resolve. This is the lightest-weight option on very large clusters.
 -   **Requires a StatefulSet.** The resolver addresses each pod by its ordinal hostname, which only a StatefulSet
-    provides. The chart rejects `static` with any other controller type. (The [dns resolver](../dns-resolver) has no such
-    requirement.)
+    provides.
 -   **The replica count is fixed at deploy time.** The backend list is generated from `collector.controller.replicas`,
     so changing the number of graphers requires a `helm upgrade` to regenerate it. The resolver will not pick up pods
     added or removed out of band.
