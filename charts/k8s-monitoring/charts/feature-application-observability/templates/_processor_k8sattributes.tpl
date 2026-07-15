@@ -49,11 +49,25 @@ otelcol.processor.k8sattributes "{{ .name | default "default" }}" {
   }
   {{- end }}
   extract {
-{{- if .Values.processors.k8sattributes.otelAnnotations }}
-    otel_annotations = {{ .Values.processors.k8sattributes.otelAnnotations }}
+{{- if or .Values.processors.k8sattributes.otelAnnotations .Values.alignServiceNameWithOTelSemConv }}
+    otel_annotations = true
 {{- end }}
 {{- if .Values.processors.k8sattributes.metadata }}
     metadata = {{ .Values.processors.k8sattributes.metadata | toJson }}
+{{- end }}
+{{- if .Values.alignServiceNameWithOTelSemConv }}
+    // Extracted into temporary attributes for service.name detection, then deleted in the transform processor.
+    // Temporary names are used so the cleanup never deletes an `app.kubernetes.io/*` attribute the user extracted.
+    label {
+      tag_name = "k8s_monitoring.tmp.instance"
+      key = "app.kubernetes.io/instance"
+      from = "pod"
+    }
+    label {
+      tag_name = "k8s_monitoring.tmp.name"
+      key = "app.kubernetes.io/name"
+      from = "pod"
+    }
 {{- end }}
 {{- range .Values.processors.k8sattributes.labels }}
     label {
