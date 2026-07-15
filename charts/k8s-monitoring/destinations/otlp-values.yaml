@@ -375,13 +375,14 @@ sendingQueue:
 # Processors to apply to the data before delivering it to its destination.
 processors:
   serviceGraphMetrics:
-    # -- Generate service graph metrics from traces. This will deploy an additional Alloy
-    # instance to handle service graph metrics generation. Traces sent to this destination will
-    # be aumatically forwarded, using a load balancer component, to this Alloy instance.
+    # -- Generate service graph metrics from traces. This will deploy an additional Alloy instance to handle service
+    # graph metrics generation. Traces sent to this destination will be automatically forwarded, using a load balancer
+    # component, to this Alloy instance.
     # @section -- Service Graph Metrics
     enabled: false
 
-    # -- The destinations where service graph metrics will be sent. If empty, all metrics-capable destinations will be used.
+    # -- The destinations where service graph metrics will be sent. If empty, all metrics-capable destinations will be
+    # used.
     # @section -- Service Graph Metrics
     destinations: []
 
@@ -429,6 +430,15 @@ processors:
       controller:
         type: statefulset
         replicas: 2
+
+    # -- Which resolver the load balancer uses to route traces to the service graph Alloy instances. Options are:
+    # * "kubernetes" (default), which opens a watch on the Kubernetes API server to track the pods.
+    # * "dns", which periodically resolves the instances' headless Service DNS to the pod IPs.
+    # * "static", which addresses each pod by its stable, ordinal hostname. The controller *must* be a StatefulSet.
+    # The "dns" and "static" resolvers avoid the Kubernetes API watch, which can overwhelm the API server on very large
+    # clusters. Both make the service graph Alloy Service headless so its DNS resolves to individual pods.
+    # @section -- Service Graph Metrics
+    loadBalancerResolver: kubernetes
 
   tailSampling:
     # -- Apply tail sampling policies to the traces before delivering them to this destination. This will create an

@@ -1,0 +1,71 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: service-graph-metrics
+
+subject:
+  releaseName: k8smon
+  path: ../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: dependencies/trace-generator.yaml
+  - preset: prometheus
+  - preset: tempo
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              uid: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+            - name: Tempo
+              type: tempo
+              url: http://tempo.tempo.svc:3200
+              jsonData:
+                serviceMap:
+                  datasourceUid: prometheus
+                nodeGraph:
+                  enabled: true
+
+tests:
+  - type: kubernetes-objects-test
+    values:
+      checks:
+        - kind: StatefulSet
+          name: k8smon-tempo-servicegraph
+          namespace: default
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: service-graph-metrics
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+          queries:
+            # Load balancer is properly finding all endpoints
+            - query: otelcol_loadbalancer_num_backends{cluster="$CLUSTER", component_id="otelcol.exporter.loadbalancing.tempo_servicegraph", resolver="dns"}
+              type: promql
+              expect:
+                value: 3
+
+            - query: count(count by (collector_id) (traces_service_graph_request_total{cluster="$CLUSTER"}))
+              type: promql
+              expect:
+                value: 3
+
+            # A known edge from the generated traces exists in Prometheus.
+            - query: traces_service_graph_request_total{cluster="$CLUSTER", client="shop-backend", server="auth-service"}
+              type: promql
+            # Requests are actively flowing across the service graph.
+            - query: sum(rate(traces_service_graph_request_total{cluster="$CLUSTER"}[5m])) > 0
+              type: promql
+            # Server-side latency is being recorded for the edges.
+            - query: traces_service_graph_request_server_seconds_bucket{cluster="$CLUSTER"}
+              type: promql

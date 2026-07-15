@@ -93,3 +93,56 @@ tests:
     asserts:
       - matchSnapshot:
           path: spec.alloy.configMap.content
+
+  - it: keeps the default (ClusterIP) Service with the kubernetes resolver
+    set:
+      destinations:
+        tempo:
+          type: otlp
+          url: tempo.tempo.svc:4317
+          metrics: {enabled: false}
+          logs: {enabled: false}
+          traces: {enabled: true}
+          processors:
+            serviceGraphMetrics:
+              enabled: true
+              loadBalancerResolver: kubernetes
+    asserts:
+      - notExists:
+          path: spec.service
+
+  - it: makes the Service headless for the dns resolver
+    set:
+      destinations:
+        tempo:
+          type: otlp
+          url: tempo.tempo.svc:4317
+          metrics: {enabled: false}
+          logs: {enabled: false}
+          traces: {enabled: true}
+          processors:
+            serviceGraphMetrics:
+              enabled: true
+              loadBalancerResolver: dns
+    asserts:
+      - equal:
+          path: spec.service.clusterIP
+          value: None
+
+  - it: makes the Service headless for the static resolver
+    set:
+      destinations:
+        tempo:
+          type: otlp
+          url: tempo.tempo.svc:4317
+          metrics: {enabled: false}
+          logs: {enabled: false}
+          traces: {enabled: true}
+          processors:
+            serviceGraphMetrics:
+              enabled: true
+              loadBalancerResolver: static
+    asserts:
+      - equal:
+          path: spec.service.clusterIP
+          value: None
