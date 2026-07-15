@@ -583,12 +583,10 @@ otelcol.processor.transform "tempo" {
 
 otelcol.exporter.loadbalancing "tempo_servicegraph" {
   resolver {
-    static {
-      hostnames = [
-        "k8smon-tempo-servicegraph-0.k8smon-tempo-servicegraph.default.svc.cluster.local:4317",
-        "k8smon-tempo-servicegraph-1.k8smon-tempo-servicegraph.default.svc.cluster.local:4317",
-        "k8smon-tempo-servicegraph-2.k8smon-tempo-servicegraph.default.svc.cluster.local:4317",
-      ]
+    kubernetes {
+      service = "k8smon-tempo-servicegraph"
+      ports   = [4317]
+      timeout = "60s"
     }
   }
   protocol {

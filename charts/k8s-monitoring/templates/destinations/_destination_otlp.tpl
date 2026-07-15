@@ -415,16 +415,19 @@ otelcol.exporter.loadbalancing {{ printf "%s_servicegraph" (include "helper.allo
   resolver {
     {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
     {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-servicegraph" $.destinationName)) | trunc $maxLength | trimSuffix "-" | lower }}
-{{- if eq .processors.serviceGraphMetrics.loadBalancerResolver "kubernetes" }}
+{{- if eq .processors.serviceGraphMetrics.loadBalancer.resolver "kubernetes" }}
     kubernetes {
       service = "{{ $collectorName }}"
+      ports   = [4317]
+      timeout = {{ .processors.serviceGraphMetrics.loadBalancer.timeout | quote }}
     }
-{{- else if eq .processors.serviceGraphMetrics.loadBalancerResolver "dns" }}
+{{- else if eq .processors.serviceGraphMetrics.loadBalancer.resolver "dns" }}
     dns {
       hostname = "{{ $collectorName }}.{{ include "helper.namespace" $ }}.svc.cluster.local"
       port     = "4317"
+      timeout = {{ .processors.serviceGraphMetrics.loadBalancer.timeout | quote }}
     }
-{{- else if eq .processors.serviceGraphMetrics.loadBalancerResolver "static" }}
+{{- else if eq .processors.serviceGraphMetrics.loadBalancer.resolver "static" }}
     static {
       hostnames = [
 {{- $replicas := int (dig "collector" "controller" "replicas" 1 .processors.serviceGraphMetrics) }}

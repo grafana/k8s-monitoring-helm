@@ -72,7 +72,8 @@ destinations:
     processors:
       serviceGraphMetrics:
         enabled: true
-        loadBalancerResolver: dns  # <-- The key change from the default
+        loadBalancer:
+          resolver: dns  # <-- The key change from the default
         collector:
           controller:
             replicas: 3
