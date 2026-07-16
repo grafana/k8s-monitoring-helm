@@ -10,6 +10,7 @@ SCHEMA_MODS_JSON_FILES = $(shell find schema-mods -name "*.json")
 SCHEMA_MODS_JQ_FILES = $(shell find schema-mods -name "*.jq")
 
 ALLOY_OPERATOR_VERSION := $(shell yq '.dependencies[] | select(.name == "alloy-operator") | .version' Chart.yaml)
+GRAFANA_HELM_CHARTS_KEYRING := ../../keys/grafana-helm-charts-pubkey.gpg
 charts/alloy-operator-$(ALLOY_OPERATOR_VERSION).tgz: Chart.lock
 collectors/upstream/alloy-values.yaml: charts/alloy-operator-$(ALLOY_OPERATOR_VERSION).tgz
 	@tar xzf $< -C collectors/upstream/ --strip-components=1 alloy-operator/alloy-values.yaml
@@ -201,6 +202,16 @@ build-features:
 	for chart in $(FEATURE_CHARTS); do \
 		make -C $$chart build; \
 	done
+
+# Verify the signatures of signed chart dependencies.
+.PHONY: verify-signatures
+verify-signatures: ## Verify the signatures of the signed chart dependencies
+	helm pull alloy-operator \
+		--repo https://grafana.github.io/helm-charts \
+		--version $(ALLOY_OPERATOR_VERSION) \
+		--verify --keyring $(GRAFANA_HELM_CHARTS_KEYRING) \
+		--destination "$$(mktemp -d)"
+	make -C charts/feature-cluster-metrics verify-signatures
 
 # Build targets
 .PHONY: build
