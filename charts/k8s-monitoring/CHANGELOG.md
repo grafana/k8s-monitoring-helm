@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Add the ability to set the resolver and timeout for `processors.serviceGraphMetrics` in OTLP destinations, choosing how the load balancing exporter routes traces to the service graph Alloy instances. (@petewall)
 *   Add missing extra metric processing rules for Istio metrics integration (@1azunna)
 *   Add `openTelemetryConversion.keepIdentifyingResourceAttributes` option to Prometheus destinations to optionally preserve `service.name`, `service.namespace`, and `service.instance.id` as labels on `target_info` during OTLP to Prometheus conversion. (#2723) (@jereenv)
 *   Update Alloy Operator to 0.6.1, Beyla to 1.16.10, kube-state-metrics to 7.8.1, Node Exporter to 4.56.1, OpenCost to 2.5.26, Prometheus Operator CRDs to 30.0.1 (@petewall)

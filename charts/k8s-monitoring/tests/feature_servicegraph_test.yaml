@@ -1,6 +1,6 @@
 ---
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Feature - Servicegraph Metrics
+suite: Feature - Service Graph Metrics
 templates:
   - alloy-servicegraph.yaml
 tests:
@@ -51,3 +51,61 @@ tests:
     asserts:
       - matchSnapshot:
           path: spec.alloy.configMap.content
+
+  - it: keeps the default (ClusterIP) Service with the kubernetes resolver
+    set:
+      destinations:
+        - name: tempo
+          type: otlp
+          url: tempo.tempo.svc:4317
+          metrics: {enabled: false}
+          logs: {enabled: false}
+          traces: {enabled: true}
+          processors:
+            serviceGraphMetrics:
+              enabled: true
+              loadBalancer:
+                resolver: kubernetes
+    asserts:
+      # The default collector always renders a Service; with the kubernetes resolver it must not be made headless.
+      - notEqual:
+          path: spec.service.clusterIP
+          value: None
+
+  - it: makes the Service headless for the dns resolver
+    set:
+      destinations:
+        - name: tempo
+          type: otlp
+          url: tempo.tempo.svc:4317
+          metrics: {enabled: false}
+          logs: {enabled: false}
+          traces: {enabled: true}
+          processors:
+            serviceGraphMetrics:
+              enabled: true
+              loadBalancer:
+                resolver: dns
+    asserts:
+      - equal:
+          path: spec.service.clusterIP
+          value: None
+
+  - it: makes the Service headless for the static resolver
+    set:
+      destinations:
+        - name: tempo
+          type: otlp
+          url: tempo.tempo.svc:4317
+          metrics: {enabled: false}
+          logs: {enabled: false}
+          traces: {enabled: true}
+          processors:
+            serviceGraphMetrics:
+              enabled: true
+              loadBalancer:
+                resolver: static
+    asserts:
+      - equal:
+          path: spec.service.clusterIP
+          value: None

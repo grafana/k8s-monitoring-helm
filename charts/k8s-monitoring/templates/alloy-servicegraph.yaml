@@ -10,6 +10,13 @@
     {{- $extraEnv := dig "alloy" "extraEnv" list ($destination.processors.serviceGraphMetrics.collector | default dict) }}
     {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "POD_NAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.name")))) | fromYamlArray }}
     {{- $collectorValues := mergeOverwrite (dict "fullnameOverride" $collectorName) ($destination.processors.serviceGraphMetrics.collector | default dict) (dict "alloy" (dict "extraEnv" $extraEnv)) }}
+    {{- /* The "dns" and "static" resolvers address the Alloy pods by DNS, which requires the governing Service to be
+           headless so it returns individual pod IPs (and, for a StatefulSet, per-pod records). The "kubernetes"
+           resolver reads EndpointSlices directly and works with the default ClusterIP Service. */}}
+    {{- $resolver := dig "loadBalancer" "resolver" "kubernetes" $destination.processors.serviceGraphMetrics }}
+    {{- if or (eq $resolver "dns") (eq $resolver "static") }}
+      {{- $collectorValues = mergeOverwrite $collectorValues (dict "service" (dict "clusterIP" "None")) }}
+    {{- end }}
     {{- $values := (deepCopy $ | merge (dict "collectorName" $collectorName "collectorValues" $collectorValues)) }}
     {{- $alloyValues := include "collector.alloy.values" $values | fromYaml }}
 
