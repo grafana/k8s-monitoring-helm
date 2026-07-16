@@ -114,6 +114,7 @@ jobs:
         uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e  # v4.0.1
 
       - name: Run test
+        id: run_test
         run: |
           if [ -f "${TEST_DIRECTORY}/Makefile" ]; then
             make -C "${TEST_DIRECTORY}" clean all
@@ -123,4 +124,19 @@ jobs:
           TARGET_REVISION: ${{ github.event_name == 'pull_request' && format('refs/pull/{0}/merge', github.event.pull_request.number) || github.ref_name }}
           KUBECONFIG: "${{ github.workspace }}/source/charts/k8s-monitoring/${{ matrix.test }}/kubeconfig.yaml"
           TEST_DIRECTORY: "source/charts/k8s-monitoring/${{ matrix.test }}"
-          DELETE_CLUSTER: true
+          # Keep the cluster alive on failure so diagnostics can be collected; it is
+          # deleted by the explicit "Delete cluster" step below.
+          DELETE_CLUSTER: false
+
+      - name: Collect diagnostics on failure
+        if: ${{ failure() && steps.run_test.outcome == 'failure' }}
+        run: source/scripts/collect-integration-test-diagnostics.sh
+        env:
+          KUBECONFIG: "${{ github.workspace }}/source/charts/k8s-monitoring/${{ matrix.test }}/kubeconfig.yaml"
+
+      - name: Delete cluster
+        if: ${{ always() }}
+        run: helm-chart-toolbox/tools/helm-test/delete-cluster "${TEST_DIRECTORY}" || true
+        env:
+          KUBECONFIG: "${{ github.workspace }}/source/charts/k8s-monitoring/${{ matrix.test }}/kubeconfig.yaml"
+          TEST_DIRECTORY: "source/charts/k8s-monitoring/${{ matrix.test }}"
