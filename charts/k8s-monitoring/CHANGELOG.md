@@ -4,6 +4,7 @@
 
 ## 4.3.0
 
+*   Add a `presets` attribute to the remote configuration (`remotecfg`) collector attributes, containing the comma-separated list of the collector's presets. (@petewall)
 *   Fix standardize on upper-case in level labels (#2844) (@saruprim)
 *   Add missing extra metric processing rules for Istio metrics integration (@1azunna)
 *   Add the ability to set the resolver and timeout for `processors.serviceGraphMetrics` in OTLP destinations, choosing how the load balancing exporter routes traces to the service graph Alloy instances. (@petewall)

@@ -78,6 +78,7 @@ Settings for each primary Alloy instance come from several potential sources, in
 | remoteConfig.extraAttributes | object | `{}` | Attributes to be added to this collector when requesting configuration. |
 | remoteConfig.noProxy | string | `""` | Comma-separated list of IP addresses, CIDR notations, and domain names to exclude from proxying. |
 | remoteConfig.pollFrequency | string | `"30s"` | The frequency at which to poll the remote config server for updates. |
+| remoteConfig.presetsAttribute | bool | `true` | Sent a `presets` attribute which is a comma-separated list of this Alloy instance's presets. |
 | remoteConfig.proxyConnectHeader | object | `{}` | Specifies headers to send to proxies during CONNECT requests. |
 | remoteConfig.proxyFromEnvironment | bool | `false` | Use the proxy URL indicated by environment variables. |
 | remoteConfig.proxyURL | string | `""` | The proxy URL to use of the remote config server. |
