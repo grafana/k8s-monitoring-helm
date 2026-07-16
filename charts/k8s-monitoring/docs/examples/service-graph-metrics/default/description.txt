@@ -1,0 +1,41 @@
+# Service Graph Metrics
+
+This example shows how to generate service graph metrics from traces using the k8s-monitoring Helm chart.
+
+## What are Service Graph Metrics?
+
+Service graph metrics describe the relationships between the services in your system. They are built by pairing the
+client span and the server span of each request, producing metrics such as `traces_service_graph_request_total` and
+`traces_service_graph_request_server_seconds` for every edge (caller → callee) in your architecture. Grafana uses these
+metrics to draw the Service Graph and the node graph on the Tempo data source.
+
+Rather than relying on Tempo's metrics generator, this example generates the metrics inside the collector, so they can
+be written to any metrics destination.
+
+## How it works
+
+Enabling `serviceGraphMetrics` on an OTLP destination deploys a dedicated Alloy instance that runs
+the [`otelcol.connector.servicegraph`](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.connector.servicegraph/)
+component and writes the resulting metrics to the metrics destinations (Prometheus, in this example).
+
+To build an edge, a grapher must see **both** the client span and the server span of a request. If those two spans
+landed on different graphers, the edge would never be completed. To prevent that, the receiver forwards traces through
+an `otelcol.exporter.loadbalancing` component, which consistently routes every span of a given trace ID to the same
+grapher.
+
+This matters most when the receiver is scaled out. In this example the receiver is a **DaemonSet**, so an application's
+replicas may send their spans to different replicas of the receiver. No matter which receiver pod a span arrives on, the
+load balancing exporter ensures the whole trace is reassembled on a single grapher:
+
+```text
+  workload replicas (many nodes)
+        │  OTLP
+        ▼
+  alloy (DaemonSet: one pod per node)
+        │  loadbalancing exporter — routes by trace ID
+        ▼
+  service graphers (StatefulSet: 3 replicas)
+        │  traces_service_graph_* metrics
+        ▼
+  Prometheus
+```
