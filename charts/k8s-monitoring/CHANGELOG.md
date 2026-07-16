@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 3.8.11
 
 *   Add the ability to set the resolver and timeout for `processors.serviceGraphMetrics` in OTLP destinations, choosing how the load balancing exporter routes traces to the service graph Alloy instances. (@petewall)
 *   Add missing extra metric processing rules for Istio metrics integration (@1azunna)
