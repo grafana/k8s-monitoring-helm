@@ -46,6 +46,28 @@ tests:
           path: data["config.alloy"]
           pattern: '"provider" = "openshift",'
 
+  - it: sets the presets attribute from the collector presets
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      collectors:
+        alloy-metrics:
+          presets: [large, clustered, deployment]
+          remoteConfig:
+            enabled: true
+            url: https://fleet-management-prod-001.grafana.net
+            auth:
+              type: basic
+              username: 123456
+              password: "It's a secret to everyone"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '"presets" = "large,clustered,deployment",'
+
   - it: allows for overriding the default attributes
     template: alloy-config.yaml
     set:
