@@ -13,150 +13,128 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
-# Source: k8s-monitoring/templates/destination_secret.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: "localloki-k8smon-k8s-monitoring"
-  namespace: "default"
-type: Opaque
-data:
-  tenantId: "MQ=="
-  username: "bG9raQ=="
-  password: "bG9raXBhc3N3b3Jk"
----
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: k8smon-alloy-logs
+  name: k8smon-alloy
   namespace: default
 data:
   config.alloy: |
-    // Feature: Pod Logs (OpenTelemetry)
-    declare "pod_logs_via_opentelemetry" {
+    // Feature: Application Observability
+    declare "application_observability" {
+      argument "metrics_destinations" {
+        comment = "Must be a list of metrics destinations where collected metrics should be forwarded to"
+      }
+    
       argument "logs_destinations" {
         comment = "Must be a list of log destinations where collected logs should be forwarded to"
       }
     
-      otelcol.receiver.filelog "pod_logs" {
-        include = ["/var/log/pods/*/*/*.log"]
-        start_at = "end"
-        include_file_name = false
-        include_file_path = true
+      argument "traces_destinations" {
+        comment = "Must be a list of trace destinations where collected trace should be forwarded to"
+      }
     
-        operators = [
-          // Container operator will set k8s.pod.name, k8s.pod.uid, k8s.container.name, k8s.container.restart_count, and k8s.namespace.name
-          {
-            type                       = "container",
-            add_metadata_from_filepath = true,
-          },
-        ]
+      // OTLP Receiver
+      otelcol.receiver.otlp "receiver" {
+        grpc {
+          endpoint = "0.0.0.0:4317"
+          include_metadata = false
+          max_recv_msg_size = "4MiB"
+          read_buffer_size = "512KiB"
+          write_buffer_size = "32KiB"
+        }
+        http {
+          endpoint = "0.0.0.0:4318"
+          include_metadata = false
+          max_request_body_size = "20MiB"
+        }
+        debug_metrics {
+          disable_high_cardinality_metrics = true
+        }
+        output {
+          traces = [otelcol.processor.resourcedetection.default.input]
+        }
+      } // otelcol.receiver.otlp "receiver"
+    
+      // Resource Detection Processor
+      otelcol.processor.resourcedetection "default" {
+        detectors = ["env","system"]
+        override = true
+    
+        system {
+          hostname_sources = ["os"]
+        }
     
         output {
-          logs = [otelcol.processor.k8sattributes.pod_logs.input]
+          traces = [otelcol.processor.k8sattributes.default.input]
         }
-      } // otelcol.receiver.filelog "pod_logs"
+      }
     
-      otelcol.processor.k8sattributes "pod_logs" {
+      // K8s Attributes Processor
+      otelcol.processor.k8sattributes "default" {
+        passthrough = false
+        extract {
+          metadata = ["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time"]
+        }
+        pod_association {
+          source {
+            from = "resource_attribute"
+            name = "k8s.pod.ip"
+          }
+        }
         pod_association {
           source {
             from = "resource_attribute"
             name = "k8s.pod.uid"
           }
         }
-    
-        extract {
-          otel_annotations = false
-          metadata = [
-            "k8s.deployment.name",
-            "k8s.statefulset.name",
-            "k8s.daemonset.name",
-            "k8s.cronjob.name",
-            "k8s.job.name",
-            "k8s.node.name",
-          ]
-          annotation {
-            key_regex = "resource.opentelemetry.io/(.*)"
-            tag_name  = "$1"
-            from      = "pod"
-          }
-          annotation {
-            tag_name = "logs.grafana.com/pods.enabled"
-            key      = "logs.grafana.com/pods.enabled"
-            from     = "pod"
-          }
-          label {
-            tag_name = "app_kubernetes_io_name"
-            key      = "app.kubernetes.io/name"
-            from     = "pod"
-          }
-          label {
-            tag_name = "color"
-            key      = "color"
-            from     = "namespace"
+        pod_association {
+          source {
+            from = "connection"
           }
         }
     
         output {
-          logs = [otelcol.processor.filter.pod_logs.input]
+          traces = [otelcol.processor.transform.default.input]
         }
-      } // otelcol.processor.k8sattributes "pod_logs"
+      }
     
-      otelcol.processor.filter "pod_logs" {
+      // Transform Processor
+      otelcol.processor.transform "default" {
         error_mode = "ignore"
-        logs {
-          log_record = [
-            `resource.attributes["logs.grafana.com/pods.enabled"] == "false"`,
-            `resource.attributes["logs.grafana.com/pods.enabled"] == "no"`,
-            `resource.attributes["logs.grafana.com/pods.enabled"] == "skip"`,
-          ]
-        }
-        output {
-          logs = [otelcol.processor.transform.pod_logs.input]
-        }
-      } // otelcol.processor.filter "pod_logs"
-    
-      otelcol.processor.transform "pod_logs" {
-        error_mode = "ignore"
-        log_statements {
-          context = "resource"
+        trace_statements {
+          context = "span"
           statements = [
-            `delete_key(attributes, "k8s.container.restart_count")`,
-            `delete_key(attributes, "logs.grafana.com/pods.enabled")`,
-            `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["app.kubernetes.io/name"] != nil and attributes["app.kubernetes.io/name"] != ""`,
-            `set(attributes["service.name"], attributes["k8s.deployment.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.deployment.name"] != nil and attributes["k8s.deployment.name"] != ""`,
-            `set(attributes["service.name"], attributes["k8s.replicaset.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.replicaset.name"] != nil and attributes["k8s.replicaset.name"] != ""`,
-            `set(attributes["service.name"], attributes["k8s.statefulset.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.statefulset.name"] != nil and attributes["k8s.statefulset.name"] != ""`,
-            `set(attributes["service.name"], attributes["k8s.daemonset.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.daemonset.name"] != nil and attributes["k8s.daemonset.name"] != ""`,
-            `set(attributes["service.name"], attributes["k8s.cronjob.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.cronjob.name"] != nil and attributes["k8s.cronjob.name"] != ""`,
-            `set(attributes["service.name"], attributes["k8s.job.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.job.name"] != nil and attributes["k8s.job.name"] != ""`,
-            `set(attributes["service.name"], attributes["k8s.pod.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.pod.name"] != nil and attributes["k8s.pod.name"] != ""`,
-            `set(attributes["service.name"], attributes["k8s.container.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.container.name"] != nil and attributes["k8s.container.name"] != ""`,
-    
-            `set(attributes["service.namespace"], attributes["k8s.namespace.name"]) where (attributes["service.namespace"] == nil or attributes["service.namespace"] == "") and attributes["k8s.namespace.name"] != nil and attributes["k8s.namespace.name"] != ""`,
-    
-            `set(attributes["service.version"], attributes["app.kubernetes.io/version"]) where attributes["service.version"] == nil`,
-    
-            `set(attributes["service.instance.id"], Concat([attributes["k8s.namespace.name"], attributes["k8s.pod.name"], attributes["k8s.container.name"]], ".")) where attributes["service.instance.id"] == nil`,
-          ]
-        }
-    
-        log_statements {
-          context = "log"
-          statements = [
-            `delete_key(attributes, "log.file.path")`,
+           "set_semconv_span_name(\"1.37.0\", \"original_span_name\")",
           ]
         }
     
         output {
-          logs = argument.logs_destinations.value
+          traces = [otelcol.processor.batch.default.input]
         }
-      } // otelcol.processor.transform "pod_logs"
-    } // declare "pod_logs_via_opentelemetry"
-    pod_logs_via_opentelemetry "feature" {
+      }
+    
+      // Batch Processor
+      otelcol.processor.batch "default" {
+        send_batch_size = 8192
+        send_batch_max_size = 0
+        timeout = "2s"
+    
+        output {
+          traces = argument.traces_destinations.value
+        }
+      }
+    } // declare "application_observability"
+    application_observability "feature" {
+      metrics_destinations = [
+        otelcol.exporter.prometheus.prometheus.input,
+      ]
       logs_destinations = [
-        otelcol.exporter.loki.localloki.input,
+    
+      ]
+      traces_destinations = [
+        otelcol.processor.attributes.tempo.input,
       ]
     }
     
@@ -164,46 +142,6 @@ data:
     
     
     
-    // Destination: localLoki (loki)
-    otelcol.exporter.loki "localloki" {
-      forward_to = [loki.write.localloki.receiver]
-    } // otelcol.exporter.loki "localloki"
-    
-    loki.write "localloki" {
-      endpoint {
-        url = "http://loki.loki.svc:3100/loki/api/v1/push"
-        retry_on_http_429 = true
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
-          password = remote.kubernetes.secret.localloki.data["password"]
-        }
-        tls_config {
-          insecure_skip_verify = false
-        }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
-      }
-      external_labels = {
-        "cluster" = "service-graph-metrics-test",
-        "k8s_cluster_name" = "service-graph-metrics-test",
-      }
-    } // loki.write "localloki"
-    
-    remote.kubernetes.secret "localloki" {
-      name      = "localloki-k8smon-k8s-monitoring"
-      namespace = "default"
-    } // remote.kubernetes.secret "localloki"
----
-# Source: k8s-monitoring/templates/alloy-config.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: k8smon-alloy-metrics
-  namespace: default
-data:
-  config.alloy: |
     declare "alloy_integration" {
       argument "metrics_destinations" {
         comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
@@ -502,35 +440,16 @@ data:
         } // prometheus.relabel "alloy"
       }
     
-      alloy_integration_discovery "alloy_receiver" {
+      alloy_integration_discovery "alloy" {
         port_name = "http-metrics"
-        label_selectors = ["app.kubernetes.io/instance=k8smon-alloy-receiver"]
+        label_selectors = ["app.kubernetes.io/instance=k8smon-alloy","app.kubernetes.io/name=alloy"]
       }
     
-      alloy_integration_scrape "alloy_receiver" {
-        targets = alloy_integration_discovery.alloy_receiver.output
+      alloy_integration_scrape "alloy" {
+        targets = alloy_integration_discovery.alloy.output
         job_label = "integrations/alloy"
         clustering = true
-        keep_metrics = "up|scrape_samples_scraped|alloy_build_info|alloy_component_controller_running_components|alloy_component_dependencies_wait_seconds|alloy_component_dependencies_wait_seconds_bucket|alloy_component_evaluation_seconds|alloy_component_evaluation_seconds_bucket|alloy_component_evaluation_seconds_count|alloy_component_evaluation_seconds_sum|alloy_component_evaluation_slow_seconds|alloy_config_hash|alloy_resources_machine_rx_bytes_total|alloy_resources_machine_tx_bytes_total|alloy_resources_process_cpu_seconds_total|alloy_resources_process_resident_memory_bytes|alloy_tcp_connections|alloy_wal_samples_appended_total|alloy_wal_storage_active_series|cluster_node_gossip_health_score|cluster_node_gossip_proto_version|cluster_node_gossip_received_events_total|cluster_node_info|cluster_node_lamport_time|cluster_node_peers|cluster_node_update_observers|cluster_transport_rx_bytes_total|cluster_transport_rx_packet_queue_length|cluster_transport_rx_packets_failed_total|cluster_transport_rx_packets_total|cluster_transport_stream_rx_bytes_total|cluster_transport_stream_rx_packets_failed_total|cluster_transport_stream_rx_packets_total|cluster_transport_stream_tx_bytes_total|cluster_transport_stream_tx_packets_failed_total|cluster_transport_stream_tx_packets_total|cluster_transport_streams|cluster_transport_tx_bytes_total|cluster_transport_tx_packet_queue_length|cluster_transport_tx_packets_failed_total|cluster_transport_tx_packets_total|otelcol_exporter_send_failed_spans_total|otelcol_exporter_sent_spans_total|go_gc_duration_seconds_count|go_goroutines|go_memstats_heap_inuse_bytes|loki_process_dropped_lines_total|loki_write_batch_retries_total|loki_write_dropped_bytes_total|loki_write_dropped_entries_total|loki_write_encoded_bytes_total|loki_write_mutated_bytes_total|loki_write_mutated_entries_total|loki_write_request_duration_seconds_bucket|loki_write_sent_bytes_total|loki_write_sent_entries_total|process_cpu_seconds_total|process_start_time_seconds|otelcol_processor_batch_batch_send_size_bucket|otelcol_processor_batch_metadata_cardinality|otelcol_processor_batch_timeout_trigger_send_total|prometheus_remote_storage_bytes_total|prometheus_remote_storage_enqueue_retries_total|prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_metadata_bytes_total|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_samples_dropped_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_samples_pending|prometheus_remote_storage_samples_retried_total|prometheus_remote_storage_samples_total|prometheus_remote_storage_sent_batch_duration_seconds_bucket|prometheus_remote_storage_sent_batch_duration_seconds_count|prometheus_remote_storage_sent_batch_duration_seconds_sum|prometheus_remote_storage_shard_capacity|prometheus_remote_storage_shards|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_remote_storage_shards_min|prometheus_remote_storage_succeeded_samples_total|prometheus_remote_write_wal_samples_appended_total|prometheus_remote_write_wal_storage_active_series|prometheus_sd_discovered_targets|prometheus_target_interval_length_seconds_count|prometheus_target_interval_length_seconds_sum|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_bounds_total|prometheus_target_scrapes_sample_out_of_order_total|prometheus_target_sync_length_seconds_sum|prometheus_wal_watcher_current_segment|otelcol_receiver_accepted_spans_total|otelcol_receiver_refused_spans_total|rpc_server_duration_milliseconds_bucket|scrape_duration_seconds|traces_exporter_send_failed_spans|traces_exporter_send_failed_spans_total|traces_exporter_sent_spans|traces_exporter_sent_spans_total|traces_loadbalancer_backend_outcome|traces_loadbalancer_num_backends|traces_receiver_accepted_spans|traces_receiver_accepted_spans_total|traces_receiver_refused_spans|traces_receiver_refused_spans_total|otelcol_loadbalancer_.*"
-        scrape_interval = "60s"
-        scrape_timeout = "10s"
-        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
-        scrape_classic_histograms = false
-        scrape_native_histograms = false
-        max_cache_size = 100000
-        forward_to = argument.metrics_destinations.value
-      }
-    
-      alloy_integration_discovery "alloy_servicegraph" {
-        port_name = "http-metrics"
-        label_selectors = ["app.kubernetes.io/instance=k8smon-localtempo-servicegraph"]
-      }
-    
-      alloy_integration_scrape "alloy_servicegraph" {
-        targets = alloy_integration_discovery.alloy_servicegraph.output
-        job_label = "integrations/alloy"
-        clustering = true
-        keep_metrics = "up|scrape_samples_scraped|alloy_build_info|alloy_component_controller_running_components|alloy_component_dependencies_wait_seconds|alloy_component_dependencies_wait_seconds_bucket|alloy_component_evaluation_seconds|alloy_component_evaluation_seconds_bucket|alloy_component_evaluation_seconds_count|alloy_component_evaluation_seconds_sum|alloy_component_evaluation_slow_seconds|alloy_config_hash|alloy_resources_machine_rx_bytes_total|alloy_resources_machine_tx_bytes_total|alloy_resources_process_cpu_seconds_total|alloy_resources_process_resident_memory_bytes|alloy_tcp_connections|alloy_wal_samples_appended_total|alloy_wal_storage_active_series|cluster_node_gossip_health_score|cluster_node_gossip_proto_version|cluster_node_gossip_received_events_total|cluster_node_info|cluster_node_lamport_time|cluster_node_peers|cluster_node_update_observers|cluster_transport_rx_bytes_total|cluster_transport_rx_packet_queue_length|cluster_transport_rx_packets_failed_total|cluster_transport_rx_packets_total|cluster_transport_stream_rx_bytes_total|cluster_transport_stream_rx_packets_failed_total|cluster_transport_stream_rx_packets_total|cluster_transport_stream_tx_bytes_total|cluster_transport_stream_tx_packets_failed_total|cluster_transport_stream_tx_packets_total|cluster_transport_streams|cluster_transport_tx_bytes_total|cluster_transport_tx_packet_queue_length|cluster_transport_tx_packets_failed_total|cluster_transport_tx_packets_total|otelcol_exporter_send_failed_spans_total|otelcol_exporter_sent_spans_total|go_gc_duration_seconds_count|go_goroutines|go_memstats_heap_inuse_bytes|loki_process_dropped_lines_total|loki_write_batch_retries_total|loki_write_dropped_bytes_total|loki_write_dropped_entries_total|loki_write_encoded_bytes_total|loki_write_mutated_bytes_total|loki_write_mutated_entries_total|loki_write_request_duration_seconds_bucket|loki_write_sent_bytes_total|loki_write_sent_entries_total|process_cpu_seconds_total|process_start_time_seconds|otelcol_processor_batch_batch_send_size_bucket|otelcol_processor_batch_metadata_cardinality|otelcol_processor_batch_timeout_trigger_send_total|prometheus_remote_storage_bytes_total|prometheus_remote_storage_enqueue_retries_total|prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_metadata_bytes_total|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_samples_dropped_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_samples_pending|prometheus_remote_storage_samples_retried_total|prometheus_remote_storage_samples_total|prometheus_remote_storage_sent_batch_duration_seconds_bucket|prometheus_remote_storage_sent_batch_duration_seconds_count|prometheus_remote_storage_sent_batch_duration_seconds_sum|prometheus_remote_storage_shard_capacity|prometheus_remote_storage_shards|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_remote_storage_shards_min|prometheus_remote_storage_succeeded_samples_total|prometheus_remote_write_wal_samples_appended_total|prometheus_remote_write_wal_storage_active_series|prometheus_sd_discovered_targets|prometheus_target_interval_length_seconds_count|prometheus_target_interval_length_seconds_sum|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_bounds_total|prometheus_target_scrapes_sample_out_of_order_total|prometheus_target_sync_length_seconds_sum|prometheus_wal_watcher_current_segment|otelcol_receiver_accepted_spans_total|otelcol_receiver_refused_spans_total|rpc_server_duration_milliseconds_bucket|scrape_duration_seconds|traces_exporter_send_failed_spans|traces_exporter_send_failed_spans_total|traces_exporter_sent_spans|traces_exporter_sent_spans_total|traces_loadbalancer_backend_outcome|traces_loadbalancer_num_backends|traces_receiver_accepted_spans|traces_receiver_accepted_spans_total|traces_receiver_refused_spans|traces_receiver_refused_spans_total|traces_service_graph_request_.*"
+        keep_metrics = "up|scrape_samples_scraped|alloy_build_info|alloy_component_controller_running_components|alloy_component_dependencies_wait_seconds|alloy_component_dependencies_wait_seconds_bucket|alloy_component_evaluation_seconds|alloy_component_evaluation_seconds_bucket|alloy_component_evaluation_seconds_count|alloy_component_evaluation_seconds_sum|alloy_component_evaluation_slow_seconds|alloy_config_hash|alloy_resources_machine_rx_bytes_total|alloy_resources_machine_tx_bytes_total|alloy_resources_process_cpu_seconds_total|alloy_resources_process_resident_memory_bytes|alloy_tcp_connections|alloy_wal_samples_appended_total|alloy_wal_storage_active_series|cluster_node_gossip_health_score|cluster_node_gossip_proto_version|cluster_node_gossip_received_events_total|cluster_node_info|cluster_node_lamport_time|cluster_node_peers|cluster_node_update_observers|cluster_transport_rx_bytes_total|cluster_transport_rx_packet_queue_length|cluster_transport_rx_packets_failed_total|cluster_transport_rx_packets_total|cluster_transport_stream_rx_bytes_total|cluster_transport_stream_rx_packets_failed_total|cluster_transport_stream_rx_packets_total|cluster_transport_stream_tx_bytes_total|cluster_transport_stream_tx_packets_failed_total|cluster_transport_stream_tx_packets_total|cluster_transport_streams|cluster_transport_tx_bytes_total|cluster_transport_tx_packet_queue_length|cluster_transport_tx_packets_failed_total|cluster_transport_tx_packets_total|otelcol_exporter_send_failed_spans_total|otelcol_exporter_sent_spans_total|go_gc_duration_seconds_count|go_goroutines|go_memstats_heap_inuse_bytes|loki_process_dropped_lines_total|loki_write_batch_retries_total|loki_write_dropped_bytes_total|loki_write_dropped_entries_total|loki_write_encoded_bytes_total|loki_write_mutated_bytes_total|loki_write_mutated_entries_total|loki_write_request_duration_seconds_bucket|loki_write_sent_bytes_total|loki_write_sent_entries_total|process_cpu_seconds_total|process_start_time_seconds|otelcol_processor_batch_batch_send_size_bucket|otelcol_processor_batch_metadata_cardinality|otelcol_processor_batch_timeout_trigger_send_total|prometheus_remote_storage_bytes_total|prometheus_remote_storage_enqueue_retries_total|prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_metadata_bytes_total|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_samples_dropped_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_samples_pending|prometheus_remote_storage_samples_retried_total|prometheus_remote_storage_samples_total|prometheus_remote_storage_sent_batch_duration_seconds_bucket|prometheus_remote_storage_sent_batch_duration_seconds_count|prometheus_remote_storage_sent_batch_duration_seconds_sum|prometheus_remote_storage_shard_capacity|prometheus_remote_storage_shards|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_remote_storage_shards_min|prometheus_remote_storage_succeeded_samples_total|prometheus_remote_write_wal_samples_appended_total|prometheus_remote_write_wal_storage_active_series|prometheus_sd_discovered_targets|prometheus_target_interval_length_seconds_count|prometheus_target_interval_length_seconds_sum|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_bounds_total|prometheus_target_scrapes_sample_out_of_order_total|prometheus_target_sync_length_seconds_sum|prometheus_wal_watcher_current_segment|otelcol_receiver_accepted_spans_total|otelcol_receiver_refused_spans_total|rpc_server_duration_milliseconds_bucket|scrape_duration_seconds|traces_exporter_send_failed_spans|traces_exporter_send_failed_spans_total|traces_exporter_sent_spans|traces_exporter_sent_spans_total|traces_loadbalancer_backend_outcome|traces_loadbalancer_num_backends|traces_receiver_accepted_spans|traces_receiver_accepted_spans_total|traces_receiver_refused_spans|traces_receiver_refused_spans_total|otelcol_loadbalancer_num_backends"
         scrape_interval = "60s"
         scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
@@ -542,7 +461,7 @@ data:
     }
     alloy_integration "integration" {
       metrics_destinations = [
-        prometheus.remote_write.localprometheus.receiver,
+        prometheus.remote_write.prometheus.receiver,
       ]
     }
     
@@ -550,201 +469,10 @@ data:
     
     
     
-    // Destination: localPrometheus (prometheus)
-    otelcol.exporter.prometheus "localprometheus" {
-      add_metric_suffixes = true
-      resource_to_telemetry_conversion = false
-      keep_identifying_resource_attributes = true
-      forward_to = [prometheus.remote_write.localprometheus.receiver]
-    } // otelcol.exporter.prometheus "localprometheus"
     
-    prometheus.remote_write "localprometheus" {
-      endpoint {
-        url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
-        headers = {
-        }
-        tls_config {
-          insecure_skip_verify = false
-        }
-        send_native_histograms = false
     
-        queue_config {
-          capacity = 10000
-          min_shards = 1
-          max_shards = 50
-          max_samples_per_send = 2000
-          batch_send_deadline = "5s"
-          min_backoff = "30ms"
-          max_backoff = "5s"
-          retry_on_http_429 = true
-          sample_age_limit = "0s"
-        }
-      }
     
-      wal {
-        truncate_frequency = "2h"
-        min_keepalive_time = "5m"
-        max_keepalive_time = "8h"
-      }
-      external_labels = {
-        "cluster" = "service-graph-metrics-test",
-        "k8s_cluster_name" = "service-graph-metrics-test",
-      }
-    } // prometheus.remote_write "localprometheus"
----
-# Source: k8s-monitoring/templates/alloy-config.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: k8smon-alloy-receiver
-  namespace: default
-data:
-  config.alloy: |
-    // Feature: Application Observability
-    declare "application_observability" {
-      argument "metrics_destinations" {
-        comment = "Must be a list of metrics destinations where collected metrics should be forwarded to"
-      }
     
-      argument "logs_destinations" {
-        comment = "Must be a list of log destinations where collected logs should be forwarded to"
-      }
-    
-      argument "traces_destinations" {
-        comment = "Must be a list of trace destinations where collected trace should be forwarded to"
-      }
-    
-      // OTLP Receiver
-      otelcol.receiver.otlp "receiver" {
-        grpc {
-          endpoint = "0.0.0.0:4317"
-          include_metadata = false
-          max_recv_msg_size = "4MiB"
-          read_buffer_size = "512KiB"
-          write_buffer_size = "32KiB"
-        }
-        http {
-          endpoint = "0.0.0.0:4318"
-          include_metadata = false
-          max_request_body_size = "20MiB"
-        }
-        debug_metrics {
-          disable_high_cardinality_metrics = true
-        }
-        output {
-          metrics = [otelcol.processor.resourcedetection.default.input]
-          logs = [otelcol.processor.resourcedetection.default.input]
-          traces = [otelcol.processor.resourcedetection.default.input]
-        }
-      } // otelcol.receiver.otlp "receiver"
-    
-      // Resource Detection Processor
-      otelcol.processor.resourcedetection "default" {
-        detectors = ["env","system"]
-        override = true
-    
-        system {
-          hostname_sources = ["os"]
-        }
-    
-        output {
-          metrics = [otelcol.processor.k8sattributes.default.input]
-          logs = [otelcol.processor.k8sattributes.default.input]
-          traces = [otelcol.processor.k8sattributes.default.input]
-        }
-      }
-    
-      // K8s Attributes Processor
-      otelcol.processor.k8sattributes "default" {
-        passthrough = false
-        extract {
-          metadata = ["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time"]
-        }
-        pod_association {
-          source {
-            from = "resource_attribute"
-            name = "k8s.pod.ip"
-          }
-        }
-        pod_association {
-          source {
-            from = "resource_attribute"
-            name = "k8s.pod.uid"
-          }
-        }
-        pod_association {
-          source {
-            from = "connection"
-          }
-        }
-    
-        output {
-          metrics = [otelcol.processor.transform.default.input]
-          logs = [otelcol.processor.transform.default.input]
-          traces = [otelcol.processor.transform.default.input, otelcol.connector.host_info.default.input]
-        }
-      }
-    
-      // Host Info Connector
-      otelcol.connector.host_info "default" {
-        host_identifiers = [ "k8s.node.name" ]
-    
-        output {
-          metrics = [otelcol.processor.batch.default.input]
-        }
-      }
-    
-      // Transform Processor
-      otelcol.processor.transform "default" {
-        error_mode = "ignore"
-        log_statements {
-          context = "resource"
-          statements = [
-            "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
-            "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
-            "set(attributes[\"loki.resource.labels\"], \"cluster, namespace, job, pod\")",
-          ]
-        }
-        trace_statements {
-          context = "span"
-          statements = [
-            "replace_pattern(name, \"\\\\?.*\", \"\")",
-            "replace_match(name, \"GET /api/products/*\", \"GET /api/products/{productId}\")",
-           "set_semconv_span_name(\"1.37.0\", \"original_span_name\")",
-          ]
-        }
-    
-        output {
-          metrics = [otelcol.processor.batch.default.input]
-          logs = [otelcol.processor.batch.default.input]
-          traces = [otelcol.processor.batch.default.input]
-        }
-      }
-    
-      // Batch Processor
-      otelcol.processor.batch "default" {
-        send_batch_size = 8192
-        send_batch_max_size = 0
-        timeout = "2s"
-    
-        output {
-          metrics = argument.metrics_destinations.value
-          logs = argument.logs_destinations.value
-          traces = argument.traces_destinations.value
-        }
-      }
-    } // declare "application_observability"
-    application_observability "feature" {
-      metrics_destinations = [
-        otelcol.exporter.prometheus.localprometheus.input,
-      ]
-      logs_destinations = [
-        otelcol.exporter.loki.localloki.input,
-      ]
-      traces_destinations = [
-        otelcol.processor.attributes.localtempo.input,
-      ]
-    }
     // Self Reporting
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
@@ -784,7 +512,7 @@ data:
         action = "keep"
       }
       forward_to = [
-        prometheus.remote_write.localprometheus.receiver,
+        prometheus.remote_write.prometheus.receiver,
       ]
     } // prometheus.relabel "kubernetes_monitoring_telemetry"
     
@@ -792,48 +520,15 @@ data:
     
     
     
-    // Destination: localLoki (loki)
-    otelcol.exporter.loki "localloki" {
-      forward_to = [loki.write.localloki.receiver]
-    } // otelcol.exporter.loki "localloki"
-    
-    loki.write "localloki" {
-      endpoint {
-        url = "http://loki.loki.svc:3100/loki/api/v1/push"
-        retry_on_http_429 = true
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
-          password = remote.kubernetes.secret.localloki.data["password"]
-        }
-        tls_config {
-          insecure_skip_verify = false
-        }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
-      }
-      external_labels = {
-        "cluster" = "service-graph-metrics-test",
-        "k8s_cluster_name" = "service-graph-metrics-test",
-      }
-    } // loki.write "localloki"
-    
-    remote.kubernetes.secret "localloki" {
-      name      = "localloki-k8smon-k8s-monitoring"
-      namespace = "default"
-    } // remote.kubernetes.secret "localloki"
-    
-    
-    // Destination: localPrometheus (prometheus)
-    otelcol.exporter.prometheus "localprometheus" {
+    // Destination: prometheus (prometheus)
+    otelcol.exporter.prometheus "prometheus" {
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       keep_identifying_resource_attributes = true
-      forward_to = [prometheus.remote_write.localprometheus.receiver]
-    } // otelcol.exporter.prometheus "localprometheus"
+      forward_to = [prometheus.remote_write.prometheus.receiver]
+    } // otelcol.exporter.prometheus "prometheus"
     
-    prometheus.remote_write "localprometheus" {
+    prometheus.remote_write "prometheus" {
       endpoint {
         url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
         headers = {
@@ -862,26 +557,26 @@ data:
         max_keepalive_time = "8h"
       }
       external_labels = {
-        "cluster" = "service-graph-metrics-test",
-        "k8s_cluster_name" = "service-graph-metrics-test",
+        "cluster" = "service-graph-metrics",
+        "k8s_cluster_name" = "service-graph-metrics",
       }
-    } // prometheus.remote_write "localprometheus"
+    } // prometheus.remote_write "prometheus"
     
-    // Destination: localTempo (otlp)
-    otelcol.processor.attributes "localtempo" {
+    // Destination: tempo (otlp)
+    otelcol.processor.attributes "tempo" {
       output {
-        traces = [otelcol.processor.transform.localtempo.input]
+        traces = [otelcol.processor.transform.tempo.input]
       }
-    } // otelcol.processor.attributes "localtempo"
+    } // otelcol.processor.attributes "tempo"
     
-    otelcol.processor.transform "localtempo" {
+    otelcol.processor.transform "tempo" {
       error_mode = "ignore"
     
       trace_statements {
         context = "resource"
         statements = [
-          `set(attributes["cluster"], "service-graph-metrics-test")`,
-          `set(attributes["k8s.cluster.name"], "service-graph-metrics-test")`,
+          `set(attributes["cluster"], "service-graph-metrics")`,
+          `set(attributes["k8s.cluster.name"], "service-graph-metrics")`,
           `delete_key(attributes, "process.pid")`,
           `delete_key(attributes, "process.parent_pid")`,
           `delete_key(attributes, "process.executable.path")`,
@@ -903,18 +598,20 @@ data:
     
       output {
         traces = [
-          otelcol.exporter.loadbalancing.localtempo_servicegraph.input,
-          otelcol.processor.batch.localtempo.input,
+          otelcol.exporter.loadbalancing.tempo_servicegraph.input,
+          otelcol.processor.batch.tempo.input,
         ]
       }
-    } // otelcol.processor.transform "localtempo"
+    } // otelcol.processor.transform "tempo"
     
-    otelcol.exporter.loadbalancing "localtempo_servicegraph" {
+    otelcol.exporter.loadbalancing "tempo_servicegraph" {
       resolver {
-        kubernetes {
-          service = "k8smon-localtempo-servicegraph"
-          ports   = [4317]
-          timeout = "60s"
+        static {
+          hostnames = [
+            "k8smon-tempo-servicegraph-0.k8smon-tempo-servicegraph.default.svc.cluster.local:4317",
+            "k8smon-tempo-servicegraph-1.k8smon-tempo-servicegraph.default.svc.cluster.local:4317",
+            "k8smon-tempo-servicegraph-2.k8smon-tempo-servicegraph.default.svc.cluster.local:4317",
+          ]
         }
       }
       protocol {
@@ -926,20 +623,20 @@ data:
           }
         }
       }
-    } // otelcol.exporter.loadbalancing "localtempo_servicegraph"
+    } // otelcol.exporter.loadbalancing "tempo_servicegraph"
     
-    otelcol.processor.batch "localtempo" {
+    otelcol.processor.batch "tempo" {
       timeout = "2s"
       send_batch_size = 8192
       send_batch_max_size = 0
     
       output {
-        traces = [otelcol.exporter.otlp.localtempo.input]
+        traces = [otelcol.exporter.otlp.tempo.input]
       }
-    } // otelcol.processor.batch "localtempo"
-    otelcol.exporter.otlp "localtempo" {
+    } // otelcol.processor.batch "tempo"
+    otelcol.exporter.otlp "tempo" {
       client {
-        endpoint = "tempo.tempo.svc:4317"
+        endpoint = "http://tempo.tempo.svc:4317"
         tls {
           insecure = true
           insecure_skip_verify = true
@@ -956,7 +653,7 @@ data:
       sending_queue {
         enabled = true
       }
-    } // otelcol.exporter.otlp "localtempo"
+    } // otelcol.exporter.otlp "tempo"
 ---
 # Source: k8s-monitoring/templates/release-info.yaml
 apiVersion: v1
@@ -965,7 +662,7 @@ metadata:
   name: k8smon-k8s-monitoring-release-info
   namespace: default
 data:
-  cluster: "service-graph-metrics-test"
+  cluster: "service-graph-metrics"
   self-reporting-metric.prom: |+
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
@@ -974,12 +671,9 @@ data:
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlpgrpc,otlphttp", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="alloy", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{feature="podLogsViaOpenTelemetry", version="1.0.0"} 1
     # HELP grafana_kubernetes_monitoring_collector_info A metric to report the collectors of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_collector_info gauge
-    grafana_kubernetes_monitoring_collector_info{kind="daemonset", name="alloy-logs", presets="filesystem-log-reader,daemonset", type="alloy"} 1
-    grafana_kubernetes_monitoring_collector_info{kind="statefulset", name="alloy-metrics", presets="clustered,statefulset", replicas="1", type="alloy"} 1
-    grafana_kubernetes_monitoring_collector_info{kind="deployment", name="alloy-receiver", presets="deployment", replicas="1", type="alloy"} 1
+    grafana_kubernetes_monitoring_collector_info{kind="daemonset", name="alloy", presets="daemonset", type="alloy"} 1
     # EOF
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
@@ -1254,7 +948,7 @@ spec:
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
-  name: k8smon-localtempo-servicegraph
+  name: k8smon-tempo-servicegraph
   namespace: default
   annotations:
     helm.sdk.operatorframework.io/uninstall-wait: "true"
@@ -1264,7 +958,7 @@ spec:
       content: |-
         otelcol.receiver.otlp "service_graph_receiver" {
           grpc {
-            max_recv_msg_size = "8MB"
+            max_recv_msg_size = "4MB"
           }
   
           output {
@@ -1274,16 +968,18 @@ spec:
         otelcol.connector.servicegraph "service_graph_metrics" {
           // https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.connector.servicegraph/
   
-          cache_loop = "2m"
+          cache_loop = "1m"
   
           database_name_attributes = ["db.name"]
   
           dimensions = [
-              "cluster",
-              "service.name",
-              "service.namespace",
-              "k8s.deployment.name",
+              "cloud.availability_zone",
+              "cloud.region",
+              "deployment.environment",
+              "k8s.cluster.name",
               "k8s.namespace.name",
+              "service.namespace",
+              "service.version",
           ]
   
           latency_histogram_buckets = [
@@ -1307,11 +1003,11 @@ spec:
   
           metrics_flush_interval = "60s"
   
-          store_expiration_loop = "5s"
+          store_expiration_loop = "2s"
   
           output {
               metrics = [
-                otelcol.exporter.prometheus.localprometheus.input,
+                otelcol.exporter.prometheus.prometheus.input,
               ]
           }
         }
@@ -1320,15 +1016,15 @@ spec:
   
   
   
-        // Destination: localPrometheus (prometheus)
-        otelcol.exporter.prometheus "localprometheus" {
+        // Destination: prometheus (prometheus)
+        otelcol.exporter.prometheus "prometheus" {
           add_metric_suffixes = true
           resource_to_telemetry_conversion = false
           keep_identifying_resource_attributes = true
-          forward_to = [prometheus.remote_write.localprometheus.receiver]
-        } // otelcol.exporter.prometheus "localprometheus"
+          forward_to = [prometheus.remote_write.prometheus.receiver]
+        } // otelcol.exporter.prometheus "prometheus"
   
-        prometheus.remote_write "localprometheus" {
+        prometheus.remote_write "prometheus" {
           endpoint {
             url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
             headers = {
@@ -1357,11 +1053,11 @@ spec:
             max_keepalive_time = "8h"
           }
           external_labels = {
-            "cluster" = "service-graph-metrics-test",
-            "k8s_cluster_name" = "service-graph-metrics-test",
+            "cluster" = "service-graph-metrics",
+            "k8s_cluster_name" = "service-graph-metrics",
             collector_id = env("POD_NAME"),
           }
-        } // prometheus.remote_write "localprometheus"
+        } // prometheus.remote_write "prometheus"
       create: true
     extraEnv:
     - name: POD_NAME
@@ -1400,114 +1096,15 @@ spec:
     type: statefulset
   crds:
     create: false
-  fullnameOverride: k8smon-localtempo-servicegraph
+  fullnameOverride: k8smon-tempo-servicegraph
+  service:
+    clusterIP: None
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
-  name: k8smon-alloy-logs
-  namespace: default
-  annotations:
-    helm.sdk.operatorframework.io/uninstall-wait: "true"
-spec:
-  alloy:
-    configMap:
-      create: false
-    mounts:
-      dockercontainers: true
-      varlog: true
-    resources: {}
-    securityContext:
-      allowPrivilegeEscalation: false
-      capabilities:
-        add:
-        - CHOWN
-        - DAC_OVERRIDE
-        - FOWNER
-        - FSETID
-        - KILL
-        - SETGID
-        - SETUID
-        - SETPCAP
-        - NET_BIND_SERVICE
-        - NET_RAW
-        - SYS_CHROOT
-        - MKNOD
-        - AUDIT_WRITE
-        - SETFCAP
-        drop:
-        - ALL
-      seccompProfile:
-        type: RuntimeDefault
-    stabilityLevel: public-preview
-  controller:
-    nodeSelector:
-      kubernetes.io/os: linux
-    podAnnotations:
-      k8s.grafana.com/logs.job: integrations/alloy
-    tolerations:
-    - effect: NoSchedule
-      operator: Exists
-    type: daemonset
-  crds:
-    create: false
-  nameOverride: alloy-logs
----
-# Source: k8s-monitoring/templates/alloy.yaml
-apiVersion: collectors.grafana.com/v1alpha1
-kind: Alloy
-metadata:
-  name: k8smon-alloy-metrics
-  namespace: default
-  annotations:
-    helm.sdk.operatorframework.io/uninstall-wait: "true"
-spec:
-  alloy:
-    clustering:
-      enabled: true
-      name: alloy-metrics
-    configMap:
-      create: false
-    resources: {}
-    securityContext:
-      allowPrivilegeEscalation: false
-      capabilities:
-        add:
-        - CHOWN
-        - DAC_OVERRIDE
-        - FOWNER
-        - FSETID
-        - KILL
-        - SETGID
-        - SETUID
-        - SETPCAP
-        - NET_BIND_SERVICE
-        - NET_RAW
-        - SYS_CHROOT
-        - MKNOD
-        - AUDIT_WRITE
-        - SETFCAP
-        drop:
-        - ALL
-      seccompProfile:
-        type: RuntimeDefault
-  controller:
-    nodeSelector:
-      kubernetes.io/os: linux
-    podAnnotations:
-      k8s.grafana.com/logs.job: integrations/alloy
-    replicas: 1
-    type: statefulset
-  crds:
-    create: false
-  nameOverride: alloy-metrics
----
-# Source: k8s-monitoring/templates/alloy.yaml
-apiVersion: collectors.grafana.com/v1alpha1
-kind: Alloy
-metadata:
-  name: k8smon-alloy-receiver
+  name: k8smon-alloy
   namespace: default
   annotations:
     helm.sdk.operatorframework.io/uninstall-wait: "true"
@@ -1559,8 +1156,10 @@ spec:
       kubernetes.io/os: linux
     podAnnotations:
       k8s.grafana.com/logs.job: integrations/alloy
-    replicas: 1
-    type: deployment
+    tolerations:
+    - effect: NoSchedule
+      operator: Exists
+    type: daemonset
     volumes:
       extra:
       - configMap:
@@ -1568,7 +1167,7 @@ spec:
         name: release-info
   crds:
     create: false
-  nameOverride: alloy-receiver
+  nameOverride: alloy
 ---
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
 apiVersion: v1
@@ -1750,21 +1349,13 @@ spec:
             - /bin/bash
             - -ce
             - |
-              echo "Deleting Alloy instance: alloy/k8smon-alloy-logs..."
-              kubectl delete alloy/k8smon-alloy-logs --ignore-not-found=true --wait
-              kubectl wait --for=delete alloy/k8smon-alloy-logs --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-logs or it may not exist."
+              echo "Deleting Alloy instance: alloy/k8smon-alloy..."
+              kubectl delete alloy/k8smon-alloy --ignore-not-found=true --wait
+              kubectl wait --for=delete alloy/k8smon-alloy --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy or it may not exist."
 
-              echo "Deleting Alloy instance: alloy/k8smon-alloy-metrics..."
-              kubectl delete alloy/k8smon-alloy-metrics --ignore-not-found=true --wait
-              kubectl wait --for=delete alloy/k8smon-alloy-metrics --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-metrics or it may not exist."
-
-              echo "Deleting Alloy instance: alloy/k8smon-alloy-receiver..."
-              kubectl delete alloy/k8smon-alloy-receiver --ignore-not-found=true --wait
-              kubectl wait --for=delete alloy/k8smon-alloy-receiver --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-receiver or it may not exist."
-
-              echo "Deleting Alloy instance: alloy/k8smon-localtempo-servicegraph..."
-              kubectl delete alloy/k8smon-localtempo-servicegraph --ignore-not-found=true --wait
-              kubectl wait --for=delete alloy/k8smon-localtempo-servicegraph --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-localtempo-servicegraph or it may not exist."
+              echo "Deleting Alloy instance: alloy/k8smon-tempo-servicegraph..."
+              kubectl delete alloy/k8smon-tempo-servicegraph --ignore-not-found=true --wait
+              kubectl wait --for=delete alloy/k8smon-tempo-servicegraph --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-tempo-servicegraph or it may not exist."
 
               kubectl patch \
                 --namespace=default \

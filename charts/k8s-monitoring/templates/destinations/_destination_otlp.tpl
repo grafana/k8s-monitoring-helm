@@ -413,11 +413,30 @@ otelcol.exporter.loadbalancing {{ printf "%s_sampler" (include "helper.alloy_nam
 
 otelcol.exporter.loadbalancing {{ printf "%s_servicegraph" (include "helper.alloy_name" $.destinationName) | quote }} {
   resolver {
+    {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
+    {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-servicegraph" $.destinationName)) | trunc $maxLength | trimSuffix "-" | lower }}
+{{- if eq .processors.serviceGraphMetrics.loadBalancer.resolver "kubernetes" }}
     kubernetes {
-      {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
-      {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-servicegraph" $.destinationName)) | trunc $maxLength | trimSuffix "-" | lower }}
       service = "{{ $collectorName }}"
+      ports   = [4317]
+      timeout = {{ .processors.serviceGraphMetrics.loadBalancer.timeout | quote }}
     }
+{{- else if eq .processors.serviceGraphMetrics.loadBalancer.resolver "dns" }}
+    dns {
+      hostname = "{{ $collectorName }}.{{ include "helper.namespace" $ }}.svc.cluster.local"
+      port     = "4317"
+      timeout = {{ .processors.serviceGraphMetrics.loadBalancer.timeout | quote }}
+    }
+{{- else if eq .processors.serviceGraphMetrics.loadBalancer.resolver "static" }}
+    static {
+      hostnames = [
+{{- $replicas := int (dig "collector" "controller" "replicas" 1 .processors.serviceGraphMetrics) }}
+{{- range $i := until $replicas }}
+        "{{ $collectorName }}-{{ $i }}.{{ $collectorName }}.{{ include "helper.namespace" $ }}.svc.cluster.local:4317",
+{{- end }}
+      ]
+    }
+{{- end }}
   }
   protocol {
     otlp {
