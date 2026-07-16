@@ -1,0 +1,10 @@
+# No-op (null) Destination Example
+
+This example demonstrates how to use the `nop` destination. A `nop` destination accepts metrics, logs, traces, and
+profiles and drops all of it — nothing is stored or forwarded anywhere. Each signal terminates at a dead-end Alloy
+component (for example `prometheus.relabel` and `loki.relabel` with an empty `forward_to`, `otelcol.connector.spanlogs`
+with an empty `output`, and `pyroscope.relabel` with an empty `forward_to`).
+
+This is useful for measuring how much telemetry a deployment produces before committing to real backends. Deploy with
+only a `nop` destination, read the volume from Alloy's own metrics, tune your configuration, and then replace the `nop`
+destination with real ones. Individual signals can be turned off with, for example, `traces: {enabled: false}`.

@@ -1,0 +1,118 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Pod Logs via OpenTelemetry - Filters
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should drop logs when a pod annotation is present (explicit null)
+    set:
+      testing: {enabled: true}
+      filters:
+        annotations:
+          instrumentation.opentelemetry.io/inject-java: null
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'key      = "instrumentation.opentelemetry.io/inject-java"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'resource\.attributes\["k8s_monitoring\.tmp\.filter\.annotations\.instrumentation\.opentelemetry\.io/inject-java"\] != nil'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'delete_key\(attributes, "k8s_monitoring\.tmp\.filter\.annotations\.instrumentation\.opentelemetry\.io/inject-java"\)'
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should treat an empty value the same as null (presence)
+    set:
+      testing: {enabled: true}
+      filters:
+        annotations:
+          instrumentation.opentelemetry.io/inject-java:
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'resource\.attributes\["k8s_monitoring\.tmp\.filter\.annotations\.instrumentation\.opentelemetry\.io/inject-java"\] != nil'
+
+  - it: should drop logs when a pod annotation equals a value
+    set:
+      testing: {enabled: true}
+      filters:
+        annotations:
+          instrumentation.opentelemetry.io/inject-java: "true"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'resource\.attributes\["k8s_monitoring\.tmp\.filter\.annotations\.instrumentation\.opentelemetry\.io/inject-java"\] == "true"'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'resource\.attributes\["k8s_monitoring\.tmp\.filter\.annotations\.instrumentation\.opentelemetry\.io/inject-java"\] != nil'
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should drop logs on a value match for a pod label
+    set:
+      testing: {enabled: true}
+      filters:
+        labels:
+          team: platform
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'key      = "team"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'resource\.attributes\["k8s_monitoring\.tmp\.filter\.labels\.team"\] == "platform"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'delete_key\(attributes, "k8s_monitoring\.tmp\.filter\.labels\.team"\)'
+
+  - it: should quote a non-string value when building the equality rule
+    set:
+      testing: {enabled: true}
+      filters:
+        annotations:
+          instrumentation.opentelemetry.io/inject-java: false
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'resource\.attributes\["k8s_monitoring\.tmp\.filter\.annotations\.instrumentation\.opentelemetry\.io/inject-java"\] == "false"'
+
+  - it: should build drop rules from both annotation and label filters, mixing presence and value
+    set:
+      testing: {enabled: true}
+      filters:
+        annotations:
+          instrumentation.opentelemetry.io/inject-java: "true"
+        labels:
+          team:
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'resource\.attributes\["k8s_monitoring\.tmp\.filter\.annotations\.instrumentation\.opentelemetry\.io/inject-java"\] == "true"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'resource\.attributes\["k8s_monitoring\.tmp\.filter\.labels\.team"\] != nil'
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should not add custom drop rules when filters is empty
+    set:
+      testing: {enabled: true}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'k8s_monitoring\.tmp\.filter\.'

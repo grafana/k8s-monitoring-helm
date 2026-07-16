@@ -31,7 +31,7 @@ tests:
             Please set:
             destinations:
               a-destination-with-no-type:
-                type: custom, loki-stdout, loki, otlp, prometheus, or pyroscope
+                type: custom, loki-stdout, loki, nop, otlp, prometheus, or pyroscope
 
   - it: validates the destination type
     set:
@@ -48,7 +48,22 @@ tests:
             Please set:
             destinations:
               a-destination-with-an-invalid-type:
-                type: custom, loki-stdout, loki, otlp, prometheus, or pyroscope
+                type: custom, loki-stdout, loki, nop, otlp, prometheus, or pyroscope
+
+  - it: skips validation for disabled destinations
+    set:
+      cluster: {name: test-cluster}
+      clusterMetrics: {enabled: true}
+      telemetryServices: {kube-state-metrics: {deploy: true}}
+      collectors: {alloy-metrics: {alloy: {clustering: {enabled: true}}}}
+      destinations:
+        metricsService:
+          type: prometheus
+          url: http://prometheus.example.com/api/prom
+        a-disabled-destination-with-no-type:
+          disabled: true
+    asserts:
+      - notFailedTemplate: {}
 
   - it: allows destination names with alphanumeric, underscores, and dashes
     set:
@@ -328,6 +343,68 @@ tests:
               test:
                 type: otlp
                 protocol: http
+
+  - it: rejects the static service graph resolver when the collector is not a StatefulSet
+    set:
+      cluster:
+        name: test-cluster
+      destinations:
+        tempo:
+          type: otlp
+          url: tempo.tempo.svc:4317
+          metrics: {enabled: false}
+          logs: {enabled: false}
+          traces: {enabled: true}
+          processors:
+            serviceGraphMetrics:
+              enabled: true
+              loadBalancer:
+                resolver: static
+              collector:
+                controller:
+                  type: deployment
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "tempo" uses the "static" service graph load balancer resolver, which requires a StatefulSet controller.
+            The static resolver addresses each service graph Alloy pod by its stable, ordinal hostname, which only a StatefulSet provides.
+            Either keep the StatefulSet controller (the default):
+            destinations:
+              tempo:
+                type: otlp
+                processors:
+                  serviceGraphMetrics:
+                    loadBalancer:
+                      resolver: static
+                    collector:
+                      controller:
+                        type: statefulset
+            Or choose a different resolver ("kubernetes" or "dns").
+
+  - it: allows the static service graph resolver with the default StatefulSet controller
+    set:
+      cluster:
+        name: test-cluster
+      clusterMetrics: {enabled: true}
+      telemetryServices: {kube-state-metrics: {deploy: true}}
+      collectors: {alloy-metrics: {alloy: {clustering: {enabled: true}}}}
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+        tempo:
+          type: otlp
+          url: tempo.tempo.svc:4317
+          metrics: {enabled: false}
+          logs: {enabled: false}
+          traces: {enabled: true}
+          processors:
+            serviceGraphMetrics:
+              enabled: true
+              loadBalancer:
+                resolver: static
+    asserts:
+      - notFailedTemplate: {}
 
 #  - it: detects if traces are disabled and tail sampling is enabled
 # TODO

@@ -302,6 +302,41 @@
                 "convertClassicHistogramsToNhcb": {
                     "type": "boolean"
                 },
+                "image": {
+                    "type": "object",
+                    "properties": {
+                        "pullPolicy": {
+                            "type": "string",
+                            "enum": [
+                                "",
+                                "Always",
+                                "IfNotPresent",
+                                "Never"
+                            ]
+                        },
+                        "pullSecrets": {
+                            "type": "array"
+                        },
+                        "registry": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "imagePullPolicy": {
+                    "type": "string",
+                    "enum": [
+                        "",
+                        "Always",
+                        "IfNotPresent",
+                        "Never"
+                    ]
+                },
+                "imagePullSecrets": {
+                    "type": "array"
+                },
+                "imageRegistry": {
+                    "type": "string"
+                },
                 "kubernetesAPIService": {
                     "type": "string"
                 },
@@ -936,6 +971,9 @@
                         "pollFrequency": {
                             "type": "string"
                         },
+                        "presetsAttribute": {
+                            "type": "boolean"
+                        },
                         "proxyConnectHeader": {
                             "type": "object"
                         },
@@ -1125,6 +1163,9 @@
             "properties": {
                 "config": {
                     "type": "string"
+                },
+                "disabled": {
+                    "type": "boolean"
                 },
                 "ecosystem": {
                     "type": "string"
@@ -1391,6 +1432,9 @@
                         "type": "string"
                     }
                 },
+                "disabled": {
+                    "type": "boolean"
+                },
                 "extraHeaders": {
                     "type": "object"
                 },
@@ -1538,6 +1582,9 @@
         "loki-stdout-destination": {
             "type": "object",
             "properties": {
+                "disabled": {
+                    "type": "boolean"
+                },
                 "logProcessingRules": {
                     "type": "string"
                 },
@@ -1550,6 +1597,53 @@
                 "type": {
                     "type": "string",
                     "const": "loki-stdout"
+                }
+            }
+        },
+        "nop-destination": {
+            "type": "object",
+            "properties": {
+                "disabled": {
+                    "type": "boolean"
+                },
+                "logs": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "metrics": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "profiles": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "traces": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "type": {
+                    "type": "string",
+                    "const": "nop"
                 }
             }
         },
@@ -1706,6 +1800,9 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "disabled": {
+                    "type": "boolean"
                 },
                 "extraHeaders": {
                     "type": "object"
@@ -1930,6 +2027,17 @@
                                         "type": "string"
                                     }
                                 },
+                                "loadBalancer": {
+                                    "type": "object",
+                                    "properties": {
+                                        "resolver": {
+                                            "type": "string"
+                                        },
+                                        "timeout": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
                                 "metricsFlushInterval": {
                                     "type": "string"
                                 },
@@ -1953,6 +2061,13 @@
                                 },
                                 "storeExpirationLoop": {
                                     "type": "string"
+                                },
+                                "loadBalancerResolver": {
+                                    "enum": [
+                                        "kubernetes",
+                                        "dns",
+                                        "static"
+                                    ]
                                 }
                             }
                         },
@@ -2516,6 +2631,9 @@
                         "type": "string"
                     }
                 },
+                "disabled": {
+                    "type": "boolean"
+                },
                 "extraHeaders": {
                     "type": "object"
                 },
@@ -2908,6 +3026,9 @@
                         "type": "string"
                     }
                 },
+                "disabled": {
+                    "type": "boolean"
+                },
                 "extraHeaders": {
                     "type": "object"
                 },
@@ -3057,6 +3178,9 @@
                 },
                 {
                     "$ref": "#/definitions/loki-destination"
+                },
+                {
+                    "$ref": "#/definitions/nop-destination"
                 },
                 {
                     "$ref": "#/definitions/otlp-destination"

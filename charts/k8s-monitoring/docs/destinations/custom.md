@@ -10,6 +10,7 @@ data is sent to it. This can allow you to create new destinations that are not n
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| disabled | bool | `false` | Set to `true` to disable this destination. Disabled destinations are excluded from all telemetry data flows, which is useful for removing a destination that was defined in a shared or parent values file. |
 | name | string | `""` | The name for this custom destination. |
 
 ### Other Values

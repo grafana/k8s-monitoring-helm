@@ -188,5 +188,28 @@
     {{- end }}
   {{- end }}
 
+  {{- /* The "static" service graph load balancer resolver requires stable, ordinal pod hostnames, which only a StatefulSet provides */}}
+  {{- if eq (dig "processors" "serviceGraphMetrics" "enabled" false .Destination) true }}
+    {{- $resolver := dig "processors" "serviceGraphMetrics" "loadBalancer" "resolver" "kubernetes" .Destination }}
+    {{- $controllerType := dig "processors" "serviceGraphMetrics" "collector" "controller" "type" "statefulset" .Destination }}
+    {{- if and (eq $resolver "static") (ne $controllerType "statefulset") }}
+      {{- $msg := list "" (printf "Destination \"%s\" uses the \"static\" service graph load balancer resolver, which requires a StatefulSet controller." .DestinationName) }}
+      {{- $msg = append $msg "The static resolver addresses each service graph Alloy pod by its stable, ordinal hostname, which only a StatefulSet provides." }}
+      {{- $msg = append $msg "Either keep the StatefulSet controller (the default):" }}
+      {{- $msg = append $msg "destinations:" }}
+      {{- $msg = append $msg (printf "  %s:" .DestinationName) }}
+      {{- $msg = append $msg "    type: otlp" }}
+      {{- $msg = append $msg "    processors:" }}
+      {{- $msg = append $msg "      serviceGraphMetrics:" }}
+      {{- $msg = append $msg "        loadBalancer:" }}
+      {{- $msg = append $msg "          resolver: static" }}
+      {{- $msg = append $msg "        collector:" }}
+      {{- $msg = append $msg "          controller:" }}
+      {{- $msg = append $msg "            type: statefulset" }}
+      {{- $msg = append $msg "Or choose a different resolver (\"kubernetes\" or \"dns\")." }}
+      {{ fail (join "\n" $msg) }}
+    {{- end }}
+  {{- end }}
+
   {{- /* TODO: Add validation for catching if traces.enabled = false and processors.tailSampling.enabled = true */}}
 {{- end }}

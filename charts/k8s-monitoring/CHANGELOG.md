@@ -2,8 +2,19 @@
 
 ## Unreleased
 
+## 4.3.0
+
+*   Add a `presets` attribute to the remote configuration (`remotecfg`) collector attributes, containing the comma-separated list of the collector's presets. (@petewall)
 *   Fix standardize on upper-case in level labels (#2844) (@saruprim)
 *   Add missing extra metric processing rules for Istio metrics integration (@1azunna)
+*   Add the ability to set the resolver and timeout for `processors.serviceGraphMetrics` in OTLP destinations, choosing how the load balancing exporter routes traces to the service graph Alloy instances. (@petewall)
+*   Update the SDK Injector (k8s-injection-controller) to 0.2.1. Its container image now defaults to the pinned chart appVersion (`0.2.0`) instead of the `main` tag. (@TylerHelmuth)
+*   Align `service.name`/`service.namespace` detection on logs (new opt-in `alignServiceNameWithOTelSemConv` flag) and profiles with the [OpenTelemetry Kubernetes semantic conventions](https://opentelemetry.io/docs/specs/semconv/non-normative/k8s-attributes/) that Grafana Beyla uses, so telemetry correlates across metrics, logs, traces, and profiles for the same workload. (#2547) (@petewall)
+*   Allow a destination to be disabled by setting `disabled: true`. Disabled destinations are excluded from all destination lists, secrets, and generated Alloy instances, which makes it possible to remove a destination that was defined in a shared or parent values file. (#2800) (@petewall)
+*   Add the `nop` destination, which drops all telemetry sent to it. (#1461) (@TylerHelmuth)
+*   Add the `otel-receiver` collector preset, which opens the standard OTLP receiver ports on the collector (4317 for OTLP gRPC and 4318 for OTLP HTTP). (@petewall)
+*   Add support for global image settings. `global.image.registry`, `global.image.pullPolicy`, and `global.image.pullSecrets` are now documented and schema-validated, and apply to the Alloy instances, the Alloy Operator, and the Alloy removal hooks. The flat `global.imageRegistry`, `global.imagePullPolicy`, and `global.imagePullSecrets` keys used by dependent charts (kube-state-metrics, Node Exporter, Windows Exporter) are also documented. (#2498) (@TylerHelmuth)
+*   Add a `filters` option to the Pod Logs via OpenTelemetry feature for dropping pod logs based on the pod's annotations or labels. Set `filters.annotations` or `filters.labels` to a map of Kubernetes annotation/label key to the value that should drop the log, or `null` to drop whenever the annotation/label is present. A pod's logs are dropped if any configured filter matches. (#2846) (@TylerHelmuth)
 
 ## 4.2.2
 

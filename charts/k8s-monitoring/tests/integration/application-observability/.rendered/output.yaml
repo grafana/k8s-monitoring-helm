@@ -86,7 +86,20 @@ data:
       otelcol.processor.k8sattributes "default" {
         passthrough = false
         extract {
+          otel_annotations = true
           metadata = ["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time"]
+          // Extracted into temporary attributes for service.name detection, then deleted in the transform processor.
+          // Temporary names are used so the cleanup never deletes an `app.kubernetes.io/*` attribute the user extracted.
+          label {
+            tag_name = "k8s_monitoring.tmp.instance"
+            key = "app.kubernetes.io/instance"
+            from = "pod"
+          }
+          label {
+            tag_name = "k8s_monitoring.tmp.name"
+            key = "app.kubernetes.io/name"
+            from = "pod"
+          }
         }
         pod_association {
           source {
@@ -124,6 +137,64 @@ data:
       // Transform Processor
       otelcol.processor.transform "default" {
         error_mode = "ignore"
+        metric_statements {
+          context = "resource"
+          statements = [
+            // Set service.name by choosing the first value found from the following ordered list:
+            // - service.name as reported by the application or set from the resource.opentelemetry.io/service.name annotation
+            // - pod.label[app.kubernetes.io/instance]
+            // - pod.label[app.kubernetes.io/name]
+            // - k8s.workload.name (Deployment, StatefulSet, DaemonSet, CronJob, Job, ...)
+            // - k8s.pod.name
+            // The instance/name pod labels are read from temporary attributes (k8s_monitoring.tmp.*) extracted by the
+            // k8sattributes processor, so the cleanup below only ever deletes attributes this feature added.
+            `set(resource.attributes["service.name"], resource.attributes["k8s_monitoring.tmp.instance"]) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and resource.attributes["k8s_monitoring.tmp.instance"] != nil and resource.attributes["k8s_monitoring.tmp.instance"] != ""`,
+            `set(resource.attributes["service.name"], resource.attributes["k8s_monitoring.tmp.name"]) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and resource.attributes["k8s_monitoring.tmp.name"] != nil and resource.attributes["k8s_monitoring.tmp.name"] != ""`,
+            `set(resource.attributes["service.name"], resource.attributes["k8s.deployment.name"]) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and resource.attributes["k8s.deployment.name"] != nil and resource.attributes["k8s.deployment.name"] != ""`,
+            `set(resource.attributes["service.name"], resource.attributes["k8s.replicaset.name"]) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and resource.attributes["k8s.replicaset.name"] != nil and resource.attributes["k8s.replicaset.name"] != ""`,
+            `set(resource.attributes["service.name"], resource.attributes["k8s.statefulset.name"]) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and resource.attributes["k8s.statefulset.name"] != nil and resource.attributes["k8s.statefulset.name"] != ""`,
+            `set(resource.attributes["service.name"], resource.attributes["k8s.daemonset.name"]) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and resource.attributes["k8s.daemonset.name"] != nil and resource.attributes["k8s.daemonset.name"] != ""`,
+            `set(resource.attributes["service.name"], resource.attributes["k8s.cronjob.name"]) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and resource.attributes["k8s.cronjob.name"] != nil and resource.attributes["k8s.cronjob.name"] != ""`,
+            `set(resource.attributes["service.name"], resource.attributes["k8s.job.name"]) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and resource.attributes["k8s.job.name"] != nil and resource.attributes["k8s.job.name"] != ""`,
+            `set(resource.attributes["service.name"], resource.attributes["k8s.pod.name"]) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and resource.attributes["k8s.pod.name"] != nil and resource.attributes["k8s.pod.name"] != ""`,
+    
+            // Set service.namespace to the pod namespace if not already set
+            `set(resource.attributes["service.namespace"], resource.attributes["k8s.namespace.name"]) where (resource.attributes["service.namespace"] == nil or resource.attributes["service.namespace"] == "") and resource.attributes["k8s.namespace.name"] != nil and resource.attributes["k8s.namespace.name"] != ""`,
+    
+            // Remove the temporary attributes used for service.name detection
+            `delete_key(resource.attributes, "k8s_monitoring.tmp.instance")`,
+            `delete_key(resource.attributes, "k8s_monitoring.tmp.name")`,
+          ]
+        }
+        trace_statements {
+          context = "resource"
+          statements = [
+            // Set service.name by choosing the first value found from the following ordered list:
+            // - service.name as reported by the application or set from the resource.opentelemetry.io/service.name annotation
+            // - pod.label[app.kubernetes.io/instance]
+            // - pod.label[app.kubernetes.io/name]
+            // - k8s.workload.name (Deployment, StatefulSet, DaemonSet, CronJob, Job, ...)
+            // - k8s.pod.name
+            // The instance/name pod labels are read from temporary attributes (k8s_monitoring.tmp.*) extracted by the
+            // k8sattributes processor, so the cleanup below only ever deletes attributes this feature added.
+            `set(resource.attributes["service.name"], resource.attributes["k8s_monitoring.tmp.instance"]) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and resource.attributes["k8s_monitoring.tmp.instance"] != nil and resource.attributes["k8s_monitoring.tmp.instance"] != ""`,
+            `set(resource.attributes["service.name"], resource.attributes["k8s_monitoring.tmp.name"]) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and resource.attributes["k8s_monitoring.tmp.name"] != nil and resource.attributes["k8s_monitoring.tmp.name"] != ""`,
+            `set(resource.attributes["service.name"], resource.attributes["k8s.deployment.name"]) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and resource.attributes["k8s.deployment.name"] != nil and resource.attributes["k8s.deployment.name"] != ""`,
+            `set(resource.attributes["service.name"], resource.attributes["k8s.replicaset.name"]) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and resource.attributes["k8s.replicaset.name"] != nil and resource.attributes["k8s.replicaset.name"] != ""`,
+            `set(resource.attributes["service.name"], resource.attributes["k8s.statefulset.name"]) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and resource.attributes["k8s.statefulset.name"] != nil and resource.attributes["k8s.statefulset.name"] != ""`,
+            `set(resource.attributes["service.name"], resource.attributes["k8s.daemonset.name"]) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and resource.attributes["k8s.daemonset.name"] != nil and resource.attributes["k8s.daemonset.name"] != ""`,
+            `set(resource.attributes["service.name"], resource.attributes["k8s.cronjob.name"]) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and resource.attributes["k8s.cronjob.name"] != nil and resource.attributes["k8s.cronjob.name"] != ""`,
+            `set(resource.attributes["service.name"], resource.attributes["k8s.job.name"]) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and resource.attributes["k8s.job.name"] != nil and resource.attributes["k8s.job.name"] != ""`,
+            `set(resource.attributes["service.name"], resource.attributes["k8s.pod.name"]) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and resource.attributes["k8s.pod.name"] != nil and resource.attributes["k8s.pod.name"] != ""`,
+    
+            // Set service.namespace to the pod namespace if not already set
+            `set(resource.attributes["service.namespace"], resource.attributes["k8s.namespace.name"]) where (resource.attributes["service.namespace"] == nil or resource.attributes["service.namespace"] == "") and resource.attributes["k8s.namespace.name"] != nil and resource.attributes["k8s.namespace.name"] != ""`,
+    
+            // Remove the temporary attributes used for service.name detection
+            `delete_key(resource.attributes, "k8s_monitoring.tmp.instance")`,
+            `delete_key(resource.attributes, "k8s_monitoring.tmp.name")`,
+          ]
+        }
         trace_statements {
           context = "span"
           statements = [

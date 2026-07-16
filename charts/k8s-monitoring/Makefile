@@ -203,6 +203,7 @@ AGENTS.md: AGENTS.md.gotmpl $(FEATURE_CHARTS) $(DESTINATION_VALUES_FILES) $(INTE
 			prometheus) desc="Remote write to Prometheus-compatible endpoint";; \
 			loki) desc="Send logs to Loki";; \
 			loki-stdout) desc="Send logs to stdout (debugging)";; \
+			nop) desc="Drop all telemetry (no storage; for measuring volume before choosing real destinations)";; \
 			otlp) desc="Send to any OTLP endpoint (Tempo, Grafana Cloud, etc.)";; \
 			pyroscope) desc="Send profiles to Pyroscope";; \
 			custom) desc="Custom destination configuration";; \

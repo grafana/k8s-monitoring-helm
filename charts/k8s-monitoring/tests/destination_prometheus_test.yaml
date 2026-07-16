@@ -18,6 +18,29 @@ tests:
       - matchSnapshot:
           path: data["config.alloy"]
 
+  - it: excludes a disabled destination from the generated config
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " "}}
+      selfReporting: {enabled: false}
+      destinations:
+        enabledMetrics:
+          type: prometheus
+          url: https://prometheus.example.com
+        disabledMetrics:
+          type: prometheus
+          url: https://prometheus2.example.com
+          disabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '// Destination: enabledMetrics \(prometheus\)'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: '// Destination: disabledMetrics \(prometheus\)'
+
   - it: allows you to disable keepIdentifyingResourceAttributes
     set:
       cluster: {name: test-cluster}

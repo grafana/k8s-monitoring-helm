@@ -1,0 +1,121 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Destinations - Nop
+templates:
+  - alloy-config.yaml
+tests:
+  - it: drops prometheus-ecosystem and OTLP-ecosystem metrics at dead-end components
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        mynop:
+          type: nop
+      clusterMetrics:
+        enabled: true
+        collector: alloy-metrics
+      collectors: {alloy-metrics: {}}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.relabel "mynop" \{\s*forward_to = \[\]'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.exporter\.prometheus "mynop" \{\s*forward_to = \[\]'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.relabel\.mynop\.receiver'
+
+  - it: drops loki-ecosystem and OTLP-ecosystem logs at dead-end components
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        mynop:
+          type: nop
+      podLogsViaLoki:
+        enabled: true
+        collector: alloy-logs
+      collectors: {alloy-logs: {}}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'loki\.relabel "mynop" \{\s*forward_to = \[\]'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.exporter\.loki "mynop" \{\s*forward_to = \[\]'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'loki\.relabel\.mynop\.receiver'
+
+  - it: drops OTLP traces at a spanlogs dead-end with an empty output block
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        mynop:
+          type: nop
+      applicationObservability:
+        enabled: true
+        collector: alloy-receiver
+        receivers:
+          otlp:
+            grpc: {enabled: true}
+      collectors: {alloy-receiver: {}}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.connector\.spanlogs "mynop" \{\s*output \{ \}'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.connector\.spanlogs\.mynop\.input'
+
+  - it: drops profiles at a pyroscope.relabel dead-end
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        mynop:
+          type: nop
+      profilesReceiver:
+        enabled: true
+      collectors: {alloy-receiver: {}}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'pyroscope\.relabel "mynop" \{\s*forward_to = \[\]'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'pyroscope\.relabel\.mynop\.receiver'
+
+  - it: omits the metrics dead-end components when metrics are disabled
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        mynop:
+          type: nop
+          metrics: {enabled: false}
+      applicationObservability:
+        enabled: true
+        collector: alloy-receiver
+        receivers:
+          otlp:
+            grpc: {enabled: true}
+      collectors: {alloy-receiver: {}}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.relabel "mynop"'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.exporter\.prometheus "mynop"'
