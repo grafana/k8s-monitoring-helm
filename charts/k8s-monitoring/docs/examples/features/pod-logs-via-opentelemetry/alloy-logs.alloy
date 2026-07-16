@@ -82,6 +82,11 @@ declare "pod_logs_via_opentelemetry" {
         key      = "color"
         from     = "namespace"
       }
+      annotation {
+        tag_name = "k8s_monitoring.tmp.filter.annotations.instrumentation.opentelemetry.io/inject-java"
+        key      = "instrumentation.opentelemetry.io/inject-java"
+        from     = "pod"
+      }
     }
 
     output {
@@ -96,6 +101,7 @@ declare "pod_logs_via_opentelemetry" {
         `resource.attributes["logs.grafana.com/pods.enabled"] == "false"`,
         `resource.attributes["logs.grafana.com/pods.enabled"] == "no"`,
         `resource.attributes["logs.grafana.com/pods.enabled"] == "skip"`,
+        `resource.attributes["k8s_monitoring.tmp.filter.annotations.instrumentation.opentelemetry.io/inject-java"] == "true"`,
       ]
     }
     output {
@@ -110,6 +116,7 @@ declare "pod_logs_via_opentelemetry" {
       statements = [
         `delete_key(attributes, "k8s.container.restart_count")`,
         `delete_key(attributes, "logs.grafana.com/pods.enabled")`,
+        `delete_key(attributes, "k8s_monitoring.tmp.filter.annotations.instrumentation.opentelemetry.io/inject-java")`,
         // Set service.name by choosing the first value found from the following ordered list:
         // - pod.annotation[resource.opentelemetry.io/service.name] (set by the k8sattributes processor above)
         // - pod.label[app.kubernetes.io/instance]

@@ -36,6 +36,11 @@ podLogsViaOpenTelemetry:
     - production
   namespaceLabels:
     color: color
+  # Drop logs from pods that the OpenTelemetry Operator has auto-instrumented for Java,
+  # since the Java agent already exports their logs via OTLP.
+  filters:
+    annotations:
+      instrumentation.opentelemetry.io/inject-java: "true"
 
 collectors:
   alloy-logs:

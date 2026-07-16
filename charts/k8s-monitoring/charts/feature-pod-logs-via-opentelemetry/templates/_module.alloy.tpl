@@ -128,6 +128,20 @@ declare "pod_logs_via_opentelemetry" {
         from     = "namespace"
       }
 {{- end }}
+{{- range $key, $value := .Values.filters.annotations }}
+      annotation {
+        tag_name = {{ printf "k8s_monitoring.tmp.filter.annotations.%s" $key | quote }}
+        key      = {{ $key | quote }}
+        from     = "pod"
+      }
+{{- end }}
+{{- range $key, $value := .Values.filters.labels }}
+      label {
+        tag_name = {{ printf "k8s_monitoring.tmp.filter.labels.%s" $key | quote }}
+        key      = {{ $key | quote }}
+        from     = "pod"
+      }
+{{- end }}
     }
 
     output {
@@ -145,6 +159,22 @@ declare "pod_logs_via_opentelemetry" {
         `resource.attributes[{{ .Values.annotationSelector | quote }}] == "false"`,
         `resource.attributes[{{ .Values.annotationSelector | quote }}] == "no"`,
         `resource.attributes[{{ .Values.annotationSelector | quote }}] == "skip"`,
+{{- range $key, $value := .Values.filters.annotations }}
+{{- $attribute := printf "k8s_monitoring.tmp.filter.annotations.%s" $key }}
+{{- if kindIs "invalid" $value }}
+        `resource.attributes[{{ $attribute | quote }}] != nil`,
+{{- else }}
+        `resource.attributes[{{ $attribute | quote }}] == {{ $value | quote }}`,
+{{- end }}
+{{- end }}
+{{- range $key, $value := .Values.filters.labels }}
+{{- $attribute := printf "k8s_monitoring.tmp.filter.labels.%s" $key }}
+{{- if kindIs "invalid" $value }}
+        `resource.attributes[{{ $attribute | quote }}] != nil`,
+{{- else }}
+        `resource.attributes[{{ $attribute | quote }}] == {{ $value | quote }}`,
+{{- end }}
+{{- end }}
       ]
     }
     output {
@@ -159,6 +189,12 @@ declare "pod_logs_via_opentelemetry" {
       statements = [
         `delete_key(attributes, "k8s.container.restart_count")`,
         `delete_key(attributes, {{ .Values.annotationSelector | quote }})`,
+{{- range $key, $value := .Values.filters.annotations }}
+        `delete_key(attributes, {{ printf "k8s_monitoring.tmp.filter.annotations.%s" $key | quote }})`,
+{{- end }}
+{{- range $key, $value := .Values.filters.labels }}
+        `delete_key(attributes, {{ printf "k8s_monitoring.tmp.filter.labels.%s" $key | quote }})`,
+{{- end }}
 
 {{- if .Values.alignServiceNameWithOTelSemConv }}
         // Set service.name by choosing the first value found from the following ordered list:
