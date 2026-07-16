@@ -1,0 +1,382 @@
+should build drop rules from both annotation and label filters, mixing presence and value:
+  1: |
+    |-
+      declare "pod_logs_via_opentelemetry" {
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        otelcol.receiver.filelog "pod_logs" {
+          include = ["/var/log/pods/*/*/*.log"]
+          start_at = "end"
+          include_file_name = false
+          include_file_path = true
+
+          operators = [
+            // Container operator will set k8s.pod.name, k8s.pod.uid, k8s.container.name, k8s.container.restart_count, and k8s.namespace.name
+            {
+              type                       = "container",
+              add_metadata_from_filepath = true,
+            },
+          ]
+
+          output {
+            logs = [otelcol.processor.k8sattributes.pod_logs.input]
+          }
+        } // otelcol.receiver.filelog "pod_logs"
+
+        otelcol.processor.k8sattributes "pod_logs" {
+          pod_association {
+            source {
+              from = "resource_attribute"
+              name = "k8s.pod.uid"
+            }
+          }
+
+          extract {
+            otel_annotations = false
+            metadata = [
+              "k8s.deployment.name",
+              "k8s.statefulset.name",
+              "k8s.daemonset.name",
+              "k8s.cronjob.name",
+              "k8s.job.name",
+              "k8s.node.name",
+            ]
+            annotation {
+              key_regex = "resource.opentelemetry.io/(.*)"
+              tag_name  = "$1"
+              from      = "pod"
+            }
+            annotation {
+              tag_name = "logs.grafana.com/pods.enabled"
+              key      = "logs.grafana.com/pods.enabled"
+              from     = "pod"
+            }
+            label {
+              tag_name = "app_kubernetes_io_name"
+              key      = "app.kubernetes.io/name"
+              from     = "pod"
+            }
+            annotation {
+              tag_name = "k8s_monitoring.tmp.filter.annotations.instrumentation.opentelemetry.io/inject-java"
+              key      = "instrumentation.opentelemetry.io/inject-java"
+              from     = "pod"
+            }
+            label {
+              tag_name = "k8s_monitoring.tmp.filter.labels.team"
+              key      = "team"
+              from     = "pod"
+            }
+          }
+
+          output {
+            logs = [otelcol.processor.filter.pod_logs.input]
+          }
+        } // otelcol.processor.k8sattributes "pod_logs"
+
+        otelcol.processor.filter "pod_logs" {
+          error_mode = "ignore"
+          logs {
+            log_record = [
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "false"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "no"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "skip"`,
+              `resource.attributes["k8s_monitoring.tmp.filter.annotations.instrumentation.opentelemetry.io/inject-java"] == "true"`,
+              `resource.attributes["k8s_monitoring.tmp.filter.labels.team"] != nil`,
+            ]
+          }
+          output {
+            logs = [otelcol.processor.transform.pod_logs.input]
+          }
+        } // otelcol.processor.filter "pod_logs"
+
+        otelcol.processor.transform "pod_logs" {
+          error_mode = "ignore"
+          log_statements {
+            context = "resource"
+            statements = [
+              `delete_key(attributes, "k8s.container.restart_count")`,
+              `delete_key(attributes, "logs.grafana.com/pods.enabled")`,
+              `delete_key(attributes, "k8s_monitoring.tmp.filter.annotations.instrumentation.opentelemetry.io/inject-java")`,
+              `delete_key(attributes, "k8s_monitoring.tmp.filter.labels.team")`,
+              `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["app.kubernetes.io/name"] != nil and attributes["app.kubernetes.io/name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.deployment.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.deployment.name"] != nil and attributes["k8s.deployment.name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.replicaset.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.replicaset.name"] != nil and attributes["k8s.replicaset.name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.statefulset.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.statefulset.name"] != nil and attributes["k8s.statefulset.name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.daemonset.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.daemonset.name"] != nil and attributes["k8s.daemonset.name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.cronjob.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.cronjob.name"] != nil and attributes["k8s.cronjob.name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.job.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.job.name"] != nil and attributes["k8s.job.name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.pod.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.pod.name"] != nil and attributes["k8s.pod.name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.container.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.container.name"] != nil and attributes["k8s.container.name"] != ""`,
+
+              `set(attributes["service.namespace"], attributes["k8s.namespace.name"]) where (attributes["service.namespace"] == nil or attributes["service.namespace"] == "") and attributes["k8s.namespace.name"] != nil and attributes["k8s.namespace.name"] != ""`,
+
+              `set(attributes["service.version"], attributes["app.kubernetes.io/version"]) where attributes["service.version"] == nil`,
+
+              `set(attributes["service.instance.id"], Concat([attributes["k8s.namespace.name"], attributes["k8s.pod.name"], attributes["k8s.container.name"]], ".")) where attributes["service.instance.id"] == nil`,
+            ]
+          }
+
+          log_statements {
+            context = "log"
+            statements = [
+              `delete_key(attributes, "log.file.path")`,
+            ]
+          }
+
+          output {
+            logs = argument.logs_destinations.value
+          }
+        } // otelcol.processor.transform "pod_logs"
+      } // declare "pod_logs_via_opentelemetry"
+should drop logs when a pod annotation equals a value:
+  1: |
+    |-
+      declare "pod_logs_via_opentelemetry" {
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        otelcol.receiver.filelog "pod_logs" {
+          include = ["/var/log/pods/*/*/*.log"]
+          start_at = "end"
+          include_file_name = false
+          include_file_path = true
+
+          operators = [
+            // Container operator will set k8s.pod.name, k8s.pod.uid, k8s.container.name, k8s.container.restart_count, and k8s.namespace.name
+            {
+              type                       = "container",
+              add_metadata_from_filepath = true,
+            },
+          ]
+
+          output {
+            logs = [otelcol.processor.k8sattributes.pod_logs.input]
+          }
+        } // otelcol.receiver.filelog "pod_logs"
+
+        otelcol.processor.k8sattributes "pod_logs" {
+          pod_association {
+            source {
+              from = "resource_attribute"
+              name = "k8s.pod.uid"
+            }
+          }
+
+          extract {
+            otel_annotations = false
+            metadata = [
+              "k8s.deployment.name",
+              "k8s.statefulset.name",
+              "k8s.daemonset.name",
+              "k8s.cronjob.name",
+              "k8s.job.name",
+              "k8s.node.name",
+            ]
+            annotation {
+              key_regex = "resource.opentelemetry.io/(.*)"
+              tag_name  = "$1"
+              from      = "pod"
+            }
+            annotation {
+              tag_name = "logs.grafana.com/pods.enabled"
+              key      = "logs.grafana.com/pods.enabled"
+              from     = "pod"
+            }
+            label {
+              tag_name = "app_kubernetes_io_name"
+              key      = "app.kubernetes.io/name"
+              from     = "pod"
+            }
+            annotation {
+              tag_name = "k8s_monitoring.tmp.filter.annotations.instrumentation.opentelemetry.io/inject-java"
+              key      = "instrumentation.opentelemetry.io/inject-java"
+              from     = "pod"
+            }
+          }
+
+          output {
+            logs = [otelcol.processor.filter.pod_logs.input]
+          }
+        } // otelcol.processor.k8sattributes "pod_logs"
+
+        otelcol.processor.filter "pod_logs" {
+          error_mode = "ignore"
+          logs {
+            log_record = [
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "false"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "no"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "skip"`,
+              `resource.attributes["k8s_monitoring.tmp.filter.annotations.instrumentation.opentelemetry.io/inject-java"] == "true"`,
+            ]
+          }
+          output {
+            logs = [otelcol.processor.transform.pod_logs.input]
+          }
+        } // otelcol.processor.filter "pod_logs"
+
+        otelcol.processor.transform "pod_logs" {
+          error_mode = "ignore"
+          log_statements {
+            context = "resource"
+            statements = [
+              `delete_key(attributes, "k8s.container.restart_count")`,
+              `delete_key(attributes, "logs.grafana.com/pods.enabled")`,
+              `delete_key(attributes, "k8s_monitoring.tmp.filter.annotations.instrumentation.opentelemetry.io/inject-java")`,
+              `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["app.kubernetes.io/name"] != nil and attributes["app.kubernetes.io/name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.deployment.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.deployment.name"] != nil and attributes["k8s.deployment.name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.replicaset.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.replicaset.name"] != nil and attributes["k8s.replicaset.name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.statefulset.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.statefulset.name"] != nil and attributes["k8s.statefulset.name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.daemonset.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.daemonset.name"] != nil and attributes["k8s.daemonset.name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.cronjob.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.cronjob.name"] != nil and attributes["k8s.cronjob.name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.job.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.job.name"] != nil and attributes["k8s.job.name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.pod.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.pod.name"] != nil and attributes["k8s.pod.name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.container.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.container.name"] != nil and attributes["k8s.container.name"] != ""`,
+
+              `set(attributes["service.namespace"], attributes["k8s.namespace.name"]) where (attributes["service.namespace"] == nil or attributes["service.namespace"] == "") and attributes["k8s.namespace.name"] != nil and attributes["k8s.namespace.name"] != ""`,
+
+              `set(attributes["service.version"], attributes["app.kubernetes.io/version"]) where attributes["service.version"] == nil`,
+
+              `set(attributes["service.instance.id"], Concat([attributes["k8s.namespace.name"], attributes["k8s.pod.name"], attributes["k8s.container.name"]], ".")) where attributes["service.instance.id"] == nil`,
+            ]
+          }
+
+          log_statements {
+            context = "log"
+            statements = [
+              `delete_key(attributes, "log.file.path")`,
+            ]
+          }
+
+          output {
+            logs = argument.logs_destinations.value
+          }
+        } // otelcol.processor.transform "pod_logs"
+      } // declare "pod_logs_via_opentelemetry"
+should drop logs when a pod annotation is present (explicit null):
+  1: |
+    |-
+      declare "pod_logs_via_opentelemetry" {
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        otelcol.receiver.filelog "pod_logs" {
+          include = ["/var/log/pods/*/*/*.log"]
+          start_at = "end"
+          include_file_name = false
+          include_file_path = true
+
+          operators = [
+            // Container operator will set k8s.pod.name, k8s.pod.uid, k8s.container.name, k8s.container.restart_count, and k8s.namespace.name
+            {
+              type                       = "container",
+              add_metadata_from_filepath = true,
+            },
+          ]
+
+          output {
+            logs = [otelcol.processor.k8sattributes.pod_logs.input]
+          }
+        } // otelcol.receiver.filelog "pod_logs"
+
+        otelcol.processor.k8sattributes "pod_logs" {
+          pod_association {
+            source {
+              from = "resource_attribute"
+              name = "k8s.pod.uid"
+            }
+          }
+
+          extract {
+            otel_annotations = false
+            metadata = [
+              "k8s.deployment.name",
+              "k8s.statefulset.name",
+              "k8s.daemonset.name",
+              "k8s.cronjob.name",
+              "k8s.job.name",
+              "k8s.node.name",
+            ]
+            annotation {
+              key_regex = "resource.opentelemetry.io/(.*)"
+              tag_name  = "$1"
+              from      = "pod"
+            }
+            annotation {
+              tag_name = "logs.grafana.com/pods.enabled"
+              key      = "logs.grafana.com/pods.enabled"
+              from     = "pod"
+            }
+            label {
+              tag_name = "app_kubernetes_io_name"
+              key      = "app.kubernetes.io/name"
+              from     = "pod"
+            }
+            annotation {
+              tag_name = "k8s_monitoring.tmp.filter.annotations.instrumentation.opentelemetry.io/inject-java"
+              key      = "instrumentation.opentelemetry.io/inject-java"
+              from     = "pod"
+            }
+          }
+
+          output {
+            logs = [otelcol.processor.filter.pod_logs.input]
+          }
+        } // otelcol.processor.k8sattributes "pod_logs"
+
+        otelcol.processor.filter "pod_logs" {
+          error_mode = "ignore"
+          logs {
+            log_record = [
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "false"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "no"`,
+              `resource.attributes["logs.grafana.com/pods.enabled"] == "skip"`,
+              `resource.attributes["k8s_monitoring.tmp.filter.annotations.instrumentation.opentelemetry.io/inject-java"] != nil`,
+            ]
+          }
+          output {
+            logs = [otelcol.processor.transform.pod_logs.input]
+          }
+        } // otelcol.processor.filter "pod_logs"
+
+        otelcol.processor.transform "pod_logs" {
+          error_mode = "ignore"
+          log_statements {
+            context = "resource"
+            statements = [
+              `delete_key(attributes, "k8s.container.restart_count")`,
+              `delete_key(attributes, "logs.grafana.com/pods.enabled")`,
+              `delete_key(attributes, "k8s_monitoring.tmp.filter.annotations.instrumentation.opentelemetry.io/inject-java")`,
+              `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["app.kubernetes.io/name"] != nil and attributes["app.kubernetes.io/name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.deployment.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.deployment.name"] != nil and attributes["k8s.deployment.name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.replicaset.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.replicaset.name"] != nil and attributes["k8s.replicaset.name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.statefulset.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.statefulset.name"] != nil and attributes["k8s.statefulset.name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.daemonset.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.daemonset.name"] != nil and attributes["k8s.daemonset.name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.cronjob.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.cronjob.name"] != nil and attributes["k8s.cronjob.name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.job.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.job.name"] != nil and attributes["k8s.job.name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.pod.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.pod.name"] != nil and attributes["k8s.pod.name"] != ""`,
+              `set(attributes["service.name"], attributes["k8s.container.name"]) where (attributes["service.name"] == nil or attributes["service.name"] == "") and attributes["k8s.container.name"] != nil and attributes["k8s.container.name"] != ""`,
+
+              `set(attributes["service.namespace"], attributes["k8s.namespace.name"]) where (attributes["service.namespace"] == nil or attributes["service.namespace"] == "") and attributes["k8s.namespace.name"] != nil and attributes["k8s.namespace.name"] != ""`,
+
+              `set(attributes["service.version"], attributes["app.kubernetes.io/version"]) where attributes["service.version"] == nil`,
+
+              `set(attributes["service.instance.id"], Concat([attributes["k8s.namespace.name"], attributes["k8s.pod.name"], attributes["k8s.container.name"]], ".")) where attributes["service.instance.id"] == nil`,
+            ]
+          }
+
+          log_statements {
+            context = "log"
+            statements = [
+              `delete_key(attributes, "log.file.path")`,
+            ]
+          }
+
+          output {
+            logs = argument.logs_destinations.value
+          }
+        } // otelcol.processor.transform "pod_logs"
+      } // declare "pod_logs_via_opentelemetry"
