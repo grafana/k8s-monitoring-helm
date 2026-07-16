@@ -198,9 +198,20 @@ declare "node_logs" {
     }
 
     // Standardize on upper-case
-    stage.template {
-      source   = "level"
-      template = "{{ "{{ ToUpper .Value }}"}}"
+    stage.match {
+      selector = "{level!=\"UNKNOWN\"}"
+
+      stage.template {
+        source   = "level"
+        template = "{{ "{{ .Value | ToUpper }}" }}"
+      }
+
+      // Set the level after 'ToUpper' as the label
+      stage.labels {
+        values = {
+          level = "",
+        }
+      }
     }
 
     {{- /* the stage.structured_metadata block needs to be conditionalized because the support for enabling structured metadata can be disabled */ -}}
