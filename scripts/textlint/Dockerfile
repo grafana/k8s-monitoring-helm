@@ -1,6 +1,7 @@
 # Image bundling textlint and the rules/plugins used by this repository, so that
 # text linting can run without a local Node.js/Yarn installation.
-# renovate: datasource=docker depName=node
+# The base image is updated by Renovate's native Dockerfile manager; the ARG
+# versions below are updated by the custom manager configured in renovate.json.
 FROM node:24-alpine
 
 # renovate: datasource=npm depName=textlint
