@@ -29,8 +29,8 @@ destinations:
 
 autoInstrumentation:
   enabled: true
-  spanMetricsOnly: true
   beyla:
+    deliverTracesToApplicationObservability: false
     config:
       data:
         discovery:

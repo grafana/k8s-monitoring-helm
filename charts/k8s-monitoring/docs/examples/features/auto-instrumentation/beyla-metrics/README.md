@@ -23,7 +23,8 @@ destinations:
 autoInstrumentation:
   enabled: true
   collector: alloy-metrics
-  spanMetricsOnly: true
+  beyla:
+    deliverTracesToApplicationObservability: false
 
 collectors:
   alloy-metrics:

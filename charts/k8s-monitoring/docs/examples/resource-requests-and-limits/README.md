@@ -50,8 +50,8 @@ hostMetrics:
 autoInstrumentation:
   enabled: true
   collector: alloy-metrics
-  spanMetricsOnly: true
   beyla:
+    deliverTracesToApplicationObservability: false
     resources:
       limits:
         cpu: 100m
