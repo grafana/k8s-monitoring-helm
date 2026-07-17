@@ -25,7 +25,6 @@ check-helm-version:
 ##@ Build
 .PHONY: clean
 clean: ## Clean all charts
-	rm -rf node_modules
 	make -C charts/k8s-monitoring $@;
 
 ##@ Build
@@ -42,14 +41,6 @@ keys/grafana-helm-charts-pubkey.gpg:
 
 keys/prometheus-community-pubkey.gpg:
 	curl -sL https://prometheus-community.github.io/helm-charts/pubkey.gpg | gpg --dearmor > keys/prometheus-community-pubkey.gpg
-
-##@ Install
-.PHONY: install
-install: ## Install dependencies
-	yarn install
-
-node_modules/.bin/textlint: package.json yarn.lock
-	yarn install
 
 ##@ Tests
 .PHONY: test
@@ -96,13 +87,34 @@ lint-terraform: ## Lint terraform files
 		fi; \
 	done
 
+# The textlint image is built locally from scripts/textlint/Dockerfile because no
+# published image bundles the rules this repository uses. Renovate tracks the
+# textlint and rule versions inside that Dockerfile.
+TEXTLINT_IMAGE = k8s-monitoring/textlint
+
 .PHONY: lint-text
-lint-text: node_modules/.bin/textlint ## Lint text files
-	@node_modules/.bin/textlint --config .textlintrc --ignore-path .textlintignore .
+lint-text: ## Lint text files
+	@if command -v textlint &> /dev/null; then \
+		echo "Linting text files with textlint..."; \
+		textlint --config .textlintrc --ignore-path .textlintignore .; \
+	else \
+		echo "Building the textlint image..."; \
+		docker build -t $(TEXTLINT_IMAGE) scripts/textlint && \
+		echo "Linting text files with textlint..." && \
+		docker run --rm -v $(shell pwd):/data --workdir /data $(TEXTLINT_IMAGE) --config .textlintrc --ignore-path .textlintignore .; \
+	fi
 
 .PHONY: lint-check-dead-links
-lint-check-dead-links: node_modules/.bin/textlint ## Lint text files and check for dead links
-	@node_modules/.bin/textlint --config .textlintrc-dead-links --ignore-path .textlintignore .
+lint-check-dead-links: ## Lint text files and check for dead links
+	@if command -v textlint &> /dev/null; then \
+		echo "Checking for dead links with textlint..."; \
+		textlint --config .textlintrc-dead-links --ignore-path .textlintignore .; \
+	else \
+		echo "Building the textlint image..."; \
+		docker build -t $(TEXTLINT_IMAGE) scripts/textlint && \
+		echo "Checking for dead links with textlint..." && \
+		docker run --rm -v $(shell pwd):/data --workdir /data $(TEXTLINT_IMAGE) --config .textlintrc-dead-links --ignore-path .textlintignore .; \
+	fi
 
 .PHONY: lint-yaml
 lint-yaml: ## Lint yaml files
