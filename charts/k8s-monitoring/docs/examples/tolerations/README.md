@@ -45,8 +45,8 @@ hostMetrics:
 autoInstrumentation:
   enabled: true
   collector: alloy-metrics
-  spanMetricsOnly: true
   beyla:
+    deliverTracesToApplicationObservability: false
     tolerations:
       - key: protected-node
         effect: NoSchedule
