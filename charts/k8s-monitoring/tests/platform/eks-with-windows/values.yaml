@@ -37,12 +37,12 @@ dataProcessors:
 
 clusterMetrics:
   enabled: true
-  collector: alloy-metrics
+  collector: alloy
   dataProcessors: [ec2-tags]
 
 hostMetrics:
   enabled: true
-  collector: alloy-metrics
+  collector: alloy
   linuxHosts:
     enabled: true
   windowsHosts:
@@ -50,7 +50,8 @@ hostMetrics:
 
 clusterEvents:
   enabled: true
-  collector: alloy-singleton
+  clustering: true
+  collector: alloy
 
 nodeLogs:
   enabled: true
@@ -67,28 +68,38 @@ podLogsViaKubernetesApi:
     kubernetes.io/os: windows
 
 integrations:
-  collector: alloy-metrics
+  collector: alloy
   alloy:
     instances:
       - name: alloy
         labelSelectors:
-          app.kubernetes.io/name: [alloy-metrics, alloy-singleton, alloy-logs]
+          app.kubernetes.io/name: [alloy, alloy-singleton, alloy-logs]
 
 collectors:
-  alloy-metrics:
+  alloy:
     presets: [clustered, statefulset]
     alloy:
       stabilityLevel: experimental  # Required for prometheus.enrich (ec2Enrichment processor)
 
-  alloy-singleton:
-    presets: [singleton]
-
   alloy-logs:
-    presets: [filesystem-log-reader, daemonset]
-    alloy:
-      clustering:
-        name: alloy-logs
-        enabled: true
+    presets: [clustered, filesystem-log-reader, daemonset]
+
+  alloy-windows:
+    presets: [windows, daemonset]
+    includeDestinations: [grafana-cloud-logs]
+    extraConfig: |
+      loki.source.windowsevent "system" {
+        eventlog_name          = "System"
+        use_incoming_timestamp = true
+        labels                 = { job = "windows-eventlogs", channel = "System" }
+        forward_to             = [loki.write.grafana_cloud_logs.receiver]
+      }
+    
+      loki.source.windowsevent "application" {
+        eventlog_name = "Application"
+        labels        = { job = "windows-eventlogs", channel = "Application" }
+        forward_to    = [loki.write.grafana_cloud_logs.receiver]
+      }
 
 telemetryServices:
   kube-state-metrics:

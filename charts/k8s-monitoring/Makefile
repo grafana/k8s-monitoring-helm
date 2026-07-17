@@ -341,10 +341,15 @@ verify-signatures:
 
 # Build targets
 .PHONY: build
-build: build-features values.schema.json templates/destinations/_destination_types.tpl templates/dataProcessors/_dataProcessor_types.tpl collectors/upstream/alloy-values.yaml build-docs examples integration-test-checks platform-test-checks
+build: build-features values.schema.json templates/destinations/_destination_types.tpl templates/dataProcessors/_dataProcessor_types.tpl collectors/upstream/alloy-values.yaml collectors/presets/windows.yaml build-docs examples integration-test-checks platform-test-checks
 
 docs/Versions.md: Chart.yaml
 	scripts/versions-doc.sh > $@
+
+# The `windows` preset pins the Alloy image tag to the Windows Server Core (HostProcess) build of the bundled Alloy
+# version, since that version can't be resolved at Helm template time. Keep it in sync with the alloy-operator dependency.
+collectors/presets/windows.yaml: Chart.yaml scripts/windows-preset-image-tag.sh
+	scripts/windows-preset-image-tag.sh
 
 docs/collectors/presets/README.md: $(COLLECTOR_PRESET_FILES)
 	scripts/presets-readme.sh > $@
