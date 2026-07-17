@@ -1,6 +1,16 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["github>grafana/grafana-renovate-config//presets/base"],
+  "customManagers": [
+    {
+      "description": "Update docker image versions pinned in the Makefile",
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)Makefile$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+[A-Z0-9_]+ = (?<currentValue>\\S+)"
+      ]
+    }
+  ],
   "packageRules": [
     {
       "description": "Regenerate files after Helm dependency updates",
