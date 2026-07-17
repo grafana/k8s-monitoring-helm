@@ -51,9 +51,6 @@ install: ## Install dependencies
 node_modules/.bin/alex: package.json yarn.lock
 	yarn install
 
-node_modules/.bin/markdownlint-cli2: package.json yarn.lock
-	yarn install
-
 node_modules/.bin/textlint: package.json yarn.lock
 	yarn install
 
@@ -81,8 +78,15 @@ lint-shell: ## Lint shell scripts
 	fi
 
 .PHONY: lint-markdown
-lint-markdown: node_modules/.bin/markdownlint-cli2 ## Lint markdown files
-	@node_modules/.bin/markdownlint-cli2 $(shell find . -name "*.md" ! -path "./.context/*" ! -path "./version-4.0-development-plan/*" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./charts/**/data-alloy/*" ! -path "./charts/k8s-monitoring/docs/create-a-new-feature/*")
+# renovate: datasource=docker depName=davidanson/markdownlint-cli2
+MARKDOWNLINT_CLI2_VERSION = v0.23.0
+MARKDOWN_FILES = $(shell find . -name "*.md" ! -path "./.context/*" ! -path "./version-4.0-development-plan/*" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./charts/**/data-alloy/*" ! -path "./charts/k8s-monitoring/docs/create-a-new-feature/*")
+lint-markdown: ## Lint markdown files
+	@if command -v markdownlint-cli2 &> /dev/null; then \
+		markdownlint-cli2 $(MARKDOWN_FILES); \
+	else \
+		docker run --rm -v $(shell pwd):/workdir davidanson/markdownlint-cli2:$(MARKDOWNLINT_CLI2_VERSION) $(MARKDOWN_FILES); \
+	fi
 
 TERRAFORM_DIRS = $(shell find . -name 'vars.tf' -exec dirname {} \;)
 .PHONY: lint-terraform
