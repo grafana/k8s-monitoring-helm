@@ -48,9 +48,6 @@ keys/prometheus-community-pubkey.gpg:
 install: ## Install dependencies
 	yarn install
 
-node_modules/.bin/alex: package.json yarn.lock
-	yarn install
-
 node_modules/.bin/textlint: package.json yarn.lock
 	yarn install
 
@@ -116,8 +113,15 @@ lint-yaml: ## Lint yaml files
 	fi
 
 .PHONY: lint-alex
-lint-alex: node_modules/.bin/alex ## Check for insensitive language
-	@node_modules/.bin/alex $(shell find . -type f -name "*.md" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./.context/*" ! -path "./CODE_OF_CONDUCT.md" ! -name "CHANGELOG.md")
+# renovate: datasource=docker depName=pipelinecomponents/alex
+ALEX_VERSION = 0.24.31
+ALEX_FILES = $(shell find . -type f -name "*.md" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./.context/*" ! -path "./CODE_OF_CONDUCT.md" ! -name "CHANGELOG.md")
+lint-alex: ## Check for insensitive language
+	@if command -v alex &> /dev/null; then \
+		alex $(ALEX_FILES); \
+	else \
+		docker run --rm -v $(shell pwd):/code pipelinecomponents/alex:$(ALEX_VERSION) alex $(ALEX_FILES); \
+	fi
 
 .PHONY: lint-misspell
 ALL_FILES_FOR_SPELLCHECK = $(shell find . -type f -name "*.md" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.context/*" -o -path "./.git/*" -o -name output.yaml -o -name .textlintrc \) )
