@@ -37,36 +37,80 @@ values.schema.json: values.yaml $$(wildcard schema-mods/*)
 .PHONY: clean
 clean:
 	rm -f README.md values.schema.json $(ALLOW_LISTS)
+	rm -rf $(VERIFY_CACHE)
 
 .PHONY: build
 build: README.md Chart.lock values.schema.json $(ALLOW_LISTS)
 
-.PHONY: verify-signatures
-verify-signatures: ## Verify the signatures of the signed chart dependencies
+# Verifying a signed dependency is network-heavy (a helm pull + GPG check, or a cosign + Rekor lookup) but only
+# meaningful when the pinned version or the trusted key changes. Each check records success in a stamp file under
+# $(VERIFY_CACHE), so unchanged builds skip the network entirely.
+#
+# Stamps also expire: any older than VERIFY_TTL_MINUTES (24h) are pruned when this Makefile is parsed, so a long-lived
+# working copy re-verifies at least daily. That bounds how long a cached success can outlive an upstream revocation - a
+# distrusted cosign/Sigstore root, or a keyring update - before a local build re-checks it.
+VERIFY_CACHE := .verified
+VERIFY_TTL_MINUTES := 1440
+
+# Drop expired stamps.
+_prune := $(shell find $(VERIFY_CACHE) -type f ! -name .gitignore -mmin +$(VERIFY_TTL_MINUTES) -delete 2>/dev/null)
+
+$(VERIFY_CACHE):
+	@mkdir -p $@
+	@printf '*\n' > $@/.gitignore   # self-ignore the cache for all clones/CI
+
+$(VERIFY_CACHE)/k8s-manifest-tail-$(K8S_MANIFEST_TAIL_VERSION): $(GRAFANA_HELM_CHARTS_KEYRING) | $(VERIFY_CACHE)
+	tmp="$$(mktemp -d)"; trap 'rm -rf "$$tmp"' EXIT; \
 	$(HELM) pull k8s-manifest-tail \
 		--repo https://grafana.github.io/helm-charts \
 		--version $(K8S_MANIFEST_TAIL_VERSION) \
 		--verify --keyring $(GRAFANA_HELM_CHARTS_KEYRING) \
-		--destination "$$(mktemp -d)"
+		--destination "$$tmp"
+	@touch $@
+
+$(VERIFY_CACHE)/kube-state-metrics-$(KUBE_STATE_METRICS_VERSION): $(PROMETHEUS_COMMUNITY_KEYRING) | $(VERIFY_CACHE)
+	tmp="$$(mktemp -d)"; trap 'rm -rf "$$tmp"' EXIT; \
 	$(HELM) pull kube-state-metrics \
 		--repo https://prometheus-community.github.io/helm-charts \
 		--version $(KUBE_STATE_METRICS_VERSION) \
 		--verify --keyring $(PROMETHEUS_COMMUNITY_KEYRING) \
-		--destination "$$(mktemp -d)"
+		--destination "$$tmp"
+	@touch $@
+
+$(VERIFY_CACHE)/prometheus-node-exporter-$(NODE_EXPORTER_VERSION): $(PROMETHEUS_COMMUNITY_KEYRING) | $(VERIFY_CACHE)
+	tmp="$$(mktemp -d)"; trap 'rm -rf "$$tmp"' EXIT; \
 	$(HELM) pull prometheus-node-exporter \
 		--repo https://prometheus-community.github.io/helm-charts \
 		--version $(NODE_EXPORTER_VERSION) \
 		--verify --keyring $(PROMETHEUS_COMMUNITY_KEYRING) \
-		--destination "$$(mktemp -d)"
+		--destination "$$tmp"
+	@touch $@
+
+$(VERIFY_CACHE)/prometheus-windows-exporter-$(WINDOWS_EXPORTER_VERSION): $(PROMETHEUS_COMMUNITY_KEYRING) | $(VERIFY_CACHE)
+	tmp="$$(mktemp -d)"; trap 'rm -rf "$$tmp"' EXIT; \
 	$(HELM) pull prometheus-windows-exporter \
 		--repo https://prometheus-community.github.io/helm-charts \
 		--version $(WINDOWS_EXPORTER_VERSION) \
 		--verify --keyring $(PROMETHEUS_COMMUNITY_KEYRING) \
-		--destination "$$(mktemp -d)"
+		--destination "$$tmp"
+	@touch $@
+
+$(VERIFY_CACHE)/opencost-$(OPENCOST_VERSION): | $(VERIFY_CACHE)
 	$(COSIGN) verify $(OPENCOST_OCI_CHART):$(OPENCOST_VERSION) \
 		--certificate-identity $(OPENCOST_COSIGN_IDENTITY) \
 		--certificate-oidc-issuer $(OPENCOST_COSIGN_ISSUER) \
 		> /dev/null
+	@touch $@
+
+VERIFY_SIGNATURE_STAMPS := \
+	$(VERIFY_CACHE)/k8s-manifest-tail-$(K8S_MANIFEST_TAIL_VERSION) \
+	$(VERIFY_CACHE)/kube-state-metrics-$(KUBE_STATE_METRICS_VERSION) \
+	$(VERIFY_CACHE)/prometheus-node-exporter-$(NODE_EXPORTER_VERSION) \
+	$(VERIFY_CACHE)/prometheus-windows-exporter-$(WINDOWS_EXPORTER_VERSION) \
+	$(VERIFY_CACHE)/opencost-$(OPENCOST_VERSION)
+
+.PHONY: verify-signatures
+verify-signatures: $(VERIFY_SIGNATURE_STAMPS) ## Verify the signatures of the signed chart dependencies
 
 .PHONY: test
 test: build

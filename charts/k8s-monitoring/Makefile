@@ -5,8 +5,17 @@ else
 HELM = ../../scripts/helm-with-version $(HELM_VERSION)
 endif
 
+# renovate: datasource=docker depName=ghcr.io/grafana/helm-chart-toolbox-doc-generator
+DOC_GENERATOR_IMAGE_VERSION = 0.2.4
+# renovate: datasource=docker depName=ghcr.io/grafana/helm-chart-toolbox-schema-generator
+SCHEMA_GENERATOR_IMAGE_VERSION = 0.2.4
+
+HELM_UNITTEST_IMAGE_VERSION = 3.18.4-1.0.0
+
 HAS_HELM_UNITTEST := $(shell $(HELM) plugin list | grep unittest 2> /dev/null)
 HAS_SHELLSPEC := $(shell command -v shellspec;)
+# renovate: datasource=docker depName=shellspec/shellspec
+SHELLSPEC_IMAGE_VERSION = 0.28.1
 
 CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
 CHART_YAML_FILES = $(shell find templates -name "*.yaml")
@@ -49,14 +58,16 @@ INTEGRATION_VALUES_FILES = $(shell find charts/feature-integrations/integrations
 
 .SECONDEXPANSION:
 docs/collectors/%.md: collectors/%-values.yaml $$(wildcard docs/collectors/.doc_templates/%.gotmpl)
-	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --file /chart/$< --template /chart/docs/collectors/.doc_templates/$(shell basename -s -values.yaml $<).gotmpl > $@
+	docker run --platform linux/amd64 --rm --volume $(CURDIR):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator:$(DOC_GENERATOR_IMAGE_VERSION) \
+		--file /chart/$< --template /chart/docs/collectors/.doc_templates/$(shell basename -s -values.yaml $<).gotmpl > $@
 
 docs/collectors/presets/%.md: collectors/presets/%.yaml
 	@echo '<!--' > $@
 	@echo '(NOTE: Do not edit README.md directly. It is a generated file!)' >> $@
 	@echo '(      To make changes, please modify values.yaml or description.txt and run `make examples`)' >> $@
 	@echo '-->' >> $@
-	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --file /chart/$< --template /chart/docs/collectors/presets/.doc_templates/$(shell basename -s .yaml $<).gotmpl >> $@
+	docker run --platform linux/amd64 --rm --volume $(CURDIR):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator:$(DOC_GENERATOR_IMAGE_VERSION) \
+		--file /chart/$< --template /chart/docs/collectors/presets/.doc_templates/$(shell basename -s .yaml $<).gotmpl >> $@
 
 	@echo '' >> $@
 	@echo '<!-- textlint-disable terminology -->' >> $@
@@ -67,19 +78,24 @@ docs/collectors/presets/%.md: collectors/presets/%.yaml
 
 
 docs/destinations/%.md: destinations/%-values.yaml $$(wildcard docs/destinations/.doc_templates/%.gotmpl)
-	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --file /chart/$< --template /chart/docs/destinations/.doc_templates/$(shell basename -s -values.yaml $<).gotmpl > $@
+	docker run --platform linux/amd64 --rm --volume $(CURDIR):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator:$(DOC_GENERATOR_IMAGE_VERSION) \
+		--file /chart/$< --template /chart/docs/destinations/.doc_templates/$(shell basename -s -values.yaml $<).gotmpl > $@
 
 docs/dataProcessors/%.md: dataProcessors/%-values.yaml $$(wildcard docs/dataProcessors/.doc_templates/%.gotmpl)
-	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --file /chart/$< --template /chart/docs/dataProcessors/.doc_templates/$(shell basename -s -values.yaml $<).gotmpl > $@
+	docker run --platform linux/amd64 --rm --volume $(CURDIR):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator:$(DOC_GENERATOR_IMAGE_VERSION) \
+		--file /chart/$< --template /chart/docs/dataProcessors/.doc_templates/$(shell basename -s -values.yaml $<).gotmpl > $@
 
 schema-mods/definitions/%-collector.schema.json: collectors/%-values.yaml
-	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --file /chart/$< > $@
+	docker run --rm --platform linux/amd64 --volume $(CURDIR):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator:$(SCHEMA_GENERATOR_IMAGE_VERSION) \
+		--file /chart/$< > $@
 
 schema-mods/definitions/%-destination.schema.json: destinations/%-values.yaml
-	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --file /chart/$< > $@
+	docker run --rm --platform linux/amd64 --volume $(CURDIR):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator:$(SCHEMA_GENERATOR_IMAGE_VERSION) \
+		--file /chart/$< > $@
 
 schema-mods/definitions/%-dataProcessor.schema.json: dataProcessors/%-values.yaml
-	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --file /chart/$< > $@
+	docker run --rm --platform linux/amd64 --volume $(CURDIR):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator:$(SCHEMA_GENERATOR_IMAGE_VERSION) \
+		--file /chart/$< > $@
 
 NUMBER_OF_DESTINATION_VALUES_FILES := $(words $(DESTINATION_VALUES_FILES))
 schema-mods/destination.json: $(DESTINATION_SCHEMA_FILES)
@@ -183,10 +199,10 @@ Chart.lock: Chart.yaml
 	@touch Chart.lock # Ensure the timestamp is updated
 
 values.schema.json: values.yaml $(COLLECTOR_SCHEMA_FILES) $(DESTINATION_SCHEMA_FILES) $(DATA_PROCESSOR_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/destination.json schema-mods/dataProcessor.json
-	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --chart /chart > $@
+	docker run --rm --platform linux/amd64 --volume $(CURDIR):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator:$(SCHEMA_GENERATOR_IMAGE_VERSION) --chart /chart > $@
 
 README.md: README.md.gotmpl values.yaml Chart.yaml
-	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --chart /chart > $@
+	docker run --platform linux/amd64 --rm --volume $(CURDIR):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator:$(DOC_GENERATOR_IMAGE_VERSION) --chart /chart > $@
 
 # AGENTS.md generation - auto-discovers features, destinations, and integrations
 AGENTS.md: AGENTS.md.gotmpl $(FEATURE_CHARTS) $(DESTINATION_VALUES_FILES) $(INTEGRATION_VALUES_FILES)
@@ -239,32 +255,38 @@ AGENTS.md: AGENTS.md.gotmpl $(FEATURE_CHARTS) $(DESTINATION_VALUES_FILES) $(INTE
 
 # Example targets
 EXAMPLE_RELEASE_NAME=k8smon
+
+alloy_files = $(if $(1),$(shell yq e '(filename | sub("[^/]*$$"; "")) as $$dir | .collectors | keys | .[] | $$dir + . + "$(2)"' $(1)))
+
 NON_RENDERED_EXAMPLE_VALUES_FILES = $(shell find docs/examples -name .no-render | sed 's/.no-render/values.yaml/')
 EXAMPLE_VALUES_FILES := $(filter-out $(NON_RENDERED_EXAMPLE_VALUES_FILES),$(shell find docs/examples -name values.yaml))
 EXAMPLE_OUTPUT_FILES := $(EXAMPLE_VALUES_FILES:values.yaml=output.yaml)
-EXAMPLE_ALLOY_FILES = $(foreach file,$(EXAMPLE_VALUES_FILES),$(call alloy_configs, $(file)))
+EXAMPLE_ALLOY_FILES := $(call alloy_files,$(EXAMPLE_VALUES_FILES),.alloy)
 EXAMPLE_README_FILES := $(EXAMPLE_VALUES_FILES:values.yaml=README.md)
 
 NON_RENDERED_INTEGRATION_TEST_VALUES_FILES = $(shell find tests/integration -name .no-render | sed 's/.no-render/values.yaml/')
 INTEGRATION_TEST_VALUES_FILES = $(filter-out $(NON_RENDERED_INTEGRATION_TEST_VALUES_FILES),$(shell find tests/integration -name values.yaml))
 INTEGRATION_TEST_OUTPUT_FILES = $(INTEGRATION_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
-INTEGRATION_TEST_ALLOY_INSTANCE_FILES = $(foreach file,$(INTEGRATION_TEST_OUTPUT_FILES),$(call alloy_instances, $(file)))
+INTEGRATION_TEST_ALLOY_FILES = $(call alloy_files,$(INTEGRATION_TEST_OUTPUT_FILES),.yaml)
 
 NON_RENDERED_PLATFORM_TEST_VALUES_FILES := $(shell find tests/platform -name .no-render | sed 's/.no-render/values.yaml/')
 PLATFORM_TEST_VALUES_FILES := $(filter-out $(NON_RENDERED_PLATFORM_TEST_VALUES_FILES),$(shell find tests/platform -name values.yaml))
 PLATFORM_TEST_OUTPUT_FILES := $(PLATFORM_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
+PLATFORM_TEST_ALLOY_FILES = $(call alloy_files,$(PLATFORM_TEST_OUTPUT_FILES),.yaml)
 
-alloy_configs = $(shell \
-	DIR="$(shell dirname $(1))/" yq e '.collectors | keys | .[] | env(DIR) + . + ".alloy"' $(1) \
-)
-alloy_instances = $(shell \
-	DIR="$(shell dirname $(1))/" yq e '.collectors | keys | .[] | env(DIR) + . + ".yaml"' $(1) \
-)
+# Everything `helm template` reads while rendering the parent chart. Any template files that are generated MUST be
+# listed explicitly because they wont be found by the $(CHART_TEMPLATE_FILES) wildcard
+HELM_TEMPLATE_DEPS := Chart.yaml Chart.lock values.yaml values.schema.json \
+	templates/destinations/_destination_types.tpl \
+	templates/dataProcessors/_dataProcessor_types.tpl \
+	$(COLLECTOR_PRESET_FILES) \
+	collectors/upstream/alloy-values.yaml \
+	$(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
 
-%/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
+%/output.yaml: %/values.yaml $(HELM_TEMPLATE_DEPS) | build-features
 	$(HELM) template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
 
-%/.rendered/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
+%/.rendered/output.yaml: %/values.yaml $(HELM_TEMPLATE_DEPS) | build-features
 	mkdir -p $(dir $@)
 	$(HELM) template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
 
@@ -292,14 +314,14 @@ alloy_instances = $(shell \
 	@echo '<!-- textlint-enable terminology -->' >> $@
 
 .PHONY: examples
-examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(PLATFORM_TEST_OUTPUT_FILES)
+examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(INTEGRATION_TEST_ALLOY_FILES) $(PLATFORM_TEST_OUTPUT_FILES) $(PLATFORM_TEST_ALLOY_FILES)
 
 .PHONY: example-checks
 example-checks: $(EXAMPLE_OUTPUT_FILES)
 ifdef HAS_SHELLSPEC
 	shellspec -c tests/example-checks
 else
-	docker run --platform linux/amd64 --rm --volume $(shell pwd):/src shellspec/shellspec -c /src/tests/example-checks -s /bin/sh
+	docker run --platform linux/amd64 --rm --volume $(CURDIR):/src shellspec/shellspec:$(SHELLSPEC_IMAGE_VERSION) -c /src/tests/example-checks -s /bin/sh
 endif
 
 
@@ -308,7 +330,7 @@ misc-checks: Chart.yaml
 ifdef HAS_SHELLSPEC
 	ALLOY_OPERATOR_VERSION=$(ALLOY_OPERATOR_VERSION) shellspec -c tests/misc-checks
 else
-	docker run --platform linux/amd64 --rm --env ALLOY_OPERATOR_VERSION=$(ALLOY_OPERATOR_VERSION) --volume $(shell pwd):/src shellspec/shellspec -c /src/tests/misc-checks -s /bin/sh
+	docker run --platform linux/amd64 --rm --env ALLOY_OPERATOR_VERSION=$(ALLOY_OPERATOR_VERSION) --volume $(CURDIR):/src shellspec/shellspec:$(SHELLSPEC_IMAGE_VERSION) -c /src/tests/misc-checks -s /bin/sh
 endif
 
 .PHONY: integration-test-checks
@@ -331,6 +353,7 @@ clean: clean-examples
 clean-examples:
 	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(PLATFORM_TEST_OUTPUT_FILES)
 
+.PHONY: build-features
 build-features:
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
@@ -383,7 +406,7 @@ unittest: values.schema.json templates/destinations/_destination_types.tpl templ
 ifdef HAS_HELM_UNITTEST
 	$(HELM) unittest --failfast --with-subchart=false .
 else
-	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:3.18.4-1.0.0 --failfast --with-subchart=false .
+	docker run --rm --volume $(CURDIR):/apps helmunittest/helm-unittest:$(HELM_UNITTEST_IMAGE_VERSION) --failfast --with-subchart=false .
 endif
 
 .PHONY: update-test-snapshots
@@ -391,7 +414,7 @@ update-test-snapshots:
 ifdef HAS_HELM_UNITTEST
 	$(HELM) unittest --with-subchart=false . --update-snapshot
 else
-	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:3.18.4-1.0.0 --with-subchart=false . --update-snapshot
+	docker run --rm --volume $(CURDIR):/apps helmunittest/helm-unittest:$(HELM_UNITTEST_IMAGE_VERSION) --with-subchart=false . --update-snapshot
 endif
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
