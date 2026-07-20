@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+*   Add the `windows` collector preset, which configures Alloy to run on Windows nodes as a HostProcess container. (@petewall)
+
 ## 4.3.3
 
 *   Update Alloy Operator to 0.6.3 (@TylerHelmuth)
