@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+*   Add the `windows` collector preset, which configures Alloy to run on Windows nodes as a HostProcess container. (@petewall)
+
 ## 4.3.2
 
 *   Fix chart schemas where the only valid type was `null`. (#2926) (@petewall)
