@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-*   Add the `windows` collector preset, which configures Alloy to run on Windows nodes as a HostProcess container. It sets the `kubernetes.io/os: windows` node selector, overrides the entrypoint to the Windows Alloy binary at `%CONTAINER_SANDBOX_MOUNT_POINT%\Program Files\GrafanaLabs\Alloy\alloy.exe`, and defaults the image tag to the Windows Server Core build of the Alloy image (set `image.tag` on the collector to override). (@petewall)
+*   Add the `windows` collector preset, which configures Alloy to run on Windows nodes as a HostProcess container. (@petewall)
 
 ## 4.3.0
 
