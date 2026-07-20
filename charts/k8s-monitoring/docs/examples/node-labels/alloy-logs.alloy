@@ -1,8 +1,19 @@
-// Feature: Pod Logs
-declare "pod_logs" {
+// Feature: Pod Logs (Loki)
+declare "pod_logs_via_loki" {
   argument "logs_destinations" {
     comment = "Must be a list of log destinations where collected logs should be forwarded to"
   }
+
+  discovery.kubernetes "pods" {
+    role = "pod"
+    selectors {
+      role = "pod"
+      field = "spec.nodeName=" + sys.env("HOSTNAME")
+    }
+    attach_metadata {
+      node = true
+    }
+  } // discovery.kubernetes "pods"
 
   discovery.relabel "filtered_pods" {
     targets = discovery.kubernetes.pods.targets
@@ -11,47 +22,33 @@ declare "pod_logs" {
       action = "replace"
       target_label = "namespace"
     }
+    rule {  // Drop anything with a "falsy" annotation value
+      source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
+      regex = "(false|no|skip)"
+      action = "drop"
+    }
     rule {
       source_labels = ["__meta_kubernetes_pod_name"]
-      action = "replace"
       target_label = "pod"
     }
     rule {
       source_labels = ["__meta_kubernetes_pod_container_name"]
-      action = "replace"
       target_label = "container"
     }
     rule {
       source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
       separator = "/"
-      action = "replace"
       replacement = "$1"
       target_label = "job"
     }
 
     // set the container runtime as a label
     rule {
-      action = "replace"
       source_labels = ["__meta_kubernetes_pod_container_id"]
       regex = "^(\\S+):\\/\\/.+$"
       replacement = "$1"
       target_label = "tmp_container_runtime"
     }
-
-    // make all labels on the pod available to the pipeline as labels,
-    // they are omitted before write to loki via stage.label_keep unless explicitly set
-    rule {
-      action = "labelmap"
-      regex = "__meta_kubernetes_pod_label_(.+)"
-    }
-
-    // make all annotations on the pod available to the pipeline as labels,
-    // they are omitted before write to loki via stage.label_keep unless explicitly set
-    rule {
-      action = "labelmap"
-      regex = "__meta_kubernetes_pod_annotation_(.+)"
-    }
-
     // explicitly set service_name. if not set, loki will automatically try to populate a default.
     // see https://grafana.com/docs/loki/latest/get-started/labels/#default-labels-for-all-users
     //
@@ -60,7 +57,6 @@ declare "pod_logs" {
     // - pod.label[app.kubernetes.io/name]
     // - k8s.container.name
     rule {
-      action = "replace"
       source_labels = [
         "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
         "__meta_kubernetes_pod_label_app_kubernetes_io_name",
@@ -78,7 +74,6 @@ declare "pod_logs" {
     // - pod.annotation[resource.opentelemetry.io/service.namespace]
     // - pod.namespace
     rule {
-      action = "replace"
       source_labels = [
         "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
         "namespace",
@@ -121,34 +116,10 @@ declare "pod_logs" {
       target_label = "app_kubernetes_io_name"
     }
 
-    rule {
-      source_labels = [
-        "__meta_kubernetes_node_label_topology_kubernetes_io_region",
-        "__meta_kubernetes_node_label_failure_domain_beta_kubernetes_io_region",
-      ]
-      regex = "^(?:;*)?([^;]+).*$"
-      target_label = "region"
-    }
-  }
-
-  discovery.kubernetes "pods" {
-    role = "pod"
-    selectors {
-      role = "pod"
-      field = "spec.nodeName=" + sys.env("HOSTNAME")
-    }
-    attach_metadata {
-      node = true
-    }
-  }
-
-  discovery.relabel "filtered_pods_with_paths" {
-    targets = discovery.relabel.filtered_pods.output
-
+    // Set the pod log path.
     rule {
       source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
       separator = "/"
-      action = "replace"
       replacement = "/var/log/pods/*$1/*.log"
       target_label = "__path__"
     }
@@ -159,20 +130,90 @@ declare "pod_logs" {
       source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
       separator = "/"
       regex = "(.+/.+)"
-      action = "replace"
       replacement = "/var/log/pods/*$1/*.log"
       target_label = "__path__"
     }
-  }
+
+    rule {
+      source_labels = [
+        "__meta_kubernetes_node_label_karpenter_sh_nodepool",
+        "__meta_kubernetes_node_label_cloud_google_com_gke_nodepool",
+        "__meta_kubernetes_node_label_eks_amazonaws_com_nodegroup",
+        "__meta_kubernetes_node_label_kubernetes_azure_com_agentpool",
+        "__meta_kubernetes_node_label_agentpool",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      target_label = "nodepool"
+    }
+
+    rule {
+      source_labels = [
+        "__meta_kubernetes_node_label_topology_kubernetes_io_region",
+        "__meta_kubernetes_node_label_failure_domain_beta_kubernetes_io_region",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      target_label = "region"
+    }
+
+    rule {
+      source_labels = [
+        "__meta_kubernetes_node_label_topology_kubernetes_io_zone",
+        "__meta_kubernetes_node_label_failure_domain_beta_kubernetes_io_zone",
+        "__meta_kubernetes_node_label_topology_gke_io_zone",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      target_label = "availability_zone"
+    }
+
+    rule {
+      source_labels = [
+        "__meta_kubernetes_node_label_kubernetes_io_role",
+        "__meta_kubernetes_node_label_node_kubernetes_io_role",
+        "__meta_kubernetes_node_label_node_role",
+        "__meta_kubernetes_node_label_role",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      target_label = "node_role"
+    }
+
+    rule {
+      source_labels = [
+        "__meta_kubernetes_node_label_kubernetes_io_os",
+        "__meta_kubernetes_node_label_os_kubernetes_io",
+        "__meta_kubernetes_node_label_os",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      target_label = "os"
+    }
+
+    rule {
+      source_labels = [
+        "__meta_kubernetes_node_label_kubernetes_io_arch",
+        "__meta_kubernetes_node_label_beta_kubernetes_io_arch",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      target_label = "architecture"
+    }
+
+    rule {
+      source_labels = [
+        "__meta_kubernetes_node_label_node_kubernetes_io_instance_type",
+        "__meta_kubernetes_node_label_beta_kubernetes_io_instance_type",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      target_label = "instance_type"
+    }
+  } // discovery.relabel "filtered_pods"
 
   local.file_match "pod_logs" {
-    path_targets = discovery.relabel.filtered_pods_with_paths.output
-  }
+    path_targets = discovery.relabel.filtered_pods.output
+  } // local.file_match "pod_logs"
 
   loki.source.file "pod_logs" {
     targets    = local.file_match.pod_logs.targets
+    tail_from_end = true
     forward_to = [loki.process.pod_logs.receiver]
-  }
+  } // loki.source.file "pod_logs"
 
   loki.process "pod_logs" {
     stage.match {
@@ -216,24 +257,15 @@ declare "pod_logs" {
     stage.structured_metadata {
       values = {
         "k8s_pod_name" = "k8s_pod_name",
-        "node_arch" = "architecture",
-        "node_os" = "os",
-        "node_pool" = "nodepool",
-        "node_type" = "instance_type",
         "pod" = "pod",
         "service_instance_id" = "service_instance_id",
       }
     }
 
-    // Only keep the labels that are defined in the `keepLabels` list.
-    stage.label_keep {
-      values = ["__tenant_id__","app_kubernetes_io_name","container","instance","job","level","namespace","service_name","service_namespace","deployment_environment","deployment_environment_name","k8s_namespace_name","k8s_deployment_name","k8s_statefulset_name","k8s_daemonset_name","k8s_cronjob_name","k8s_job_name","k8s_node_name"]
-    }
-
     forward_to = argument.logs_destinations.value
-  }
-}
-pod_logs "feature" {
+  } // loki.secretfilter "pod_logs"
+} // declare "pod_logs_via_loki"
+pod_logs_via_loki "feature" {
   logs_destinations = [
     loki.write.loki.receiver,
   ]
@@ -242,10 +274,11 @@ pod_logs "feature" {
 
 
 
+
 // Destination: loki (loki)
 otelcol.exporter.loki "loki" {
   forward_to = [loki.write.loki.receiver]
-}
+} // otelcol.exporter.loki "loki"
 
 loki.write "loki" {
   endpoint {
@@ -259,8 +292,8 @@ loki.write "loki" {
     max_backoff_retries = "10"
   }
   external_labels = {
-    "cluster" = "pod-labels-and-annotations",
-    "k8s_cluster_name" = "pod-labels-and-annotations",
+    "cluster" = "node-labels",
+    "k8s_cluster_name" = "node-labels",
   }
-}
+} // loki.write "loki"
 

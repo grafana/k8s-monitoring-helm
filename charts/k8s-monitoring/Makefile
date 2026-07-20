@@ -39,6 +39,14 @@ DATA_PROCESSOR_SCHEMA_FILES = $(DATA_PROCESSOR_VALUES_FILES:dataProcessors/%-val
 
 INTEGRATION_VALUES_FILES = $(shell find charts/feature-integrations/integrations -name "*-values.yaml" 2>/dev/null | sort -u)
 
+# Nearly every rule here generates a file with `command > $@`, which truncates
+# the target before the command runs. Without this, a failed/interrupted recipe
+# (e.g. a transient `helm template` failure under `make -j`) leaves behind an
+# empty-but-newer-than-source target that make treats as up to date on the next
+# run, silently poisoning downstream steps (e.g. the .alloy extraction). This
+# tells make to delete the target when its recipe fails so it is rebuilt cleanly.
+.DELETE_ON_ERROR:
+
 .SECONDEXPANSION:
 docs/collectors/%.md: collectors/%-values.yaml $$(wildcard docs/collectors/.doc_templates/%.gotmpl)
 	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --file /chart/$< --template /chart/docs/collectors/.doc_templates/$(shell basename -s -values.yaml $<).gotmpl > $@
@@ -263,7 +271,7 @@ alloy_instances = $(shell \
 %.alloy: $$(dir $$@)output.yaml
 	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-$(notdir $(basename $@))") | .data["config.alloy"]' $< > $@
 
-%/README.md: %/values.yaml $$(wildcard %/description.txt)
+%/README.md: %/values.yaml $$(wildcard $$(dir $$@)description.txt)
 	@echo '<!--' > $@
 	@echo '(NOTE: Do not edit README.md directly. It is a generated file!)' >> $@
 	@echo '(      To make changes, please modify values.yaml or description.txt and run `make examples`)' >> $@
