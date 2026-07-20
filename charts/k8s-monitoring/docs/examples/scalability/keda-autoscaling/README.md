@@ -10,8 +10,9 @@ series Alloy is buffering in its write-ahead log on the way to the Prometheus de
 signal of telemetry workload than CPU or memory alone.
 
 The Alloy integration is enabled so Alloy scrapes its own metrics and ships them to Prometheus, where KEDA
-queries them through a Prometheus trigger on a `ScaledObject`. The native Alloy autoscaling is not used
-because KEDA creates and manages its own HorizontalPodAutoscaler.
+queries them through a Prometheus trigger on a `ScaledObject`. The collector enables
+`controller.autoscaling.horizontal.externalHPA` so the Alloy Operator omits `spec.replicas` and allows KEDA's
+HorizontalPodAutoscaler to own the replica count.
 
 ## Prerequisites
 
@@ -52,11 +53,13 @@ collectors:
         requests:
           cpu: "1m"
           memory: "500Mi"
-    # Native HPA is intentionally disabled. KEDA's ScaledObject below creates and manages an HPA
-    # that scales on Alloy's own custom metric (active series in the Prometheus remote_write WAL).
+    # Allow KEDA's ScaledObject below to own the replica count without the Alloy Operator reverting it.
+    # KEDA scales on Alloy's own custom metric (active series in the Prometheus remote_write WAL).
     controller:
       autoscaling:
-        enabled: false
+        horizontal:
+          enabled: false
+          externalHPA: true
 
 telemetryServices:
   kube-state-metrics:
