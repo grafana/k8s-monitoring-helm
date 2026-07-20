@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Add the `windows` collector preset, which configures Alloy to run on Windows nodes as a HostProcess container. (@petewall)
 *   Update Windows Exporter to 0.12.8 (@petewall)
 
 ## 4.3.1
