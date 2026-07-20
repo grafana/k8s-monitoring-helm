@@ -1,0 +1,81 @@
+<!--
+(NOTE: Do not edit README.md directly. It is a generated file!)
+(      To make changes, please modify values.yaml or description.txt and run `make examples`)
+-->
+# Node Labels
+
+This example shows how to include node labels on all jobs for nodes, pods and endpoints.
+
+## Values
+
+<!-- textlint-disable terminology -->
+```yaml
+---
+cluster:
+  name: node-labels
+
+destinations:
+  prometheus:
+    type: prometheus
+    url: http://prometheus.prometheus.svc:9090/api/v1/write
+  loki:
+    type: loki
+    url: http://loki.loki.svc:3100/api/push
+
+# Attach node labels (node pool, region, availability zone, etc.) to telemetry.
+# Each feature that supports node labels is configured independently, using the
+# same set of node label toggles.
+
+clusterMetrics:
+  enabled: true
+  collector: alloy-metrics
+
+hostMetrics:
+  enabled: true
+  collector: alloy-metrics
+  nodeLabels:
+    nodePool: true
+    region: true
+    availabilityZone: true
+    nodeRole: true
+    nodeOS: true
+    nodeArchitecture: true
+    instanceType: true
+
+annotationAutodiscovery:
+  enabled: true
+  collector: alloy-metrics
+  nodeLabels:
+    nodePool: true
+    region: true
+    availabilityZone: true
+    nodeRole: true
+    nodeOS: true
+    nodeArchitecture: true
+    instanceType: true
+
+podLogsViaLoki:
+  enabled: true
+  collector: alloy-logs
+  nodeLabels:
+    nodePool: true
+    region: true
+    availabilityZone: true
+    nodeRole: true
+    nodeOS: true
+    nodeArchitecture: true
+    instanceType: true
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+```
+<!-- textlint-enable terminology -->
