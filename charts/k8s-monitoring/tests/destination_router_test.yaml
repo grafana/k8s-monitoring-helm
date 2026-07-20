@@ -1,0 +1,330 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Destinations - Router render
+templates:
+  - alloy-config.yaml
+tests:
+  - it: OTLP fan-out - default-first ordering, per-downstream gates, both bodies render (F1-F7 baseline)
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        stack-a:
+          type: otlp
+          url: https://otlp-stack-a.example.com
+        platform:
+          type: otlp
+          url: https://otlp-platform.example.com
+        my-router:
+          type: router
+          attribute: k8s.namespace.name
+          routes:
+            - match: {equals: tenant-a}
+              destinations: [stack-a]
+          defaultDestinations: [platform]
+      podLogsViaOpenTelemetry:
+        enabled: true
+        destinations: [my-router]
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+          alloy:
+            stabilityLevel: public-preview
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '"set\(attributes\[\\"selected_destinations\\"\], \\"platform\\"\)"[\s\S]*"set\(attributes\[\\"selected_destinations\\"\], \\"stack-a\\"\) where attributes\[\\"k8s\.namespace\.name\\"\] == \\"tenant-a\\""'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.processor\.filter "my_router_platform_gate_logs_otlp"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.processor\.filter "my_router_stack_a_gate_logs_otlp"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.exporter\.otlp "platform"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.exporter\.otlp "stack_a"'
+
+  - it: first-match-wins - an earlier-declared route beats a later-declared route that also matches (F-order)
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        stack-a:
+          type: otlp
+          url: https://otlp-stack-a.example.com
+        platform:
+          type: otlp
+          url: https://otlp-platform.example.com
+        my-router:
+          type: router
+          attribute: k8s.namespace.name
+          routes:
+            - match: {equals: tenant-a}
+              destinations: [stack-a]
+            - match: {matches: "^tenant-.*$"}
+              destinations: [platform]
+          defaultDestinations: [platform]
+      podLogsViaOpenTelemetry:
+        enabled: true
+        destinations: [my-router]
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+          alloy:
+            stabilityLevel: public-preview
+    asserts:
+      - isKind:
+          of: ConfigMap
+      # The second-declared route (matches) is rendered FIRST, and the first-declared route
+      # (equals) is rendered LAST, so OTTL's sequential set()-overwrite semantics make the
+      # first-DECLARED route win for a record that matches both.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '"set\(attributes\[\\"selected_destinations\\"\], \\"platform\\"\) where IsMatch\(attributes\[\\"k8s\.namespace\.name\\"\], \\"\^tenant-\.\*\$\\"\) == true"[\s\S]*"set\(attributes\[\\"selected_destinations\\"\], \\"stack-a\\"\) where attributes\[\\"k8s\.namespace\.name\\"\] == \\"tenant-a\\""'
+
+  - it: match.in renders as a parenthesized OR-chain, not the invalid OTTL "in" operator (F1)
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        stack-a:
+          type: otlp
+          url: https://otlp-stack-a.example.com
+        platform:
+          type: otlp
+          url: https://otlp-platform.example.com
+        my-router:
+          type: router
+          attribute: k8s.namespace.name
+          routes:
+            - match: {in: [tenant-a, tenant-b]}
+              destinations: [stack-a]
+          defaultDestinations: [platform]
+      podLogsViaOpenTelemetry:
+        enabled: true
+        destinations: [my-router]
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+          alloy:
+            stabilityLevel: public-preview
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '"set\(attributes\[\\"selected_destinations\\"\], \\"stack-a\\"\) where \(attributes\[\\"k8s\.namespace\.name\\"\] == \\"tenant-a\\" or attributes\[\\"k8s\.namespace\.name\\"\] == \\"tenant-b\\"\)"'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: ' in \['
+
+  - it: match.matches double-escapes backslashes so OTTL's own string parser un-escapes them back to a real regex (F2)
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        stack-a:
+          type: otlp
+          url: https://otlp-stack-a.example.com
+        platform:
+          type: otlp
+          url: https://otlp-platform.example.com
+        my-router:
+          type: router
+          attribute: k8s.namespace.name
+          routes:
+            - match: {matches: "^team-\\d+$"}
+              destinations: [stack-a]
+          defaultDestinations: [platform]
+      podLogsViaOpenTelemetry:
+        enabled: true
+        destinations: [my-router]
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+          alloy:
+            stabilityLevel: public-preview
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '"set\(attributes\[\\"selected_destinations\\"\], \\"stack-a\\"\) where IsMatch\(attributes\[\\"k8s\.namespace\.name\\"\], \\"\^team-\\\\\\\\d\+\$\\"\) == true"'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'team-\\d\+\$'
+
+  - it: a double-quote in an equals value cannot break out of the OTTL string literal (F3/F4)
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        stack-a:
+          type: otlp
+          url: https://otlp-stack-a.example.com
+        platform:
+          type: otlp
+          url: https://otlp-platform.example.com
+        my-router:
+          type: router
+          attribute: k8s.namespace.name
+          routes:
+            - match: {equals: 'a" or true or "b'}
+              destinations: [stack-a]
+          defaultDestinations: [platform]
+      podLogsViaOpenTelemetry:
+        enabled: true
+        destinations: [my-router]
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+          alloy:
+            stabilityLevel: public-preview
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '"set\(attributes\[\\"selected_destinations\\"\], \\"stack-a\\"\) where attributes\[\\"k8s\.namespace\.name\\"\] == \\"a\\\\\\" or true or \\\\\\"b\\""'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: '== "a" or true or "b"'
+
+  - it: label path - prometheus.relabel routes on the namespace label with default-first ordering, per-downstream gates
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        mimir:
+          type: prometheus
+          url: https://prometheus-mimir.example.com
+        platform-prom:
+          type: prometheus
+          url: https://prometheus-platform.example.com
+        my-router:
+          type: router
+          attribute: k8s.namespace.name
+          routes:
+            - match: {equals: tenant-a}
+              destinations: [mimir]
+          defaultDestinations: [platform-prom]
+      clusterMetrics:
+        enabled: true
+        destinations: [my-router]
+      telemetryServices:
+        kube-state-metrics:
+          deploy: true
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'replacement  = "platform-prom"[\s\S]*regex         = "\^tenant-a\$"[\s\S]*replacement   = "mimir"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.relabel "my_router_mimir_gate_metrics_prometheus"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.relabel "my_router_platform_prom_gate_metrics_prometheus"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.remote_write "mimir"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.remote_write "platform_prom"'
+
+  - it: per-signal fallback - a route pointing only at a destination that cannot carry the signal is skipped for that signal (F5)
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        loki-only-dest:
+          type: loki
+          url: https://loki.example.com
+        platform:
+          type: otlp
+          url: https://otlp-platform.example.com
+        my-router:
+          type: router
+          attribute: k8s.namespace.name
+          routes:
+            - match: {equals: plain}
+              destinations: [loki-only-dest]
+          defaultDestinations: [platform]
+      clusterMetrics:
+        enabled: true
+        destinations: [my-router]
+      telemetryServices:
+        kube-state-metrics:
+          deploy: true
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+    asserts:
+      - isKind:
+          of: ConfigMap
+      # The metrics-ecosystem components only ever stamp/gate the default ("platform"); a loki-only
+      # destination never gets a metrics gate, so matched records for "plain" keep the default marker.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '"set\(attributes\[\\"selected_destinations\\"\], \\"platform\\"\)"'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'my_router_loki_only_dest_gate_metrics'
+      # Sanity: loki-only-dest DOES get a logs gate, proving the signal filter -- not a rendering
+      # bug -- is why it's absent from the metrics gates above.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'my_router_loki_only_dest_gate_logs'
+
+  - it: a route's signals filter only applies its rule to the matching signal's router component (F6/route.signals)
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        mimir:
+          type: prometheus
+          url: https://prometheus-mimir.example.com
+        loki-dest:
+          type: loki
+          url: https://loki.example.com
+        my-router:
+          type: router
+          attribute: k8s.namespace.name
+          routes:
+            - match: {equals: tenant-a}
+              destinations: [loki-dest]
+              signals: [logs]
+          defaultDestinations: [mimir, loki-dest]
+      clusterMetrics:
+        enabled: true
+        destinations: [my-router]
+        collector: alloy-metrics
+      podLogsViaLoki:
+        enabled: true
+        destinations: [my-router]
+        collector: alloy-logs
+      telemetryServices:
+        kube-state-metrics:
+          deploy: true
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'loki\.relabel "my_router_logs_loki" \{[\s\S]*?rule \{\s*source_labels = \["namespace"\]\s*regex\s*= "\^tenant-a\$"\s*target_label\s*= "selected_destinations"\s*replacement\s*= "loki-dest"\s*\}[\s\S]*?\} // loki\.relabel "my_router_logs_loki"'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.relabel "my_router_metrics_prometheus" \{[\s\S]*?rule \{\s*source_labels = \["namespace"\]\s*regex\s*= "\^tenant-a\$"\s*target_label\s*= "selected_destinations"\s*replacement\s*= "loki-dest"\s*\}[\s\S]*?\} // prometheus\.relabel "my_router_metrics_prometheus"'
