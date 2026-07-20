@@ -1,5 +1,5 @@
 ---
-name: Generate Built Files
+name: Regenerate Files
 # Regenerate the k8s-monitoring chart's built/generated files on demand.
 # Add the "regenerate-files" label to any PR to run `make clean build` and
 # commit the results back to the PR branch. This is the manual equivalent of
@@ -18,8 +18,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  generate:
-    name: Generate Built Files
+  regenerate:
+    name: Regenerate Files
     if: ${{ github.event.label.name == 'regenerate-files' }}
     runs-on: ubuntu-latest
     permissions:
@@ -36,7 +36,6 @@ jobs:
         run: |
           gh pr comment "${PR}" --body \
             ":warning: \`regenerate-files\` is not supported on PRs from forks. Please run \`make -C charts/k8s-monitoring clean build\` locally and commit the result."
-          gh pr edit "${PR}" --remove-label regenerate-files
           exit 1
 
       - name: Checkout PR branch
@@ -81,5 +80,13 @@ jobs:
             gh pr comment "${PR}" --body \
               "Files have been regenerated. Unit tests, integration tests, and lint checks will need to be re-run manually."
           fi
-          # Remove the label so it can be re-applied to trigger another run.
-          gh pr edit "${PR}" --remove-label regenerate-files
+
+      - name: Remove label
+        # Always remove the label, even if an earlier step failed, so it can be
+        # re-applied to retry. Label edits target the base repo's PR, so this
+        # also runs for the forked-PR case handled above.
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: gh pr edit "${PR}" --remove-label regenerate-files
