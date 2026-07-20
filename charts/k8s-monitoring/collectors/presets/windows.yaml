@@ -10,7 +10,6 @@ alloy:
   # Override the entrypoint to the Alloy binary inside the HostProcess container's sandbox mount point.
   command:
     - '%CONTAINER_SANDBOX_MOUNT_POINT%\Program Files\GrafanaLabs\Alloy\alloy.exe'
-
   # Replace the default Linux securityContext with Windows HostProcess settings. The Linux-only fields must be cleared
   # or they get applied to the Windows container.
   securityContext:
@@ -20,14 +19,12 @@ alloy:
     windowsOptions:
       hostProcess: true
       runAsUserName: "NT AUTHORITY\\SYSTEM"
-
 # -- Use the Windows HostProcess (Windows Server Core) build of the Alloy image, since the operator otherwise defaults
 # to the Linux image. Setting `image.tag` on the collector overrides this. KEEP IN SYNC when bumping the
 # `alloy-operator` dependency: this must match the "Alloy Binary" version in `docs/Versions.md`.
 # @section -- Alloy Configuration
 image:
   tag: v1.17.1-windowsservercore-ltsc2022
-
 # -- Run the Alloy Pod as a Windows HostProcess pod, so every container in the Pod inherits the HostProcess settings.
 # @section -- Other Values
 global:
@@ -35,7 +32,6 @@ global:
     windowsOptions:
       hostProcess: true
       runAsUserName: "NT AUTHORITY\\SYSTEM"
-
 # -- Schedule the Alloy Pod onto Windows nodes and run it on the host network, which Kubernetes requires for
 # HostProcess pods. The matching `dnsPolicy` keeps cluster DNS resolution working under host networking.
 # @section -- Other Values
@@ -44,7 +40,6 @@ controller:
     kubernetes.io/os: windows
   hostNetwork: true
   dnsPolicy: ClusterFirstWithHostNet
-
 # This isn't supported on Windows
 configReloader:
   enabled: false

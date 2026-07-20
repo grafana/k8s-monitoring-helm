@@ -348,8 +348,12 @@ docs/Versions.md: Chart.yaml
 
 # The `windows` preset pins the Alloy image tag to the Windows Server Core (HostProcess) build of the bundled Alloy
 # version, since that version can't be resolved at Helm template time. Keep it in sync with the alloy-operator dependency.
-collectors/presets/windows.yaml: Chart.yaml scripts/windows-preset-image-tag.sh
-	scripts/windows-preset-image-tag.sh
+ALLOY_HELM_VERSION = $(shell helm show chart charts/alloy-operator-*.tgz | yq '.appVersion')
+ALLOY_IMAGE_VERSION = $(shell helm search repo grafana/alloy --version $(ALLOY_HELM_VERSION) --output yaml | yq '.[].app_version')
+ALLOY_WINDOWS_IMAGE_SUFFIX := windowsservercore-ltsc2022
+collectors/presets/windows.yaml: Chart.yaml
+	yq eval '.image.tag = "$(ALLOY_IMAGE_VERSION)-$(ALLOY_WINDOWS_IMAGE_SUFFIX)"' --output-format yaml $@ > $@.new
+	@mv $@.new $@
 
 docs/collectors/presets/README.md: $(COLLECTOR_PRESET_FILES)
 	scripts/presets-readme.sh > $@
