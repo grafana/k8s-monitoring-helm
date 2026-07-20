@@ -1,0 +1,85 @@
+---
+name: Generate Built Files
+# Regenerate the k8s-monitoring chart's built/generated files on demand.
+# Add the "regenerate-files" label to any PR to run `make clean build` and
+# commit the results back to the PR branch. This is the manual equivalent of
+# the check performed by the "Check Generated Files" job, and is handy for
+# Renovate PRs (whose runner lacks helm/yq/docker/cosign) or any PR that
+# changes inputs to the generated files.
+# yamllint disable-line rule:truthy
+on:
+  pull_request:
+    types: [labeled]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  generate:
+    name: Generate Built Files
+    if: ${{ github.event.label.name == 'regenerate-files' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Fail on forked PRs
+        # The built-in GITHUB_TOKEN cannot push to a fork's branch, so this
+        # workflow only supports same-repo branches (e.g. Renovate PRs).
+        if: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          gh pr comment "${PR}" --body \
+            ":warning: \`regenerate-files\` is not supported on PRs from forks. Please run \`make -C charts/k8s-monitoring clean build\` locally and commit the result."
+          gh pr edit "${PR}" --remove-label regenerate-files
+          exit 1
+
+      - name: Checkout PR branch
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          # Persist credentials so we can push the regenerated files back.
+          persist-credentials: 'true'
+
+      - name: Set up Helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310  # v5.0.1
+        with:
+          version: v4.1.4  # pin to 4.1.x; 4.2.x changes template output formatting (helm/helm#32132)
+
+      - name: Set up Cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6  # v4.1.2
+
+      # docker and yq are preinstalled on the ubuntu-latest runner image, so
+      # they do not need a setup step (matching the Check Generated Files job).
+
+      - name: Regenerate files
+        run: |
+          make -C charts/k8s-monitoring clean
+          make -C charts/k8s-monitoring build-features
+          make -C charts/k8s-monitoring -j"$(nproc)" build
+
+      - name: Commit and push regenerated files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Generated files are already up to date."
+          else
+            git commit -m "chore: regenerate built files"
+            git push origin "HEAD:${HEAD_REF}"
+            echo "Pushed regenerated files to the PR branch."
+            gh pr comment "${PR}" --body \
+              "Files have been regenerated. Unit tests, integration tests, and lint checks will need to be re-run manually."
+          fi
+          # Remove the label so it can be re-applied to trigger another run.
+          gh pr edit "${PR}" --remove-label regenerate-files
