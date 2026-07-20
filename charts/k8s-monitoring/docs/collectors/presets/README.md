@@ -24,6 +24,7 @@ Presets are a way to set predefined configurations for Alloy collectors.
 | [singleton](singleton.md) | Configures Alloy to run as a single-instance, protecting workloads that would result in duplicated data if run on multiple replicas. |
 | [small](small.md) | Sets resource requests and limits sized for small clusters (approximately up to 50 nodes or light telemetry workloads). See [Alloy resource estimation guidelines](https://grafana.com/docs/alloy/latest/introduction/estimate-resource-usage/) for tuning. |
 | [statefulset](statefulset.md) | Configures Alloy to run as a StatefulSet, with a default of 1 replica. |
+| [windows](windows.md) | Configures Alloy to run on Windows nodes as a HostProcess container. It schedules Alloy onto Windows nodes, runs the Windows Alloy binary from its in-container sandbox path, and applies the Windows-specific `securityContext` needed for HostProcess pods (clearing the Linux capabilities and seccomp profile that don't apply on Windows). Combine with a controller preset such as `daemonset` to run Alloy on every Windows node. |
 | [xlarge](xlarge.md) | Sets resource requests and limits sized for very large clusters (approximately 1000+ nodes or heavy telemetry workloads). See [Alloy resource estimation guidelines](https://grafana.com/docs/alloy/latest/introduction/estimate-resource-usage/) for tuning. |
 
 ## Collector sizing
