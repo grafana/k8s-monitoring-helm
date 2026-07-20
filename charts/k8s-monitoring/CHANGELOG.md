@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+*   Add the `windows` collector preset, which configures Alloy to run on Windows nodes as a HostProcess container. (@petewall)
+
 ## 4.3.1
 
 *   Validate that each collector's Alloy stability level is high enough for the experimental or public-preview components in its rendered configuration. (@petewall)
