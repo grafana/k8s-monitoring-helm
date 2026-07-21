@@ -25,12 +25,12 @@ check-helm-version:
 ##@ Build
 .PHONY: clean
 clean: ## Clean all charts
-	make -C charts/k8s-monitoring $@;
+	$(MAKE) -C charts/k8s-monitoring $@;
 
 ##@ Build
 .PHONY: build
 build: check-helm-version ## Build all charts
-	make -C charts/k8s-monitoring $@;
+	$(MAKE) -C charts/k8s-monitoring $@;
 
 ##@ Keys
 .PHONY: update-signing-keys
@@ -45,7 +45,7 @@ keys/prometheus-community-pubkey.gpg:
 ##@ Tests
 .PHONY: test
 test: build lint ## Run tests for all charts
-	make -C charts/k8s-monitoring $@;
+	$(MAKE) -C charts/k8s-monitoring $@;
 
 .PHONY: lint
 lint: lint-alloy lint-shell lint-markdown lint-terraform lint-text lint-yaml lint-alex lint-misspell lint-actionlint lint-zizmor ## Run all linters
@@ -57,12 +57,14 @@ lint-alloy: ## Lint Alloy files
 	rm -rf data-alloy  # Clean up temporary Alloy data directory
 
 .PHONY: lint-shell
+# renovate: datasource=docker depName=koalaman/shellcheck
+SHELLCHECK_VERSION = v0.11.0
 SHELL_SCRIPTS = $(shell find . -type f -name "*.sh" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -path "./charts/k8s-monitoring-v1/test/spec/*" -o -path "./charts/k8s-monitoring/tests/example-checks/spec/*" -o -path "./charts/k8s-monitoring/tests/misc-checks/spec/*" \))
 lint-shell: ## Lint shell scripts
 	@if command -v shellcheck &> /dev/null; then \
 		shellcheck $(SHELL_SCRIPTS); \
 	else \
-		docker run --rm -v $(shell pwd):/src --workdir /src koalaman/shellcheck:stable --rcfile .shellcheckrc $(SHELL_SCRIPTS); \
+		docker run --rm -v $(shell pwd):/src --workdir /src koalaman/shellcheck:$(SHELLCHECK_VERSION) --rcfile .shellcheckrc $(SHELL_SCRIPTS); \
 	fi
 
 .PHONY: lint-markdown
@@ -78,12 +80,14 @@ lint-markdown: ## Lint markdown files
 
 TERRAFORM_DIRS = $(shell find . -name 'vars.tf' -exec dirname {} \;)
 .PHONY: lint-terraform
+# renovate: datasource=docker depName=ghcr.io/terraform-linters/tflint
+TFLINT_VERSION = v0.64.0
 lint-terraform: ## Lint terraform files
 	@for dir in $(TERRAFORM_DIRS); do \
 		if command -v tflint &> /dev/null; then \
 			tflint --chdir "$${dir}"; \
 		else \
-			docker run --rm -v $(shell pwd)/$${dir}:/data ghcr.io/terraform-linters/tflint; \
+			docker run --rm -v $(shell pwd)/$${dir}:/data ghcr.io/terraform-linters/tflint:$(TFLINT_VERSION); \
 		fi; \
 	done
 
@@ -117,11 +121,13 @@ lint-check-dead-links: ## Lint text files and check for dead links
 	fi
 
 .PHONY: lint-yaml
+# renovate: datasource=docker depName=cytopia/yamllint
+YAMLLINT_VERSION = 1-0.10
 lint-yaml: ## Lint yaml files
 	@if command -v yamllint &> /dev/null; then \
 		yamllint --strict --config-file .yamllint.yml .; \
 	else \
-		docker run --rm -v $(shell pwd):/data cytopia/yamllint:latest --config-file .yamllint.yml .; \
+		docker run --rm -v $(shell pwd):/data cytopia/yamllint:$(YAMLLINT_VERSION) --config-file .yamllint.yml .; \
 	fi
 
 .PHONY: lint-alex
@@ -146,19 +152,23 @@ lint-misspell: ## Check for common misspellings
 	fi
 
 .PHONY: lint-actionlint
+# renovate: datasource=docker depName=rhysd/actionlint
+ACTIONLINT_VERSION = 1.7.12
 lint-actionlint: ## Lint GitHub Action workflows
 	@if command -v actionlint &> /dev/null; then \
 		actionlint .github/workflows/*.yml .github/workflows/*.yaml; \
 	else \
-		docker run --rm -v $(shell pwd):/src --workdir /src rhysd/actionlint:latest .github/workflows/*.yml .github/workflows/*.yaml; \
+		docker run --rm -v $(shell pwd):/src --workdir /src rhysd/actionlint:$(ACTIONLINT_VERSION) .github/workflows/*.yml .github/workflows/*.yaml; \
 	fi
 
 .PHONY: lint-zizmor
+# renovate: datasource=docker depName=ghcr.io/zizmorcore/zizmor
+ZIZMOR_VERSION = 1.27.0
 lint-zizmor: ## Statically analyze GitHub Action workflows
 	@if command -v zizmor&> /dev/null; then \
 		zizmor .; \
 	else \
-		docker run --rm -v $(shell pwd):/src --workdir /src ghcr.io/zizmorcore/zizmor:latest .; \
+		docker run --rm -v $(shell pwd):/src --workdir /src ghcr.io/zizmorcore/zizmor:$(ZIZMOR_VERSION) .; \
 	fi
 
 

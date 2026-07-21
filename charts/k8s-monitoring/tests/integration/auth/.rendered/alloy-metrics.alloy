@@ -1,0 +1,820 @@
+// Feature: Cluster Metrics
+declare "cluster_metrics" {
+  argument "metrics_destinations" {
+    comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+  }
+  discovery.kubernetes "nodes" {
+    role = "node"
+  } // discovery.kubernetes "nodes"
+
+  discovery.relabel "nodes" {
+    targets = discovery.kubernetes.nodes.targets
+    rule {
+      source_labels = ["__meta_kubernetes_node_name"]
+      target_label  = "node"
+    }
+
+    rule {
+      replacement = "kubernetes"
+      target_label = "source"
+    }
+  } // discovery.relabel "nodes"
+
+  // Kubelet
+  discovery.relabel "kubelet" {
+    targets = discovery.relabel.nodes.output
+  } // discovery.relabel "kubelet"
+
+  prometheus.scrape "kubelet" {
+    targets  = discovery.relabel.kubelet.output
+    job_name = "integrations/kubernetes/kubelet"
+    scheme   = "https"
+    scrape_interval = "60s"
+    scrape_timeout = "10s"
+    scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+    scrape_classic_histograms = false
+    scrape_native_histograms = false
+    convert_classic_histograms_to_nhcb = false
+    bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+
+    tls_config {
+      ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+      insecure_skip_verify = true
+      server_name = "kubernetes"
+    }
+
+    clustering {
+      enabled = true
+    }
+
+    forward_to = [prometheus.relabel.kubelet.receiver]
+  } // prometheus.scrape "kubelet"
+
+  prometheus.relabel "kubelet" {
+    max_cache_size = 100000
+    rule {
+      source_labels = ["__name__"]
+      regex = "up|scrape_samples_scraped|go_goroutines|kubelet_certificate_manager_client_expiration_renew_errors|kubelet_certificate_manager_client_ttl_seconds|kubelet_certificate_manager_server_ttl_seconds|kubelet_cgroup_manager_duration_seconds_bucket|kubelet_cgroup_manager_duration_seconds_count|kubelet_node_config_error|kubelet_node_name|kubelet_pleg_relist_duration_seconds_bucket|kubelet_pleg_relist_duration_seconds_count|kubelet_pleg_relist_interval_seconds_bucket|kubelet_pod_start_duration_seconds_bucket|kubelet_pod_start_duration_seconds_count|kubelet_pod_worker_duration_seconds_bucket|kubelet_pod_worker_duration_seconds_count|kubelet_running_container_count|kubelet_running_containers|kubelet_running_pod_count|kubelet_running_pods|kubelet_runtime_operations_errors_total|kubelet_runtime_operations_total|kubelet_server_expiration_renew_errors|kubelet_volume_stats_available_bytes|kubelet_volume_stats_capacity_bytes|kubelet_volume_stats_inodes|kubelet_volume_stats_inodes_free|kubelet_volume_stats_inodes_used|kubelet_volume_stats_used_bytes|kubernetes_build_info|namespace_workload_pod|process_cpu_seconds_total|process_resident_memory_bytes|rest_client_requests_total|storage_operation_duration_seconds_count|storage_operation_errors_total|volume_manager_total_volumes"
+      action = "keep"
+    }
+
+    forward_to = argument.metrics_destinations.value
+  } // prometheus.relabel "kubelet"
+} // declare "cluster_metrics"
+cluster_metrics "feature" {
+  metrics_destinations = [
+    prometheus.remote_write.prometheus_basicauth.receiver,
+    prometheus.remote_write.prometheus_basicauth_external_secret_1.receiver,
+    prometheus.remote_write.prometheus_basicauth_external_secret_2.receiver,
+    prometheus.remote_write.prometheus_bearer_token.receiver,
+    prometheus.remote_write.prometheus_noauth.receiver,
+    otelcol.receiver.prometheus.prometheus_otlp_basicauth.receiver,
+    otelcol.receiver.prometheus.prometheus_otlp_bearer_token.receiver,
+    otelcol.receiver.prometheus.prometheus_otlp_noauth.receiver,
+  ]
+}
+// Self Reporting
+prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
+  set_collectors = ["textfile"]
+  textfile {
+    directory = "/etc/release-info"
+  }
+} // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
+
+discovery.relabel "kubernetes_monitoring_telemetry" {
+  targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
+  rule {
+    target_label = "instance"
+    action = "replace"
+    replacement = "k8smon"
+  }
+  rule {
+    target_label = "job"
+    action = "replace"
+    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  }
+} // discovery.relabel "kubernetes_monitoring_telemetry"
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+  scrape_interval = "60s"
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
+
+prometheus.relabel "kubernetes_monitoring_telemetry" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "grafana_kubernetes_monitoring_.*"
+    action = "keep"
+  }
+  forward_to = [
+    prometheus.remote_write.prometheus_basicauth.receiver,
+    prometheus.remote_write.prometheus_basicauth_external_secret_1.receiver,
+    prometheus.remote_write.prometheus_basicauth_external_secret_2.receiver,
+    prometheus.remote_write.prometheus_bearer_token.receiver,
+    prometheus.remote_write.prometheus_noauth.receiver,
+  ]
+} // prometheus.relabel "kubernetes_monitoring_telemetry"
+
+
+
+
+
+// Destination: prometheus-basicauth (prometheus)
+otelcol.exporter.prometheus "prometheus_basicauth" {
+  add_metric_suffixes = true
+  resource_to_telemetry_conversion = false
+  keep_identifying_resource_attributes = true
+  forward_to = [prometheus.remote_write.prometheus_basicauth.receiver]
+} // otelcol.exporter.prometheus "prometheus_basicauth"
+
+prometheus.remote_write "prometheus_basicauth" {
+  endpoint {
+    url = "http://nginx-auth-gateway.default.svc/metrics/basic/api/v1/write"
+    headers = {
+    }
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.prometheus_basicauth.data["username"])
+      password = remote.kubernetes.secret.prometheus_basicauth.data["password"]
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    send_native_histograms = false
+
+    queue_config {
+      capacity = 10000
+      min_shards = 1
+      max_shards = 50
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "30ms"
+      max_backoff = "5s"
+      retry_on_http_429 = true
+      sample_age_limit = "0s"
+    }
+  }
+
+  wal {
+    truncate_frequency = "2h"
+    min_keepalive_time = "5m"
+    max_keepalive_time = "8h"
+  }
+  external_labels = {
+    "cluster" = "auth-integration-test",
+    "k8s_cluster_name" = "auth-integration-test",
+    destination = "prometheus-basicauth",
+  }
+} // prometheus.remote_write "prometheus_basicauth"
+
+remote.kubernetes.secret "prometheus_basicauth" {
+  name      = "prometheus-basicauth-k8smon-k8s-monitoring"
+  namespace = "default"
+} // remote.kubernetes.secret "prometheus_basicauth"
+
+
+// Destination: prometheus-basicauth-external-secret-1 (prometheus)
+otelcol.exporter.prometheus "prometheus_basicauth_external_secret_1" {
+  add_metric_suffixes = true
+  resource_to_telemetry_conversion = false
+  keep_identifying_resource_attributes = true
+  forward_to = [prometheus.remote_write.prometheus_basicauth_external_secret_1.receiver]
+} // otelcol.exporter.prometheus "prometheus_basicauth_external_secret_1"
+
+prometheus.remote_write "prometheus_basicauth_external_secret_1" {
+  endpoint {
+    url = "http://nginx-auth-gateway.default.svc/metrics/basic/api/v1/write"
+    headers = {
+      "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.prometheus_basicauth_external_secret_1.data["tenantId"]),
+    }
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.prometheus_basicauth_external_secret_1.data["username"])
+      password = remote.kubernetes.secret.prometheus_basicauth_external_secret_1.data["password"]
+    }
+    tls_config {
+      insecure_skip_verify = false
+      ca_pem = convert.nonsensitive(remote.kubernetes.secret.prometheus_basicauth_external_secret_1.data["ca"])
+      cert_pem = convert.nonsensitive(remote.kubernetes.secret.prometheus_basicauth_external_secret_1.data["cert"])
+      key_pem = remote.kubernetes.secret.prometheus_basicauth_external_secret_1.data["key"]
+    }
+    send_native_histograms = false
+
+    queue_config {
+      capacity = 10000
+      min_shards = 1
+      max_shards = 50
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "30ms"
+      max_backoff = "5s"
+      retry_on_http_429 = true
+      sample_age_limit = "0s"
+    }
+  }
+
+  wal {
+    truncate_frequency = "2h"
+    min_keepalive_time = "5m"
+    max_keepalive_time = "8h"
+  }
+  external_labels = {
+    "cluster" = "auth-integration-test",
+    "k8s_cluster_name" = "auth-integration-test",
+    destination = "prometheus-basicauth-external-secret-1",
+  }
+} // prometheus.remote_write "prometheus_basicauth_external_secret_1"
+
+remote.kubernetes.secret "prometheus_basicauth_external_secret_1" {
+  name      = "credentials"
+  namespace = "default"
+} // remote.kubernetes.secret "prometheus_basicauth_external_secret_1"
+
+
+// Destination: prometheus-basicauth-external-secret-2 (prometheus)
+otelcol.exporter.prometheus "prometheus_basicauth_external_secret_2" {
+  add_metric_suffixes = true
+  resource_to_telemetry_conversion = false
+  keep_identifying_resource_attributes = true
+  forward_to = [prometheus.remote_write.prometheus_basicauth_external_secret_2.receiver]
+} // otelcol.exporter.prometheus "prometheus_basicauth_external_secret_2"
+
+prometheus.remote_write "prometheus_basicauth_external_secret_2" {
+  endpoint {
+    url = "http://nginx-auth-gateway.default.svc/metrics/basic/api/v1/write"
+    headers = {
+      "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.prometheus_basicauth_external_secret_2.data["tenantId"]),
+    }
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.prometheus_basicauth_external_secret_2.data["prometheusUsername"])
+      password = remote.kubernetes.secret.prometheus_basicauth_external_secret_2.data["prometheusPassword"]
+    }
+    tls_config {
+      insecure_skip_verify = false
+      ca_pem = convert.nonsensitive(remote.kubernetes.secret.prometheus_basicauth_external_secret_2.data["ca"])
+      cert_pem = convert.nonsensitive(remote.kubernetes.secret.prometheus_basicauth_external_secret_2.data["cert"])
+      key_pem = remote.kubernetes.secret.prometheus_basicauth_external_secret_2.data["key"]
+    }
+    send_native_histograms = false
+
+    queue_config {
+      capacity = 10000
+      min_shards = 1
+      max_shards = 50
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "30ms"
+      max_backoff = "5s"
+      retry_on_http_429 = true
+      sample_age_limit = "0s"
+    }
+  }
+
+  wal {
+    truncate_frequency = "2h"
+    min_keepalive_time = "5m"
+    max_keepalive_time = "8h"
+  }
+  external_labels = {
+    "cluster" = "auth-integration-test",
+    "k8s_cluster_name" = "auth-integration-test",
+    destination = "prometheus-basicauth-external-secret-2",
+  }
+} // prometheus.remote_write "prometheus_basicauth_external_secret_2"
+
+remote.kubernetes.secret "prometheus_basicauth_external_secret_2" {
+  name      = "credentials"
+  namespace = "default"
+} // remote.kubernetes.secret "prometheus_basicauth_external_secret_2"
+
+
+// Destination: prometheus-bearer-token (prometheus)
+otelcol.exporter.prometheus "prometheus_bearer_token" {
+  add_metric_suffixes = true
+  resource_to_telemetry_conversion = false
+  keep_identifying_resource_attributes = true
+  forward_to = [prometheus.remote_write.prometheus_bearer_token.receiver]
+} // otelcol.exporter.prometheus "prometheus_bearer_token"
+
+prometheus.remote_write "prometheus_bearer_token" {
+  endpoint {
+    url = "http://nginx-auth-gateway.default.svc/metrics/bearer/api/v1/write"
+    headers = {
+    }
+    bearer_token = remote.kubernetes.secret.prometheus_bearer_token.data["bearerToken"]
+    tls_config {
+      insecure_skip_verify = false
+    }
+    send_native_histograms = false
+
+    queue_config {
+      capacity = 10000
+      min_shards = 1
+      max_shards = 50
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "30ms"
+      max_backoff = "5s"
+      retry_on_http_429 = true
+      sample_age_limit = "0s"
+    }
+  }
+
+  wal {
+    truncate_frequency = "2h"
+    min_keepalive_time = "5m"
+    max_keepalive_time = "8h"
+  }
+  external_labels = {
+    "cluster" = "auth-integration-test",
+    "k8s_cluster_name" = "auth-integration-test",
+    destination = "prometheus-bearer-token",
+  }
+} // prometheus.remote_write "prometheus_bearer_token"
+
+remote.kubernetes.secret "prometheus_bearer_token" {
+  name      = "prometheus-bearer-token-k8smon-k8s-monitoring"
+  namespace = "default"
+} // remote.kubernetes.secret "prometheus_bearer_token"
+
+
+// Destination: prometheus-noauth (prometheus)
+otelcol.exporter.prometheus "prometheus_noauth" {
+  add_metric_suffixes = true
+  resource_to_telemetry_conversion = false
+  keep_identifying_resource_attributes = true
+  forward_to = [prometheus.remote_write.prometheus_noauth.receiver]
+} // otelcol.exporter.prometheus "prometheus_noauth"
+
+prometheus.remote_write "prometheus_noauth" {
+  endpoint {
+    url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
+    headers = {
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    send_native_histograms = false
+
+    queue_config {
+      capacity = 10000
+      min_shards = 1
+      max_shards = 50
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "30ms"
+      max_backoff = "5s"
+      retry_on_http_429 = true
+      sample_age_limit = "0s"
+    }
+  }
+
+  wal {
+    truncate_frequency = "2h"
+    min_keepalive_time = "5m"
+    max_keepalive_time = "8h"
+  }
+  external_labels = {
+    "cluster" = "auth-integration-test",
+    "k8s_cluster_name" = "auth-integration-test",
+    destination = "prometheus-noauth",
+  }
+} // prometheus.remote_write "prometheus_noauth"
+
+// Destination: prometheus-otlp-basicauth (otlp)
+otelcol.receiver.prometheus "prometheus_otlp_basicauth" {
+  output {
+    metrics = [otelcol.processor.transform.prometheus_otlp_basicauth_scrape_normalize.input]
+  }
+} // otelcol.receiver.prometheus "prometheus_otlp_basicauth"
+
+// Repairs artifacts of the Prometheus-to-OTLP conversion performed by
+// otelcol.receiver.prometheus. Only metrics that came from a Prometheus scrape pass
+// through this component; OTLP-native telemetry enters the pipeline further down.
+otelcol.processor.transform "prometheus_otlp_basicauth_scrape_normalize" {
+  error_mode = "ignore"
+  metric_statements {
+    context = "resource"
+    statements = [
+      // The conversion sets service.name to the full Prometheus job label (e.g.
+      // "namespace/workload"). When the scrape target declares its identity explicitly
+      // with a service_name label on its own target_info metric (e.g. Grafana Beyla),
+      // prefer that value and drop the duplicate.
+      `set(attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
+      `delete_key(attributes, "service_name") where attributes["service_name"] == attributes["service.name"]`,
+      // The same conversion turns other flat target_info labels into resource attributes.
+      // Promote them to their OpenTelemetry counterparts and drop the flat duplicates, so
+      // the OTLP endpoint does not receive two conflicting spellings of the same attribute.
+      `set(attributes["service.namespace"], attributes["service_namespace"]) where (attributes["service.namespace"] == nil or attributes["service.namespace"] == "") and attributes["service_namespace"] != nil and attributes["service_namespace"] != ""`,
+      `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == attributes["service.namespace"]`,
+      `set(attributes["deployment.environment"], attributes["deployment_environment"]) where (attributes["deployment.environment"] == nil or attributes["deployment.environment"] == "") and attributes["deployment_environment"] != nil and attributes["deployment_environment"] != ""`,
+      `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == attributes["deployment.environment"]`,
+      `set(attributes["deployment.environment.name"], attributes["deployment_environment_name"]) where (attributes["deployment.environment.name"] == nil or attributes["deployment.environment.name"] == "") and attributes["deployment_environment_name"] != nil and attributes["deployment_environment_name"] != ""`,
+      `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == attributes["deployment.environment.name"]`,
+    ]
+  }
+  metric_statements {
+    context = "datapoint"
+    statements = [
+      // Same correction for scrape targets that put service_name on every series
+      // instead of exposing a target_info metric.
+      `set(resource.attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
+    ]
+  }
+  output {
+    metrics = [otelcol.processor.attributes.prometheus_otlp_basicauth.input]
+  }
+} // otelcol.processor.transform "prometheus_otlp_basicauth_scrape_normalize"
+otelcol.processor.attributes "prometheus_otlp_basicauth" {
+  action {
+    key = "destination"
+    action = "upsert"
+    value = "prometheus-otlp-basicauth"
+  }
+  output {
+    metrics = [otelcol.processor.transform.prometheus_otlp_basicauth.input]
+  }
+} // otelcol.processor.attributes "prometheus_otlp_basicauth"
+
+otelcol.processor.transform "prometheus_otlp_basicauth" {
+  error_mode = "ignore"
+  metric_statements {
+    context = "resource"
+    statements = [
+      `set(attributes["cluster"], "auth-integration-test")`,
+      `set(attributes["k8s.cluster.name"], "auth-integration-test")`,
+      `delete_key(attributes, "process.pid")`,
+      `delete_key(attributes, "process.parent_pid")`,
+      `delete_key(attributes, "process.executable.path")`,
+      `delete_key(attributes, "process.command_line")`,
+      `delete_key(attributes, "process.command_args")`,
+      `delete_key(attributes, "process.owner")`,
+      `delete_key(attributes, "process.runtime.version")`,
+      `delete_key(attributes, "process.runtime.description")`,
+      `delete_key(attributes, "host.ip")`,
+      `delete_key(attributes, "host.mac")`,
+      `delete_key(attributes, "k8s.pod.start_time")`,
+      `delete_key(attributes, "k8s.pod.uid")`,
+      `delete_key(attributes, "container.image.id")`,
+      `delete_key(attributes, "container.image.repo_digests")`,
+      `delete_key(attributes, "os.description")`,
+      `delete_key(attributes, "os.build_id")`,
+      // Scrape targets that expose their own target_info metric (e.g. Grafana Beyla) can
+      // carry a flat k8s_cluster_name resource attribute, which conflicts with the
+      // k8s.cluster.name attribute set above and gets ";"-joined by the Prometheus OTLP
+      // endpoint. Drop the flat copy when the values match.
+      `delete_key(attributes, "k8s_cluster_name") where attributes["k8s_cluster_name"] == attributes["k8s.cluster.name"]`,
+    ]
+  }
+
+  metric_statements {
+    context = "datapoint"
+    statements = [
+      `set(attributes["cluster"], "auth-integration-test")`,
+      `set(attributes["k8s.cluster.name"], "auth-integration-test")`,
+      `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+      `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+      `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+      `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+      `set(resource.attributes["service.name"], attributes["service_name"] ) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and attributes["service_name"] != nil and attributes["service_name"] != ""`,
+      `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+      `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where (resource.attributes["service.namespace"] == nil or resource.attributes["service.namespace"] == "") and attributes["service_namespace"] != nil and attributes["service_namespace"] != ""`,
+      `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+    ]
+  }
+
+  output {
+    metrics = [otelcol.processor.batch.prometheus_otlp_basicauth.input]
+  }
+} // otelcol.processor.transform "prometheus_otlp_basicauth"
+
+otelcol.processor.batch "prometheus_otlp_basicauth" {
+  timeout = "2s"
+  send_batch_size = 8192
+  send_batch_max_size = 0
+
+  output {
+    metrics = [otelcol.exporter.otlphttp.prometheus_otlp_basicauth.input]
+  }
+} // otelcol.processor.batch "prometheus_otlp_basicauth"
+otelcol.exporter.otlphttp "prometheus_otlp_basicauth" {
+  client {
+    endpoint = "http://nginx-auth-gateway.default.svc/metrics/basic/api/v1/otlp"
+    auth = otelcol.auth.basic.prometheus_otlp_basicauth.handler
+    tls {
+      insecure = false
+      insecure_skip_verify = false
+    }
+  }
+
+  retry_on_failure {
+    enabled = true
+    initial_interval = "5s"
+    max_interval = "30s"
+    max_elapsed_time = "5m"
+  }
+
+  sending_queue {
+    enabled = true
+  }
+} // otelcol.exporter.otlphttp "prometheus_otlp_basicauth"
+
+otelcol.auth.basic "prometheus_otlp_basicauth" {
+  username = convert.nonsensitive(remote.kubernetes.secret.prometheus_otlp_basicauth.data["username"])
+  password = remote.kubernetes.secret.prometheus_otlp_basicauth.data["password"]
+} // otelcol.auth.basic "prometheus_otlp_basicauth"
+
+remote.kubernetes.secret "prometheus_otlp_basicauth" {
+  name      = "prometheus-otlp-basicauth-k8smon-k8s-monitoring"
+  namespace = "default"
+} // remote.kubernetes.secret "prometheus_otlp_basicauth"
+
+
+// Destination: prometheus-otlp-bearer-token (otlp)
+otelcol.receiver.prometheus "prometheus_otlp_bearer_token" {
+  output {
+    metrics = [otelcol.processor.transform.prometheus_otlp_bearer_token_scrape_normalize.input]
+  }
+} // otelcol.receiver.prometheus "prometheus_otlp_bearer_token"
+
+// Repairs artifacts of the Prometheus-to-OTLP conversion performed by
+// otelcol.receiver.prometheus. Only metrics that came from a Prometheus scrape pass
+// through this component; OTLP-native telemetry enters the pipeline further down.
+otelcol.processor.transform "prometheus_otlp_bearer_token_scrape_normalize" {
+  error_mode = "ignore"
+  metric_statements {
+    context = "resource"
+    statements = [
+      // The conversion sets service.name to the full Prometheus job label (e.g.
+      // "namespace/workload"). When the scrape target declares its identity explicitly
+      // with a service_name label on its own target_info metric (e.g. Grafana Beyla),
+      // prefer that value and drop the duplicate.
+      `set(attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
+      `delete_key(attributes, "service_name") where attributes["service_name"] == attributes["service.name"]`,
+      // The same conversion turns other flat target_info labels into resource attributes.
+      // Promote them to their OpenTelemetry counterparts and drop the flat duplicates, so
+      // the OTLP endpoint does not receive two conflicting spellings of the same attribute.
+      `set(attributes["service.namespace"], attributes["service_namespace"]) where (attributes["service.namespace"] == nil or attributes["service.namespace"] == "") and attributes["service_namespace"] != nil and attributes["service_namespace"] != ""`,
+      `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == attributes["service.namespace"]`,
+      `set(attributes["deployment.environment"], attributes["deployment_environment"]) where (attributes["deployment.environment"] == nil or attributes["deployment.environment"] == "") and attributes["deployment_environment"] != nil and attributes["deployment_environment"] != ""`,
+      `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == attributes["deployment.environment"]`,
+      `set(attributes["deployment.environment.name"], attributes["deployment_environment_name"]) where (attributes["deployment.environment.name"] == nil or attributes["deployment.environment.name"] == "") and attributes["deployment_environment_name"] != nil and attributes["deployment_environment_name"] != ""`,
+      `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == attributes["deployment.environment.name"]`,
+    ]
+  }
+  metric_statements {
+    context = "datapoint"
+    statements = [
+      // Same correction for scrape targets that put service_name on every series
+      // instead of exposing a target_info metric.
+      `set(resource.attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
+    ]
+  }
+  output {
+    metrics = [otelcol.processor.attributes.prometheus_otlp_bearer_token.input]
+  }
+} // otelcol.processor.transform "prometheus_otlp_bearer_token_scrape_normalize"
+otelcol.processor.attributes "prometheus_otlp_bearer_token" {
+  action {
+    key = "destination"
+    action = "upsert"
+    value = "prometheus-otlp-bearer-token"
+  }
+  output {
+    metrics = [otelcol.processor.transform.prometheus_otlp_bearer_token.input]
+  }
+} // otelcol.processor.attributes "prometheus_otlp_bearer_token"
+
+otelcol.processor.transform "prometheus_otlp_bearer_token" {
+  error_mode = "ignore"
+  metric_statements {
+    context = "resource"
+    statements = [
+      `set(attributes["cluster"], "auth-integration-test")`,
+      `set(attributes["k8s.cluster.name"], "auth-integration-test")`,
+      `delete_key(attributes, "process.pid")`,
+      `delete_key(attributes, "process.parent_pid")`,
+      `delete_key(attributes, "process.executable.path")`,
+      `delete_key(attributes, "process.command_line")`,
+      `delete_key(attributes, "process.command_args")`,
+      `delete_key(attributes, "process.owner")`,
+      `delete_key(attributes, "process.runtime.version")`,
+      `delete_key(attributes, "process.runtime.description")`,
+      `delete_key(attributes, "host.ip")`,
+      `delete_key(attributes, "host.mac")`,
+      `delete_key(attributes, "k8s.pod.start_time")`,
+      `delete_key(attributes, "k8s.pod.uid")`,
+      `delete_key(attributes, "container.image.id")`,
+      `delete_key(attributes, "container.image.repo_digests")`,
+      `delete_key(attributes, "os.description")`,
+      `delete_key(attributes, "os.build_id")`,
+      // Scrape targets that expose their own target_info metric (e.g. Grafana Beyla) can
+      // carry a flat k8s_cluster_name resource attribute, which conflicts with the
+      // k8s.cluster.name attribute set above and gets ";"-joined by the Prometheus OTLP
+      // endpoint. Drop the flat copy when the values match.
+      `delete_key(attributes, "k8s_cluster_name") where attributes["k8s_cluster_name"] == attributes["k8s.cluster.name"]`,
+    ]
+  }
+
+  metric_statements {
+    context = "datapoint"
+    statements = [
+      `set(attributes["cluster"], "auth-integration-test")`,
+      `set(attributes["k8s.cluster.name"], "auth-integration-test")`,
+      `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+      `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+      `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+      `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+      `set(resource.attributes["service.name"], attributes["service_name"] ) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and attributes["service_name"] != nil and attributes["service_name"] != ""`,
+      `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+      `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where (resource.attributes["service.namespace"] == nil or resource.attributes["service.namespace"] == "") and attributes["service_namespace"] != nil and attributes["service_namespace"] != ""`,
+      `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+    ]
+  }
+
+  output {
+    metrics = [otelcol.processor.batch.prometheus_otlp_bearer_token.input]
+  }
+} // otelcol.processor.transform "prometheus_otlp_bearer_token"
+
+otelcol.processor.batch "prometheus_otlp_bearer_token" {
+  timeout = "2s"
+  send_batch_size = 8192
+  send_batch_max_size = 0
+
+  output {
+    metrics = [otelcol.exporter.otlphttp.prometheus_otlp_bearer_token.input]
+  }
+} // otelcol.processor.batch "prometheus_otlp_bearer_token"
+otelcol.exporter.otlphttp "prometheus_otlp_bearer_token" {
+  client {
+    endpoint = "http://nginx-auth-gateway.default.svc/metrics/bearer/api/v1/otlp"
+    auth = otelcol.auth.bearer.prometheus_otlp_bearer_token.handler
+    tls {
+      insecure = false
+      insecure_skip_verify = false
+    }
+  }
+
+  retry_on_failure {
+    enabled = true
+    initial_interval = "5s"
+    max_interval = "30s"
+    max_elapsed_time = "5m"
+  }
+
+  sending_queue {
+    enabled = true
+  }
+} // otelcol.exporter.otlphttp "prometheus_otlp_bearer_token"
+
+otelcol.auth.bearer "prometheus_otlp_bearer_token" {
+  token = remote.kubernetes.secret.prometheus_otlp_bearer_token.data["bearerToken"]
+} // otelcol.auth.bearer "prometheus_otlp_bearer_token"
+
+remote.kubernetes.secret "prometheus_otlp_bearer_token" {
+  name      = "prometheus-otlp-bearer-token-k8smon-k8s-monitoring"
+  namespace = "default"
+} // remote.kubernetes.secret "prometheus_otlp_bearer_token"
+
+
+// Destination: prometheus-otlp-noauth (otlp)
+otelcol.receiver.prometheus "prometheus_otlp_noauth" {
+  output {
+    metrics = [otelcol.processor.transform.prometheus_otlp_noauth_scrape_normalize.input]
+  }
+} // otelcol.receiver.prometheus "prometheus_otlp_noauth"
+
+// Repairs artifacts of the Prometheus-to-OTLP conversion performed by
+// otelcol.receiver.prometheus. Only metrics that came from a Prometheus scrape pass
+// through this component; OTLP-native telemetry enters the pipeline further down.
+otelcol.processor.transform "prometheus_otlp_noauth_scrape_normalize" {
+  error_mode = "ignore"
+  metric_statements {
+    context = "resource"
+    statements = [
+      // The conversion sets service.name to the full Prometheus job label (e.g.
+      // "namespace/workload"). When the scrape target declares its identity explicitly
+      // with a service_name label on its own target_info metric (e.g. Grafana Beyla),
+      // prefer that value and drop the duplicate.
+      `set(attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
+      `delete_key(attributes, "service_name") where attributes["service_name"] == attributes["service.name"]`,
+      // The same conversion turns other flat target_info labels into resource attributes.
+      // Promote them to their OpenTelemetry counterparts and drop the flat duplicates, so
+      // the OTLP endpoint does not receive two conflicting spellings of the same attribute.
+      `set(attributes["service.namespace"], attributes["service_namespace"]) where (attributes["service.namespace"] == nil or attributes["service.namespace"] == "") and attributes["service_namespace"] != nil and attributes["service_namespace"] != ""`,
+      `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == attributes["service.namespace"]`,
+      `set(attributes["deployment.environment"], attributes["deployment_environment"]) where (attributes["deployment.environment"] == nil or attributes["deployment.environment"] == "") and attributes["deployment_environment"] != nil and attributes["deployment_environment"] != ""`,
+      `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == attributes["deployment.environment"]`,
+      `set(attributes["deployment.environment.name"], attributes["deployment_environment_name"]) where (attributes["deployment.environment.name"] == nil or attributes["deployment.environment.name"] == "") and attributes["deployment_environment_name"] != nil and attributes["deployment_environment_name"] != ""`,
+      `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == attributes["deployment.environment.name"]`,
+    ]
+  }
+  metric_statements {
+    context = "datapoint"
+    statements = [
+      // Same correction for scrape targets that put service_name on every series
+      // instead of exposing a target_info metric.
+      `set(resource.attributes["service.name"], attributes["service_name"]) where attributes["service_name"] != nil and attributes["service_name"] != ""`,
+    ]
+  }
+  output {
+    metrics = [otelcol.processor.attributes.prometheus_otlp_noauth.input]
+  }
+} // otelcol.processor.transform "prometheus_otlp_noauth_scrape_normalize"
+otelcol.processor.attributes "prometheus_otlp_noauth" {
+  action {
+    key = "destination"
+    action = "upsert"
+    value = "prometheus-otlp-noauth"
+  }
+  output {
+    metrics = [otelcol.processor.transform.prometheus_otlp_noauth.input]
+  }
+} // otelcol.processor.attributes "prometheus_otlp_noauth"
+
+otelcol.processor.transform "prometheus_otlp_noauth" {
+  error_mode = "ignore"
+  metric_statements {
+    context = "resource"
+    statements = [
+      `set(attributes["cluster"], "auth-integration-test")`,
+      `set(attributes["k8s.cluster.name"], "auth-integration-test")`,
+      `delete_key(attributes, "process.pid")`,
+      `delete_key(attributes, "process.parent_pid")`,
+      `delete_key(attributes, "process.executable.path")`,
+      `delete_key(attributes, "process.command_line")`,
+      `delete_key(attributes, "process.command_args")`,
+      `delete_key(attributes, "process.owner")`,
+      `delete_key(attributes, "process.runtime.version")`,
+      `delete_key(attributes, "process.runtime.description")`,
+      `delete_key(attributes, "host.ip")`,
+      `delete_key(attributes, "host.mac")`,
+      `delete_key(attributes, "k8s.pod.start_time")`,
+      `delete_key(attributes, "k8s.pod.uid")`,
+      `delete_key(attributes, "container.image.id")`,
+      `delete_key(attributes, "container.image.repo_digests")`,
+      `delete_key(attributes, "os.description")`,
+      `delete_key(attributes, "os.build_id")`,
+      // Scrape targets that expose their own target_info metric (e.g. Grafana Beyla) can
+      // carry a flat k8s_cluster_name resource attribute, which conflicts with the
+      // k8s.cluster.name attribute set above and gets ";"-joined by the Prometheus OTLP
+      // endpoint. Drop the flat copy when the values match.
+      `delete_key(attributes, "k8s_cluster_name") where attributes["k8s_cluster_name"] == attributes["k8s.cluster.name"]`,
+    ]
+  }
+
+  metric_statements {
+    context = "datapoint"
+    statements = [
+      `set(attributes["cluster"], "auth-integration-test")`,
+      `set(attributes["k8s.cluster.name"], "auth-integration-test")`,
+      `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+      `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+      `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+      `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+      `set(resource.attributes["service.name"], attributes["service_name"] ) where (resource.attributes["service.name"] == nil or resource.attributes["service.name"] == "") and attributes["service_name"] != nil and attributes["service_name"] != ""`,
+      `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+      `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where (resource.attributes["service.namespace"] == nil or resource.attributes["service.namespace"] == "") and attributes["service_namespace"] != nil and attributes["service_namespace"] != ""`,
+      `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+    ]
+  }
+
+  output {
+    metrics = [otelcol.processor.batch.prometheus_otlp_noauth.input]
+  }
+} // otelcol.processor.transform "prometheus_otlp_noauth"
+
+otelcol.processor.batch "prometheus_otlp_noauth" {
+  timeout = "2s"
+  send_batch_size = 8192
+  send_batch_max_size = 0
+
+  output {
+    metrics = [otelcol.exporter.otlphttp.prometheus_otlp_noauth.input]
+  }
+} // otelcol.processor.batch "prometheus_otlp_noauth"
+otelcol.exporter.otlphttp "prometheus_otlp_noauth" {
+  client {
+    endpoint = "http://prometheus-server.prometheus.svc:9090/api/v1/otlp"
+    tls {
+      insecure = false
+      insecure_skip_verify = false
+    }
+  }
+
+  retry_on_failure {
+    enabled = true
+    initial_interval = "5s"
+    max_interval = "30s"
+    max_elapsed_time = "5m"
+  }
+
+  sending_queue {
+    enabled = true
+  }
+} // otelcol.exporter.otlphttp "prometheus_otlp_noauth"
+
