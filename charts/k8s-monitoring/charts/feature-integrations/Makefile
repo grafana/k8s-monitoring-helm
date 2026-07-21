@@ -5,6 +5,13 @@ else
 HELM = ../../../../scripts/helm-with-version $(HELM_VERSION)
 endif
 
+# renovate: datasource=docker depName=ghcr.io/grafana/helm-chart-toolbox-doc-generator
+DOC_GENERATOR_IMAGE_VERSION = 0.2.4
+# renovate: datasource=docker depName=ghcr.io/grafana/helm-chart-toolbox-schema-generator
+SCHEMA_GENERATOR_IMAGE_VERSION = 0.2.4
+
+HELM_UNITTEST_IMAGE_VERSION = 3.18.4-1.0.0
+
 HAS_HELM_UNITTEST := $(shell $(HELM) plugin list | grep unittest 2> /dev/null)
 
 SCHEMA_MODS_JSON_FILES = $(shell find schema-mods -name "*.json")
@@ -28,11 +35,11 @@ Chart.lock: Chart.yaml
 
 .SECONDEXPANSION:
 docs/integrations/%.md: integrations/%-values.yaml $$(wildcard docs/integrations/.doc_templates/%.gotmpl)
-	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --file /chart/$< --template /chart/docs/integrations/.doc_templates/$(shell basename -s -values.yaml $<).gotmpl > $@
+	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator:$(DOC_GENERATOR_IMAGE_VERSION) --file /chart/$< --template /chart/docs/integrations/.doc_templates/$(shell basename -s -values.yaml $<).gotmpl > $@
 
 schema-mods/definitions/%-integration.schema.json: integrations/%-values.yaml
 	@mkdir -p $(shell dirname $@)
-	@docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --file /chart/$< > $@
+	@docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator:$(SCHEMA_GENERATOR_IMAGE_VERSION) --file /chart/$< > $@
 
 NUMBER_OF_INTEGRATION_VALUES_FILES := $(words $(INTEGRATION_VALUES_FILES))
 schema-mods/integration-list.json: $(INTEGRATION_VALUES_FILES)
@@ -72,10 +79,10 @@ templates/_integration_types.tpl: $(INTEGRATION_VALUES_FILES)
 	echo '{{- end -}}' >> $@
 
 values.schema.json: values.yaml $(INTEGRATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/integration-list.json
-	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --chart /chart > $@
+	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator:$(SCHEMA_GENERATOR_IMAGE_VERSION) --chart /chart > $@
 
 README.md: values.yaml Chart.yaml $$(wildcard README.md.gotmpl)
-	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --chart /chart > $@
+	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator:$(DOC_GENERATOR_IMAGE_VERSION) --chart /chart > $@
 
 .PHONY: clean
 clean:
@@ -93,7 +100,7 @@ test: build
 ifdef HAS_HELM_UNITTEST
 	$(HELM) unittest .
 else
-	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:3.18.4-1.0.0 .
+	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:$(HELM_UNITTEST_IMAGE_VERSION) .
 endif
 
 .PHONY: update-test-snapshots
@@ -101,5 +108,5 @@ update-test-snapshots:
 ifdef HAS_HELM_UNITTEST
 	$(HELM) unittest . --update-snapshot
 else
-	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:3.18.4-1.0.0 . --update-snapshot
+	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:$(HELM_UNITTEST_IMAGE_VERSION) . --update-snapshot
 endif

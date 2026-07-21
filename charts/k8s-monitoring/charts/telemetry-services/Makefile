@@ -5,6 +5,8 @@ else
 HELM = ../../../../scripts/helm-with-version $(HELM_VERSION)
 endif
 
+HELM_UNITTEST_IMAGE_VERSION = 3.18.4-1.0.0
+
 HAS_HELM_UNITTEST := $(shell $(HELM) plugin list | grep unittest 2> /dev/null)
 
 K8S_MANIFEST_TAIL_VERSION := $(shell yq '.dependencies[] | select(.name == "k8s-manifest-tail") | .version' Chart.yaml)
@@ -123,7 +125,7 @@ test: build
 ifdef HAS_HELM_UNITTEST
 	$(HELM) unittest .
 else
-	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:3.18.4-1.0.0 .
+	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:$(HELM_UNITTEST_IMAGE_VERSION) .
 endif
 
 .PHONY: update-test-snapshots
@@ -131,5 +133,5 @@ update-test-snapshots:
 ifdef HAS_HELM_UNITTEST
 	$(HELM) unittest . --update-snapshot
 else
-	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:3.18.4-1.0.0 . --update-snapshot
+	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:$(HELM_UNITTEST_IMAGE_VERSION) . --update-snapshot
 endif
