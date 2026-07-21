@@ -10,6 +10,9 @@ DOC_GENERATOR_IMAGE_VERSION = 0.2.4
 # renovate: datasource=docker depName=ghcr.io/grafana/helm-chart-toolbox-schema-generator
 SCHEMA_GENERATOR_IMAGE_VERSION = 0.2.4
 
+# Pinned manually and intentionally NOT tracked by Renovate: the tag is
+# <helm-version>-<helm-unittest-version>, so an automated bump would also change
+# the bundled Helm version. Update it deliberately.
 HELM_UNITTEST_IMAGE_VERSION = 3.18.4-1.0.0
 
 HAS_HELM_UNITTEST := $(shell $(HELM) plugin list | grep unittest 2> /dev/null)

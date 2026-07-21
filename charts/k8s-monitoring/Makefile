@@ -10,6 +10,9 @@ DOC_GENERATOR_IMAGE_VERSION = 0.2.4
 # renovate: datasource=docker depName=ghcr.io/grafana/helm-chart-toolbox-schema-generator
 SCHEMA_GENERATOR_IMAGE_VERSION = 0.2.4
 
+# Pinned manually and intentionally NOT tracked by Renovate: the tag is
+# <helm-version>-<helm-unittest-version>, so an automated bump would also change
+# the bundled Helm version. Update it deliberately.
 HELM_UNITTEST_IMAGE_VERSION = 3.18.4-1.0.0
 
 HAS_HELM_UNITTEST := $(shell $(HELM) plugin list | grep unittest 2> /dev/null)
@@ -268,20 +271,25 @@ EXAMPLE_README_FILES := $(EXAMPLE_VALUES_FILES:values.yaml=README.md)
 NON_RENDERED_INTEGRATION_TEST_VALUES_FILES = $(shell find tests/integration -name .no-render | sed 's/.no-render/values.yaml/')
 INTEGRATION_TEST_VALUES_FILES = $(filter-out $(NON_RENDERED_INTEGRATION_TEST_VALUES_FILES),$(shell find tests/integration -name values.yaml))
 INTEGRATION_TEST_OUTPUT_FILES = $(INTEGRATION_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
-INTEGRATION_TEST_ALLOY_FILES = $(call alloy_rendered_files,$(INTEGRATION_TEST_VALUES_FILES),.alloy)
+INTEGRATION_TEST_ALLOY_FILES := $(call alloy_rendered_files,$(INTEGRATION_TEST_VALUES_FILES),.alloy)
 
 NON_RENDERED_PLATFORM_TEST_VALUES_FILES := $(shell find tests/platform -name .no-render | sed 's/.no-render/values.yaml/')
 PLATFORM_TEST_VALUES_FILES := $(filter-out $(NON_RENDERED_PLATFORM_TEST_VALUES_FILES),$(shell find tests/platform -name values.yaml))
 PLATFORM_TEST_OUTPUT_FILES := $(PLATFORM_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
-PLATFORM_TEST_ALLOY_FILES = $(call alloy_rendered_files,$(PLATFORM_TEST_VALUES_FILES),.alloy)
+PLATFORM_TEST_ALLOY_FILES := $(call alloy_rendered_files,$(PLATFORM_TEST_VALUES_FILES),.alloy)
 
-# Everything `helm template` reads while rendering the parent chart. Any template files that are generated MUST be
-# listed explicitly because they wont be found by the $(CHART_TEMPLATE_FILES) wildcard
+# Everything `helm template` reads while rendering the parent chart, so editing any of these re-renders the outputs.
+# Files pulled in with .Files.Get (the collector values, the extracted upstream alloy values, the collector presets, and
+# the OTLP resource-attributes remove-list) and the generated *.tpl files must be listed explicitly: the
+# $(CHART_TEMPLATE_FILES)/$(CHART_YAML_FILES) wildcards only cover templates/ and are evaluated (by find, at parse time)
+# before generated files exist.
 HELM_TEMPLATE_DEPS := Chart.yaml Chart.lock values.yaml values.schema.json \
 	templates/destinations/_destination_types.tpl \
 	templates/dataProcessors/_dataProcessor_types.tpl \
 	$(COLLECTOR_PRESET_FILES) \
+	$(COLLECTOR_VALUES_FILES) \
 	collectors/upstream/alloy-values.yaml \
+	default-remove-lists/resource-attributes.yaml \
 	$(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
 
 %/output.yaml: %/values.yaml $(HELM_TEMPLATE_DEPS) | build-features
@@ -347,7 +355,7 @@ clean: clean-examples
 	rm -f $(DATA_PROCESSOR_SCHEMA_FILES) $(DATA_PROCESSOR_DOCS_FILES)
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
-		make -C $$chart clean; \
+		$(MAKE) -C $$chart clean; \
 	done
 
 .PHONY: clean-examples
@@ -358,7 +366,7 @@ clean-examples:
 build-features:
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
-		make -C $$chart build; \
+		$(MAKE) -C $$chart build; \
 	done
 
 # Verify the signatures of signed Grafana chart dependencies.
@@ -369,7 +377,7 @@ verify-signatures:
 		--version $(ALLOY_OPERATOR_VERSION) \
 		--verify --keyring $(GRAFANA_HELM_CHARTS_KEYRING) \
 		--destination "$$(mktemp -d)"
-	make -C charts/telemetry-services verify-signatures
+	$(MAKE) -C charts/telemetry-services verify-signatures
 
 # Build targets
 .PHONY: build
@@ -391,7 +399,7 @@ test: unittest lint-helm lint-configs example-checks misc-checks test-features
 test-features:
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
-		make -C $$chart test; \
+		$(MAKE) -C $$chart test; \
 	done
 
 lint-configs: $(EXAMPLE_ALLOY_FILES)
@@ -419,5 +427,5 @@ else
 endif
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
-		make -C $$chart update-test-snapshots; \
+		$(MAKE) -C $$chart update-test-snapshots; \
 	done

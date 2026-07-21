@@ -25,12 +25,12 @@ check-helm-version:
 ##@ Build
 .PHONY: clean
 clean: ## Clean all charts
-	make -C charts/k8s-monitoring $@;
+	$(MAKE) -C charts/k8s-monitoring $@;
 
 ##@ Build
 .PHONY: build
 build: check-helm-version ## Build all charts
-	make -C charts/k8s-monitoring $@;
+	$(MAKE) -C charts/k8s-monitoring $@;
 
 ##@ Keys
 .PHONY: update-signing-keys
@@ -45,7 +45,7 @@ keys/prometheus-community-pubkey.gpg:
 ##@ Tests
 .PHONY: test
 test: build lint ## Run tests for all charts
-	make -C charts/k8s-monitoring $@;
+	$(MAKE) -C charts/k8s-monitoring $@;
 
 .PHONY: lint
 lint: lint-alloy lint-shell lint-markdown lint-terraform lint-text lint-yaml lint-alex lint-misspell lint-actionlint lint-zizmor ## Run all linters
@@ -122,7 +122,7 @@ lint-check-dead-links: ## Lint text files and check for dead links
 
 .PHONY: lint-yaml
 # renovate: datasource=docker depName=cytopia/yamllint
-YAMLLINT_VERSION = 1
+YAMLLINT_VERSION = 1-0.10
 lint-yaml: ## Lint yaml files
 	@if command -v yamllint &> /dev/null; then \
 		yamllint --strict --config-file .yamllint.yml .; \
