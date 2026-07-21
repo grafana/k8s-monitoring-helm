@@ -1,0 +1,28 @@
+---
+cluster:
+  name: windows-event-logs-cluster
+
+destinations:
+  loki:
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+
+windowsEventLogs:
+  enabled: true
+  collector: alloy-windows
+  sources:
+    - name: application
+      eventLogName: Application
+      jobLabel: integrations/windows-application-logs
+    - name: system
+      eventLogName: System
+      jobLabel: integrations/windows-system-logs
+
+collectors:
+  alloy-windows:
+    presets: [windows, daemonset]

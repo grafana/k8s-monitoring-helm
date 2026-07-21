@@ -1,0 +1,99 @@
+<!--
+(NOTE: Do not edit README.md directly. It is a generated file!)
+(      To make changes, please modify README.md.gotmpl and run `helm-docs`)
+-->
+
+# Feature: Windows Event Logs
+
+{{ template "chart.deprecationWarning" . }}
+
+The Windows Event Logs feature enables the collection of event logs from Windows Kubernetes Cluster Nodes. It uses the
+[`loki.source.windowsevent`](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.source.windowsevent/)
+Alloy component to read from the Windows Event Log channels. Each entry in the `sources` list becomes its own
+`loki.source.windowsevent` component. No channels are gathered by default, so you must configure at least one source.
+
+This feature requires a collector running on the Windows Nodes. Use the `windows` and `daemonset` collector presets so
+that an Alloy Pod runs as a HostProcess container on every Windows Node.
+
+## Usage
+
+```yaml
+windowsEventLogs:
+  enabled: true
+  collector: alloy-windows
+  sources:
+    - name: application
+      eventLogName: Application
+      jobLabel: integrations/windows-application-logs
+    - name: system
+      eventLogName: System
+      jobLabel: integrations/windows-system-logs
+
+collectors:
+  alloy-windows:
+    presets: [windows, daemonset]
+```
+
+([values](#values))
+
+## Sources
+
+The `sources` list controls which event log channels are gathered. Each entry becomes its own
+`loki.source.windowsevent` component, so you can gather any channel (`Application`, `System`, `Security`, or a custom
+provider channel) without being limited to a hard-coded set. Each entry needs a unique `name` (used for the Alloy
+component label and the bookmark file name) and either an `eventLogName` or an [XPath query](https://learn.microsoft.com/en-us/windows/win32/wes/consuming-events)
+that specifies the channel in XML form.
+
+```yaml
+windowsEventLogs:
+  enabled: true
+  sources:
+    - name: application
+      eventLogName: Application
+      jobLabel: integrations/windows-application-logs
+    - name: system
+      eventLogName: System
+      jobLabel: integrations/windows-system-logs
+      # Only gather Warning (Level=3), Error (Level=2), and Critical (Level=1) events.
+      xpathQuery: "*[System[(Level=1 or Level=2 or Level=3)]]"
+    # An XML-form query specifies the channel itself, so no eventLogName is required.
+    - name: low-memory
+      jobLabel: integrations/windows-low-memory
+      xpathQuery: "System/*[UserData/LowOnMemory]"
+```
+
+## Bookmarks
+
+To avoid re-reading events after a Pod restart, this feature stores a bookmark file for each channel. Because the
+collector runs as a DaemonSet, the bookmarks are persisted to a directory on each Windows Node via a `hostPath` volume
+mount. You can change the path or disable persistence entirely:
+
+```yaml
+windowsEventLogs:
+  enabled: true
+  bookmarks:
+    enabled: true
+    hostPath: 'C:\ProgramData\Grafana\Alloy\WindowsEventLogs'
+```
+
+## Testing
+
+This chart contains unit tests to verify the generated configuration. The hidden value `deployAsConfigMap` will render
+the generated configuration into a ConfigMap object. While this ConfigMap is not used during regular operation, you can
+use it to show the outcome of a given values file.
+
+The unit tests use this ConfigMap to create an object with the configuration that can be asserted against. To run the
+tests, use `helm test`.
+
+Be sure perform actual integration testing in a live environment in the main [k8s-monitoring](../..) chart.
+
+<!-- textlint-disable terminology -->
+{{ template "chart.maintainersSection" . }}
+<!-- textlint-enable terminology -->
+<!-- markdownlint-disable no-bare-urls -->
+<!-- markdownlint-disable list-marker-space -->
+{{ template "chart.sourcesSection" . }}
+<!-- markdownlint-enable list-marker-space -->
+{{ template "chart.requirementsSection" . }}
+{{ template "chart.valuesSection" . }}
+<!-- markdownlint-enable no-bare-urls -->

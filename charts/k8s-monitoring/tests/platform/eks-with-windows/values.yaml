@@ -37,74 +37,62 @@ dataProcessors:
 
 clusterMetrics:
   enabled: true
-  collector: alloy
+  collector: alloy-linux
   dataProcessors: [ec2-tags]
 
 hostMetrics:
   enabled: true
-  collector: alloy
+  collector: alloy-linux
   linuxHosts:
     enabled: true
-  windowsHosts:
-    enabled: true
+    source: alloy
 
 clusterEvents:
   enabled: true
   clustering: true
-  collector: alloy
+  collector: alloy-linux
 
 nodeLogs:
   enabled: true
-  collector: alloy-logs
+  collector: alloy-linux
+
+windowsEventLogs:
+  enabled: true
+  collector: alloy-windows
+  sources:
+    - name: application
+      eventLogName: Application
+      jobLabel: integrations/windows-application-logs
 
 podLogsViaLoki:
   enabled: true
-  collector: alloy-logs
+  collector: alloy-linux
 
 podLogsViaKubernetesApi:
   enabled: true
-  collector: alloy-logs
+  collector: alloy-linux
   nodeSelector:
     kubernetes.io/os: windows
 
 integrations:
-  collector: alloy
+  collector: alloy-linux
   alloy:
     instances:
       - name: alloy
         labelSelectors:
-          app.kubernetes.io/name: [alloy, alloy-singleton, alloy-logs]
+          app.kubernetes.io/name: [alloy-linux, alloy-logs]
 
 collectors:
-  alloy:
-    presets: [clustered, statefulset]
+  alloy-linux:
+    presets: [clustered, linux-host-monitor, filesystem-log-reader, daemonset]
     alloy:
       stabilityLevel: experimental  # Required for prometheus.enrich (ec2Enrichment processor)
 
-  alloy-logs:
-    presets: [clustered, filesystem-log-reader, daemonset]
-
   alloy-windows:
     presets: [windows, daemonset]
-    includeDestinations: [grafana-cloud-logs]
-    extraConfig: |
-      loki.source.windowsevent "system" {
-        eventlog_name          = "System"
-        use_incoming_timestamp = true
-        labels                 = { job = "windows-eventlogs", channel = "System" }
-        forward_to             = [loki.write.grafana_cloud_logs.receiver]
-      }
-
-      loki.source.windowsevent "application" {
-        eventlog_name = "Application"
-        labels        = { job = "windows-eventlogs", channel = "Application" }
-        forward_to    = [loki.write.grafana_cloud_logs.receiver]
-      }
+    alloy:
+      stabilityLevel: experimental  # Required for prometheus.enrich (ec2Enrichment processor)
 
 telemetryServices:
   kube-state-metrics:
-    deploy: true
-  node-exporter:
-    deploy: true
-  windows-exporter:
     deploy: true

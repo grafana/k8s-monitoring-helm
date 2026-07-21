@@ -1,0 +1,20 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Windows Event Logs - Default values
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should render the Application and System channels
+    set:
+      testing: {enabled: true}
+      sources:
+        - name: application
+          eventLogName: Application
+          jobLabel: integrations/windows-application-logs
+        - name: system
+          eventLogName: System
+          jobLabel: integrations/windows-system-logs
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

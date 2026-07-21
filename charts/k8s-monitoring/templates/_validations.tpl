@@ -13,6 +13,7 @@
   {{- $updatedValues := $.Values }}
   {{- range $featureKey := ((include "features.list.enabled" .) | fromYamlArray) }}
     {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) }}
+    {{- include "collectors.validate.exists" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey )}}
     {{- if $collectorName }}
       {{- $valuesWithFeatureModification := (include (printf "features.%s.collector.values" $featureKey) $ | fromYaml) }}
       {{- $updatedValues = merge $.Values $valuesWithFeatureModification }}

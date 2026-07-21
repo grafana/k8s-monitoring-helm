@@ -1,0 +1,60 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Feature - Windows Event Logs - Collector validation
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should fail if not a daemonset
+    set:
+      sources:
+        - name: application
+          eventLogName: Application
+      testing:
+        enabled: true
+        Collector:
+          presets: [windows]
+          controller:
+            type: deployment
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Windows Event Logs feature requires Alloy to be a DaemonSet, so that an Alloy Pod runs on every Windows Node.
+            Please set:
+            collectors:
+              alloy-test:
+                controller:
+                  type: daemonset
+
+  - it: should fail if the windows preset is not used
+    set:
+      sources:
+        - name: application
+          eventLogName: Application
+      testing:
+        enabled: true
+        Collector:
+          presets: [daemonset]
+          controller:
+            type: daemonset
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Windows Event Logs feature requires Alloy to use the `windows` preset, so it runs as a HostProcess container on Windows Nodes.
+            Please set:
+            collectors:
+              alloy-test:
+                presets: [windows, daemonset]
+
+  - it: should pass with a windows daemonset collector
+    set:
+      sources:
+        - name: application
+          eventLogName: Application
+      testing:
+        enabled: true
+        Collector:
+          presets: [windows, daemonset]
+          controller:
+            type: daemonset
+    asserts:
+      - isKind:
+          of: ConfigMap

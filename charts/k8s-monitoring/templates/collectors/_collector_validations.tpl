@@ -168,3 +168,15 @@
     {{- end }}
   {{- end }}
 {{- end }}
+
+{{/* Inputs: . (root object), collectorName (string), featureKey (string) */}}
+{{- define "collectors.validate.exists" }}
+  {{- $collectors := keys .Values.collectors | sortAlpha }}
+  {{- if not (has .collectorName $collectors) }}
+    {{- $msg := list "" (printf "The feature %s is referencing a collector named \"%s\" but it does not exist." .featureKey .collectorName) }}
+    {{- $msg = append $msg "Please assign the feature to one of these clusters:" }}
+    {{- $msg = append $msg (printf "%s:" .featureKey) }}
+    {{- $msg = append $msg (printf "  collector: [%s]" (include "english_list_or" $collectors)) }}
+    {{- fail (join "\n" $msg) }}
+  {{- end }}
+{{- end }}
