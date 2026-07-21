@@ -256,7 +256,8 @@ AGENTS.md: AGENTS.md.gotmpl $(FEATURE_CHARTS) $(DESTINATION_VALUES_FILES) $(INTE
 # Example targets
 EXAMPLE_RELEASE_NAME=k8smon
 
-alloy_files = $(if $(1),$(shell yq e '(filename | sub("[^/]*$$"; "")) as $$dir | .collectors | keys | .[] | $$dir + . + "$(2)"' $(1)))
+alloy_files = $(if $(1),$(shell yq e '(filename | sub("[^/]*$$"; "")) as $$dir | .collectors // {} | keys | .[] | $$dir + . + "$(2)"' $(1)))
+alloy_rendered_files = $(if $(1),$(shell yq e '(filename | sub("[^/]*$$"; ".rendered/")) as $$dir | .collectors // {} | keys | .[] | $$dir + . + "$(2)"' $(1)))
 
 NON_RENDERED_EXAMPLE_VALUES_FILES = $(shell find docs/examples -name .no-render | sed 's/.no-render/values.yaml/')
 EXAMPLE_VALUES_FILES := $(filter-out $(NON_RENDERED_EXAMPLE_VALUES_FILES),$(shell find docs/examples -name values.yaml))
@@ -267,12 +268,12 @@ EXAMPLE_README_FILES := $(EXAMPLE_VALUES_FILES:values.yaml=README.md)
 NON_RENDERED_INTEGRATION_TEST_VALUES_FILES = $(shell find tests/integration -name .no-render | sed 's/.no-render/values.yaml/')
 INTEGRATION_TEST_VALUES_FILES = $(filter-out $(NON_RENDERED_INTEGRATION_TEST_VALUES_FILES),$(shell find tests/integration -name values.yaml))
 INTEGRATION_TEST_OUTPUT_FILES = $(INTEGRATION_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
-INTEGRATION_TEST_ALLOY_FILES = $(call alloy_files,$(INTEGRATION_TEST_OUTPUT_FILES),.yaml)
+INTEGRATION_TEST_ALLOY_FILES = $(call alloy_rendered_files,$(INTEGRATION_TEST_VALUES_FILES),.alloy)
 
 NON_RENDERED_PLATFORM_TEST_VALUES_FILES := $(shell find tests/platform -name .no-render | sed 's/.no-render/values.yaml/')
 PLATFORM_TEST_VALUES_FILES := $(filter-out $(NON_RENDERED_PLATFORM_TEST_VALUES_FILES),$(shell find tests/platform -name values.yaml))
 PLATFORM_TEST_OUTPUT_FILES := $(PLATFORM_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
-PLATFORM_TEST_ALLOY_FILES = $(call alloy_files,$(PLATFORM_TEST_OUTPUT_FILES),.yaml)
+PLATFORM_TEST_ALLOY_FILES = $(call alloy_rendered_files,$(PLATFORM_TEST_VALUES_FILES),.alloy)
 
 # Everything `helm template` reads while rendering the parent chart. Any template files that are generated MUST be
 # listed explicitly because they wont be found by the $(CHART_TEMPLATE_FILES) wildcard
@@ -351,7 +352,7 @@ clean: clean-examples
 
 .PHONY: clean-examples
 clean-examples:
-	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(PLATFORM_TEST_OUTPUT_FILES)
+	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(INTEGRATION_TEST_ALLOY_FILES) $(PLATFORM_TEST_OUTPUT_FILES) $(PLATFORM_TEST_ALLOY_FILES)
 
 .PHONY: build-features
 build-features:
