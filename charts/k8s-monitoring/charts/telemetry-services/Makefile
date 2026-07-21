@@ -20,6 +20,9 @@ PROMETHEUS_COMMUNITY_KEYRING := ../../../../keys/prometheus-community-pubkey.gpg
 # so it is verified against the signing workflow's certificate identity instead of
 # a keyring. This chart depends on the signed OCI artifact directly (see Chart.yaml).
 COSIGN ?= cosign
+HAS_COSIGN := $(shell command -v $(COSIGN) 2> /dev/null)
+# renovate: datasource=docker depName=ghcr.io/sigstore/cosign/cosign
+COSIGN_IMAGE_VERSION = v3.1.2
 OPENCOST_VERSION := $(shell yq '.dependencies[] | select(.name == "opencost") | .version' Chart.yaml)
 OPENCOST_OCI_CHART := ghcr.io/opencost/charts/opencost
 OPENCOST_COSIGN_IDENTITY := https://github.com/opencost/opencost-helm-chart/.github/workflows/publish.yml@refs/heads/main
@@ -97,11 +100,23 @@ $(VERIFY_CACHE)/prometheus-windows-exporter-$(WINDOWS_EXPORTER_VERSION): $(PROME
 		--destination "$$tmp"
 	@touch $@
 
+# Use a locally installed cosign when present, otherwise fall back to the cosign
+# image (same pattern as helm-unittest/shellspec) so verification is always
+# enforced - including in jobs that reach this via build-features but don't
+# install cosign. The stamp is touched only after a successful verify.
 $(VERIFY_CACHE)/opencost-$(OPENCOST_VERSION): | $(VERIFY_CACHE)
+ifdef HAS_COSIGN
 	$(COSIGN) verify $(OPENCOST_OCI_CHART):$(OPENCOST_VERSION) \
 		--certificate-identity $(OPENCOST_COSIGN_IDENTITY) \
 		--certificate-oidc-issuer $(OPENCOST_COSIGN_ISSUER) \
 		> /dev/null
+else
+	docker run --rm ghcr.io/sigstore/cosign/cosign:$(COSIGN_IMAGE_VERSION) \
+		verify $(OPENCOST_OCI_CHART):$(OPENCOST_VERSION) \
+		--certificate-identity $(OPENCOST_COSIGN_IDENTITY) \
+		--certificate-oidc-issuer $(OPENCOST_COSIGN_ISSUER) \
+		> /dev/null
+endif
 	@touch $@
 
 VERIFY_SIGNATURE_STAMPS := \
