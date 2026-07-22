@@ -67,8 +67,11 @@ prometheus.relabel "probes" {
 {{- if .Values.probes.extraMetricProcessingRules }}
 {{ .Values.probes.extraMetricProcessingRules | indent 2 }}
 {{- end }}
-{{- end }}
   forward_to = argument.metrics_destinations.value
 } // prometheus.relabel "probes"
+{{- else }}
+  forward_to = argument.metrics_destinations.value
+} // prometheus.operator.probes "probes"
+{{- end }}
 {{- end }}
 {{- end }}

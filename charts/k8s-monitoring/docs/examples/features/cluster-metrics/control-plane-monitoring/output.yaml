@@ -286,7 +286,7 @@ data:
         }
     
         forward_to = argument.logs_destinations.value
-      } // loki.secretfilter "pod_logs"
+      } // loki.process "pod_logs"
     } // declare "pod_logs_via_loki"
     pod_logs_via_loki "feature" {
       logs_destinations = [
@@ -608,7 +608,7 @@ data:
           enabled = true
         }
         forward_to = argument.metrics_destinations.value
-      } // prometheus.relabel "apiserver"
+      } // prometheus.scrape "apiserver"
     
       discovery.kubernetes "kube_controller_manager" {
         role = "pod"
@@ -648,7 +648,7 @@ data:
           enabled = true
         }
         forward_to = argument.metrics_destinations.value
-      } // prometheus.relabel "kube_controller_manager"
+      } // prometheus.scrape "kube_controller_manager"
     
       // KubeDNS
       discovery.kubernetes "kube_dns" {
@@ -760,7 +760,7 @@ data:
           enabled = true
         }
         forward_to = argument.metrics_destinations.value
-      } // prometheus.relabel "kube_dns"
+      } // prometheus.scrape "kube_dns"
     
       discovery.kubernetes "kube_proxy" {
         role = "pod"
@@ -796,7 +796,7 @@ data:
           enabled = true
         }
         forward_to = argument.metrics_destinations.value
-      } // prometheus.relabel "kube_proxy"
+      } // prometheus.scrape "kube_proxy"
     
       discovery.kubernetes "kube_scheduler" {
         role = "pod"
@@ -836,7 +836,7 @@ data:
           enabled = true
         }
         forward_to = argument.metrics_destinations.value
-      } // prometheus.relabel "kube_scheduler"
+      } // prometheus.scrape "kube_scheduler"
       discovery.kubernetes "kube_state_metrics" {
         role = "endpoints"
     

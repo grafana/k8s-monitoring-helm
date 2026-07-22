@@ -66,8 +66,11 @@ prometheus.relabel "kube_controller_manager" {
 {{- if .Values.kubeControllerManager.extraMetricProcessingRules }}
 {{ .Values.kubeControllerManager.extraMetricProcessingRules | indent 2 }}
 {{- end }}
-{{- end }}
   forward_to = argument.metrics_destinations.value
 } // prometheus.relabel "kube_controller_manager"
+{{- else }}
+  forward_to = argument.metrics_destinations.value
+} // prometheus.scrape "kube_controller_manager"
+{{- end }}
 {{- end }}
 {{- end }}

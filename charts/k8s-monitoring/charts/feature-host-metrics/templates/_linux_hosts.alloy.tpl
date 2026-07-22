@@ -83,8 +83,11 @@ prometheus.relabel "node_exporter" {
 {{- if .Values.linuxHosts.extraMetricProcessingRules }}
   {{- .Values.linuxHosts.extraMetricProcessingRules | nindent 2}}
 {{- end }}
-{{- end }}
   forward_to = argument.metrics_destinations.value
 } // prometheus.relabel "node_exporter"
+{{- else }}
+  forward_to = argument.metrics_destinations.value
+} // prometheus.scrape "node_exporter"
+{{- end }}
 {{- end }}
 {{- end }}

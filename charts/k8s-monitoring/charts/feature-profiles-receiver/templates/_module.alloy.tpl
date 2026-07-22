@@ -15,8 +15,11 @@ declare "profiles_receiver" {
 
   pyroscope.relabel "default" {
 {{ .Values.profileProcessingRules | indent 4 }}
-{{- end }}
     forward_to = argument.profiles_destinations.value
   } // pyroscope.relabel "default"
+{{- else }}
+    forward_to = argument.profiles_destinations.value
+  } // pyroscope.receive_http "default"
+{{- end }}
 } // declare "profiles_receiver"
 {{- end }}

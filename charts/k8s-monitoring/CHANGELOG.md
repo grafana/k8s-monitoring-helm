@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Fix the comment on the closing brace of generated Alloy config components so it always names the component that opened the block. (@petewall)
 *   Add an `overrideUnknownServiceNames` option to the Application Observability feature. When enabled, the `service.name` resource attribute will be overridden if its value is `unknown_service*`. (@petewall)
 *   Update Windows Exporter to 0.12.8 (@petewall)
 

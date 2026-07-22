@@ -138,8 +138,11 @@ declare "annotation_autodiscovery" {
 {{- if .Values.extraMetricProcessingRules }}
 {{ .Values.extraMetricProcessingRules | indent 4 }}
 {{- end }}
-{{- end }}
     forward_to = argument.metrics_destinations.value
   } // prometheus.relabel "annotation_autodiscovery"
+{{- else }}
+    forward_to = argument.metrics_destinations.value
+  } // prometheus.scrape "annotation_autodiscovery_https"
+{{- end }}
 } // declare "annotation_autodiscovery"
 {{- end -}}

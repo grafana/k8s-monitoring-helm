@@ -134,9 +134,12 @@ loki.process "secret_filter_inclusion" {
     action = "drop"
   }
 
-{{- end }}
   forward_to = [loki.secretfilter.pod_logs_objects.receiver]
 } // loki.process "secret_filter_inclusion"
+{{- else }}
+  forward_to = [loki.secretfilter.pod_logs_objects.receiver]
+} // loki.process "pod_logs_objects"
+{{- end }}
 
 loki.secretfilter "pod_logs_objects" {
 {{- if .Values.secretFilter.gitleaksConfigPathFrom }}
@@ -156,8 +159,11 @@ loki.secretfilter "pod_logs_objects" {
 {{- else }}
   redact_percent = {{ .Values.secretFilter.redactPercent | int }}
 {{- end }}
-{{- end }}
   forward_to = argument.logs_destinations.value
 } // loki.secretfilter "pod_logs_objects"
+{{- else }}
+  forward_to = argument.logs_destinations.value
+} // loki.process "pod_logs_objects"
+{{- end }}
 
 {{- end }}

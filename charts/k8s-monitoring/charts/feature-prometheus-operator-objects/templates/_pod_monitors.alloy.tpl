@@ -67,8 +67,11 @@ prometheus.relabel "podmonitors" {
 {{- if .Values.podMonitors.extraMetricProcessingRules }}
 {{ .Values.podMonitors.extraMetricProcessingRules | indent 2 }}
 {{- end }}
-{{- end }}
   forward_to = argument.metrics_destinations.value
 } // prometheus.relabel "podmonitors"
+{{- else }}
+  forward_to = argument.metrics_destinations.value
+} // prometheus.operator.podmonitors "pod_monitors"
+{{- end }}
 {{- end }}
 {{- end }}

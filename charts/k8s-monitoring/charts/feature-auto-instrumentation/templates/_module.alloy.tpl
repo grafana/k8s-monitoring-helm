@@ -88,8 +88,11 @@ declare "auto_instrumentation" {
 {{- if .Values.beyla.extraMetricProcessingRules }}
 {{ .Values.beyla.extraMetricProcessingRules | indent 4 }}
 {{- end }}
-{{- end }}
     forward_to = argument.metrics_destinations.value
   } // prometheus.relabel "beyla"
+{{- else }}
+    forward_to = argument.metrics_destinations.value
+  } // prometheus.scrape "beyla_internal"
+{{- end }}
 } // declare "auto_instrumentation"
 {{- end -}}
