@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+*   Update Node Exporter to 4.56.1 (@petewall)
+
 ## 4.3.0
 
 *   Add a `presets` attribute to the remote configuration (`remotecfg`) collector attributes, containing the comma-separated list of the collector's presets. (@petewall)
