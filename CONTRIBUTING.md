@@ -266,7 +266,7 @@ The process for creating a new release is:
 
 ### Updating the chart version
 
-Use the [set-version.sh](./charts/k8s-monitoring-v1/scripts/set-version.sh) script to update the version and regenerate
+Use the [set-version.sh](./charts/k8s-monitoring/scripts/set-version.sh) script to update the version and regenerate
 the files that contain version numbers. For example:
 
 ```bash
@@ -283,7 +283,7 @@ that GitHub repository, you can set the App version in the second argument to th
 
 ### Starting the release workflow
 
-The [helm-release-v1.yml](.github/workflows/release-v1.yml) GitHub workflow handles the details of packaging the
-v1 Chart, creating the release on this repository, creating a release on
+The [release.yml](.github/workflows/release.yml) GitHub workflow handles the details of packaging the
+Chart, creating the release on this repository, creating a release on
 the [grafana/helm-charts](https://github.com/grafana/helm-charts) repository, and finally updating the Helm chart
 repository.
