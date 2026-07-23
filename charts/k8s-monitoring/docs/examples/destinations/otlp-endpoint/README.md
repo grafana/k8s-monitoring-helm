@@ -67,6 +67,9 @@ podLogsViaLoki:
 collectors:
   alloy-metrics:
     presets: [clustered, statefulset]
+    # otelcol.storage.file is a public-preview component, so the collector must run at that stability level.
+    alloy:
+      stabilityLevel: public-preview
     extraConfig: |
       otelcol.storage.file "otlp_gateway_queue_storage" {
         create_directory = true
@@ -75,6 +78,9 @@ collectors:
 
   alloy-logs:
     presets: [filesystem-log-reader, daemonset]
+    # otelcol.storage.file is a public-preview component, so the collector must run at that stability level.
+    alloy:
+      stabilityLevel: public-preview
     extraConfig: |
       otelcol.storage.file "otlp_gateway_queue_storage" {
         create_directory = true

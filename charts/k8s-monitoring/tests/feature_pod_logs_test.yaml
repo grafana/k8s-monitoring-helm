@@ -63,7 +63,7 @@ tests:
           path: data["config.alloy"]
 
   - it: requires experimental stability level if secret filtering is enabled
-    template: validations.yaml
+    template: alloy-config.yaml
     set:
       cluster:
         name: ci-test-cluster
@@ -81,8 +81,11 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Pod Logs feature requires Alloy to use the experimental stability level when using the secretFilter.
-            Please set:
+            The Alloy collector "alloy-logs" is using a component which is not available in its current stability level (generally-available):
+              - loki.secretfilter (experimental)
+
+            Please set the stability level to "experimental" to use this configuration, or adjust the configuration to remove these components.
+
             collectors:
               alloy-logs:
                 alloy:

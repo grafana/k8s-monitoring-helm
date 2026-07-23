@@ -1,0 +1,161 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Validations - Collector stability level
+templates:
+  - alloy-config.yaml
+tests:
+  - it: fails when an experimental component is used at the generally-available stability level
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        metric-store:
+          type: prometheus
+          url: http://prom.svc:9090/api/v1/write
+          metricEnrichment: {podLabels: [color]}
+      clusterMetrics: {enabled: true, collector: alloy-metrics}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+          includeDestinations: [metric-store]
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+        node-exporter: {deploy: true}
+        windows-exporter: {deploy: true}
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Alloy collector "alloy-metrics" is using a component which is not available in its current stability level (generally-available):
+              - prometheus.enrich (experimental)
+            
+            Please set the stability level to "experimental" to use this configuration, or adjust the configuration to remove these components.
+            
+            collectors:
+              alloy-metrics:
+                alloy:
+                  stabilityLevel: experimental
+
+  - it: fails when an experimental component is used at the public-preview stability level
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        metric-store:
+          type: prometheus
+          url: http://prom.svc:9090/api/v1/write
+          metricEnrichment: {podLabels: [color]}
+      clusterMetrics: {enabled: true, collector: alloy-metrics}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+          includeDestinations: [metric-store]
+          alloy:
+            stabilityLevel: public-preview
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+        node-exporter: {deploy: true}
+        windows-exporter: {deploy: true}
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Alloy collector "alloy-metrics" is using a component which is not available in its current stability level (public-preview):
+              - prometheus.enrich (experimental)
+            
+            Please set the stability level to "experimental" to use this configuration, or adjust the configuration to remove these components.
+            
+            collectors:
+              alloy-metrics:
+                alloy:
+                  stabilityLevel: experimental
+
+  - it: passes when the experimental stability level is set for an experimental component
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        metric-store:
+          type: prometheus
+          url: http://prom.svc:9090/api/v1/write
+          metricEnrichment: {podLabels: [color]}
+      clusterMetrics: {enabled: true, collector: alloy-metrics}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+          includeDestinations: [metric-store]
+          alloy: {stabilityLevel: experimental}
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+        node-exporter: {deploy: true}
+        windows-exporter: {deploy: true}
+    asserts:
+      - containsDocument: {kind: ConfigMap, apiVersion: v1}
+
+  - it: fails and suggests public-preview when only a public-preview component is used at the generally-available level
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        log-storage:
+          type: otlp
+          protocol: http
+          url: http://loki.loki.svc:3100/otlp
+      podLogsViaOpenTelemetry: {enabled: true, collector: alloy-logs}
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Alloy collector "alloy-logs" is using a component which is not available in its current stability level (generally-available):
+              - otelcol.receiver.filelog (public-preview)
+
+            Please set the stability level to "public-preview" or "experimental" to use this configuration, or adjust the configuration to remove these components.
+
+            collectors:
+              alloy-logs:
+                alloy:
+                  stabilityLevel: public-preview
+
+  - it: passes when the public-preview stability level is set for a public-preview component
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        log-storage:
+          type: otlp
+          protocol: http
+          url: http://loki.loki.svc:3100/otlp
+      podLogsViaOpenTelemetry: {enabled: true, collector: alloy-logs}
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+          alloy: {stabilityLevel: public-preview}
+    asserts:
+      - containsDocument: {kind: ConfigMap, apiVersion: v1}
+
+  - it: lists both offending components and requires experimental when experimental and public-preview components are mixed
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        metric-store:
+          type: prometheus
+          url: http://prom.svc:9090/api/v1/write
+          metricEnrichment: {podLabels: [color]}
+      clusterMetrics: {enabled: true, collector: alloy-metrics}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+          includeDestinations: [metric-store]
+          extraConfig: |-
+            otelcol.receiver.filelog "example" {}
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+        node-exporter: {deploy: true}
+        windows-exporter: {deploy: true}
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Alloy collector "alloy-metrics" is using these components which are not available in its current stability level (generally-available):
+              - prometheus.enrich (experimental)
+              - otelcol.receiver.filelog (public-preview)
+
+            Please set the stability level to "experimental" to use this configuration, or adjust the configuration to remove these components.
+
+            collectors:
+              alloy-metrics:
+                alloy:
+                  stabilityLevel: experimental

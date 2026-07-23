@@ -67,6 +67,61 @@
 {{- end }}
 {{- end }}
 
+{{/* Fails if the collector's stability level is too restrictive for the components in its rendered config.
+     The experimental and public-preview component lists are the same files used by scripts/lint-alloy.sh,
+     so the linter and the chart validation stay in sync.
+     Inputs: collectorName (string), config (assembled Alloy config), collectorValues (merged collector values), Files */}}
+{{- define "collectors.validate.stabilityLevel" }}
+  {{- $configuredLevel := dig "alloy" "stabilityLevel" "generally-available" .collectorValues }}
+  {{- if ne $configuredLevel "experimental" }}
+    {{- $offenders := list }}
+    {{- $needsExperimental := false }}
+    {{- $experimentalComponents := .Files.Get "collectors/alloy-experimental.yaml" | fromYamlArray }}
+    {{- range $component := $experimentalComponents }}
+      {{- $pattern := printf "(?m)^[[:space:]]*%s[[:space:]]" ($component | replace "." "\\.") }}
+      {{- if regexMatch $pattern $.config }}
+        {{- $offenders = append $offenders (printf "  - %s (experimental)" $component) }}
+        {{- $needsExperimental = true }}
+      {{- end }}
+    {{- end }}
+
+    {{- if ne $configuredLevel "public-preview" }}
+      {{- $publicPreviewComponents := .Files.Get "collectors/alloy-public-preview.yaml" | fromYamlArray }}
+
+      {{- range $component := $publicPreviewComponents }}
+        {{- $pattern := printf "(?m)^[[:space:]]*%s[[:space:]]" ($component | replace "." "\\.") }}
+        {{- if regexMatch $pattern $.config }}
+          {{- $offenders = append $offenders (printf "  - %s (public-preview)" $component) }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+
+    {{- if $offenders }}
+      {{- $requiredLevel := "public-preview" }}
+      {{- $requiredPhrase := "\"public-preview\" or \"experimental\"" }}
+      {{- if $needsExperimental }}
+        {{- $requiredLevel = "experimental" }}
+        {{- $requiredPhrase = "\"experimental\"" }}
+      {{- end }}
+      {{- $msg := list "" }}
+      {{- if eq (len $offenders) 1 }}
+        {{- $msg = append $msg (printf "The Alloy collector %q is using a component which is not available in its current stability level (%s):" .collectorName $configuredLevel) }}
+      {{- else }}
+        {{- $msg = append $msg (printf "The Alloy collector %q is using these components which are not available in its current stability level (%s):" .collectorName $configuredLevel) }}
+      {{- end }}
+      {{- $msg = concat $msg $offenders }}
+      {{- $msg = append $msg "" }}
+      {{- $msg = append $msg (printf "Please set the stability level to %s to use this configuration, or adjust the configuration to remove these components." $requiredPhrase) }}
+      {{- $msg = append $msg "" }}
+      {{- $msg = append $msg "collectors:" }}
+      {{- $msg = append $msg (printf "  %s:" .collectorName) }}
+      {{- $msg = append $msg "    alloy:" }}
+      {{- $msg = append $msg (printf "      stabilityLevel: %s" $requiredLevel) }}
+      {{- fail (join "\n" $msg) }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
 {{- define "collectors.validate.atLeastOneEnabled" }}
   {{- $enabledCollectors := include "collectors.list.enabled" . | fromYamlArray }}
   {{- if eq (len $enabledCollectors) 0 }}

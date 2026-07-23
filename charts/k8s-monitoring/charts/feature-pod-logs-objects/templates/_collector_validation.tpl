@@ -41,17 +41,4 @@
     {{- fail (join "\n" $msg) }}
   {{- end -}}
 {{- end -}}
-
-{{- if .Values.secretFilter.enabled }}
-  {{- $stabilityLevel := (dig "alloy" "stabilityLevel" "generally-available" .Collector)}}
-  {{- if ne $stabilityLevel "experimental" }}
-    {{- $msg := list "" "PodLogs Objects feature requires Alloy to use the experimental stability level when using the secretFilter." }}
-    {{- $msg = append $msg "Please set:"}}
-    {{- $msg = append $msg "collectors:" }}
-    {{- $msg = append $msg (printf "  %s:" .CollectorName) }}
-    {{- $msg = append $msg "    alloy:"}}
-    {{- $msg = append $msg "      stabilityLevel: experimental"}}
-    {{- fail (join "\n" $msg) }}
-  {{- end -}}
-{{- end -}}
 {{- end -}}
