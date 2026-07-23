@@ -19,9 +19,9 @@ one, it fails with guidance. See the `alloy-operator.conflictCheck` value to und
 
 ### Symptoms
 
-**Two cluster-scoped operators.** Because both operators watch every namespace, they fight over every `Alloy`
+**Two cluster-scoped operators.** Because both operators watch every namespace, they both try to reconcile every `Alloy`
 instance. The Alloy Pods are continually redeployed and restarted, and both operator Pods log a constant churn of
-failed install/upgrade/rollback attempts, such as:
+failing install/upgrade/rollback attempts, such as:
 
 ```text
 "msg":"Release failed" ... "error":"upgrade failed; rollback required"
