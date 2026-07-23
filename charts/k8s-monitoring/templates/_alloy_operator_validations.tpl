@@ -11,7 +11,7 @@ restricted to those namespaces (namespace-scoped); absent means it watches the w
 Conflict rules (only when we deploy our own operator):
   - Another cluster-scoped operator always conflicts (it watches every namespace, including ours).
   - Another namespace-scoped operator conflicts only when ours is cluster-scoped (ours then watches theirs).
-Two namespace-scoped operators never conflict here.
+This validation does not attempt to detect conflicts between two namespace-scoped operators that watch overlapping namespaces.
 */}}
 {{- define "alloyOperator.validate" }}
 {{- $op := index .Values "alloy-operator" }}
