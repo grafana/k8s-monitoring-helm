@@ -18,7 +18,7 @@ This validation does not attempt to detect conflicts between two namespace-scope
 {{- if and $op.deploy $op.conflictCheck }}
   {{- $ourClusterScoped := and (not (dig "ownNamespaceOnly" false $op)) (empty (dig "namespaces" (list) $op)) }}
   {{- $conflict := dict }}
-  {{- range $deploy := (lookup "apps/v1" "Deployment" "" "").items }}
+  {{- range $deploy := (dig "items" list (lookup "apps/v1" "Deployment" "" "" | default dict)) }}
     {{- if not $conflict.found }}
       {{- $labels := $deploy.metadata.labels | default dict }}
       {{- /* Skip the Alloy Operator managed by this release (relevant on upgrades) */}}
