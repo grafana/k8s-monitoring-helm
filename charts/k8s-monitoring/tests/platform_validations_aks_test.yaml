@@ -22,6 +22,12 @@ tests:
             version: "v1"
             resource: "nodes"
           namespaced: false
+        "apps/v1/Deployment":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "deployments"
+          namespaced: true
       objects:
         - kind: Node
           apiVersion: v1
@@ -29,6 +35,17 @@ tests:
             name: node1
             labels:
               kubernetes.azure.com/cluster: aks-cluster
+        - kind: Deployment
+          apiVersion: apps/v1
+          metadata:
+            name: some-app
+            namespace: default
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: app
+                    image: registry.k8s.io/pause:3.9
     asserts:
       - failedTemplate:
           errorMessage: |-
@@ -61,6 +78,12 @@ tests:
             version: "v1"
             resource: "nodes"
           namespaced: false
+        "apps/v1/Deployment":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "deployments"
+          namespaced: true
       objects:
         - kind: Node
           apiVersion: v1
@@ -68,6 +91,17 @@ tests:
             name: node1
             labels:
               kubernetes.azure.com/cluster: aks-cluster
+        - kind: Deployment
+          apiVersion: apps/v1
+          metadata:
+            name: some-app
+            namespace: default
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: app
+                    image: registry.k8s.io/pause:3.9
     asserts:
       - failedTemplate:
           errorMessage: |-
@@ -105,6 +139,12 @@ tests:
             version: "v1"
             resource: "nodes"
           namespaced: false
+        "apps/v1/Deployment":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "deployments"
+          namespaced: true
       objects:
         - kind: Node
           apiVersion: v1
@@ -112,6 +152,17 @@ tests:
             name: node1
             labels:
               kubernetes.azure.com/cluster: aks-cluster
+        - kind: Deployment
+          apiVersion: apps/v1
+          metadata:
+            name: some-app
+            namespace: default
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: app
+                    image: registry.k8s.io/pause:3.9
     asserts:
       - notFailedTemplate: {}
 
@@ -148,6 +199,12 @@ tests:
             version: "v1"
             resource: "nodes"
           namespaced: false
+        "apps/v1/Deployment":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "deployments"
+          namespaced: true
       objects:
         - kind: Node
           apiVersion: v1
@@ -155,5 +212,16 @@ tests:
             name: node1
             labels:
               kubernetes.azure.com/cluster: aks-cluster
+        - kind: Deployment
+          apiVersion: apps/v1
+          metadata:
+            name: some-app
+            namespace: default
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: app
+                    image: registry.k8s.io/pause:3.9
     asserts:
       - notFailedTemplate: {}

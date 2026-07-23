@@ -31,6 +31,7 @@
     {{- include "collectors.validate.remoteConfig" (deepCopy $ | merge (dict "collectorName" $collectorName)) }}
   {{- end }}
   {{- include "telemetryServices.validate" . }}
+  {{- include "alloyOperator.validate" . }}
 {{- end }}
 
 {{/* Checks if a V1 values file was used */}}

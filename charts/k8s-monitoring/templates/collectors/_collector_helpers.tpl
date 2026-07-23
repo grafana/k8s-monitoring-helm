@@ -202,7 +202,15 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
     {{- $clusterNameValues = dict "alloy" (dict "clustering" (dict "name" .collectorName))}}
   {{- end }}
 {{- end }}
-{{ mergeOverwrite $defaultValues $presetValues (deepCopy $globalValues) (deepCopy $userCommonValues) $clusterNameValues (deepCopy $userValues) | toYaml }}
+{{- /* When this chart does not deploy the Alloy Operator, an external (possibly older) operator reconciles these
+       instances and would otherwise choose the Alloy image itself. Pin the Alloy image tag to the version this
+       chart expects. This is a low-precedence default (applied before presets and user values), so a preset such
+       as `windows` or a user-set image tag still wins. */}}
+{{- $operatorImageValues := dict }}
+{{- if not (index $.Values "alloy-operator").deploy }}
+  {{- $operatorImageValues = dict "image" (dict "tag" (include "collector.alloy.pinnedImageTag" .)) }}
+{{- end }}
+{{ mergeOverwrite $defaultValues $operatorImageValues $presetValues (deepCopy $globalValues) (deepCopy $userCommonValues) $clusterNameValues (deepCopy $userValues) | toYaml }}
 {{- end }}
 
 {{- /* Gets the Alloy values including default upstream values. Input: $, .collectorName (string, collector name), .collectorValues (object) */ -}}

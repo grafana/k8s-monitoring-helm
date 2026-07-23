@@ -435,6 +435,7 @@ details:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| alloy-operator.conflictCheck | bool | `true` | Check for another Alloy Operator already running in the cluster that would compete to manage the same Alloy instances. |
 | alloy-operator.deploy | bool | `true` | Deploy the Alloy Operator. |
 | alloy-operator.waitForAlloyRemoval.enabled | bool | `true` | Run Helm hooks that ensure all Alloy instances are cleaned up before the Alloy Operator is removed. This enables two hooks that share the settings in this section: a post-install/post-upgrade hook that adds a finalizer to the Alloy Operator deployment, and a pre-delete hook that removes Alloy instances and the finalizer during uninstall. |
 | alloy-operator.waitForAlloyRemoval.image | object | `{"digest":"","pullPolicy":"IfNotPresent","pullSecrets":[],"registry":"ghcr.io","repository":"grafana/helm-chart-toolbox-kubectl","tag":"0.1.2"}` | The image to use for the Alloy removal Helm Hooks (both the post-install/post-upgrade add-finalizer hook and the pre-delete removal hook). |

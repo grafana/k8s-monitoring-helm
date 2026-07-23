@@ -1,0 +1,87 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Alloy Operator - Alloy image pinning when the operator is not deployed
+templates:
+  - alloy.yaml
+tests:
+  - it: pins the Alloy image tag on the instance when the Alloy Operator is not deployed
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// Giving this Alloy something to do"
+      alloy-operator:
+        deploy: false
+    asserts:
+      - containsDocument:
+          kind: Alloy
+          apiVersion: collectors.grafana.com/v1alpha1
+          name: RELEASE-NAME-alloy-metrics
+      - equal:
+          path: spec.image.tag
+          value: "v1.18.0"
+
+  - it: does not pin the Alloy image when this chart deploys the Alloy Operator
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// Giving this Alloy something to do"
+      alloy-operator:
+        deploy: true
+    asserts:
+      - containsDocument:
+          kind: Alloy
+          apiVersion: collectors.grafana.com/v1alpha1
+          name: RELEASE-NAME-alloy-metrics
+      - notExists:
+          path: spec.image
+
+  - it: respects an image tag set on all collectors (collectorCommon) over the pinned default
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// Giving this Alloy something to do"
+      collectorCommon:
+        alloy:
+          image:
+            tag: "v1.9.9-custom"
+      alloy-operator:
+        deploy: false
+    asserts:
+      - equal:
+          path: spec.image.tag
+          value: "v1.9.9-custom"
+
+  - it: respects an image tag set on a single collector over the pinned default
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// Giving this Alloy something to do"
+          image:
+            tag: "v1.9.9-collector"
+      alloy-operator:
+        deploy: false
+    asserts:
+      - equal:
+          path: spec.image.tag
+          value: "v1.9.9-collector"
+
+  - it: pins only the tag, preserving an image repository set on the collector
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// Giving this Alloy something to do"
+          image:
+            repository: my-mirror/alloy
+      alloy-operator:
+        deploy: false
+    asserts:
+      - equal:
+          path: spec.image.repository
+          value: my-mirror/alloy
+      - equal:
+          path: spec.image.tag
+          value: "v1.18.0"
