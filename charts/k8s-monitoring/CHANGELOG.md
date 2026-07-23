@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Harden the Node Exporter DaemonSet security context. It no longer shares the host PID namespace (`hostPID: false`), and its container now sets `allowPrivilegeEscalation: false`, drops all Linux capabilities, and uses the `RuntimeDefault` seccomp profile. These defaults are not required by Node Exporter's default collectors (host process data is read through the read-only `/host/proc` mount) and can be overridden under `telemetryServices.node-exporter`. (#2883) (@petewall)
 *   Allow regexes in the `namespaces` list for the Prometheus Operator Objects feature and fix the ScrapeConfigs `excludeNamespaces` filter. (#3018) (@petewall)
 *   Set `allowPrivilegeEscalation: false` on the Node Exporter container by default. If you set `privileged: true` or add the `CAP_SYS_ADMIN` capability in `telemetryServices.node-exporter.containerSecurityContext`, also set `allowPrivilegeEscalation: true`, since Kubernetes rejects that combination. The chart now fails with this guidance. (#2898) (@TylerHelmuth)
 *   Stop adding the container runtime default capabilities (including `NET_RAW` and `MKNOD`) back to the Alloy collectors. The default security context now drops all capabilities and only adds back `NET_BIND_SERVICE`, so collectors pass the `baseline` Pod Security Standard by default. Use the `root` preset or set `collectorCommon.alloy.alloy.securityContext.capabilities.add` if a collector needs more. (#2901) (@TylerHelmuth)
