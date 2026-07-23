@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Validate that each collector's Alloy stability level is high enough for the experimental or public-preview components in its rendered configuration. (@petewall)
 *   Add a validation that detects another Alloy Operator already running in the cluster that would compete to manage the same Alloy instances. Disable with `alloy-operator.conflictCheck: false`. (@petewall)
 *   When the Alloy Operator is not deployed by this chart (`alloy-operator.deploy: false`), pin the Alloy image tag on the Alloy instances so an external (possibly older) operator does not substitute its own default Alloy image. Set `image.tag` on a collector to override. (@petewall)
 *   Update Alloy Operator to 0.6.2, kube-state-metrics to 8.0.0, Node Exporter to 4.56.1, and OpenCost to 2.5.28 (@petewall)

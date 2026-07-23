@@ -48,24 +48,3 @@ tests:
                 alloy:
                   mounts:
                     varlog: true
-
-  - it: should fail if not using the public-preview stability level
-    set:
-      testing:
-        enabled: true
-        Collector:
-          alloy:
-            stabilityLevel: stable
-            mounts:
-              varlog: true
-          controller:
-            type: daemonset
-    asserts:
-      - failedTemplate:
-          errorMessage: |-
-            Pod Logs feature requires Alloy to use the public-preview stability level.
-            Please set:
-            collectors:
-              alloy-test:
-                alloy:
-                  stabilityLevel: public-preview

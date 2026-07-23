@@ -53,29 +53,6 @@ tests:
                 clustering:
                   enabled: true
 
-  - it: should fail when secretFilter is enabled without experimental stability level
-    set:
-      secretFilter:
-        enabled: true
-      testing:
-        enabled: true
-        Collector:
-          alloy:
-            clustering:
-              enabled: true
-            stabilityLevel: generally-available
-          controller:
-            type: daemonset
-    asserts:
-      - failedTemplate:
-          errorMessage: |-
-            PodLogs Objects feature requires Alloy to use the experimental stability level when using the secretFilter.
-            Please set:
-            collectors:
-              alloy-test:
-                alloy:
-                  stabilityLevel: experimental
-
   - it: should fail when nodeFilter is enabled on non-DaemonSet deployments
     set:
       nodeFilter: true

@@ -29,15 +29,4 @@
     {{- $msg = append $msg "        varlog: true" }}
     {{- fail (join "\n" $msg) }}
   {{- end -}}
-
-  {{- $stabilityLevel := (dig "alloy" "stabilityLevel" "generally-available" .Collector)}}
-  {{- if and (ne $stabilityLevel "public-preview") (ne $stabilityLevel "experimental") }}
-    {{- $msg := list "" "Pod Logs feature requires Alloy to use the public-preview stability level." }}
-    {{- $msg = append $msg "Please set:"}}
-    {{- $msg = append $msg "collectors:" }}
-    {{- $msg = append $msg (printf "  %s:" .CollectorName) }}
-    {{- $msg = append $msg "    alloy:"}}
-    {{- $msg = append $msg "      stabilityLevel: public-preview"}}
-    {{- fail (join "\n" $msg) }}
-  {{- end -}}
 {{- end -}}

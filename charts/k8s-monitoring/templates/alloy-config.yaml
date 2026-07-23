@@ -32,6 +32,9 @@
 
 {{/* Remove all trailing whitespace */}}
 {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" }}
+
+{{/* Ensure the collector's stability level is high enough for the components in the rendered config */}}
+{{- include "collectors.validate.stabilityLevel" (dict "collectorName" $collectorName "config" $alloyConfig "collectorValues" $collectorValues "Files" $.Files) }}
 ---
 apiVersion: v1
 kind: ConfigMap
