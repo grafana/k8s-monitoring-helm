@@ -1,0 +1,496 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Validations - Alloy Operator scope conflict
+templates:
+  - validations.yaml
+tests:
+  - it: fails when another cluster-scoped Alloy Operator is found and ours is cluster-scoped
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.loki.svc:3100/api/push
+      collectors:
+        alloy-singleton: {}
+      clusterEvents:
+        enabled: true
+      telemetryServices:
+        node-exporter:
+          deploy: false
+      alloy-operator:
+        deploy: true
+    kubernetesProvider:
+      scheme:
+        "v1/Node":
+          gvr:
+            version: "v1"
+            resource: "nodes"
+          namespaced: false
+        "apps/v1/Deployment":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "deployments"
+          namespaced: true
+      objects:
+        - kind: Node
+          apiVersion: v1
+          metadata:
+            name: node1
+        - kind: Deployment
+          apiVersion: apps/v1
+          metadata:
+            name: existing-alloy-operator
+            namespace: other-ns
+            labels:
+              app.kubernetes.io/name: alloy-operator
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: manager
+                    image: docker.io/grafana/alloy-operator:1.11.0
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Another Alloy Operator appears to be running in this cluster.
+            Found Deployment "existing-alloy-operator" in namespace "other-ns" running at cluster scope.
+            Two overlapping Alloy Operators will compete to manage the same Alloy instances, causing conflicting reconciliation.
+
+            Option 1: Don't deploy the bundled Alloy Operator and rely on the existing one:
+            alloy-operator:
+              deploy: false
+
+            Restricting this Alloy Operator to its own namespace will not help, since the existing operator is cluster-scoped and would still manage Alloy instances in every namespace.
+
+            If this detection is incorrect, you can disable this check:
+            alloy-operator:
+              conflictCheck: false
+
+  - it: fails when another cluster-scoped Alloy Operator is found even though ours is namespace-scoped
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.loki.svc:3100/api/push
+      collectors:
+        alloy-singleton: {}
+      clusterEvents:
+        enabled: true
+      telemetryServices:
+        node-exporter:
+          deploy: false
+      alloy-operator:
+        deploy: true
+        ownNamespaceOnly: true
+    kubernetesProvider:
+      scheme:
+        "v1/Node":
+          gvr:
+            version: "v1"
+            resource: "nodes"
+          namespaced: false
+        "apps/v1/Deployment":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "deployments"
+          namespaced: true
+      objects:
+        - kind: Node
+          apiVersion: v1
+          metadata:
+            name: node1
+        - kind: Deployment
+          apiVersion: apps/v1
+          metadata:
+            name: existing-alloy-operator
+            namespace: other-ns
+            labels:
+              app.kubernetes.io/name: alloy-operator
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: manager
+                    image: docker.io/grafana/alloy-operator:1.11.0
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Another Alloy Operator appears to be running in this cluster.
+            Found Deployment "existing-alloy-operator" in namespace "other-ns" running at cluster scope.
+            Two overlapping Alloy Operators will compete to manage the same Alloy instances, causing conflicting reconciliation.
+
+            Option 1: Don't deploy the bundled Alloy Operator and rely on the existing one:
+            alloy-operator:
+              deploy: false
+
+            If this detection is incorrect, you can disable this check:
+            alloy-operator:
+              conflictCheck: false
+
+  - it: fails when a namespace-scoped Alloy Operator is found and ours is cluster-scoped, offering to restrict ours
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.loki.svc:3100/api/push
+      collectors:
+        alloy-singleton: {}
+      clusterEvents:
+        enabled: true
+      telemetryServices:
+        node-exporter:
+          deploy: false
+      alloy-operator:
+        deploy: true
+    kubernetesProvider:
+      scheme:
+        "v1/Node":
+          gvr:
+            version: "v1"
+            resource: "nodes"
+          namespaced: false
+        "apps/v1/Deployment":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "deployments"
+          namespaced: true
+      objects:
+        - kind: Node
+          apiVersion: v1
+          metadata:
+            name: node1
+        - kind: Deployment
+          apiVersion: apps/v1
+          metadata:
+            name: existing-alloy-operator
+            namespace: other-ns
+            labels:
+              app.kubernetes.io/name: alloy-operator
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: manager
+                    image: docker.io/grafana/alloy-operator:1.11.0
+                    env:
+                      - name: WATCH_NAMESPACE
+                        value: other-ns
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Another Alloy Operator appears to be running in this cluster.
+            Found Deployment "existing-alloy-operator" in namespace "other-ns" running at namespace scope.
+            Two overlapping Alloy Operators will compete to manage the same Alloy instances, causing conflicting reconciliation.
+
+            Option 1: Don't deploy the bundled Alloy Operator and rely on the existing one:
+            alloy-operator:
+              deploy: false
+
+            Option 2: Restrict this Alloy Operator to its own namespace so the two don't overlap:
+            alloy-operator:
+              ownNamespaceOnly: true
+
+            If this detection is incorrect, you can disable this check:
+            alloy-operator:
+              conflictCheck: false
+
+  - it: detects an existing Alloy Operator by container image when no identifying label is present
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.loki.svc:3100/api/push
+      collectors:
+        alloy-singleton: {}
+      clusterEvents:
+        enabled: true
+      telemetryServices:
+        node-exporter:
+          deploy: false
+      alloy-operator:
+        deploy: true
+    kubernetesProvider:
+      scheme:
+        "v1/Node":
+          gvr:
+            version: "v1"
+            resource: "nodes"
+          namespaced: false
+        "apps/v1/Deployment":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "deployments"
+          namespaced: true
+      objects:
+        - kind: Node
+          apiVersion: v1
+          metadata:
+            name: node1
+        - kind: Deployment
+          apiVersion: apps/v1
+          metadata:
+            name: my-operator
+            namespace: observability
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: manager
+                    image: docker.io/grafana/alloy-operator:1.11.0
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Another Alloy Operator appears to be running in this cluster.
+            Found Deployment "my-operator" in namespace "observability" running at cluster scope.
+            Two overlapping Alloy Operators will compete to manage the same Alloy instances, causing conflicting reconciliation.
+
+            Option 1: Don't deploy the bundled Alloy Operator and rely on the existing one:
+            alloy-operator:
+              deploy: false
+
+            Restricting this Alloy Operator to its own namespace will not help, since the existing operator is cluster-scoped and would still manage Alloy instances in every namespace.
+
+            If this detection is incorrect, you can disable this check:
+            alloy-operator:
+              conflictCheck: false
+
+  - it: does not fail when both the existing and bundled operators are namespace-scoped
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.loki.svc:3100/api/push
+      collectors:
+        alloy-singleton: {}
+      clusterEvents:
+        enabled: true
+      telemetryServices:
+        node-exporter:
+          deploy: false
+      alloy-operator:
+        deploy: true
+        ownNamespaceOnly: true
+    kubernetesProvider:
+      scheme:
+        "v1/Node":
+          gvr:
+            version: "v1"
+            resource: "nodes"
+          namespaced: false
+        "apps/v1/Deployment":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "deployments"
+          namespaced: true
+      objects:
+        - kind: Node
+          apiVersion: v1
+          metadata:
+            name: node1
+        - kind: Deployment
+          apiVersion: apps/v1
+          metadata:
+            name: existing-alloy-operator
+            namespace: other-ns
+            labels:
+              app.kubernetes.io/name: alloy-operator
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: manager
+                    image: docker.io/grafana/alloy-operator:1.11.0
+                    env:
+                      - name: WATCH_NAMESPACE
+                        value: other-ns
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: ignores the Alloy Operator managed by this release
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.loki.svc:3100/api/push
+      collectors:
+        alloy-singleton: {}
+      clusterEvents:
+        enabled: true
+      telemetryServices:
+        node-exporter:
+          deploy: false
+      alloy-operator:
+        deploy: true
+    kubernetesProvider:
+      scheme:
+        "v1/Node":
+          gvr:
+            version: "v1"
+            resource: "nodes"
+          namespaced: false
+        "apps/v1/Deployment":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "deployments"
+          namespaced: true
+      objects:
+        - kind: Node
+          apiVersion: v1
+          metadata:
+            name: node1
+        - kind: Deployment
+          apiVersion: apps/v1
+          metadata:
+            name: RELEASE-NAME-alloy-operator
+            namespace: NAMESPACE
+            labels:
+              app.kubernetes.io/name: alloy-operator
+              app.kubernetes.io/instance: RELEASE-NAME
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: manager
+                    image: docker.io/grafana/alloy-operator:1.11.0
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: does not fail when the scope conflict check is disabled, even with a conflicting operator
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.loki.svc:3100/api/push
+      collectors:
+        alloy-singleton: {}
+      clusterEvents:
+        enabled: true
+      telemetryServices:
+        node-exporter:
+          deploy: false
+      alloy-operator:
+        deploy: true
+        conflictCheck: false
+    kubernetesProvider:
+      scheme:
+        "v1/Node":
+          gvr:
+            version: "v1"
+            resource: "nodes"
+          namespaced: false
+        "apps/v1/Deployment":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "deployments"
+          namespaced: true
+      objects:
+        - kind: Node
+          apiVersion: v1
+          metadata:
+            name: node1
+        - kind: Deployment
+          apiVersion: apps/v1
+          metadata:
+            name: existing-alloy-operator
+            namespace: other-ns
+            labels:
+              app.kubernetes.io/name: alloy-operator
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: manager
+                    image: docker.io/grafana/alloy-operator:1.11.0
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: does not fail when the bundled Alloy Operator is not deployed
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.loki.svc:3100/api/push
+      collectors:
+        alloy-singleton: {}
+      clusterEvents:
+        enabled: true
+      telemetryServices:
+        node-exporter:
+          deploy: false
+      alloy-operator:
+        deploy: false
+    kubernetesProvider:
+      scheme:
+        "v1/Node":
+          gvr:
+            version: "v1"
+            resource: "nodes"
+          namespaced: false
+        "apps/v1/Deployment":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "deployments"
+          namespaced: true
+      objects:
+        - kind: Node
+          apiVersion: v1
+          metadata:
+            name: node1
+        - kind: Deployment
+          apiVersion: apps/v1
+          metadata:
+            name: existing-alloy-operator
+            namespace: other-ns
+            labels:
+              app.kubernetes.io/name: alloy-operator
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: manager
+                    image: docker.io/grafana/alloy-operator:1.11.0
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: does not fail when no other Alloy Operator is present
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.loki.svc:3100/api/push
+      collectors:
+        alloy-singleton: {}
+      clusterEvents:
+        enabled: true
+      telemetryServices:
+        node-exporter:
+          deploy: false
+      alloy-operator:
+        deploy: true
+    asserts:
+      - notFailedTemplate: {}
