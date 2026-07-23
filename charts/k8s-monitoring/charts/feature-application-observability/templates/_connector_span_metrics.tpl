@@ -38,6 +38,12 @@ otelcol.connector.spanmetrics "{{ .name | default "default" }}" {
   dimensions_cache_size = {{ .Values.connectors.spanMetrics.dimensionsCacheSize }}
   aggregation_cardinality_limit = {{ .Values.connectors.spanMetrics.aggregationCardinalityLimit }}
   namespace = {{ .Values.connectors.spanMetrics.namespace | quote }}
+{{- if .Values.connectors.spanMetrics.metricsExpiration }}
+  metrics_expiration = {{ .Values.connectors.spanMetrics.metricsExpiration | quote }}
+{{- end }}
+{{- if .Values.connectors.spanMetrics.seriesExpiration }}
+  series_expiration = {{ .Values.connectors.spanMetrics.seriesExpiration | quote }}
+{{- end }}
 {{- if .Values.connectors.spanMetrics.events.enabled }}
   events {
     enabled = true

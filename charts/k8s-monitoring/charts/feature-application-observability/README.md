@@ -121,7 +121,9 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | connectors.spanMetrics.histogram.exponential.maxSize | int | `160` | Maximum number of buckets per positive or negative number range. |
 | connectors.spanMetrics.histogram.type | string | `"explicit"` | Type of histograms to create. Must be either "explicit" or "exponential". |
 | connectors.spanMetrics.histogram.unit | string | `"s"` | The histogram unit. |
+| connectors.spanMetrics.metricsExpiration | duration | `nil` | Time period after which metrics are considered stale and are removed from the cache. Leaving this unset (or `0s`) means metrics never expire. |
 | connectors.spanMetrics.namespace | string | `"traces.span.metrics"` | The Metric namespace. |
+| connectors.spanMetrics.seriesExpiration | duration | `nil` | Time period after which individual metric series are considered stale and are no longer exported. Leaving this unset (or `0s`) means series never expire. |
 | connectors.spanMetrics.skipBeyla | bool | `true` | Skip Beyla traces when `span.metrics.skip` resource attribute is present. |
 | connectors.spanMetrics.skipInternal | bool | `true` | Skip span if span kind is internal. |
 | connectors.spanMetrics.transforms | object | `{"datapoint":[],"metric":[],"resource":[]}` | Apply transformations to span metrics after they are generated. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.transform/)) |

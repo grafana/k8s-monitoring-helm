@@ -41,3 +41,21 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["module.alloy"]
+
+  - it: sets metrics and series expiration when configured
+    set:
+      testing: {enabled: true}
+      connectors:
+        spanMetrics:
+          enabled: true
+          metricsExpiration: 5m
+          seriesExpiration: 10m
+      receivers:
+        otlp:
+          grpc:
+            enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
