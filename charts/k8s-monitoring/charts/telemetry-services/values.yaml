@@ -21,6 +21,22 @@ node-exporter:
     # Defaults (https://github.com/prometheus/node_exporter/blob/master/collector/filesystem_linux.go#L38) + tmpfs,ramfs
     - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|erofs|sysfs|tracefs|tmpfs|ramfs)$
 
+  # Do not share the host process ID namespace. Node Exporter reads host process data through the read-only /host/proc
+  # mount, so it does not need the host PID namespace, which would let the container see and signal all host processes.
+  # @ignored
+  hostPID: false
+
+  # Harden the container security context. Node Exporter runs as a non-root user with a read-only root filesystem and
+  # needs no Linux capabilities or privilege escalation for its default collectors.
+  # @ignored
+  containerSecurityContext:
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: [ALL]
+    seccompProfile:
+      type: RuntimeDefault
+
   # Disable the prometheus.io/scrape annotation
   # @ignored
   service:

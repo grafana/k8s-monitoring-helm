@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Harden the Node Exporter DaemonSet security context. It no longer shares the host PID namespace (`hostPID: false`), and its container now sets `allowPrivilegeEscalation: false`, drops all Linux capabilities, and uses the `RuntimeDefault` seccomp profile. These defaults are not required by Node Exporter's default collectors (host process data is read through the read-only `/host/proc` mount) and can be overridden under `telemetryServices.node-exporter`. (#2883) (@petewall)
 *   Fix the Prometheus destination so the cluster label honors `cluster.nameFrom`. (#2963) (@TylerHelmuth)
 *   Route integration instances to different collectors by setting collector on each instance. (#2616) (@TylerHelmuth)
 

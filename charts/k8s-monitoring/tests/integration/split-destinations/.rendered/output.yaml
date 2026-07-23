@@ -2249,7 +2249,13 @@ spec:
             - --web.listen-address=[$(HOST_IP)]:9100
             - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|erofs|sysfs|tracefs|tmpfs|ramfs)$
           securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
             readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
           env:
             - name: HOST_IP
               value: 0.0.0.0
@@ -2291,7 +2297,7 @@ spec:
               mountPropagation: HostToContainer
               readOnly: true
       hostNetwork: true
-      hostPID: true
+      hostPID: false
       hostIPC: false
       affinity:
         nodeAffinity:
