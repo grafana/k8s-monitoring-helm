@@ -1,0 +1,128 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: multi-deployment
+
+# Two copies of the k8s-monitoring chart run in the same cluster:
+#   - Copy one is deployed as a dependency (a Flux HelmRelease of the released
+#     chart) into "namespace-one" -- see dependencies/k8s-monitoring-namespace-one.yaml
+#   - Copy two is deployed as the test subject (the local chart) into "namespace-two"
+# See README.md for the conflicts this test guards against.
+subject:
+  releaseName: k8smon-two
+  path: ../../..
+  namespace: namespace-two
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  # Copy one of k8s-monitoring, deployed into namespace-one before the subject.
+  - file: dependencies/k8s-monitoring-namespace-one.yaml
+  - preset: prometheus
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+            - name: Loki
+              type: loki
+              url: http://loki-gateway.loki.svc:8080
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+
+tests:
+  # Verifies the deployment topology, in particular the shared-operator design:
+  # copy two does not run its own Alloy Operator, yet its Alloy collectors are
+  # still created -- because copy one's operator reconciles Alloy instances
+  # across every namespace.
+  - type: kubernetes-objects-test
+    values:
+      checks:
+        # Copy one (namespace-one) runs the only Alloy Operator in the cluster.
+        - {name: k8smon-one-alloy-operator, kind: Deployment, namespace: namespace-one, expect: {count: 1}}
+        # Copy two (namespace-two) does NOT run its own operator (alloy-operator.deploy=false).
+        - {name: k8smon-two-alloy-operator, kind: Deployment, namespace: namespace-two, expect: {count: 0}}
+
+        # Copy one's collectors, reconciled by its own operator in namespace-one.
+        - {name: k8smon-one-alloy-metrics, kind: StatefulSet, namespace: namespace-one, expect: {count: 1}}
+        - {name: k8smon-one-alloy-singleton, kind: Deployment, namespace: namespace-one, expect: {count: 1}}
+        - {name: k8smon-one-alloy-logs, kind: DaemonSet, namespace: namespace-one, expect: {count: 1}}
+
+        # Copy two's collectors exist in namespace-two even though copy two runs no
+        # operator -- proving copy one's operator reconciles Alloy instances across
+        # namespaces.
+        - {name: k8smon-two-alloy-metrics, kind: StatefulSet, namespace: namespace-two, expect: {count: 1}}
+        - {name: k8smon-two-alloy-singleton, kind: Deployment, namespace: namespace-two, expect: {count: 1}}
+        - {name: k8smon-two-alloy-logs, kind: DaemonSet, namespace: namespace-two, expect: {count: 1}}
+
+        # Each copy runs its own node-level services.
+        - {name: k8smon-one-node-exporter, kind: DaemonSet, namespace: namespace-one, expect: {count: 1}}
+        - {name: k8smon-two-node-exporter, kind: DaemonSet, namespace: namespace-two, expect: {count: 1}}
+        - {name: k8smon-one-kube-state-metrics, kind: Deployment, namespace: namespace-one, expect: {count: 1}}
+        - {name: k8smon-two-kube-state-metrics, kind: Deployment, namespace: namespace-two, expect: {count: 1}}
+
+  # Both copies ship telemetry to the same Prometheus and Loki under their own
+  # cluster name, proving the two copies collect data independently.
+  - type: query-test
+    values:
+      tests:
+        - env:
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            PROMETHEUS_USER: promuser
+            PROMETHEUS_PASS: prometheuspassword
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+          queries:
+            # Both copies report their own self-reporting metrics.
+            - query: grafana_kubernetes_monitoring_build_info{cluster="multi-deployment-one"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_build_info{cluster="multi-deployment-two"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="multi-deployment-one", feature="hostMetrics"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="multi-deployment-two", feature="hostMetrics"}
+              type: promql
+
+            # Both copies deploy their own kube-state-metrics and scrape cluster metrics.
+            - query: count(kube_node_info{cluster="multi-deployment-one", job="integrations/kubernetes/kube-state-metrics"})
+              type: promql
+              expect:
+                value: 1
+            - query: count(kube_node_info{cluster="multi-deployment-two", job="integrations/kubernetes/kube-state-metrics"})
+              type: promql
+              expect:
+                value: 1
+
+            # Both copies deploy their own node-exporter (on different host ports)
+            # and collect host metrics.
+            - query: node_exporter_build_info{cluster="multi-deployment-one", job="integrations/node_exporter"}
+              type: promql
+            - query: node_exporter_build_info{cluster="multi-deployment-two", job="integrations/node_exporter"}
+              type: promql
+
+            # Both copies collect cluster events.
+            - query: count_over_time({cluster="multi-deployment-one", job="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
+            - query: count_over_time({cluster="multi-deployment-two", job="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
+
+            # Both copies collect pod logs.
+            - query: count_over_time({cluster="multi-deployment-one", job!="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
+            - query: count_over_time({cluster="multi-deployment-two", job!="integrations/kubernetes/eventhandler"}[1h])
+              type: logql

@@ -1,0 +1,63 @@
+---
+cluster:
+  name: multi-deployment-two
+
+destinations:
+  localPrometheus:
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+    auth:
+      type: basic
+      username: promuser
+      password: prometheuspassword
+  localLoki:
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+
+clusterMetrics:
+  enabled: true
+  collector: alloy-metrics
+
+hostMetrics:
+  enabled: true
+  collector: alloy-metrics
+  linuxHosts:
+    enabled: true
+
+clusterEvents:
+  enabled: true
+  collector: alloy-singleton
+
+podLogsViaLoki:
+  enabled: true
+  collector: alloy-logs
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+
+    # Pick a unique port so we don't conflict with the existing Node Exporter
+    service:
+      port: 9101
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+
+  alloy-singleton:
+    presets: [singleton]
+
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+
+# Deploying two copies of the chart means two Alloy Operators. By default, the operator watches every namespace in the
+# cluster, so both operators would reconcile *both* copies' Alloy instances and fight over them.
+alloy-operator:
+  deploy: false
