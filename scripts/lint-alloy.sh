@@ -17,6 +17,31 @@ if [[ "$(command -v alloy || true)" = "" ]]; then
   exit 1
 fi
 
+# Resolve the directory holding the stability-level component lists, relative to this script so
+# it works regardless of the current working directory.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+COLLECTORS_DIR="${SCRIPT_DIR}/../charts/k8s-monitoring/collectors"
+
+# Read a YAML list of component names ("- component.name") and emit them, one per line. The "---"
+# document separator and any blank lines are ignored (component names always start with a letter).
+read_component_list() {
+  local file="$1"
+  [[ -f "${file}" ]] || return 0
+  sed -n 's/^[[:space:]]*-[[:space:]]*//p' "${file}"
+}
+
+# Build the grep argument arrays for each stability level from the collector definitions, so the
+# component lists live in one place instead of being hardcoded here.
+EXPERIMENTAL_GREP_ARGS=()
+while IFS= read -r component; do
+  [[ "${component}" =~ ^[a-z] ]] && EXPERIMENTAL_GREP_ARGS+=(-e "${component}")
+done < <(read_component_list "${COLLECTORS_DIR}/alloy-experimental.yaml")
+
+PUBLIC_PREVIEW_GREP_ARGS=()
+while IFS= read -r component; do
+  [[ "${component}" =~ ^[a-z] ]] && PUBLIC_PREVIEW_GREP_ARGS+=(-e "${component}")
+done < <(read_component_list "${COLLECTORS_DIR}/alloy-public-preview.yaml")
+
 # Inject a component that utilizes Kubernetes discovery, so we know that the config will fail in a predictable way.
 k8sDiscovery='discovery.kubernetes "lint_config_component" { role = "nodes" }'
 
@@ -28,11 +53,12 @@ lint_alloy_file() {
     return 0
   fi
 
-  # Raise the stability level to match the least stable component used in the config.
+  # Raise the stability level to match the least stable component used in the config. The component
+  # lists come from charts/k8s-monitoring/collectors/alloy-{experimental,public-preview}.yaml.
   local stability_level=generally-available
-  if grep -qF -e "otelcol.exporter.debug" -e "prometheus.enrich" -e "loki.enrich" -e "pyroscope.enrich" "${file}"; then
+  if [[ "${#EXPERIMENTAL_GREP_ARGS[@]}" -gt 0 ]] && grep -qF "${EXPERIMENTAL_GREP_ARGS[@]}" "${file}"; then
     stability_level=experimental
-  elif grep -qF -e "otelcol.receiver.filelog" -e "otelcol.storage.file" "${file}"; then
+  elif [[ "${#PUBLIC_PREVIEW_GREP_ARGS[@]}" -gt 0 ]] && grep -qF "${PUBLIC_PREVIEW_GREP_ARGS[@]}" "${file}"; then
     stability_level=public-preview
   fi
 
