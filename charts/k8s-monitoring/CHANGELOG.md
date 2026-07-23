@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Harden the Node Exporter DaemonSet security context. It no longer shares the host PID namespace (`hostPID: false`), and its container now sets `allowPrivilegeEscalation: false`, drops all Linux capabilities, and uses the `RuntimeDefault` seccomp profile. These defaults are not required by Node Exporter's default collectors (host process data is read through the read-only `/host/proc` mount) and can be overridden under `telemetryServices.node-exporter`. (#2883) (@petewall)
 *   Update Alloy Operator to 0.6.2, kube-state-metrics to 8.0.0, Node Exporter to 4.56.1, and OpenCost to 2.5.28 (@petewall)
 
 ## 4.3.0
