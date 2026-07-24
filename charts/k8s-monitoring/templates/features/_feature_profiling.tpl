@@ -34,8 +34,6 @@ profiling "feature" {
 
 {{- define "features.profiling.collector.values" }}{{- end -}}
 
-{{- define "features.profiling.chooseCollector" -}}{{- end -}}
-
 {{- define "features.profiling.validate" }}
 {{- if .Values.profiling.enabled -}}
 {{- $featureKey := "profiling" }}

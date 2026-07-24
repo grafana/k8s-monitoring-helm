@@ -45,5 +45,3 @@ auto_instrumentation "feature" {
 {{- end -}}
 
 {{- define "features.autoInstrumentation.collector.values" }}{{- end -}}
-
-{{- define "features.autoInstrumentation.chooseCollector" -}}{{- end -}}

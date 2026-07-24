@@ -46,8 +46,6 @@ profiles_receiver "feature" {
 {{- end -}}
 {{- end -}}
 
-{{- define "features.profilesReceiver.chooseCollector" -}}{{- end -}}
-
 {{- define "features.profilesReceiver.validate" }}
 {{- if .Values.profilesReceiver.enabled -}}
   {{- $featureKey := "profilesReceiver" }}

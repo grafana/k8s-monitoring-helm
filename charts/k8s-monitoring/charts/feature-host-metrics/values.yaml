@@ -66,6 +66,12 @@ linuxHosts:
   # @section -- Linux Host
   enabled: false
 
+  # -- Which collector to assign the Linux host metrics to. If empty, the feature-level `hostMetrics.collector` is used.
+  # Set this to route Linux host metrics to a different collector than the Windows host metrics or energy metrics (for
+  # example, a Linux DaemonSet using the Alloy source).
+  # @section -- Linux Host
+  collector: ""
+
   # -- How to collect Linux host metrics. "node-exporter" scrapes a Node Exporter deployment (discovered via
   # telemetryServices or labelMatchers). "alloy" collects host metrics directly using `prometheus.exporter.unix` on the
   # assigned collector, which must be a privileged DaemonSet (use the "linux-host-monitor" and "daemonset" collector
@@ -154,6 +160,19 @@ windowsHosts:
   # @section -- Windows Host
   enabled: false
 
+  # -- Which collector to assign the Windows host metrics to. If empty, the feature-level `hostMetrics.collector` is
+  # used. Set this to route Windows host metrics to a different collector than the Linux host metrics or energy metrics
+  # (for example, a Windows DaemonSet using the Alloy source).
+  # @section -- Windows Host
+  collector: ""
+
+  # -- How to collect Windows host metrics. "windows-exporter" scrapes a Windows Exporter deployment (discovered via
+  # telemetryServices or labelMatchers). "alloy" collects host metrics directly using `prometheus.exporter.windows` on
+  # the assigned collector, which must be a DaemonSet running on Windows nodes (use the "windows", and "daemonset"
+  # collector presets) and does not require a Windows Exporter deployment.
+  # @section -- Windows Host
+  source: windows-exporter
+
   # -- Namespace to locate Windows Exporter pods. If deploying from telemetry services, this will automatically be
   #  # populated.
   # @section -- Windows Host
@@ -226,6 +245,11 @@ energyMetrics:
   # -- Deploy and scrape energy metrics.
   # @section -- Energy Metrics
   enabled: false
+
+  # -- Which collector to assign the energy metrics to. If empty, the feature-level `hostMetrics.collector` is used. Set
+  # this to route energy metrics to a different collector than the Linux or Windows host metrics.
+  # @section -- Energy Metrics
+  collector: ""
 
   # -- Namespace to locate Kepler pods. If deploying from telemetry services, this will automatically be populated.
   # @section -- Energy Metrics

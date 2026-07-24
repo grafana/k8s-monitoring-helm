@@ -34,8 +34,6 @@ cluster_events "feature" {
 
 {{- define "features.clusterEvents.collector.values" }}{{- end -}}
 
-{{- define "features.clusterEvents.chooseCollector" -}}{{- end -}}
-
 {{- define "features.clusterEvents.validate" }}
 {{- if .Values.clusterEvents.enabled -}}
 {{- $featureKey := "clusterEvents" }}

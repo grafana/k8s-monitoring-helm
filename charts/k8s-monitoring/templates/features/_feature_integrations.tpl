@@ -78,8 +78,6 @@
 
 {{- define "features.integrations.collector.values" }}{{ end -}}
 
-{{- define "features.integrations.chooseCollector" -}}{{- end -}}
-
 {{- define "features.integrations.validate" }}
 {{- if eq (include "features.integrations.enabled" .) "true" }}
 {{- $featureName := "Service Integrations" }}

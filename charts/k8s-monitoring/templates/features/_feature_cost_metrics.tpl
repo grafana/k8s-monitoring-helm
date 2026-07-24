@@ -34,8 +34,6 @@ cost_metrics "feature" {
 
 {{- define "features.costMetrics.collector.values" }}{{- end -}}
 
-{{- define "features.costMetrics.chooseCollector" -}}{{- end -}}
-
 {{- define "features.costMetrics.validate" }}
 {{- if .Values.costMetrics.enabled }}
   {{- $featureKey := "costMetrics" }}

@@ -34,8 +34,6 @@ prometheus_operator_objects "feature" {
 
 {{- define "features.prometheusOperatorObjects.collector.values" }}{{- end -}}
 
-{{- define "features.prometheusOperatorObjects.chooseCollector" -}}{{- end -}}
-
 {{- define "features.prometheusOperatorObjects.validate" }}
 {{- if .Values.prometheusOperatorObjects.enabled -}}
 {{- $featureKey := "prometheusOperatorObjects" }}

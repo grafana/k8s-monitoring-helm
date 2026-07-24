@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+*   Collect Windows host metrics directly with Alloy by setting `hostMetrics.windowsHosts.source: alloy`, which uses the built-in `prometheus.exporter.windows` instead of deploying and scraping a separate Windows Exporter. (@petewall)
+*   Route the Host Metrics sub-features to different collectors. `hostMetrics.linuxHosts`, `hostMetrics.windowsHosts`, and `hostMetrics.energyMetrics` each accept their own `collector`, falling back to the feature-level `hostMetrics.collector`. This makes it possible to collect Linux host metrics on a Linux DaemonSet and Windows host metrics on a Windows DaemonSet at the same time. (@petewall)
 *   Add the `windowsEventLogs` feature, which gathers Windows event logs from Windows Nodes. (@petewall)
 *   Add a `windows` collector preset, which schedules Alloy onto Windows nodes as a process-isolated container. (@petewall)
 *   Add a `windows-host-process` preset, which layers on the HostProcess settings needed for host access such as reading the Windows Event Log. (@petewall)

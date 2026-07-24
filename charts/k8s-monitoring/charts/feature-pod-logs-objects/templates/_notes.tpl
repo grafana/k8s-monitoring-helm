@@ -6,6 +6,6 @@ gather Kubernetes Pod logs using PodLogs objects.
 
 {{- define "feature.podLogsObjects.notes.actions" }}{{- end }}
 
-{{- define "feature.podLogsObjects.summary" -}}
+{{- define "feature.podLogsObjects.summary" }}
 version: {{ .Chart.Version }}
 {{- end }}
