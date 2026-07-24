@@ -39,7 +39,7 @@ collectors:
 The `sources` list controls which event log channels are gathered. Each entry becomes its own
 `loki.source.windowsevent` component, so you can gather any channel (`Application`, `System`, `Security`, or a custom
 provider channel) without being limited to a hard-coded set. Each entry needs a unique `name` (used for the Alloy
-component label and the bookmark file name) and either an `eventLogName` or an [XPath query](https://learn.microsoft.com/en-us/windows/win32/wes/consuming-events)
+component label and the bookmark filename) and either an `eventLogName` or an [XPath query](https://learn.microsoft.com/en-us/windows/win32/wes/consuming-events)
 that specifies the channel in XML form.
 
 ```yaml
@@ -138,5 +138,5 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| sources | list | `[]` | The list of Windows event log sources to gather. Each entry becomes a separate `loki.source.windowsevent` component, so you can gather any channel (for example `Application`, `System`, or `Security`) without hard-coding a fixed set. Per-entry fields:   - `name` (required): a unique identifier used for the Alloy component label and the bookmark file name.   - `eventLogName`: the Windows event log channel to read from. Required unless `xpathQuery` specifies the channel in     [XML form](https://learn.microsoft.com/en-us/windows/win32/wes/consuming-events).   - `jobLabel`: the value for the `job` label on this source's logs.   - `xpathQuery`: an [XPath query](https://learn.microsoft.com/en-us/windows/win32/wes/consuming-events) for filtering     which events are read. The default of `*` reads all events.   - `labels`: a map of additional static labels to set on this source's logs. |
+| sources | list | `[]` | The list of Windows event log sources to gather. Each entry becomes a separate `loki.source.windowsevent` component, so you can gather any channel (for example `Application`, `System`, or `Security`) without hard-coding a fixed set. Per-entry fields:   - `name` (required): a unique identifier used for the Alloy component label and the bookmark filename.   - `eventLogName`: the Windows event log channel to read from. Required unless `xpathQuery` specifies the channel in     [XML form](https://learn.microsoft.com/en-us/windows/win32/wes/consuming-events).   - `jobLabel`: the value for the `job` label on this source's logs.   - `xpathQuery`: an [XPath query](https://learn.microsoft.com/en-us/windows/win32/wes/consuming-events) for filtering     which events are read. The default of `*` reads all events.   - `labels`: a map of additional static labels to set on this source's logs. |
 <!-- markdownlint-enable no-bare-urls -->
