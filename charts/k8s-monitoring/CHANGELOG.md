@@ -3,6 +3,7 @@
 ## Unreleased
 
 *   Add the `windows` collector preset, which configures Alloy to run on Windows nodes as a HostProcess container. (@petewall)
+*   Add the `router` destination, which routes telemetry to different destinations based on the value of a resource attribute or label (default `k8s.namespace.name`). Routes are evaluated in order and the first match wins; unmatched data goes to the required `defaultDestinations`. (#2849) (@mbaykara)
 
 ## 4.3.3
 

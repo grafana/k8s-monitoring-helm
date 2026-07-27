@@ -89,6 +89,15 @@
       {{- include "destinations.otlp.validate" (dict "Values" . "Destination" $destination "DestinationName" $destinationName) -}}
     {{- end }}
 
+    {{/* Router destination validations. Note: $ (not .) is used here to reach the root context --
+         "." has been rebound by the enclosing range to the current $destination, so only $ still
+         points at what destinations.validate itself was called with. Router validation needs the
+         full destinations map (unlike otlp validation, which only looks at its own Destination),
+         so this distinction matters here. */}}
+    {{- if (eq $destination.type "router") }}
+      {{- include "destinations.router.validate" (dict "Values" $ "Destination" $destination "DestinationName" $destinationName) -}}
+    {{- end }}
+
     {{/* Validate the rules.collector reference for destinations that opt into rule sync. */}}
     {{- if and (dig "rules" "enabled" false $destination) (dig "rules" "collector" "" $destination) }}
       {{- $rulesCollector := $destination.rules.collector }}
