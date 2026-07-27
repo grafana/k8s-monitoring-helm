@@ -2,6 +2,7 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify README.md.gotmpl and run `helm-docs`)
 -->
+<!--alex disable host-hostess hostesses-hosts -->
 
 # Feature: Windows Event Logs
 
@@ -141,3 +142,5 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | sources | list | `[]` | The list of Windows event log sources to gather. Each entry becomes a separate `loki.source.windowsevent` component, so you can gather any channel (for example `Application`, `System`, or `Security`) without hard-coding a fixed set. Per-entry fields:   - `name` (required): a unique identifier used for the Alloy component label and the bookmark filename.   - `eventLogName`: the Windows event log channel to read from. Required unless `xpathQuery` specifies the channel in     [XML form](https://learn.microsoft.com/en-us/windows/win32/wes/consuming-events).   - `jobLabel`: the value for the `job` label on this source's logs.   - `xpathQuery`: an [XPath query](https://learn.microsoft.com/en-us/windows/win32/wes/consuming-events) for filtering     which events are read. The default of `*` reads all events.   - `labels`: a map of additional static labels to set on this source's logs. |
 <!-- markdownlint-enable no-bare-urls -->
+
+<!--alex enable host-hostess hostesses-hosts-->
