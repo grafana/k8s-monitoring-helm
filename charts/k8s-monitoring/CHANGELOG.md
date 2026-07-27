@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+*   Update Windows Exporter to 0.12.8 (@petewall)
+
 ## 4.3.1
 
 *   Validate that each collector's Alloy stability level is high enough for the experimental or public-preview components in its rendered configuration. (@petewall)

@@ -41,7 +41,7 @@ telemetryServices:
 | https://grafana.github.io/helm-charts | k8s-manifest-tail(k8s-manifest-tail) | 0.1.5 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 8.0.0 |
 | https://prometheus-community.github.io/helm-charts | node-exporter(prometheus-node-exporter) | 4.56.1 |
-| https://prometheus-community.github.io/helm-charts | windows-exporter(prometheus-windows-exporter) | 0.12.7 |
+| https://prometheus-community.github.io/helm-charts | windows-exporter(prometheus-windows-exporter) | 0.12.8 |
 | https://sustainable-computing-io.github.io/kepler-helm-chart | kepler | 0.6.1 |
 | oci://ghcr.io/opencost/charts | opencost | 2.5.28 |
 <!-- markdownlint-enable no-bare-urls -->
