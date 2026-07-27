@@ -152,6 +152,7 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 - ["alloy", "extraPorts"]
 - ["alloy", "mounts", "extra"]
 - ["controller", "volumes", "extra"]
+- ["controller", "initContainers"]
 {{- end }}
 
 {{- /* Gets the Alloy values. Input: $, .collectorName (string, collector name), .collectorValues (object) */ -}}

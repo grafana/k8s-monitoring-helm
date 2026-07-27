@@ -11,7 +11,7 @@ tests:
       testing:
         enabled: true
         Collector:
-          presets: [windows]
+          presets: [windows, windows-host-process]
           controller:
             type: deployment
     asserts:
@@ -24,27 +24,7 @@ tests:
                 controller:
                   type: daemonset
 
-  - it: should fail if the windows preset is not used
-    set:
-      sources:
-        - name: application
-          eventLogName: Application
-      testing:
-        enabled: true
-        Collector:
-          presets: [daemonset]
-          controller:
-            type: daemonset
-    asserts:
-      - failedTemplate:
-          errorMessage: |-
-            Windows Event Logs feature requires Alloy to use the `windows` preset, so it runs as a HostProcess container on Windows Nodes.
-            Please set:
-            collectors:
-              alloy-test:
-                presets: [windows, daemonset]
-
-  - it: should pass with a windows daemonset collector
+  - it: should fail without the windows-host-process preset
     set:
       sources:
         - name: application
@@ -53,6 +33,46 @@ tests:
         enabled: true
         Collector:
           presets: [windows, daemonset]
+          controller:
+            type: daemonset
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Windows Event Logs feature requires Alloy to run on Windows Nodes with host access, so it can read the Node's event logs.
+            Please use the `windows` and `windows-host-process` presets:
+            collectors:
+              alloy-test:
+                presets: [windows, windows-host-process, daemonset]
+
+  - it: should fail without the windows preset
+    set:
+      sources:
+        - name: application
+          eventLogName: Application
+      testing:
+        enabled: true
+        Collector:
+          presets: [windows-host-process, daemonset]
+          controller:
+            type: daemonset
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Windows Event Logs feature requires Alloy to run on Windows Nodes with host access, so it can read the Node's event logs.
+            Please use the `windows` and `windows-host-process` presets:
+            collectors:
+              alloy-test:
+                presets: [windows, windows-host-process, daemonset]
+
+  - it: should pass with a windows host-process daemonset collector
+    set:
+      sources:
+        - name: application
+          eventLogName: Application
+      testing:
+        enabled: true
+        Collector:
+          presets: [windows, windows-host-process, daemonset]
           controller:
             type: daemonset
     asserts:

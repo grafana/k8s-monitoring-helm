@@ -11,15 +11,14 @@
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| alloy | object | `{"command":["%CONTAINER_SANDBOX_MOUNT_POINT%\\Program Files\\GrafanaLabs\\Alloy\\alloy.exe"],"securityContext":{"allowPrivilegeEscalation":null,"capabilities":null,"seccompProfile":null,"windowsOptions":{"hostProcess":true,"runAsUserName":"NT AUTHORITY\\SYSTEM"}}}` | Configures Alloy to run on Windows nodes as a HostProcess container. It schedules Alloy onto Windows nodes, runs the Windows Alloy binary from its in-container sandbox path, and applies the Windows-specific `securityContext` needed for HostProcess pods (clearing the Linux capabilities and seccomp profile that don't apply on Windows). Combine with a controller preset such as `daemonset` to run Alloy on every Windows node. |
-| image | object | `{"tag":"v1.18.0-windowsservercore-ltsc2022"}` | Use the Windows HostProcess (Windows Server Core) build of the Alloy image, since the operator otherwise defaults to the Linux image. Setting `image.tag` on the collector overrides this. KEEP IN SYNC when bumping the `alloy-operator` dependency: this must match the "Alloy Binary" version in `docs/Versions.md`. |
+| alloy | object | `{"securityContext":{"allowPrivilegeEscalation":null,"capabilities":null,"seccompProfile":null}}` | Schedules Alloy onto Windows nodes and runs it as a process-isolated Windows container. It clears the Linux-only container `securityContext` fields (privilege escalation, capabilities, and seccomp profile) that Kubernetes rejects on Windows. This preset does not grant access to host resources; for workloads that need it (such as the Windows Event Logs feature), also apply the `windows-host-process` preset. Combine with a controller preset such as `daemonset` to run Alloy on every Windows node. |
+| image | object | `{"tag":"v1.18.0-windowsservercore-ltsc2022"}` | Use the Windows (Windows Server Core) build of the Alloy image, since the operator otherwise defaults to the Linux image. Setting `image.tag` on the collector overrides this. KEEP IN SYNC when bumping the `alloy-operator` dependency: this must match the "Alloy Binary" version in `docs/Versions.md`. |
 
 ### Other Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| controller | object | `{"dnsPolicy":"ClusterFirstWithHostNet","hostNetwork":true,"nodeSelector":{"kubernetes.io/os":"windows"}}` | Schedule the Alloy Pod onto Windows nodes and run it on the host network, which Kubernetes requires for HostProcess pods. The matching `dnsPolicy` keeps cluster DNS resolution working under host networking. |
-| global | object | `{"podSecurityContext":{"windowsOptions":{"hostProcess":true,"runAsUserName":"NT AUTHORITY\\SYSTEM"}}}` | Run the Alloy Pod as a Windows HostProcess pod, so every container in the Pod inherits the HostProcess settings. |
+| controller | object | `{"nodeSelector":{"kubernetes.io/os":"windows"}}` | Schedule the Alloy Pod onto Windows nodes. |
 
 ### Other Values
 
@@ -33,46 +32,30 @@
 ---
 # Windows preset
 
-# -- Configures Alloy to run on Windows nodes as a HostProcess container. It schedules Alloy onto Windows nodes, runs
-# the Windows Alloy binary from its in-container sandbox path, and applies the Windows-specific `securityContext`
-# needed for HostProcess pods (clearing the Linux capabilities and seccomp profile that don't apply on Windows).
-# Combine with a controller preset such as `daemonset` to run Alloy on every Windows node.
+# -- Schedules Alloy onto Windows nodes and runs it as a process-isolated Windows container. It clears the Linux-only
+# container `securityContext` fields (privilege escalation, capabilities, and seccomp profile) that Kubernetes rejects
+# on Windows. This preset does not grant access to host resources; for workloads that need it (such as the Windows
+# Event Logs feature), also apply the `windows-host-process` preset. Combine with a controller preset such as
+# `daemonset` to run Alloy on every Windows node.
 # @section -- Alloy Configuration
 alloy:
-  # Override the entrypoint to the Alloy binary inside the HostProcess container's sandbox mount point.
-  command:
-    - '%CONTAINER_SANDBOX_MOUNT_POINT%\Program Files\GrafanaLabs\Alloy\alloy.exe'
-  # Replace the default Linux securityContext with Windows HostProcess settings. The Linux-only fields must be cleared
-  # or they get applied to the Windows container.
+  # Clear the default Linux securityContext fields, which Kubernetes does not allow on Windows containers.
   securityContext:
     allowPrivilegeEscalation: null
     capabilities: null
     seccompProfile: null
-    windowsOptions:
-      hostProcess: true
-      runAsUserName: "NT AUTHORITY\\SYSTEM"
-# -- Use the Windows HostProcess (Windows Server Core) build of the Alloy image, since the operator otherwise defaults
-# to the Linux image. Setting `image.tag` on the collector overrides this. KEEP IN SYNC when bumping the
-# `alloy-operator` dependency: this must match the "Alloy Binary" version in `docs/Versions.md`.
+# -- Use the Windows (Windows Server Core) build of the Alloy image, since the operator otherwise defaults to the Linux
+# image. Setting `image.tag` on the collector overrides this. KEEP IN SYNC when bumping the `alloy-operator`
+# dependency: this must match the "Alloy Binary" version in `docs/Versions.md`.
 # @section -- Alloy Configuration
 image:
   tag: v1.18.0-windowsservercore-ltsc2022
-# -- Run the Alloy Pod as a Windows HostProcess pod, so every container in the Pod inherits the HostProcess settings.
-# @section -- Other Values
-global:
-  podSecurityContext:
-    windowsOptions:
-      hostProcess: true
-      runAsUserName: "NT AUTHORITY\\SYSTEM"
-# -- Schedule the Alloy Pod onto Windows nodes and run it on the host network, which Kubernetes requires for
-# HostProcess pods. The matching `dnsPolicy` keeps cluster DNS resolution working under host networking.
+# -- Schedule the Alloy Pod onto Windows nodes.
 # @section -- Other Values
 controller:
   nodeSelector:
     kubernetes.io/os: windows
-  hostNetwork: true
-  dnsPolicy: ClusterFirstWithHostNet
-# This isn't supported on Windows
+# The config reloader sidecar has no Windows image.
 configReloader:
   enabled: false
 ```

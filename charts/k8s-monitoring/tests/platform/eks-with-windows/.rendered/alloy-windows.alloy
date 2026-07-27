@@ -19,6 +19,22 @@ declare "windows_event_logs" {
     }
     forward_to = [loki.process.windows_event_logs.receiver]
   } // loki.source.windowsevent "application"
+  loki.source.windowsevent "system" {
+    eventlog_name          = "System"
+    poll_interval          = "3s"
+    use_incoming_timestamp = false
+    exclude_event_data     = false
+    exclude_user_data      = false
+    exclude_event_message  = false
+    locale                 = 0
+    bookmark_path          = "C:\\ProgramData\\Grafana\\Alloy\\WindowsEventLogs\\system.xml"
+    labels = {
+      job = "integrations/windows-system-logs",
+      instance = sys.env("HOSTNAME"),
+      channel = "System",
+    }
+    forward_to = [loki.process.windows_event_logs.receiver]
+  } // loki.source.windowsevent "system"
 
   loki.process "windows_event_logs" {
     stage.static_labels {

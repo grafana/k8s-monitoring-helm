@@ -39,6 +39,6 @@ windowsEventLogs:
 
 collectors:
   alloy-windows:
-    presets: [windows, daemonset]
+    presets: [windows, windows-host-process, daemonset]
 ```
 <!-- textlint-enable terminology -->

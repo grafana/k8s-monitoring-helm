@@ -10,12 +10,12 @@
   {{- $msg = append $msg "      type: daemonset" }}
   {{- fail (join "\n" $msg) }}
 {{- end -}}
-{{- if not (has "windows" (.Collector.presets | default list)) }}
-  {{- $msg := list "" "Windows Event Logs feature requires Alloy to use the `windows` preset, so it runs as a HostProcess container on Windows Nodes." }}
-  {{- $msg = append $msg "Please set:"}}
+{{- if not (and (has "windows" (.Collector.presets | default list)) (has "windows-host-process" (.Collector.presets | default list))) }}
+  {{- $msg := list "" "Windows Event Logs feature requires Alloy to run on Windows Nodes with host access, so it can read the Node's event logs." }}
+  {{- $msg = append $msg "Please use the `windows` and `windows-host-process` presets:"}}
   {{- $msg = append $msg "collectors:" }}
   {{- $msg = append $msg (printf "  %s:" .CollectorName) }}
-  {{- $msg = append $msg "    presets: [windows, daemonset]"}}
+  {{- $msg = append $msg "    presets: [windows, windows-host-process, daemonset]"}}
   {{- fail (join "\n" $msg) }}
 {{- end -}}
 {{- end -}}

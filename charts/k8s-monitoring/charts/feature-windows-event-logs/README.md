@@ -10,8 +10,9 @@ The Windows Event Logs feature enables the collection of event logs from Windows
 Alloy component to read from the Windows Event Log channels. Each entry in the `sources` list becomes its own
 `loki.source.windowsevent` component. No channels are gathered by default, so you must configure at least one source.
 
-This feature requires a collector running on the Windows Nodes. Use the `windows` and `daemonset` collector presets so
-that an Alloy Pod runs as a HostProcess container on every Windows Node.
+This feature requires a collector running on the Windows Nodes with host access, so it can read each Node's event
+logs. Use the `windows`, `windows-host-process`, and `daemonset` collector presets so that Alloy runs as a HostProcess
+container on every Windows Node.
 
 ## Usage
 
@@ -29,7 +30,7 @@ windowsEventLogs:
 
 collectors:
   alloy-windows:
-    presets: [windows, daemonset]
+    presets: [windows, windows-host-process, daemonset]
 ```
 
 ([values](#values))

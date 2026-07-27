@@ -454,6 +454,67 @@ declare "host_metrics" {
     }
     forward_to = argument.metrics_destinations.value
   } // prometheus.relabel "node_exporter"
+
+  // Windows hosts via Windows Exporter
+  discovery.kubernetes "windows_exporter_pods" {
+    role = "pod"
+    selectors {
+      role = "pod"
+      label = "release=k8smon,app.kubernetes.io/name=windows-exporter"
+    }
+    namespaces {
+      names = ["default"]
+    }
+
+  } // discovery.kubernetes "windows_exporter_pods"
+
+  discovery.relabel "windows_exporter" {
+    targets = discovery.kubernetes.windows_exporter_pods.targets
+
+    // keep only the specified metrics port name, and pods that are Running and ready
+    rule {
+      source_labels = [
+        "__meta_kubernetes_pod_container_init",
+        "__meta_kubernetes_pod_phase",
+        "__meta_kubernetes_pod_ready",
+      ]
+      separator = "@"
+      regex = "false@Running@true"
+      action = "keep"
+    }
+
+    // Set the instance label to the node name
+    rule {
+      source_labels = ["__meta_kubernetes_pod_node_name"]
+      target_label = "instance"
+    }
+
+  } // discovery.relabel "windows_exporter"
+
+  prometheus.scrape "windows_exporter" {
+    targets  = discovery.relabel.windows_exporter.output
+    job_name   = "integrations/windows-exporter"
+    scrape_interval = "60s"
+    scrape_timeout = "10s"
+    scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+    scrape_classic_histograms = false
+    scrape_native_histograms = false
+    convert_classic_histograms_to_nhcb = false
+    clustering {
+      enabled = true
+    }
+    forward_to = [prometheus.relabel.windows_exporter.receiver]
+  } // prometheus.scrape "windows_exporter"
+
+  prometheus.relabel "windows_exporter" {
+    max_cache_size = 100000
+    rule {
+      source_labels = ["__name__"]
+      regex = "up|scrape_samples_scraped|windows_.*|node_cpu_seconds_total|node_filesystem_size_bytes|node_filesystem_avail_bytes|container_cpu_usage_seconds_total"
+      action = "keep"
+    }
+    forward_to = argument.metrics_destinations.value
+  } // prometheus.relabel "windows_exporter"
 } // declare "host_metrics"
 host_metrics "feature" {
   metrics_destinations = [
@@ -760,7 +821,7 @@ declare "alloy_integration" {
 
   alloy_integration_discovery "alloy" {
     port_name = "http-metrics"
-    label_selectors = ["app.kubernetes.io/name in (alloy-linux,alloy-logs)"]
+    label_selectors = ["app.kubernetes.io/name in (alloy-linux,alloy-windows)"]
   }
 
   alloy_integration_scrape "alloy" {
