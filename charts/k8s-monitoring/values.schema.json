@@ -3147,6 +3147,83 @@
                 }
             }
         },
+        "router-destination": {
+            "type": "object",
+            "properties": {
+                "attribute": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z_][a-zA-Z0-9_./-]*$"
+                },
+                "defaultDestinations": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "disabled": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "routes": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "destinations": {
+                                "type": "array",
+                                "minItems": 1,
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "signals": {
+                                "type": "array",
+                                "items": {
+                                    "enum": [
+                                        "metrics",
+                                        "logs",
+                                        "traces",
+                                        "profiles"
+                                    ]
+                                }
+                            },
+                            "match": {
+                                "type": "object",
+                                "properties": {
+                                    "in": {
+                                        "type": "array"
+                                    }
+                                },
+                                "oneOf": [
+                                    {
+                                        "required": [
+                                            "equals"
+                                        ]
+                                    },
+                                    {
+                                        "required": [
+                                            "in"
+                                        ]
+                                    },
+                                    {
+                                        "required": [
+                                            "matches"
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "type": {
+                    "type": "string",
+                    "const": "router"
+                }
+            }
+        },
         "dataProcessor": {
             "type": "object",
             "anyOf": [
@@ -3193,6 +3270,9 @@
                 },
                 {
                     "$ref": "#/definitions/pyroscope-destination"
+                },
+                {
+                    "$ref": "#/definitions/router-destination"
                 }
             ]
         },

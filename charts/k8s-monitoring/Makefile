@@ -233,6 +233,7 @@ AGENTS.md: AGENTS.md.gotmpl $(FEATURE_CHARTS) $(DESTINATION_VALUES_FILES) $(INTE
 			nop) desc="Drop all telemetry (no storage; for measuring volume before choosing real destinations)";; \
 			otlp) desc="Send to any OTLP endpoint (Tempo, Grafana Cloud, etc.)";; \
 			pyroscope) desc="Send profiles to Pyroscope";; \
+			router) desc="Route telemetry to other destinations based on an attribute value";; \
 			custom) desc="Custom destination configuration";; \
 			*) desc="Send data to $$name";; \
 		esac; \
