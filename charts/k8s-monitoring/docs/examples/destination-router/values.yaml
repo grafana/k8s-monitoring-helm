@@ -1,0 +1,45 @@
+---
+cluster:
+  name: destination-router
+
+destinations:
+  stack-a:
+    type: otlp
+    protocol: http
+    url: http://tempo-stack-a.tempo.svc:443/otlp
+    metrics: {enabled: true}
+    logs: {enabled: true}
+    traces: {enabled: true}
+  platform:
+    type: otlp
+    protocol: http
+    url: http://tempo-platform.tempo.svc:443/otlp
+    metrics: {enabled: true}
+    logs: {enabled: true}
+    traces: {enabled: true}
+  tenantRouter:
+    type: router
+    # Routes on the default attribute, k8s.namespace.name, which is automatically mapped to the
+    # "namespace" label for label-based collection pipelines.
+    routes:
+      - match:
+          equals: tenant-a
+        destinations:
+          - stack-a
+    # MANDATORY: every router must define at least one fallback destination for records that
+    # don't match any route.
+    defaultDestinations:
+      - platform
+
+podLogsViaOpenTelemetry:
+  enabled: true
+  collector: alloy-logs
+  # Routers are excluded from implicit destination selection, so they must be named explicitly.
+  destinations:
+    - tenantRouter
+
+collectors:
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+    alloy:
+      stabilityLevel: public-preview

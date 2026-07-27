@@ -156,6 +156,7 @@ podLogsViaLoki:
 -   `otlp` - Send to any OTLP endpoint (Tempo, Grafana Cloud, etc.)
 -   `prometheus` - Remote write to Prometheus-compatible endpoint
 -   `pyroscope` - Send profiles to Pyroscope
+-   `router` - Route telemetry to other destinations based on an attribute value
 <!-- END DESTINATIONS -->
 
 **Configure a destination:**
