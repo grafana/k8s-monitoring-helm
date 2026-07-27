@@ -14,6 +14,32 @@
   {{- end }}
 {{- end }}
 
+{{/* Router destination type. Any enabled `type: router` destination that ended up in
+     $destinationNames (because a feature pointed at it) fans out to real destinations that are
+     never referenced by a feature directly, so those downstream destinations would otherwise
+     never get a body rendered and the router's gates would dangle. Union them in here, before
+     destinations.alloy.config renders bodies below. Single-level only: a router referencing
+     another router is not resolved transitively by this pass. */}}
+{{- range $routerCandidateName := $destinationNames }}
+  {{- if hasKey $.Values.destinations $routerCandidateName }}
+    {{- $routerCandidate := get $.Values.destinations $routerCandidateName }}
+    {{- if and (eq $routerCandidate.type "router") (not $routerCandidate.disabled) }}
+      {{- range $downstreamName := ($routerCandidate.defaultDestinations | default list) }}
+        {{- if and (hasKey $.Values.destinations $downstreamName) (not (get $.Values.destinations $downstreamName).disabled) }}
+          {{- $destinationNames = append $destinationNames $downstreamName }}
+        {{- end }}
+      {{- end }}
+      {{- range $route := ($routerCandidate.routes | default list) }}
+        {{- range $downstreamName := ($route.destinations | default list) }}
+          {{- if and (hasKey $.Values.destinations $downstreamName) (not (get $.Values.destinations $downstreamName).disabled) }}
+            {{- $destinationNames = append $destinationNames $downstreamName }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
 {{/* Save the top level object and add the collector name */}}
 {{- $values := dict "Values" $.Values "Chart" $.Chart "Files" $.Files "Release" $.Release "Subcharts" $.Subcharts "Template" $.Template "Capabilities" $.Capabilities "collectorName" $collectorName }}
 {{- $collectorValues := include "collector.alloy.values" $values | fromYaml }}

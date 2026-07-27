@@ -1,0 +1,163 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Destinations - Notes - Router warnings
+templates:
+  - NOTES.txt
+tests:
+  - it: warns when the attribute has no valid Prometheus/Loki/Pyroscope label equivalent (W-a)
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["my-router"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          attribute: "some.weird-attr"
+          routes:
+            - match: {equals: tenant-a}
+              destinations: [platform]
+          defaultDestinations: [platform]
+    asserts:
+      - matchRegexRaw:
+          pattern: 'Router "my-router" routes on attribute "some\.weird-attr"'
+      - matchRegexRaw:
+          pattern: 'only OTLP-collected telemetry can route on an arbitrary attribute'
+
+  - it: does not warn W-a for the well-known k8s.namespace.name attribute
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["my-router"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          attribute: "k8s.namespace.name"
+          routes:
+            - match: {equals: tenant-a}
+              destinations: [platform]
+          defaultDestinations: [platform]
+    asserts:
+      - notMatchRegexRaw:
+          pattern: 'has no valid label equivalent'
+
+  - it: warns when a route covers a signal none of its destinations support (W-b)
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["my-router"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        logs-only:
+          type: loki
+          url: https://loki.example.com
+        my-router:
+          type: router
+          attribute: "k8s.namespace.name"
+          routes:
+            - match: {equals: tenant-a}
+              destinations: [logs-only]
+              signals: [metrics, logs]
+          defaultDestinations: [platform]
+    asserts:
+      - matchRegexRaw:
+          pattern: 'Router "my-router" route #1 covers the "metrics" signal, but none of its destinations support metrics\. Matched metrics for this route falls back to defaultDestinations\.'
+      - notMatchRegexRaw:
+          pattern: 'covers the "logs" signal'
+
+  - it: warns per matching signal across multiple routes (W-b, route index is 1-based)
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["my-router"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        logs-only:
+          type: loki
+          url: https://loki.example.com
+        my-router:
+          type: router
+          attribute: "k8s.namespace.name"
+          routes:
+            - match: {equals: tenant-a}
+              destinations: [platform]
+              signals: [metrics]
+            - match: {equals: tenant-b}
+              destinations: [logs-only]
+              signals: [traces]
+          defaultDestinations: [platform]
+    asserts:
+      - matchRegexRaw:
+          pattern: 'Router "my-router" route #2 covers the "traces" signal, but none of its destinations support traces\.'
+      - notMatchRegexRaw:
+          pattern: 'route #1 covers'
+
+  - it: warns that an enabled router requires explicit feature opt-in (W-c)
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      clusterMetrics:
+        enabled: true
+      telemetryServices:
+        kube-state-metrics:
+          deploy: true
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        other:
+          type: otlp
+          url: https://otlp2.example.com
+        my-router:
+          type: router
+          attribute: "k8s.namespace.name"
+          routes:
+            - match: {equals: tenant-a}
+              destinations: [platform]
+              signals: [metrics]
+          defaultDestinations: [platform]
+    asserts:
+      - matchRegexRaw:
+          pattern: 'routers are excluded from implicit destination selection'
+      - matchRegexRaw:
+          pattern: 'will therefore not use a router: clusterMetrics'
+
+  - it: does not warn about anything for a clean, explicit router configuration (negative)
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      clusterMetrics:
+        enabled: true
+        destinations: [my-router]
+      telemetryServices:
+        kube-state-metrics:
+          deploy: true
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          attribute: "k8s.namespace.name"
+          routes:
+            - match: {equals: tenant-a}
+              destinations: [platform]
+              signals: [metrics]
+          defaultDestinations: [platform]
+    asserts:
+      - notMatchRegexRaw:
+          pattern: 'WARNING'

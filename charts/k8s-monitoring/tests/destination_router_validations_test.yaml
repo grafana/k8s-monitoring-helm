@@ -1,0 +1,519 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Validations - Router Destination
+templates:
+  - validations.yaml
+tests:
+  - it: requires at least one defaultDestinations entry (R1)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          routes:
+            - match: {equals: tenant-a}
+              destinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router) does not have any defaultDestinations.
+            A router is a terminal destination, so it must name at least one fallback destination for records that don't match any route.
+            Please set:
+            destinations:
+              my-router:
+                type: router
+                defaultDestinations:
+                  - my-destination
+
+  - it: rejects a route with no match condition (R2)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          routes:
+            - destinations: [platform]
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router) has a route (#1) with no match condition.
+            Every route must set exactly one of match.equals, match.in, or match.matches.
+            Please set:
+            destinations:
+              my-router:
+                type: router
+                routes:
+                  - match:
+                      equals: my-value
+                    destinations:
+                      - my-destination
+
+  - it: rejects a route with multiple match conditions (R2)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          routes:
+            - match: {equals: tenant-a, in: [tenant-b]}
+              destinations: [platform]
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router) has a route (#1) with multiple match conditions set: equals, in.
+            Exactly one of match.equals, match.in, or match.matches is required per route.
+            Please remove all but one of these fields.
+
+  - it: rejects match.in given as a string instead of a list (R2b)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          routes:
+            - match: {in: "foo"}
+              destinations: [platform]
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router) has a route (#1) whose match.in value is not a list: foo.
+            The `in` match must be a list, e.g. `in: [value1, value2]`.
+            Please set:
+            destinations:
+              my-router:
+                type: router
+                routes:
+                  - match:
+                      in: [my-value-a, my-value-b]
+
+  - it: rejects an empty match.in list (R3)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          routes:
+            - match: {in: []}
+              destinations: [platform]
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router) has a route (#1) with an empty match.in list.
+            match.in needs at least one value to match against.
+            Please set:
+            destinations:
+              my-router:
+                type: router
+                routes:
+                  - match:
+                      in: [my-value-a, my-value-b]
+
+  - it: rejects a non-string match.equals value (R4)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          routes:
+            - match: {equals: true}
+              destinations: [platform]
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router) has a route (#1) whose match.equals value is not a string: true.
+            Please quote it so it isn't parsed as a YAML number, boolean, or null:
+            destinations:
+              my-router:
+                type: router
+                routes:
+                  - match:
+                      equals: "true"
+
+  - it: rejects a non-string entry in match.in (R4)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          routes:
+            - match: {in: [123]}
+              destinations: [platform]
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router) has a route (#1) whose match.in list contains a non-string value: 123.
+            Please quote it so it isn't parsed as a YAML number, boolean, or null:
+            destinations:
+              my-router:
+                type: router
+                routes:
+                  - match:
+                      in: ["123"]
+
+  - it: rejects a non-string match.matches value (R4)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          routes:
+            - match: {matches: false}
+              destinations: [platform]
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router) has a route (#1) whose match.matches value is not a string: false.
+            Please quote it so it isn't parsed as a YAML number, boolean, or null:
+            destinations:
+              my-router:
+                type: router
+                routes:
+                  - match:
+                      matches: "false"
+
+  - it: rejects a match.matches value that does not compile as a regex (R5)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          routes:
+            - match: {matches: "["}
+              destinations: [platform]
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorPattern: error parsing regexp
+
+  - it: rejects a route destination that does not exist (R6)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          routes:
+            - match: {equals: tenant-a}
+              destinations: [doesnotexist]
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router) has a route (#1) referencing unknown destination "doesnotexist".
+            The destination must exist and be enabled.
+            Please reference one of the known destinations:
+              platform
+
+  - it: rejects a defaultDestinations entry that is disabled (R6)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+          disabled: true
+        my-router:
+          type: router
+          routes: []
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router) has a defaultDestinations entry referencing unknown destination "platform".
+            The destination must exist and be enabled.
+            Please reference one of the known destinations:
+
+  - it: rejects an empty signals list on a route (R7)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          routes:
+            - match: {equals: tenant-a}
+              destinations: [platform]
+              signals: []
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router) has a route (#1) with an empty signals list.
+            Either remove the signals field to match all signals, or list at least one of: metrics, logs, traces, profiles.
+
+  - it: rejects an unknown signal name on a route (R7)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          routes:
+            - match: {equals: tenant-a}
+              destinations: [platform]
+              signals: [bogus]
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router) has a route (#1) with an unknown signal "bogus".
+            Please use one of: metrics, logs, traces, profiles.
+
+  - it: rejects a route destination that is itself a router (R8)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        other-router:
+          type: router
+          routes: []
+          defaultDestinations: [platform]
+        my-router:
+          type: router
+          routes:
+            - match: {equals: tenant-a}
+              destinations: [other-router]
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router) has a route (#1) referencing another router destination "other-router".
+            Routing telemetry from one router into another router would create a cycle in the generated Alloy pipeline, so it is not supported.
+            Please point routes and defaultDestinations at real (non-router) destinations.
+
+  - it: rejects a defaultDestinations entry that is itself a router (R8)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        other-router:
+          type: router
+          routes: []
+          defaultDestinations: [platform]
+        my-router:
+          type: router
+          routes: []
+          defaultDestinations: [other-router]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router) has a defaultDestinations entry referencing another router destination "other-router".
+            Routing telemetry from one router into another router would create a cycle in the generated Alloy pipeline, so it is not supported.
+            Please point routes and defaultDestinations at real (non-router) destinations.
+
+  - it: allows a valid router configuration with routes and defaults
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          attribute: k8s.namespace.name
+          routes:
+            - match: {equals: tenant-a}
+              destinations: [platform]
+          defaultDestinations: [platform]
+      collectors: {alloy-receiver: {extraConfig: "// simulated feature"}}
+    asserts:
+      - notFailedTemplate: {}
+
+---
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+# This suite covers destinations.router.assertCanCarry, the seam check that replaced the old,
+# false-positive-prone R10 (see destinations/_destination_router_validations.tpl). Unlike the
+# suite above, these cases need a real, enabled feature forwarding real telemetry through the
+# router -- that is the whole point of the seam (only pipeline.alloy.targets.forFeature knows
+# which signal a feature is actually sending) -- so they render alloy-config.yaml, not
+# validations.yaml.
+suite: Validations - Router Destination Seam Check (destinations.router.assertCanCarry)
+templates:
+  - alloy-config.yaml
+tests:
+  - it: fails when a feature actually sends a signal to a router whose no-routes defaultDestinations cannot carry it
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      podLogsViaOpenTelemetry:
+        enabled: true
+        destinations: [my-router]
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+          alloy:
+            stabilityLevel: public-preview
+      destinations:
+        mimir:
+          type: prometheus
+          url: https://prometheus.example.com/api/v1/write
+        my-router:
+          type: router
+          attribute: "k8s.namespace.name"
+          routes: []
+          defaultDestinations: [mimir]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Feature "podLogsViaOpenTelemetry" sends logs to router destination "my-router", but that router has no route or defaultDestinations entry that can accept logs.
+            logs reaching this router would be dropped.
+            Please add a destination that supports logs to the router's routes or defaultDestinations.
+
+  - it: fails when a feature's signal only matches a route pointing at a destination that cannot carry it, and defaults can't either
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      podLogsViaOpenTelemetry:
+        enabled: true
+        destinations: [my-router]
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+          alloy:
+            stabilityLevel: public-preview
+      destinations:
+        mimir:
+          type: prometheus
+          url: https://prometheus.example.com/api/v1/write
+        my-router:
+          type: router
+          attribute: "k8s.namespace.name"
+          routes:
+            - match: {equals: tenant-a}
+              destinations: [mimir]
+              signals: [logs]
+          defaultDestinations: [mimir]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Feature "podLogsViaOpenTelemetry" sends logs to router destination "my-router", but that router has no route or defaultDestinations entry that can accept logs.
+            logs reaching this router would be dropped.
+            Please add a destination that supports logs to the router's routes or defaultDestinations.
+
+  - it: allows a no-routes fan-out router with otlp defaultDestinations when the only feature routed through it sends logs (false-positive fix)
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      podLogsViaOpenTelemetry:
+        enabled: true
+        destinations: [fanout]
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+          alloy:
+            stabilityLevel: public-preview
+      destinations:
+        a:
+          type: otlp
+          url: https://otlp-a.example.com
+        b:
+          type: otlp
+          url: https://otlp-b.example.com
+        fanout:
+          type: router
+          defaultDestinations: [a, b]
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: allows a metrics-only feature through a router whose defaultDestinations is otlp-only
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      clusterMetrics:
+        enabled: true
+        destinations: [my-router]
+      telemetryServices:
+        kube-state-metrics:
+          deploy: true
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          defaultDestinations: [platform]
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: allows a per-signal split - a route covers logs, defaults cover metrics
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      clusterMetrics:
+        enabled: true
+        destinations: [my-router]
+        collector: alloy-metrics
+      podLogsViaLoki:
+        enabled: true
+        destinations: [my-router]
+        collector: alloy-logs
+      telemetryServices:
+        kube-state-metrics:
+          deploy: true
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        loki-dest:
+          type: loki
+          url: https://loki.example.com
+        my-router:
+          type: router
+          routes:
+            - match: {equals: tenant-a}
+              destinations: [loki-dest]
+              signals: [logs]
+          defaultDestinations: [platform]
+    asserts:
+      - notFailedTemplate: {}
