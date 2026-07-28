@@ -47,7 +47,10 @@
 {{- range $featureKey := include "features.list" . | fromYamlArray }}
   {{- $featureCollectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) }}
   {{- if eq $collectorName $featureCollectorName }}
-    {{ $alloyConfig = cat $alloyConfig (include (printf "features.%s.include" $featureKey) $values | trim | nindent 0) }}
+    {{- $featureConfig := include (printf "features.%s.include" $featureKey) $values | trim }}
+    {{- if $featureConfig }}
+      {{ $alloyConfig = cat $alloyConfig ($featureConfig | nindent 0) }}
+    {{- end }}
   {{- end }}
 {{- end }}
 {{- $dataProcessorSharedComponents := include "dataProcessors.alloy.collectorComponents" (dict "Values" $.Values "config" $alloyConfig) | trim }}
