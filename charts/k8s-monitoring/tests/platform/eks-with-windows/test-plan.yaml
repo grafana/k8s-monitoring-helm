@@ -39,20 +39,34 @@ tests:
               type: promql
             - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="clusterEvents"}
               type: promql
-            - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="nodeLogs"}
-              type: promql
-            - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="podLogsViaLoki"}
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="hostMetrics", sources="linuxHosts,windowsHosts"}
               type: promql
             - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="integrations", sources="alloy"}
               type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="nodeLogs"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="windowsEventLogs"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="podLogsViaLoki"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="podLogsViaKubernetesApi"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_collector_info{cluster="$clusterName", name="alloy-linux", presets="clustered,linux-host-monitor,filesystem-log-reader,daemonset"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_collector_info{cluster="$clusterName", name="alloy-windows", presets="windows,windows-host-process,windows-scrapeable,daemonset"}
+              type: promql
 
             # Cluster metrics
+            # Kubelet
             - query: kubernetes_build_info{cluster="$clusterName", job="integrations/kubernetes/kubelet"}
               type: promql
+            # Kubelet Resources
             - query: node_cpu_usage_seconds_total{cluster="$clusterName", job="integrations/kubernetes/resources"}
               type: promql
+            # cAdvisor
             - query: machine_memory_bytes{cluster="$clusterName", job="integrations/kubernetes/cadvisor"}
               type: promql
+            # kube-state-metrics
             - query: count(kube_node_info{cluster="$clusterName", job="integrations/kubernetes/kube-state-metrics"})
               type: promql
               expect:
@@ -64,14 +78,11 @@ tests:
             - query: workqueue_adds_total{cluster="$clusterName", job="kube-controller-manager"}
               type: promql
 
-            # EC2 enrichment: the ec2-tags data processor copies each node's EC2 `Team` tag
-            # onto node-labeled metrics. Both EC2 instances are tagged `Team=platform-test`,
-            # so both nodes' kube_node_info gain `team="platform-test"`.
-            - query: count(kube_node_info{cluster="$clusterName", job="integrations/kubernetes/kube-state-metrics", team="platform-test"})
-              type: promql
-              expect:
-                value: 2
+            # Cluster events
+            - query: count_over_time({cluster="$clusterName", job="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
 
+            # Host metrics
             # Single Linux node
             - query: count(sum by (instance) (node_cpu_seconds_total{cluster="$clusterName", job="integrations/node_exporter"}))
               type: promql
@@ -85,25 +96,38 @@ tests:
                 operator: ==
                 value: 1
 
+            # Integrations
             # Alloy metrics
-            - query: alloy_build_info{cluster="$clusterName", app="alloy-metrics"}
+            - query: alloy_build_info{cluster="$clusterName", app="alloy-linux"}
               type: promql
-            - query: alloy_build_info{cluster="$clusterName", app="alloy-singleton"}
+            - query: alloy_build_info{cluster="$clusterName", app="alloy-windows"}
               type: promql
-            - query: alloy_build_info{cluster="$clusterName", app="alloy-logs"}
-              type: promql
-
-            # Cluster events
-            - query: count_over_time({cluster="$clusterName", job="integrations/kubernetes/eventhandler"}[1h])
-              type: logql
 
             # Node logs
             - query: count_over_time({cluster="$clusterName", job="integrations/kubernetes/journal"}[1h])
               type: logql
 
-            # Pod logs
-            - query: count_over_time({cluster="$clusterName", job!~"integrations/kubernetes/eventhandler|integrations/kubernetes/journal"}[1h])
+            # Windows Event logs
+            - query: count_over_time({cluster="$clusterName", job="integrations/windows-application-logs"}[1h])
               type: logql
+            - query: count_over_time({cluster="$clusterName", job="integrations/windows-system-logs"}[1h])
+              type: logql
+
+            # Pod logs
+            # Logs from the Linux pods (via file system)
+            - query: count_over_time({cluster="$clusterName", job="default/alloy-operator"}[1h])
+              type: logql
+            # Logs from the Windows pods (via API Server)
+            - query: count_over_time({cluster="$clusterName", job="integrations/windows_exporter"}[1h])
+              type: logql
+
+            # EC2 enrichment: the ec2-tags data processor copies each node's EC2 `Team` tag
+            # onto node-labeled metrics. Both EC2 instances are tagged `Team=platform-test`,
+            # so both nodes' kube_node_info gain `team="platform-test"`.
+            - query: count(kube_node_info{cluster="$clusterName", job="integrations/kubernetes/kube-state-metrics", team="platform-test"})
+              type: promql
+              expect:
+                value: 2
 
             # DPM check
             - query: avg(count_over_time(scrape_samples_scraped{cluster="$clusterName"}[1m]))

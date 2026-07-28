@@ -2,7 +2,10 @@
 
 ## Unreleased
 
-*   Add the `windows` collector preset, which configures Alloy to run on Windows nodes as a HostProcess container. (@petewall)
+*   Add the `windowsEventLogs` feature, which gathers Windows event logs from Windows Nodes. (@petewall)
+*   Add a `windows` collector preset, which schedules Alloy onto Windows nodes as a process-isolated container. (@petewall)
+*   Add a `windows-host-process` preset, which layers on the HostProcess settings needed for host access such as reading the Windows Event Log. (@petewall)
+*   Add a `windows-scrapeable` preset, which opens the Alloy metrics port on the Windows Node's host firewall so other collectors can scrape it. (@petewall)
 *   Add the `router` destination, which routes telemetry to different destinations based on the value of a resource attribute or label (default `k8s.namespace.name`). Routes are evaluated in order and the first match wins; unmatched data goes to the required `defaultDestinations`. (#2849) (@mbaykara)
 
 ## 4.3.3

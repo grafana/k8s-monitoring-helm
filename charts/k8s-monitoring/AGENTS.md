@@ -125,6 +125,7 @@ charts/feature-{name}/
 -   `feature-profiles-receiver` - Kubernetes Observability feature for receiving profiles.
 -   `feature-profiling` - Gathers profiles from eBPF, Java, and pprof sources.
 -   `feature-prometheus-operator-objects` - Gathers metrics using Prometheus Operator Objects
+-   `feature-windows-event-logs` - Kubernetes Observability feature for gathering Windows event logs.
 -   `telemetry-services` - Additional Deployments to generate observability telemetry data
 <!-- END FEATURES -->
 
