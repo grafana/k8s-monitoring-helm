@@ -2,8 +2,11 @@
 
 ## Unreleased
 
+*   Add `extraResourceAttributes` and `extraResourceAttributesFrom` options to the OTLP destination. (#2913) (@petewall)
+
 ## 4.3.2
 
+attributes in the otlp destination)
 *   Fix chart schemas where the only valid type was `null`. (#2926) (@petewall)
 *   Validate `replaceComponent` entries across collectors, and make it possible to mark them as optional. (#2912) (@petewall)
 *   Fix the comment on the closing brace of generated Alloy config components so it always names the component that opened the block. (@petewall)
