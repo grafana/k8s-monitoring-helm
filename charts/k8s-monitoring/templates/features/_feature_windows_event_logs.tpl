@@ -56,7 +56,7 @@ windows_event_logs "feature" {
 {{- define "features.windowsEventLogs.validate" }}
 {{- if .Values.windowsEventLogs.enabled -}}
 {{- $featureKey := "windowsEventLogs" }}
-{{- $featureName := "Windows Event logs" }}
+{{- $featureName := "Windows Event Logs" }}
 {{- include "feature.windowsEventLogs.validate" (dict "Values" $.Values.windowsEventLogs) }}
 {{- $destinations := include "features.windowsEventLogs.destinations" . | fromYamlArray }}
 {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "featureName" $featureName) }}
