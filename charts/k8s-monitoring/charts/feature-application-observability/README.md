@@ -45,7 +45,10 @@ When the flag is enabled, `service.name` is set to the first value found from th
 application, then the `resource.opentelemetry.io/service.namespace` pod annotation, then the pod namespace.
 
 Note: OpenTelemetry SDKs that are not configured with a service name report `unknown_service:<language>`. Because that
-counts as a reported value, the fallback list does not apply to it.
+counts as a reported value, the fallback list does not apply to it. Set `overrideUnknownServiceNames: true` to delete
+the `service.name` resource attribute whenever it matches this `unknown_service` default, so it is treated as unset. When
+combined with `alignServiceNameWithOTelSemConv`, the fallback list above then fills in a meaningful name instead of
+leaving `unknown_service:<language>`.
 
 To pin a specific service name for a workload, set the `resource.opentelemetry.io/service.name` annotation on the pod.
 
@@ -84,6 +87,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | alignServiceNameWithOTelSemConv | bool | `false` | Align the `service.name` and `service.namespace` resource attributes with the [OpenTelemetry semantic conventions for Kubernetes attributes](https://opentelemetry.io/docs/specs/semconv/non-normative/k8s-attributes/) (which is what Grafana Beyla uses) when the application has not reported them itself. When enabled, the detection chain becomes: pod annotation `resource.opentelemetry.io/service.name` → pod label `app.kubernetes.io/instance` → pod label `app.kubernetes.io/name` → owner workload name (Deployment, StatefulSet, etc.) → pod name. Enabling this also enables `processors.k8sattributes.otelAnnotations`. |
+| overrideUnknownServiceNames | bool | `false` | If the incoming `service.name` attribute is `unknown_service`, then override it with a value based on Kubernetes annotations, attributes, or names. This can happen if the application is using an OpenTelemetry SDKs but did not configure with a service name. Most useful when combined with `alignServiceNameWithOTelSemConv`. |
 
 ### Connectors: Grafana Cloud Host Info
 
