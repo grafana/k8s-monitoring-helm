@@ -1,0 +1,49 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Windows Event Logs - Source validation
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should fail if no sources are defined
+    set:
+      testing: {enabled: true}
+      sources: []
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Windows Event Logs feature requires at least one source.
+            Please set one:
+            windowsEventLogs:
+              sources:
+                - name: application
+                  eventLogName: Application
+                  jobLabel: integrations/windows-application-logs
+
+  - it: should fail if a source is missing a name
+    set:
+      testing: {enabled: true}
+      sources:
+        - eventLogName: Application
+    asserts:
+      - failedTemplate:
+          errorMessage: "Each entry in `windowsEventLogs.sources` must set a `name`, which is used for the Alloy component label and bookmark file name."
+
+  - it: should fail if two sources share a name
+    set:
+      testing: {enabled: true}
+      sources:
+        - name: application
+          eventLogName: Application
+        - name: application
+          eventLogName: System
+    asserts:
+      - failedTemplate:
+          errorMessage: 'Duplicate Windows Event Logs source name "application". Each `windowsEventLogs.sources` entry must have a unique `name`.'
+
+  - it: should fail if a source has neither eventLogName nor an XPath query
+    set:
+      testing: {enabled: true}
+      sources:
+        - name: application
+    asserts:
+      - failedTemplate:
+          errorMessage: 'Windows Event Logs source "application" must set `eventLogName`, or an XML-form `xpathQuery` that specifies the channel to read from.'

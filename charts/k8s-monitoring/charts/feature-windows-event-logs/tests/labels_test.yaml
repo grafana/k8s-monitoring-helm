@@ -1,0 +1,20 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Windows Event Logs - Labels
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should set labels from extracted event fields
+    set:
+      testing: {enabled: true}
+      sources:
+        - name: application
+          eventLogName: Application
+          jobLabel: integrations/windows-application-logs
+      extraLabels:
+        computer: computer
+        source: source
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

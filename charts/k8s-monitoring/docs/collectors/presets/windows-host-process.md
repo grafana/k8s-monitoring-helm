@@ -1,0 +1,57 @@
+<!--
+(NOTE: Do not edit README.md directly. It is a generated file!)
+(      To make changes, please modify values.yaml or description.txt and run `make examples`)
+-->
+# windows-host-process.yaml
+
+<!-- textlint-disable terminology -->
+## Values
+
+### Alloy Configuration
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| alloy | object | `{"command":["%CONTAINER_SANDBOX_MOUNT_POINT%\\Program Files\\GrafanaLabs\\Alloy\\alloy.exe"],"securityContext":{"windowsOptions":{"hostProcess":true,"runAsUserName":"NT AUTHORITY\\SYSTEM"}}}` | Runs Alloy as a Windows HostProcess container, giving it access to host resources such as the Event Log, host filesystem, and host network. Apply this on top of the `windows` preset for features that need host access, such as the Windows Event Logs feature. It overrides the entrypoint to the Alloy binary inside the HostProcess container's sandbox mount point and applies the HostProcess `securityContext`. |
+
+### Other Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| controller | object | `{"dnsPolicy":"ClusterFirstWithHostNet","hostNetwork":true}` | HostProcess Pods must run on the host network, which Kubernetes requires. The matching `dnsPolicy` keeps cluster DNS resolution working under host networking. |
+| global | object | `{"podSecurityContext":{"windowsOptions":{"hostProcess":true,"runAsUserName":"NT AUTHORITY\\SYSTEM"}}}` | Run the Alloy Pod as a Windows HostProcess Pod, so every container in the Pod inherits the HostProcess settings. |
+<!-- textlint-enable terminology -->
+
+<!-- textlint-disable terminology -->
+```yaml
+---
+# Windows HostProcess preset
+
+# -- Runs Alloy as a Windows HostProcess container, giving it access to host resources such as the Event Log, host
+# filesystem, and host network. Apply this on top of the `windows` preset for features that need host access, such as
+# the Windows Event Logs feature. It overrides the entrypoint to the Alloy binary inside the HostProcess container's
+# sandbox mount point and applies the HostProcess `securityContext`.
+# @section -- Alloy Configuration
+alloy:
+  # Override the entrypoint to the Alloy binary inside the HostProcess container's sandbox mount point.
+  command:
+    - '%CONTAINER_SANDBOX_MOUNT_POINT%\Program Files\GrafanaLabs\Alloy\alloy.exe'
+  # Apply the Windows HostProcess settings to the Alloy container.
+  securityContext:
+    windowsOptions:
+      hostProcess: true
+      runAsUserName: "NT AUTHORITY\\SYSTEM"
+# -- Run the Alloy Pod as a Windows HostProcess Pod, so every container in the Pod inherits the HostProcess settings.
+# @section -- Other Values
+global:
+  podSecurityContext:
+    windowsOptions:
+      hostProcess: true
+      runAsUserName: "NT AUTHORITY\\SYSTEM"
+# -- HostProcess Pods must run on the host network, which Kubernetes requires. The matching `dnsPolicy` keeps cluster
+# DNS resolution working under host networking.
+# @section -- Other Values
+controller:
+  hostNetwork: true
+  dnsPolicy: ClusterFirstWithHostNet
+```
+<!-- textlint-enable terminology -->

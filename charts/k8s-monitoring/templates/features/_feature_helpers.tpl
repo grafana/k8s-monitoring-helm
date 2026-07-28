@@ -9,6 +9,7 @@
 - integrations
 - kubernetesManifests
 - nodeLogs
+- windowsEventLogs
 - podLogsViaLoki
 - podLogsViaOpenTelemetry
 - podLogsViaKubernetesApi

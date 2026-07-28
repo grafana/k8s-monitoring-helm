@@ -397,7 +397,6 @@ otelcol.processor.transform "k8s_metadata_tempo_gate_traces_otlp_strip" {
     traces = [otelcol.processor.attributes.tempo.input]
   }
 }
-
 // Feature: Cluster Metrics
 declare "cluster_metrics" {
   argument "metrics_destinations" {
@@ -727,12 +726,6 @@ prometheus.relabel "k8s_metadata_prometheus_gate_metrics_prometheus" {
     regex  = "selected_destinations"
   }
 }
-
-
-
-
-
-
 // Feature: Pod Logs (Loki)
 declare "pod_logs_via_loki" {
   argument "logs_destinations" {
@@ -986,9 +979,6 @@ loki.relabel "k8s_metadata_loki_gate_logs_loki" {
   }
   max_cache_size = 100
 }
-
-
-
 // Feature: Profiles Receiver
 declare "profiles_receiver" {
   argument "profiles_destinations" {
@@ -1060,8 +1050,6 @@ pyroscope.relabel "k8s_metadata_pyroscope_gate_profiles_pyroscope" {
     regex  = "selected_destinations"
   }
 }
-
-
 // Self Reporting
 prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   set_collectors = ["textfile"]
