@@ -1,6 +1,7 @@
 {{/* Inputs: Values (values) metricsOutput, logsOutput, tracesOutput, name */}}
 {{/* https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.transform/ */}}
 {{- define "feature.applicationObservability.processor.transform.alloy.target" }}otelcol.processor.transform.{{ .name | default "default" }}.input{{ end }}
+
 {{/*
 Fallback statements to detect service.name and service.namespace when not set by the application or by the
 resource.opentelemetry.io/* pod annotations (extracted by the k8sattributes processor). Follows the OpenTelemetry
@@ -32,21 +33,30 @@ semantic conventions for Kubernetes service names: instance label, name label, w
 `delete_key(resource.attributes, "k8s_monitoring.tmp.instance")`,
 `delete_key(resource.attributes, "k8s_monitoring.tmp.name")`,
 {{- end }}
+
+{{/*
+Delete the service.name resource attribute when it is an OpenTelemetry SDK default (unknown_service*), so the value is
+treated as unset. This runs before the service.name detection statements, so the fallback detection can populate a
+meaningful name in its place.
+*/}}
+{{- define "feature.applicationObservability.processor.transform.overrideUnknownServiceNameStatements" }}
+// Drop the OpenTelemetry SDK default service.name (unknown_service*) so it is treated as unset
+`delete_key(resource.attributes, "service.name") where resource.attributes["service.name"] != nil and IsMatch(resource.attributes["service.name"], "^unknown_service")`,
+{{- end }}
 {{- define "feature.applicationObservability.processor.transform.alloy" }}
 otelcol.processor.transform "{{ .name | default "default" }}" {
   error_mode = {{ .Values.processors.transform.errorMode | quote }}
 
 {{- if .Values.metrics.enabled }}
-{{- if or .Values.metrics.transforms.resource .Values.alignServiceNameWithOTelSemConv }}
+{{- if or .Values.metrics.transforms.resource .Values.alignServiceNameWithOTelSemConv .Values.overrideUnknownServiceNames }}
   metric_statements {
     context = "resource"
     statements = [
 {{- range $transform := .Values.metrics.transforms.resource }}
 {{ $transform | quote | indent 6 }},
 {{- end }}
-{{- if .Values.alignServiceNameWithOTelSemConv }}
-{{- include "feature.applicationObservability.processor.transform.serviceDetectionStatements" . | indent 6 }}
-{{- end }}
+{{- if .Values.overrideUnknownServiceNames }}{{- include "feature.applicationObservability.processor.transform.overrideUnknownServiceNameStatements" . | indent 6 }}{{- end }}
+{{- if .Values.alignServiceNameWithOTelSemConv }}{{- include "feature.applicationObservability.processor.transform.serviceDetectionStatements" . | indent 6 }}{{- end }}
     ]
   }
 {{- end }}
@@ -83,9 +93,8 @@ otelcol.processor.transform "{{ .name | default "default" }}" {
       "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
       "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
       "set(attributes[\"loki.resource.labels\"], \"{{ .Values.logs.transforms.labels | join ", " }}\")",
-{{- if .Values.alignServiceNameWithOTelSemConv }}
-{{- include "feature.applicationObservability.processor.transform.serviceDetectionStatements" . | indent 6 }}
-{{- end }}
+{{- if .Values.overrideUnknownServiceNames }}{{- include "feature.applicationObservability.processor.transform.overrideUnknownServiceNameStatements" . | indent 6 }}{{- end }}
+{{- if .Values.alignServiceNameWithOTelSemConv }}{{- include "feature.applicationObservability.processor.transform.serviceDetectionStatements" . | indent 6 }}{{- end }}
     ]
   }
 {{- if .Values.logs.transforms.log }}
@@ -100,16 +109,15 @@ otelcol.processor.transform "{{ .name | default "default" }}" {
 {{- end }}
 {{- end }}
 {{- if .Values.traces.enabled }}
-{{- if or .Values.traces.transforms.resource .Values.alignServiceNameWithOTelSemConv }}
+{{- if or .Values.traces.transforms.resource .Values.alignServiceNameWithOTelSemConv .Values.overrideUnknownServiceNames }}
   trace_statements {
     context = "resource"
     statements = [
 {{- range $transform := .Values.traces.transforms.resource }}
 {{ $transform | quote | indent 6 }},
 {{- end }}
-{{- if .Values.alignServiceNameWithOTelSemConv }}
-{{- include "feature.applicationObservability.processor.transform.serviceDetectionStatements" . | indent 6 }}
-{{- end }}
+{{- if .Values.overrideUnknownServiceNames }}{{- include "feature.applicationObservability.processor.transform.overrideUnknownServiceNameStatements" . | indent 6 }}{{- end }}
+{{- if .Values.alignServiceNameWithOTelSemConv }}{{- include "feature.applicationObservability.processor.transform.serviceDetectionStatements" . | indent 6 }}{{- end }}
     ]
   }
 {{- end }}

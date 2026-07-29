@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Add an `overrideUnknownServiceNames` option to the Application Observability feature. When enabled, the `service.name` resource attribute will be overridden if its value is `unknown_service*`. (@petewall)
 *   Update Windows Exporter to 0.12.8 (@petewall)
 
 ## 4.3.1

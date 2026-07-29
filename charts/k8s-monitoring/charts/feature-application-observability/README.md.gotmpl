@@ -47,7 +47,10 @@ When the flag is enabled, `service.name` is set to the first value found from th
 application, then the `resource.opentelemetry.io/service.namespace` pod annotation, then the pod namespace.
 
 Note: OpenTelemetry SDKs that are not configured with a service name report `unknown_service:<language>`. Because that
-counts as a reported value, the fallback list does not apply to it.
+counts as a reported value, the fallback list does not apply to it. Set `overrideUnknownServiceNames: true` to delete
+the `service.name` resource attribute whenever it matches this `unknown_service` default, so it is treated as unset. When
+combined with `alignServiceNameWithOTelSemConv`, the fallback list above then fills in a meaningful name instead of
+leaving `unknown_service:<language>`.
 
 To pin a specific service name for a workload, set the `resource.opentelemetry.io/service.name` annotation on the pod.
 

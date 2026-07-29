@@ -1,0 +1,33 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Application Observability - Override Unknown Service Names
+templates:
+  - test/configmap.yaml
+tests:
+  - it: deletes unknown_service service names across metrics, logs, and traces
+    set:
+      testing: {enabled: true}
+      overrideUnknownServiceNames: true
+      receivers:
+        otlp:
+          grpc:
+            enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: runs before service name detection when combined with alignServiceNameWithOTelSemConv
+    set:
+      testing: {enabled: true}
+      overrideUnknownServiceNames: true
+      alignServiceNameWithOTelSemConv: true
+      receivers:
+        otlp:
+          grpc:
+            enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
