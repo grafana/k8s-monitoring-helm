@@ -326,6 +326,12 @@ HELM_TEMPLATE_DEPS := Chart.yaml Chart.lock values.yaml values.schema.json \
 .PHONY: examples
 examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(INTEGRATION_TEST_ALLOY_FILES) $(PLATFORM_TEST_OUTPUT_FILES) $(PLATFORM_TEST_ALLOY_FILES)
 
+# Verify that the comment on every Alloy config component's closing brace matches
+# the component that opened the block (e.g. `} // prometheus.relabel "foo"`).
+.PHONY: check-alloy-closures
+check-alloy-closures: $(EXAMPLE_ALLOY_FILES) $(INTEGRATION_TEST_ALLOY_FILES) $(PLATFORM_TEST_ALLOY_FILES)
+	awk -f ../../scripts/check-alloy-closures.awk $(EXAMPLE_ALLOY_FILES) $(INTEGRATION_TEST_ALLOY_FILES) $(PLATFORM_TEST_ALLOY_FILES)
+
 .PHONY: example-checks
 example-checks: $(EXAMPLE_OUTPUT_FILES)
 ifdef HAS_SHELLSPEC
@@ -401,7 +407,7 @@ build-docs: README.md AGENTS.md docs/Versions.md docs/collectors/presets/README.
 
 # Test targets
 .PHONY: test unittest lint-helm lint-configs
-test: unittest lint-helm lint-configs example-checks misc-checks test-features
+test: unittest lint-helm lint-configs check-alloy-closures example-checks misc-checks test-features
 
 test-features:
 	set -e && \

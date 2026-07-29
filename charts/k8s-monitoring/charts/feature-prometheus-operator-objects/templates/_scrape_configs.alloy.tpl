@@ -67,8 +67,11 @@ prometheus.relabel "scrapeConfigs" {
 {{- if .Values.scrapeConfigs.extraMetricProcessingRules }}
 {{ .Values.scrapeConfigs.extraMetricProcessingRules | indent 2 }}
 {{- end }}
-{{- end }}
   forward_to = argument.metrics_destinations.value
 } // prometheus.relabel "scrapeConfigs"
+{{- else }}
+  forward_to = argument.metrics_destinations.value
+} // prometheus.operator.scrapeconfigs "scrapeConfigs"
+{{- end }}
 {{- end }}
 {{- end }}

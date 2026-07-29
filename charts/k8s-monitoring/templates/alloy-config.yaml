@@ -1,3 +1,10 @@
+{{- $replacementsUsed := dict }}
+{{- range $replacement := .Values.replaceComponent }}
+  {{- if not $replacement.optional }}
+    {{- $key := include "replaceComponent.key" $replacement }}
+    {{- $_ := set $replacementsUsed $key false }}
+  {{- end }}
+{{- end }}
 {{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
 {{- $destinationNames := (get $.Values.collectors $collectorName).includeDestinations | default list }}
 {{- range $featureKey := include "features.list" $ | fromYamlArray }}
@@ -28,7 +35,14 @@
 {{- $alloyConfig = cat $alloyConfig (include "destinations.alloy.rules" (deepCopy $ | merge (dict "collectorName" $collectorName)) | trim | nindent 0) }}
 {{- $alloyConfig = cat $alloyConfig (include "destinations.alloy.config" (deepCopy $ | merge (dict "destinationNames" ($destinationNames | uniq | sortAlpha))) | trim | nindent 0) }}
 
-{{- $alloyConfig = include "replaceComponent.apply" (dict "config" $alloyConfig "replacements" $.Values.replaceComponent "collectorName" $collectorName) }}
+{{- range $replacement := $.Values.replaceComponent }}
+  {{- $before := $alloyConfig }}
+  {{- $alloyConfig = include "replaceComponent.apply" (dict "config" $alloyConfig "replacement" $replacement) }}
+  {{- /* A changed config means the replacement matched — the marker apply inserts guarantees the change. */ -}}
+  {{- if ne $alloyConfig $before }}
+    {{- $_ := set $replacementsUsed (include "replaceComponent.key" $replacement) true }}
+  {{- end }}
+{{- end }}
 
 {{/* Remove all trailing whitespace */}}
 {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" }}
@@ -43,4 +57,18 @@ metadata:
   namespace: {{ include "helper.namespace" $ }}
 data:
   config.alloy: |{{ $alloyConfig | trim | nindent 4 }}
+{{- end }}
+{{- /*
+Validate replacements only after every collector has been processed: a replacement may match
+some collectors but not others, so we can only know it matched *nothing* once all of them are
+done. This runs after the ConfigMaps above are emitted, which is fine — `fail` aborts the whole
+render, so the partial output is discarded rather than written.
+*/ -}}
+{{- range $replacement := .Values.replaceComponent }}
+  {{- $key := include "replaceComponent.key" $replacement }}
+  {{- $required := not $replacement.optional }}
+  {{- $unused := not (get $replacementsUsed $key) }}
+  {{- if and $required $unused }}
+    {{- include "replaceComponent.notFoundError" (dict "replacement" $replacement )}}
+  {{- end }}
 {{- end }}

@@ -94,8 +94,11 @@ prometheus.relabel "kube_state_metrics" {
 {{- if (index .Values "kube-state-metrics").extraMetricProcessingRules }}
   {{ (index .Values "kube-state-metrics").extraMetricProcessingRules | nindent 2}}
 {{- end }}
-{{- end }}
   forward_to = argument.metrics_destinations.value
 } // prometheus.relabel "kube_state_metrics"
+{{- else }}
+  forward_to = argument.metrics_destinations.value
+} // prometheus.scrape "kube_state_metrics"
+{{- end }}
 {{- end }}
 {{- end }}

@@ -32,8 +32,12 @@ tests:
       - notMatchRegex:
           path: data["config.alloy"]
           pattern: '__meta_kubernetes_namespace_pod'
+      # A marker comment is inserted so a replaced component is identifiable from the ConfigMap alone.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'This component was replaced by the chart''s `replaceComponent` setting\.'
 
-  - it: fails when the target component does not exist
+  - it: fails when the target component does not exist in any collector
     set:
       cluster: {name: test-cluster}
       collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
@@ -48,7 +52,25 @@ tests:
           content: "forward_to = []"
     asserts:
       - failedTemplate:
-          errorPattern: 'component prometheus\.relabel "nonexistent" not found'
+          errorPattern: 'Could not find the component prometheus\.relabel "nonexistent" to replace in any collector'
+
+  - it: skips a non-matching replacement when optional is true
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: prometheus
+          url: https://prometheus.example.com
+      replaceComponent:
+        - type: prometheus.relabel
+          name: nonexistent
+          optional: true
+          content: "forward_to = []"
+    asserts:
+      - isKind:
+          of: ConfigMap
 
   - it: scopes replacement to a specific module when module is set
     set:
@@ -110,9 +132,36 @@ tests:
           content: "forward_to = []"
     asserts:
       - failedTemplate:
-          errorPattern: 'component prometheus\.relabel "missing" not found in module "my_module"'
+          errorPattern: 'Could not find the component prometheus\.relabel "missing" to replace in any collector'
 
-  - it: skips module-scoped replacement when module is not rendered
+  - it: skips a module-scoped replacement when the component is absent and optional is true
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: custom
+          ecosystem: otlp
+          logs: {enabled: true, target: "noop.input"}
+          config: |
+            declare "my_module" {
+              prometheus.relabel "other" {
+                original = "yes"
+              } // prometheus.relabel "other"
+            } // declare "my_module"
+      replaceComponent:
+        - type: prometheus.relabel
+          name: missing
+          module: my_module
+          optional: true
+          content: "forward_to = []"
+    asserts:
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'original = "yes"'
+
+  - it: fails when a module-scoped replacement's module is not rendered by any collector
     set:
       cluster: {name: test-cluster}
       collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
@@ -127,5 +176,60 @@ tests:
           module: nonexistent_module
           content: "forward_to = []"
     asserts:
+      - failedTemplate:
+          errorPattern: 'Could not find the component prometheus\.relabel "anything" to replace in any collector'
+
+  - it: skips a module-scoped replacement when the module is not rendered and optional is true
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: prometheus
+          url: https://prometheus.example.com
+      replaceComponent:
+        - type: prometheus.relabel
+          name: anything
+          module: nonexistent_module
+          optional: true
+          content: "forward_to = []"
+    asserts:
       - isKind:
           of: ConfigMap
+
+  - it: does not fail when a replacement matches at least one collector but not all
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: prometheus
+          url: https://prometheus.example.com
+      collectors:
+        # Document order follows collectors.list.enabled (alphabetical): 0=alloy-metrics, 1=alloy-singleton.
+        alloy-metrics:
+          includeDestinations: ["test"]
+          extraConfig: " "
+        alloy-singleton:
+          includeDestinations: ["test"]
+          extraConfig: |
+            prometheus.relabel "shared" {
+              original = "singleton"
+            } // prometheus.relabel "shared"
+      replaceComponent:
+        - type: prometheus.relabel
+          name: shared
+          content: |-
+            replaced = "yes"
+    asserts:
+      # The collector that has the component gets the replacement applied...
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'replaced = "yes"'
+        documentIndex: 1
+      # ...and the collector without it renders normally instead of failing.
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'replaced = "yes"'
+        documentIndex: 0

@@ -62,8 +62,11 @@ prometheus.relabel "kube_proxy" {
 {{- if .Values.kubeProxy.extraMetricProcessingRules }}
 {{ .Values.kubeProxy.extraMetricProcessingRules | indent 2 }}
 {{- end }}
-{{- end }}
   forward_to = argument.metrics_destinations.value
 } // prometheus.relabel "kube_proxy"
+{{- else }}
+  forward_to = argument.metrics_destinations.value
+} // prometheus.scrape "kube_proxy"
+{{- end }}
 {{- end }}
 {{- end }}

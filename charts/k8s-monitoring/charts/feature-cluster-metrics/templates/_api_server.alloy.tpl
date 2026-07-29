@@ -93,8 +93,11 @@ prometheus.relabel "apiserver" {
   {{ .Values.apiServer.extraMetricProcessingRules | indent 2 }}
 {{- end }}
 
-{{- end }}
   forward_to = argument.metrics_destinations.value
 } // prometheus.relabel "apiserver"
+{{- else }}
+  forward_to = argument.metrics_destinations.value
+} // prometheus.scrape "apiserver"
+{{- end }}
 {{- end }}
 {{- end }}

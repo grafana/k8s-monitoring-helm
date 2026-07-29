@@ -91,8 +91,11 @@ prometheus.relabel "kepler" {
 {{- if .Values.energyMetrics.extraMetricProcessingRules }}
   {{ .Values.energyMetrics.extraMetricProcessingRules | nindent 2 }}
 {{- end }}
-{{- end }}
   forward_to = argument.metrics_destinations.value
 } // prometheus.relabel "kepler"
+{{- else }}
+  forward_to = argument.metrics_destinations.value
+} // prometheus.scrape "kepler"
+{{- end }}
 {{- end }}
 {{- end }}

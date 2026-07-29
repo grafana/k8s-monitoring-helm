@@ -66,8 +66,11 @@ prometheus.relabel "kube_scheduler" {
 {{- if .Values.kubeScheduler.extraMetricProcessingRules }}
 {{ .Values.kubeScheduler.extraMetricProcessingRules | indent 2 }}
 {{- end }}
-{{- end }}
   forward_to = argument.metrics_destinations.value
 } // prometheus.relabel "kube_scheduler"
+{{- else }}
+  forward_to = argument.metrics_destinations.value
+} // prometheus.scrape "kube_scheduler"
+{{- end }}
 {{- end }}
 {{- end }}
