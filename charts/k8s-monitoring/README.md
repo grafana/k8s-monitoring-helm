@@ -649,7 +649,7 @@ details:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| replaceComponent | list | `[]` | *Experimental*: Replace the body of a generated Alloy component with custom content. Each entry must match the `type` and `name` of a component that the chart would otherwise render (e.g. `prometheus.relabel "metricsService"`). The templated component must end with a `} // <type> "<name>"` close tag for replacement to find it, otherwise the render fails. Set `module: <name>` to scope the replacement to a component inside a `declare "<module>" { ... }` block. |
+| replaceComponent | list | `[]` | *Experimental*: Replace the body of a generated Alloy component with custom content. Each entry must match the `type` and `name` of a component that the chart would otherwise render (e.g. `prometheus.relabel "metricsService"`). The templated component must end with a `} // <type> "<name>"` close tag for replacement to find it. A replacement is applied to every collector whose config contains the component, and the render only fails if no collector contains it, so a component that exists on only some collectors is fine. Set `module: <name>` to scope the replacement to a component inside a `declare "<module>" { ... }` block. Set `optional: true` to skip a replacement that matches no collector instead of failing the render. |
 
 ### Features - Self-reporting
 
