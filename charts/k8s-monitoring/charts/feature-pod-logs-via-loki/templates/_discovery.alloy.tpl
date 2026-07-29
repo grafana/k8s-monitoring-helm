@@ -21,11 +21,6 @@ discovery.kubernetes "pods" {
     role = "pod"
     field = "spec.nodeName=" + sys.env("HOSTNAME")
   }
-{{- if .Values.namespaces }}
-  namespaces {
-    names = {{ .Values.namespaces | toJson }}
-  }
-{{- end }}
 {{- if $labelSelectors }}
     selectors {
       role = "pod"
@@ -66,6 +61,13 @@ discovery.relabel "filtered_pods" {
     action = "replace"
     target_label = "namespace"
   }
+{{- if .Values.namespaces }}
+  rule {
+    source_labels = ["namespace"]
+    regex = "{{ .Values.namespaces | join "|" }}"
+    action = "keep"
+  }
+{{- end }}
 {{- if .Values.excludeNamespaces }}
   rule {
     source_labels = ["namespace"]
