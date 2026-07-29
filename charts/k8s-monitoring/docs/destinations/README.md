@@ -64,7 +64,7 @@ destinations:
 When there are multiple destinations that support the same type of telemetry data, the Helm chart will try to
 intelligently assign data from features to destinations. The assignment algorithm is:
 
-1.  Has the feature defined its own `destintaions` list? If so, use that.
+1.  Has the feature defined its own `destinations` list? If so, use that.
 2.  Assign any destinations to features that are in the same ecosystem.
 3.  If there are no matching ecosystem destinations, assign any destinations that support the telemetry data type.
 
