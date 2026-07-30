@@ -1,8 +1,12 @@
 # Changelog
 
-## 3.8.11
+## 3.8.12
 
 *   Fix chart schemas where the only valid type was `null`. (#2926) (@petewall)
+*   Update Alloy Operator to 0.6.2, kube-state-metrics to 8.0.0, Prometheus Operator CRDs to 31.0.0, OpenCost to 2.5.28, and Windows Exporter to 0.12.8 (@petewall)
+
+## 3.8.11
+
 *   Add the ability to set the resolver and timeout for `processors.serviceGraphMetrics` in OTLP destinations, choosing how the load balancing exporter routes traces to the service graph Alloy instances. (@petewall)
 *   Add missing extra metric processing rules for Istio metrics integration (@1azunna)
 *   Add `openTelemetryConversion.keepIdentifyingResourceAttributes` option to Prometheus destinations to optionally preserve `service.name`, `service.namespace`, and `service.instance.id` as labels on `target_info` during OTLP to Prometheus conversion. (#2723) (@jereenv)
