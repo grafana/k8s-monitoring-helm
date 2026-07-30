@@ -41,7 +41,7 @@ prometheus_operator_objects "feature" {
 {{- $featureKey := "prometheusOperatorObjects" }}
 {{- $featureName := "Prometheus Operator Objects" }}
 {{- $destinations := include "features.prometheusOperatorObjects.destinations" . | fromYamlArray }}
-{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "featureName" $featureName) }}
+{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "featureName" $featureName "Values" $.Values "featureKey" $featureKey) }}
 {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "prometheusOperatorObjects" "featureName" $featureName "type" "metrics" "ecosystem" "prometheus") }}
 {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
 {{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}

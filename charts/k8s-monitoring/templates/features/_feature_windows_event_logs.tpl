@@ -59,7 +59,7 @@ windows_event_logs "feature" {
 {{- $featureName := "Windows Event Logs" }}
 {{- include "feature.windowsEventLogs.validate" (dict "Values" $.Values.windowsEventLogs) }}
 {{- $destinations := include "features.windowsEventLogs.destinations" . | fromYamlArray }}
-{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "featureName" $featureName) }}
+{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "featureName" $featureName "Values" $.Values "featureKey" $featureKey) }}
 {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "windowsEventLogs" "featureName" $featureName "type" "logs" "ecosystem" "loki") }}
 
 {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}

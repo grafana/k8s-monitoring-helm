@@ -16,12 +16,82 @@
   {{- end }}
 {{- end }}
 
-{{/* Inputs: destinations (array of destination names), type (string), featureName (string) */}}
+{{/* Inputs: destinations (array of destination names), type (string), featureName (string),
+     Values (optional, the chart's .Values), featureKey (optional, this feature's values key).
+
+     When Values and featureKey are supplied and the empty list was caused by router shadowing --
+     every destination that could have carried this signal sits behind a router, and routers are
+     excluded from implicit selection (see the F7 comment on destinations.get) -- say so and
+     suggest naming the router, instead of the default "add a destination" advice. Without that
+     branch the message tells the user to add a destination of a type they already have, which is
+     the one situation where the generic advice is actively wrong. */}}
 {{- define "destinations.validate.destinationListNotEmpty" }}
 {{- if empty .destinations }}
+  {{- $routerCandidates := list }}
+  {{- $shadowedButCapable := list }}
+  {{- if and .Values .featureKey }}
+    {{- /* Shadowing only suppresses IMPLICIT selection. When the feature sets its own
+           `destinations` filter, destinations.get honours that filter verbatim and never consults
+           the shadow set (see the explicit-filter branch of destinations.get), so an empty result
+           means the filter itself is wrong -- a typo, or a destination that does not carry this
+           signal. Blaming a router there would tell the user to overwrite a choice they made
+           deliberately, so fall through to the generic advice. */}}
+    {{- $featureValues := index $.Values .featureKey | default dict }}
+    {{- $filter := $featureValues.destinations | default list }}
+    {{- if empty $filter }}
+      {{- $enabledDestinations := include "destinations.getEnabled" ($.Values.destinations | default dict) | fromYaml }}
+      {{- /* Real destinations that carry this signal. Routers are excluded: their supports_<signal>
+             is unconditionally true, so counting them would treat a router as its own downstream.
+             Capability is checked against the raw destination values, matching how
+             destinations.get decides what it would have selected. */}}
+      {{- $capable := dict }}
+      {{- range $destinationName, $destination := $enabledDestinations }}
+        {{- if ne $destination.type "router" }}
+          {{- if eq (include (printf "destinations.%s.supports_%s" $destination.type $.type) $destination) "true" }}
+            {{- $_ := set $capable $destinationName true }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+      {{- /* Keep each router paired with the capable destinations IT shadows. Merging every
+             router's downstreams into one set would let us suggest a router whose downstreams
+             cannot carry this signal at all -- which passes validation and then silently
+             misroutes, because destinations.router.supports_<signal> always reports true. */}}
+      {{- $reachable := dict }}
+      {{- range $routerName, $router := $enabledDestinations }}
+        {{- if eq $router.type "router" }}
+          {{- $downstream := $router.defaultDestinations | default list }}
+          {{- range $route := ($router.routes | default list) }}
+            {{- $downstream = concat $downstream ($route.destinations | default list) }}
+          {{- end }}
+          {{- $matched := false }}
+          {{- range $d := $downstream }}
+            {{- if hasKey $capable $d }}
+              {{- $_ := set $reachable $d true }}
+              {{- $matched = true }}
+            {{- end }}
+          {{- end }}
+          {{- if $matched }}
+            {{- $routerCandidates = append $routerCandidates $routerName }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+      {{- $shadowedButCapable = keys $reachable | sortAlpha }}
+      {{- $routerCandidates = $routerCandidates | sortAlpha }}
+    {{- end }}
+  {{- end }}
   {{- $msg := list "" (printf "No destinations found that can accept %s from the %s feature." .type .featureName) }}
-  {{- $msg = append $msg (printf "Please add a destination with %s support." .type) }}
-  {{- $msg = append $msg "See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md for more details." }}
+  {{- if and $routerCandidates $shadowedButCapable }}
+    {{- $msg = append $msg (printf "These destinations support %s, but are only reachable through a router: %s." .type (join ", " $shadowedButCapable)) }}
+    {{- $msg = append $msg (printf "Routers are excluded from implicit destination selection, so this feature must name the router it should send through: %s." (join ", " $routerCandidates)) }}
+    {{- $msg = append $msg "Please set:" }}
+    {{- $msg = append $msg (printf "%s:" .featureKey) }}
+    {{- $msg = append $msg "  destinations:" }}
+    {{- $msg = append $msg (printf "    - %s" (first $routerCandidates)) }}
+    {{- $msg = append $msg "See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/DestinationRouting.md for more details." }}
+  {{- else }}
+    {{- $msg = append $msg (printf "Please add a destination with %s support." .type) }}
+    {{- $msg = append $msg "See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md for more details." }}
+  {{- end }}
   {{- fail (join "\n" $msg) }}
 {{- end }}
 {{- end }}
