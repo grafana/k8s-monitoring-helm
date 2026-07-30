@@ -41,7 +41,7 @@ cluster_metrics "feature" {
   {{- $featureKey := "clusterMetrics" }}
   {{- $featureName := "Kubernetes Cluster metrics" }}
   {{- $destinations := include "features.clusterMetrics.destinations" . | fromYamlArray }}
-  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "featureName" $featureName) }}
+  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "featureName" $featureName "Values" $.Values "featureKey" $featureKey) }}
   {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" $featureKey "featureName" $featureName "type" "metrics" "ecosystem" "prometheus") }}
 
   {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
