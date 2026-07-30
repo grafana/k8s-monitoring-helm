@@ -80,7 +80,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | connectors.spanMetrics.events.enabled | bool | `false` | Capture events metrics, which track span events. |
 | connectors.spanMetrics.excludeDimensions | list | `[]` | List of dimensions to be excluded from the default set of dimensions. |
 | connectors.spanMetrics.exemplars.enabled | bool | `false` | Attach exemplars to histograms. |
-| connectors.spanMetrics.exemplars.maxPerDataPoint | number | `nil` | Limits the number of exemplars that can be added to a unique dimension set. |
+| connectors.spanMetrics.exemplars.maxPerDataPoint | int | `nil` | Limits the number of exemplars that can be added to a unique dimension set. |
 | connectors.spanMetrics.histogram.enabled | bool | `true` | Capture histogram metrics, derived from spans’ durations. |
 | connectors.spanMetrics.histogram.explicit.buckets | list | `["2ms","4ms","6ms","8ms","10ms","50ms","100ms","200ms","400ms","800ms","1s","1400ms","2s","5s","10s","15s"]` | The histogram buckets to use. |
 | connectors.spanMetrics.histogram.exponential.maxSize | int | `160` | Maximum number of buckets per positive or negative number range. |

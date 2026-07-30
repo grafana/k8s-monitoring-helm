@@ -5,7 +5,7 @@
 
 # k8s-monitoring
 
-![Version: 3.8.11](https://img.shields.io/badge/Version-3.8.11-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 3.8.11](https://img.shields.io/badge/AppVersion-3.8.11-informational?style=flat-square)
+![Version: 3.8.12](https://img.shields.io/badge/Version-3.8.12-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 3.8.12](https://img.shields.io/badge/AppVersion-3.8.12-informational?style=flat-square)
 Capture all telemetry data from your Kubernetes cluster.
 
 ## Breaking change announcements
@@ -256,7 +256,7 @@ details:
 |  | profilesReceiver(feature-profiles-receiver) | 1.0.0 |
 |  | profiling(feature-profiling) | 1.0.0 |
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
-| https://grafana.github.io/helm-charts | alloy-operator | 0.6.1 |
+| https://grafana.github.io/helm-charts | alloy-operator | 0.6.2 |
 <!-- markdownlint-enable no-bare-urls -->
 
 ## Values

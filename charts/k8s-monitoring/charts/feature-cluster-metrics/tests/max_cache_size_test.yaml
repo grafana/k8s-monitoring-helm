@@ -1,0 +1,23 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Cluster Metrics - Max Cache Size Overrides
+templates:
+  - configmap.yaml
+tests:
+  - it: should allow overriding the global and per-source maxCacheSize
+    set:
+      deployAsConfigMap: true
+      global:
+        maxCacheSize: 200000
+      cadvisor:
+        maxCacheSize: 400000
+    asserts:
+      - isKind:
+          of: ConfigMap
+      # cadvisor uses its per-source override
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: max_cache_size = 400000
+      # kubelet has no per-source override, so it falls back to global
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: max_cache_size = 200000
