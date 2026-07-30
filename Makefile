@@ -69,7 +69,7 @@ lint-shell: ## Lint shell scripts
 
 .PHONY: lint-markdown
 # renovate: datasource=docker depName=davidanson/markdownlint-cli2
-MARKDOWNLINT_CLI2_VERSION = v0.23.1
+MARKDOWNLINT_CLI2_VERSION = v0.23.2
 MARKDOWN_FILES = $(shell find . -name "*.md" ! -path "./.context/*" ! -path "./version-4.0-development-plan/*" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./charts/**/data-alloy/*" ! -path "./charts/k8s-monitoring/docs/create-a-new-feature/*")
 lint-markdown: ## Lint markdown files
 	@if command -v markdownlint-cli2 &> /dev/null; then \
