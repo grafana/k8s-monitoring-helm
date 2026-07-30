@@ -46,13 +46,13 @@
 
 {{- define "features.integrations.destinations.isTranslating" }}
 {{- $isTranslating := false -}}
-{{/*{{- $destinations := include "features.integrations.destinations" . | fromYamlArray -}}*/}}
-{{/*{{ range $destination := $destinations -}}*/}}
-{{/*  {{- $destinationEcosystem := include "destination.getEcosystem" (deepCopy $ | merge (dict "destination" $destination)) -}}*/}}
-{{/*  {{- if ne $destinationEcosystem "prometheus" -}}*/}}
-{{/*    {{- $isTranslating = true -}}*/}}
-{{/*  {{- end -}}*/}}
-{{/*{{- end -}}*/}}
+{{- /*{{- $destinations := include "features.integrations.destinations" . | fromYamlArray -}}*/}}
+{{- /*{{ range $destination := $destinations -}}*/}}
+{{- /*  {{- $destinationEcosystem := include "destination.getEcosystem" (deepCopy $ | merge (dict "destination" $destination)) -}}*/}}
+{{- /*  {{- if ne $destinationEcosystem "prometheus" -}}*/}}
+{{- /*    {{- $isTranslating = true -}}*/}}
+{{- /*  {{- end -}}*/}}
+{{- /*{{- end -}}*/}}
 {{- $isTranslating -}}
 {{- end -}}
 
@@ -87,7 +87,7 @@
 {{- $metricIntegrations := include "feature.integrations.configured.metrics" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
 {{- $destinations := include "features.integrations.destinations" . | fromYamlArray }}
 {{- if $metricIntegrations }}
-  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "featureName" $featureName) }}
+  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "featureName" $featureName "Values" $.Values "featureKey" "integrations") }}
   {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "integrations" "featureName" $featureName "type" "metrics" "ecosystem" "prometheus") }}
   {{- $collectorName := $.Values.integrations.collector }}
   {{- include "collectors.validate.clusteringEnabled" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName "featureName" $featureName) }}
@@ -95,7 +95,7 @@
 
 {{- $logOutputIntegrations := include "feature.integrations.configured.logOutput" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
 {{- if $logOutputIntegrations }}
-  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "featureName" $featureName) }}
+  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "featureName" $featureName "Values" $.Values "featureKey" "integrations") }}
   {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "integrations" "featureName" $featureName "type" "logs" "ecosystem" "loki") }}
 {{- end }}
 
