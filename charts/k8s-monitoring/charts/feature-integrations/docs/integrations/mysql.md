@@ -93,6 +93,7 @@ integrations:
 | databaseObservability.allowUpdatePerformanceSchemaSettings | bool | `false` | Whether to allow updates to performance_schema settings in any collector. |
 | databaseObservability.enabled | bool | `false` | Whether to gather table, schema, and query information from the database. Requires exporter to be enabled. |
 | databaseObservability.excludeSchemas | list | `[]` | A list of schemas to exclude from monitoring. |
+| databaseObservability.labels | object | `{}` | Additional static labels to add to both metrics and logs produced by Database Observability for this instance. Keys are label names, values are label values. The reserved labels `job`, `instance`, and `dsn` cannot be overridden. |
 
 ### Database Observability - Cloud Provider
 

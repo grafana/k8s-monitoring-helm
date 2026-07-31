@@ -261,6 +261,12 @@ loki.relabel {{ $dbRelabelName | quote }} {
     target_label = "instance"
     replacement = {{ .name | quote }}
   }
+  {{- range $label, $value := .databaseObservability.labels }}
+  rule {
+    target_label = {{ $label | quote }}
+    replacement = {{ $value | quote }}
+  }
+  {{- end }}
 }
 
 discovery.relabel {{ $dbRelabelName | quote }} {
@@ -277,6 +283,12 @@ discovery.relabel {{ $dbRelabelName | quote }} {
     target_label = "instance"
     replacement = {{ .name | quote }}
   }
+  {{- range $label, $value := .databaseObservability.labels }}
+  rule {
+    target_label = {{ $label | quote }}
+    replacement = {{ $value | quote }}
+  }
+  {{- end }}
 }
 {{- end }}
 

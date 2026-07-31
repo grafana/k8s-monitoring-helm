@@ -43,6 +43,13 @@
   {{- $msg = append $msg "          enabled: true" }}
   {{- fail (join "\n" $msg) }}
 {{- end }}
+{{- if $dbO11yEnabled }}
+  {{- range $label, $_ := (dig "databaseObservability" "labels" dict .instance) }}
+    {{- if has $label (list "job" "instance" "dsn") }}
+      {{- fail (printf "\nThe label %q in databaseObservability.labels for instance %q is reserved and cannot be overridden.\nReserved labels: job, instance, dsn.\nUse `jobLabel` to change the job value." $label $.instance.name) }}
+    {{- end }}
+  {{- end }}
+{{- end }}
 {{- if and .instance.logs.enabled (not .instance.logs.labelSelectors) }}
   {{- $msg := list "" "The MySQL integration requires a label selector" }}
   {{- $msg = append $msg "For example, please set:" }}

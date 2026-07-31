@@ -112,6 +112,7 @@ integrations:
 | databaseObservability.excludeCurrentUser | bool | `true` | Exclude the user that Alloy uses to connect to the database from monitoring. The resolved username is automatically appended to `excludeUsers`, if not already present. |
 | databaseObservability.excludeDatabases | list | `[]` | A list of databases to exclude from monitoring. |
 | databaseObservability.excludeUsers | list | `[]` | A list of users to exclude from monitoring. |
+| databaseObservability.labels | object | `{}` | Additional static labels to add to both metrics and logs produced by Database Observability for this instance. Keys are label names, values are label values. The reserved labels `job`, `instance`, and `dsn` cannot be overridden. |
 
 ### Exporter Settings
 
