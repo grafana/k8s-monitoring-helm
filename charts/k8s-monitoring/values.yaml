@@ -791,3 +791,87 @@ extraObjects: []
 #     dataFrom:
 #     - extract:
 #         key: mysecret
+
+#
+# Config Validator
+#
+
+# The Config Validator runs a pre-install/pre-upgrade Helm hook that validates the generated Alloy config for each
+# enabled collector via `alloy fmt` and `alloy run`. The install or upgrade is aborted on any syntax or load error,
+# preventing a broken config from reaching the cluster.
+configValidator:
+  # -- Run the pre-install/pre-upgrade Alloy config validator.
+  # @section -- Config Validator
+  enabled: false
+
+  # -- The image used to validate the generated Alloy config. Each field is optional; when empty it falls back to the
+  # per-collector Alloy image, and finally to the Alloy version pinned by this chart's Alloy Operator.
+  # @section -- Config Validator
+  image:
+    # -- Config validator image registry. When empty, uses `global.image.registry`, then the collector's Alloy registry.
+    registry: ""
+    # -- Config validator image repository. When empty, uses the collector's Alloy image repository (`grafana/alloy`).
+    repository: ""
+    # -- (string) Config validator image tag. When empty, uses the collector's Alloy image tag, then the Alloy version
+    # pinned by this chart.
+    tag: ""
+    # -- Config validator image digest. When set, takes precedence over the tag.
+    digest: ""
+    # -- Config validator image pull policy.
+    pullPolicy: IfNotPresent
+    # -- Config validator image pull secrets. When empty, uses `global.image.pullSecrets`, then the collector's.
+    pullSecrets: []
+
+  # -- ServiceAccount the validator pod runs as. When empty, the namespace default ServiceAccount is used.
+  # @section -- Config Validator
+  serviceAccount:
+    name: ""
+
+  # -- Extra arguments passed to `alloy run` during validation.
+  # @section -- Config Validator
+  extraArgs: []
+
+  # -- Annotations to apply to the validator pod.
+  # @section -- Config Validator
+  podAnnotations: {}
+
+  # -- Labels to apply to the validator pod. Service mesh sidecar injection is disabled by default so the short-lived
+  # hook pod can run to completion.
+  # @section -- Config Validator
+  podLabels:
+    sidecar.istio.io/inject: "false"
+    linkerd.io/inject: disabled
+
+  # -- Security context to apply to the validator container. This can also be set to `null` to remove it entirely, and
+  # `runAsUser` can be set to `null` to remove just that field. When running as non-root, keep `readOnlyRootFilesystem`
+  # working by leaving the validator's storage path on the writable `emptyDir` this hook mounts.
+  # @section -- Config Validator
+  securityContext: {}
+  #  allowPrivilegeEscalation: false
+  #  capabilities:
+  #    drop: ["ALL"]
+  #  readOnlyRootFilesystem: true
+  #  runAsNonRoot: true
+  #  runAsUser: 473
+  #  seccompProfile:
+  #    type: RuntimeDefault
+
+  # -- Resources for the validator pod.
+  # @section -- Config Validator
+  resources: {}
+
+  # -- Node selector applied to the validator pod.
+  # @section -- Config Validator
+  nodeSelector: {}
+
+  # -- Tolerations applied to the validator pod.
+  # @section -- Config Validator
+  tolerations: []
+
+  # -- Extra labels added to both the validator pod and its ConfigMap.
+  # @section -- Config Validator
+  extraLabels: {}
+
+  # -- Extra annotations added to both the validator pod and its ConfigMap.
+  # @section -- Config Validator
+  extraAnnotations: {}

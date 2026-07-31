@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Add an opt-in pre-install/pre-upgrade hook that validates each enabled collector's generated Alloy config via `alloy fmt` and `alloy run`, aborting the install/upgrade on syntax or load errors. Enable with `configValidator.enabled: true`. The validator image and pod settings (`configValidator.image`, `podLabels`, `podAnnotations`, `securityContext`, `resources`, `nodeSelector`, `tolerations`) are configurable like the Alloy Operator hooks; the image defaults to the per-collector Alloy image, then to the Alloy version pinned by this chart. (@petewall)
 *   Add the `windowsEventLogs` feature, which gathers Windows event logs from Windows Nodes. (@petewall)
 *   Add a `windows` collector preset, which schedules Alloy onto Windows nodes as a process-isolated container. (@petewall)
 *   Add a `windows-host-process` preset, which layers on the HostProcess settings needed for host access such as reading the Windows Event Log. (@petewall)

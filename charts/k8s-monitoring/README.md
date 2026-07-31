@@ -684,6 +684,23 @@ details:
 | windowsEventLogs.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
 | windowsEventLogs.enabled | bool | `false` | Enable gathering event logs from Windows Kubernetes Cluster Nodes. |
 
+### Config Validator
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| configValidator.enabled | bool | `false` | Run the pre-install/pre-upgrade Alloy config validator. |
+| configValidator.image | object | `{"digest":"","pullPolicy":"IfNotPresent","pullSecrets":[],"registry":"","repository":"","tag":""}` | The image used to validate the generated Alloy config. Each field is optional; when empty it falls back to the per-collector Alloy image, and finally to the Alloy version pinned by this chart's Alloy Operator. |
+| configValidator.serviceAccount | object | `{"name":""}` | ServiceAccount the validator pod runs as. When empty, the namespace default ServiceAccount is used. |
+| configValidator.extraArgs | list | `[]` | Extra arguments passed to `alloy run` during validation. |
+| configValidator.podAnnotations | object | `{}` | Annotations to apply to the validator pod. |
+| configValidator.podLabels | object | `{"linkerd.io/inject":"disabled","sidecar.istio.io/inject":"false"}` | Labels to apply to the validator pod. Service mesh sidecar injection is disabled by default so the short-lived hook pod can run to completion. |
+| configValidator.securityContext | object | `{}` | Security context to apply to the validator container. This can also be set to `null` to remove it entirely, and `runAsUser` can be set to `null` to remove just that field. When running as non-root, keep `readOnlyRootFilesystem` working by leaving the validator's storage path on the writable `emptyDir` this hook mounts. |
+| configValidator.resources | object | `{}` | Resources for the validator pod. |
+| configValidator.nodeSelector | object | `{}` | Node selector applied to the validator pod. |
+| configValidator.tolerations | list | `[]` | Tolerations applied to the validator pod. |
+| configValidator.extraLabels | object | `{}` | Extra labels added to both the validator pod and its ConfigMap. |
+| configValidator.extraAnnotations | object | `{}` | Extra annotations added to both the validator pod and its ConfigMap. |
+
 ### Other Values
 
 | Key | Type | Default | Description |
