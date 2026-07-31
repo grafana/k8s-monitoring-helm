@@ -1,0 +1,37 @@
+snapshot of the rendered Pod spec:
+  1: |
+    containers:
+      - command:
+          - bash
+          - -c
+          - |
+            echo "Validating Grafana Alloy config for collector alloy-metrics"
+            if ! alloy fmt /etc/alloy/config.alloy > /dev/null; then
+              exit 1
+            fi
+            output=$(alloy run --stability.level generally-available --storage.path=/tmp/alloy  "/etc/alloy/config.alloy" 2>&1)
+            if ! echo "${output}" | grep "KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT must be defined" >/dev/null; then
+              echo "${output}"
+              exit 1
+            fi
+            echo "Grafana Alloy config file is valid"
+        env:
+          - name: KUBERNETES_SERVICE_HOST
+            value: ""
+          - name: KUBERNETES_SERVICE_PORT
+            value: ""
+        image: docker.io/grafana/alloy:v1.18.0
+        imagePullPolicy: IfNotPresent
+        name: alloy
+        volumeMounts:
+          - mountPath: /etc/alloy
+            name: config
+          - mountPath: /tmp/alloy
+            name: alloy-storage
+    restartPolicy: Never
+    volumes:
+      - configMap:
+          name: RELEASE-NAME-alloy-metrics-validate
+        name: config
+      - emptyDir: {}
+        name: alloy-storage
