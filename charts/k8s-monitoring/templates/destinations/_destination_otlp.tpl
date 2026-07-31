@@ -119,6 +119,12 @@ otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | q
       `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
 {{- end }}
 {{- end }}
+{{- range $key, $value := .extraResourceAttributes }}
+      `set(attributes[{{ $key | quote }}], {{ $value | quote }})`,
+{{- end }}
+{{- range $key, $value := .extraResourceAttributesFrom }}
+      string.format(`set(attributes[%q], %q)`, {{ $key | quote }}, {{ $value }}),
+{{- end }}
 {{- range $resourceAttribute := $resourceAttributesToRemove }}
       `delete_key(attributes, {{ $resourceAttribute | quote }})`,
 {{- end }}
@@ -193,6 +199,12 @@ otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | q
       `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
 {{- end }}
 {{- end }}
+{{- range $key, $value := .extraResourceAttributes }}
+      `set(attributes[{{ $key | quote }}], {{ $value | quote }})`,
+{{- end }}
+{{- range $key, $value := .extraResourceAttributesFrom }}
+      string.format(`set(attributes[%q], %q)`, {{ $key | quote }}, {{ $value }}),
+{{- end }}
 {{- range $resourceAttribute := $resourceAttributesToRemove }}
       `delete_key(attributes, {{ $resourceAttribute | quote }})`,
 {{- end }}
@@ -255,6 +267,12 @@ otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | q
 {{- else }}
       `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
 {{- end }}
+{{- end }}
+{{- range $key, $value := .extraResourceAttributes }}
+      `set(attributes[{{ $key | quote }}], {{ $value | quote }})`,
+{{- end }}
+{{- range $key, $value := .extraResourceAttributesFrom }}
+      string.format(`set(attributes[%q], %q)`, {{ $key | quote }}, {{ $value }}),
 {{- end }}
 {{- range $resourceAttribute := $resourceAttributesToRemove }}
       `delete_key(attributes, {{ $resourceAttribute | quote }})`,

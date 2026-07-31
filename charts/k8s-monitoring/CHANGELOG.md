@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+*   Add `extraResourceAttributes` and `extraResourceAttributesFrom` options to the OTLP destination. (#2913) (@petewall)
+
 ## 4.3.2
 
 *   Fix chart schemas where the only valid type was `null`. (#2926) (@petewall)

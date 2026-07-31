@@ -146,3 +146,23 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["config.alloy"]
+
+  - it: allows you to set extra resource attributes
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: otlp
+          url: https://otlp.example.com
+          extraResourceAttributes:
+            environment: production
+            product: shopping-cart
+          extraResourceAttributesFrom:
+            region: sys.env("REGION")
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]
