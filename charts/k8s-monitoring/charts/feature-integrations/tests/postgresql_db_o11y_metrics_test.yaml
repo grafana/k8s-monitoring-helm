@@ -262,6 +262,48 @@ tests:
         matchSnapshot:
           path: data["metrics.alloy"]
 
+  - it: adds custom labels to db o11y metrics and logs
+    set:
+      testing: {enabled: true}
+      postgresql:
+        instances:
+          - name: my-database
+            exporter:
+              dataSource:
+                host: my-db.postgresql.svc
+            databaseObservability:
+              enabled: true
+              labels:
+                environment: production
+                team: payments
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
+  - it: rejects reserved db o11y labels
+    set:
+      testing: {enabled: true}
+      postgresql:
+        instances:
+          - name: my-database
+            exporter:
+              dataSource:
+                host: my-db.postgresql.svc
+            databaseObservability:
+              enabled: true
+              labels:
+                job: custom
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
+        failedTemplate:
+          errorMessage: |-
+            The label "job" in databaseObservability.labels for instance "my-database" is reserved and cannot be overridden.
+            Reserved labels: job, instance, dsn.
+            Use `jobLabel` to change the job value.
+
   - it: requires metrics
     set:
       testing: {enabled: true}

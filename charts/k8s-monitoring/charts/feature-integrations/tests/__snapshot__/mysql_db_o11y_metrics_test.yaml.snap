@@ -1,3 +1,116 @@
+adds custom labels to db o11y metrics and logs:
+  1: |
+    |-
+      declare "mysql_integration" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        prometheus.exporter.mysql "my_database" {
+          data_source_name = string.format("%s:%d/", "my-db.mysql.svc", 3306)
+          enable_collectors = ["heartbeat","mysql.user"]
+        }
+
+        database_observability.mysql "my_database" {
+          targets = prometheus.exporter.mysql.my_database.targets
+          data_source_name = string.format("%s:%d/", "my-db.mysql.svc", 3306)
+          allow_update_performance_schema_settings = false
+          explain_plans {
+            collect_interval = "1m"
+            initial_lookback = "24h"
+            per_collect_ratio = "1"
+          }
+          query_details {
+            collect_interval = "1m"
+          }
+          query_samples {
+            collect_interval = "10s"
+            disable_query_redaction = false
+            auto_enable_setup_consumers = false
+            setup_consumers_check_interval = "1h"
+            sample_min_duration = "0s"
+            wait_event_min_duration = "1us"
+          }
+          schema_details {
+            collect_interval = "1m"
+          }
+          setup_consumers {
+            collect_interval = "1h"
+          }
+          setup_actors {
+            auto_update_setup_actors = false
+            collect_interval = "1h"
+          }
+          enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
+          disable_collectors = ["locks"]
+
+          forward_to = [loki.relabel.database_observability_mysql_my_database.receiver]
+        }
+
+        loki.relabel "database_observability_mysql_my_database" {
+          forward_to = argument.logs_destinations.value
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "my-database"
+          }
+          rule {
+            target_label = "environment"
+            replacement = "production"
+          }
+          rule {
+            target_label = "team"
+            replacement = "payments"
+          }
+        }
+
+        discovery.relabel "database_observability_mysql_my_database" {
+          targets = database_observability.mysql.my_database.targets
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "my-database"
+          }
+          rule {
+            target_label = "environment"
+            replacement = "production"
+          }
+          rule {
+            target_label = "team"
+            replacement = "payments"
+          }
+        }
+        prometheus.scrape "my_database" {
+          targets = discovery.relabel.database_observability_mysql_my_database.output
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = argument.metrics_destinations.value
+        }
+      }
 defaults text_limit to 0 for perf_schema.eventsstatements when db o11y is enabled:
   1: |
     |-

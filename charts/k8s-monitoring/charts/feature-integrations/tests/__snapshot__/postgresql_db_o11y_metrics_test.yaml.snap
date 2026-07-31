@@ -1,3 +1,206 @@
+adds custom labels to db o11y metrics and logs:
+  1: |
+    |-
+      declare "postgresql_integration" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        prometheus.exporter.postgres "my_database" {
+          data_source_names = [string.format("postgresql://%s:%d/", "my-db.postgresql.svc", 5432)]
+          enabled_collectors = ["database","locks","replication","replication_slot","stat_bgwriter","stat_database","stat_progress_vacuum","stat_user_tables","statio_user_tables","wal"]
+          disable_default_metrics = false
+          disable_settings_metrics = false
+        }
+
+        database_observability.postgres "my_database" {
+          targets = prometheus.exporter.postgres.my_database.targets
+          data_source_name = string.format("postgresql://%s:%d/", "my-db.postgresql.svc", 5432)
+          exclude_current_user = true
+          explain_plans {
+            collect_interval = "1m"
+            per_collect_ratio = "1"
+          }
+          query_details {
+            collect_interval = "1m"
+          }
+          query_samples {
+            collect_interval = "15s"
+            disable_query_redaction = false
+          }
+          schema_details {
+            collect_interval = "1m"
+          }
+          enable_collectors = ["explain_plans","query_details","query_samples","schema_details"]
+
+          forward_to = [loki.relabel.database_observability_postgres_my_database.receiver]
+        }
+
+        loki.relabel "database_observability_postgres_my_database" {
+          forward_to = argument.logs_destinations.value
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "my-database"
+          }
+          rule {
+            target_label = "environment"
+            replacement = "production"
+          }
+          rule {
+            target_label = "team"
+            replacement = "payments"
+          }
+        }
+
+        discovery.relabel "database_observability_postgres_my_database" {
+          targets = database_observability.postgres.my_database.targets
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "my-database"
+          }
+          rule {
+            target_label = "environment"
+            replacement = "production"
+          }
+          rule {
+            target_label = "team"
+            replacement = "payments"
+          }
+        }
+        prometheus.scrape "my_database" {
+          targets = discovery.relabel.database_observability_postgres_my_database.output
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = argument.metrics_destinations.value
+        }
+      }
+honors top-level exclude_current_user:
+  1: |
+    |-
+      declare "postgresql_integration" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        remote.kubernetes.secret "top_level_excl_db" {
+          name      = "top-level-excl-db-release-name-feature-integrations"
+          namespace = "NAMESPACE"
+        } // remote.kubernetes.secret "top_level_excl_db"
+
+        prometheus.exporter.postgres "top_level_excl_db" {
+          data_source_names = [string.format("postgresql://%s:%s@%s:%d/",
+            encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.top_level_excl_db.data["username"])),
+            encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.top_level_excl_db.data["password"])),
+            "top-level-excl-db.postgresql.svc",
+            5432,
+          )]
+          enabled_collectors = ["database","locks","replication","replication_slot","stat_bgwriter","stat_database","stat_progress_vacuum","stat_user_tables","statio_user_tables","wal"]
+          disable_default_metrics = false
+          disable_settings_metrics = false
+        }
+
+        database_observability.postgres "top_level_excl_db" {
+          targets = prometheus.exporter.postgres.top_level_excl_db.targets
+          data_source_name = string.format("postgresql://%s:%s@%s:%d/",
+            encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.top_level_excl_db.data["username"])),
+            encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.top_level_excl_db.data["password"])),
+            "top-level-excl-db.postgresql.svc",
+            5432,
+          )
+          exclude_current_user = false
+          explain_plans {
+            collect_interval = "1m"
+            per_collect_ratio = "1"
+          }
+          query_details {
+            collect_interval = "1m"
+          }
+          query_samples {
+            collect_interval = "15s"
+            disable_query_redaction = false
+          }
+          schema_details {
+            collect_interval = "1m"
+          }
+          enable_collectors = ["explain_plans","query_details","query_samples","schema_details"]
+
+          forward_to = [loki.relabel.database_observability_postgres_top_level_excl_db.receiver]
+        }
+
+        loki.relabel "database_observability_postgres_top_level_excl_db" {
+          forward_to = argument.logs_destinations.value
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "top-level-excl-db"
+          }
+        }
+
+        discovery.relabel "database_observability_postgres_top_level_excl_db" {
+          targets = database_observability.postgres.top_level_excl_db.targets
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "top-level-excl-db"
+          }
+        }
+        prometheus.scrape "top_level_excl_db" {
+          targets = discovery.relabel.database_observability_postgres_top_level_excl_db.output
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = argument.metrics_destinations.value
+        }
+      }
 keeps prometheus.relabel when metrics tuning is set under db o11y:
   1: |
     |-
@@ -511,107 +714,6 @@ renders new db o11y options (statements_limit):
         }
         prometheus.scrape "limited_db" {
           targets = discovery.relabel.database_observability_postgres_limited_db.output
-          clustering {
-            enabled = true
-          }
-
-          scrape_interval = "60s"
-          scrape_timeout = "10s"
-          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
-          scrape_classic_histograms = false
-          scrape_native_histograms = false
-          forward_to = argument.metrics_destinations.value
-        }
-      }
-honors top-level exclude_current_user:
-  1: |
-    |-
-      declare "postgresql_integration" {
-        argument "metrics_destinations" {
-          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
-        }
-        argument "logs_destinations" {
-          comment = "Must be a list of log destinations where collected logs should be forwarded to"
-        }
-
-        remote.kubernetes.secret "top_level_excl_db" {
-          name      = "top-level-excl-db-release-name-feature-integrations"
-          namespace = "NAMESPACE"
-        } // remote.kubernetes.secret "top_level_excl_db"
-
-        prometheus.exporter.postgres "top_level_excl_db" {
-          data_source_names = [string.format("postgresql://%s:%s@%s:%d/",
-            encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.top_level_excl_db.data["username"])),
-            encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.top_level_excl_db.data["password"])),
-            "top-level-excl-db.postgresql.svc",
-            5432,
-          )]
-          enabled_collectors = ["database","locks","replication","replication_slot","stat_bgwriter","stat_database","stat_progress_vacuum","stat_user_tables","statio_user_tables","wal"]
-          disable_default_metrics = false
-          disable_settings_metrics = false
-        }
-
-        database_observability.postgres "top_level_excl_db" {
-          targets = prometheus.exporter.postgres.top_level_excl_db.targets
-          data_source_name = string.format("postgresql://%s:%s@%s:%d/",
-            encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.top_level_excl_db.data["username"])),
-            encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.top_level_excl_db.data["password"])),
-            "top-level-excl-db.postgresql.svc",
-            5432,
-          )
-          exclude_current_user = false
-          explain_plans {
-            collect_interval = "1m"
-            per_collect_ratio = "1"
-          }
-          query_details {
-            collect_interval = "1m"
-          }
-          query_samples {
-            collect_interval = "15s"
-            disable_query_redaction = false
-          }
-          schema_details {
-            collect_interval = "1m"
-          }
-          enable_collectors = ["explain_plans","query_details","query_samples","schema_details"]
-
-          forward_to = [loki.relabel.database_observability_postgres_top_level_excl_db.receiver]
-        }
-
-        loki.relabel "database_observability_postgres_top_level_excl_db" {
-          forward_to = argument.logs_destinations.value
-          rule {
-            target_label = "job"
-            replacement = "integrations/db-o11y"
-          }
-          rule {
-            source_labels = ["instance"]
-            target_label = "dsn"
-          }
-          rule {
-            target_label = "instance"
-            replacement = "top-level-excl-db"
-          }
-        }
-
-        discovery.relabel "database_observability_postgres_top_level_excl_db" {
-          targets = database_observability.postgres.top_level_excl_db.targets
-          rule {
-            target_label = "job"
-            replacement = "integrations/db-o11y"
-          }
-          rule {
-            source_labels = ["instance"]
-            target_label = "dsn"
-          }
-          rule {
-            target_label = "instance"
-            replacement = "top-level-excl-db"
-          }
-        }
-        prometheus.scrape "top_level_excl_db" {
-          targets = discovery.relabel.database_observability_postgres_top_level_excl_db.output
           clustering {
             enabled = true
           }
