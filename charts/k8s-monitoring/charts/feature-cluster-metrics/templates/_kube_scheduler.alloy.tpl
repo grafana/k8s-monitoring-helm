@@ -2,6 +2,20 @@
 {{- if or .Values.kubeScheduler.enabled (and .Values.controlPlane.enabled (not (eq .Values.kubeScheduler.enabled false))) }}
 {{- $metricAllowList := .Values.kubeScheduler.metricsTuning.includeMetrics }}
 {{- $metricDenyList := .Values.kubeScheduler.metricsTuning.excludeMetrics }}
+{{- if eq .Values.kubeScheduler.discoveryMode "eks-proxy" }}
+
+discovery.relabel "kube_scheduler" {
+  // On Amazon EKS the control plane is managed by AWS and the Kube Scheduler has no discoverable Pod, so
+  // its metrics are scraped from the EKS Control Plane Metrics API served on the Kubernetes API server.
+  targets = [{
+    __address__      = {{ .Values.global.kubernetesAPIService | default "kubernetes.default.svc.cluster.local:443" | quote }},
+    __metrics_path__ = "/apis/metrics.eks.amazonaws.com/v1/ksh/container/metrics",
+  }]
+{{- if .Values.kubeScheduler.extraDiscoveryRules }}
+{{ .Values.kubeScheduler.extraDiscoveryRules | indent 2 }}
+{{- end }}
+} // discovery.relabel "kube_scheduler"
+{{- else }}
 
 discovery.kubernetes "kube_scheduler" {
   role = "pod"
@@ -25,6 +39,7 @@ discovery.relabel "kube_scheduler" {
 {{ .Values.kubeScheduler.extraDiscoveryRules | indent 2 }}
 {{- end }}
 } // discovery.relabel "kube_scheduler"
+{{- end }}
 
 prometheus.scrape "kube_scheduler" {
   targets           = discovery.relabel.kube_scheduler.output

@@ -199,6 +199,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| kubeControllerManager.discoveryMode | string | `"pod"` | How to discover and scrape the Kube Controller Manager. Options are "pod" (find the component's Pod via the `selectorLabel` in `kube-system`) or "eks-proxy" (scrape the EKS Control Plane Metrics API served at `/apis/metrics.eks.amazonaws.com/v1/kcm/container/metrics` on the Kubernetes API server, used by Amazon EKS where the control plane is managed by AWS and has no discoverable Pods). `eks-proxy` requires Kubernetes 1.28+ and additional RBAC; see the EKS platform example. |
 | kubeControllerManager.enabled | bool | `false` | Scrape metrics from the Kube Controller Manager |
 | kubeControllerManager.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for the Kube Controller Manager. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | kubeControllerManager.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for the Kube Controller Manager. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
@@ -206,9 +207,9 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kubeControllerManager.maxCacheSize | string | `nil` | Sets the max_cache_size for the Kube Controller Manager prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
 | kubeControllerManager.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | kubeControllerManager.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. An empty list means keep all. |
-| kubeControllerManager.port | int | `10257` | Port number used by the Kube Controller Manager, set by `--secure-port.` |
+| kubeControllerManager.port | int | `10257` | Port number used by the Kube Controller Manager, set by `--secure-port.` Only used when `discoveryMode` is "pod". |
 | kubeControllerManager.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kube Controller Manager. Overrides `global.scrapeInterval`. |
-| kubeControllerManager.selectorLabel | string | `"component=kube-controller-manager"` | Selector label. |
+| kubeControllerManager.selectorLabel | string | `"component=kube-controller-manager"` | Selector label. Only used when `discoveryMode` is "pod". |
 
 ### KubeDNS
 
@@ -244,6 +245,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| kubeScheduler.discoveryMode | string | `"pod"` | How to discover and scrape the Kube Scheduler. Options are "pod" (find the component's Pod via the `selectorLabel` in `kube-system`) or "eks-proxy" (scrape the EKS Control Plane Metrics API served at `/apis/metrics.eks.amazonaws.com/v1/ksh/container/metrics` on the Kubernetes API server, used by Amazon EKS where the control plane is managed by AWS and has no discoverable Pods). `eks-proxy` requires Kubernetes 1.28+ and additional RBAC; see the EKS platform example. |
 | kubeScheduler.enabled | bool | `false` | Scrape metrics from the Kube Scheduler |
 | kubeScheduler.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for the Kube Scheduler. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | kubeScheduler.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for the Kube Scheduler. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
@@ -251,10 +253,10 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kubeScheduler.maxCacheSize | string | `nil` | Sets the max_cache_size for the Kube Scheduler prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
 | kubeScheduler.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | kubeScheduler.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. An empty list means keep all. |
-| kubeScheduler.port | int | `10259` | Port number used by the Kube Scheduler, set by `--secure-port`. |
+| kubeScheduler.port | int | `10259` | Port number used by the Kube Scheduler, set by `--secure-port`. Only used when `discoveryMode` is "pod". |
 | kubeScheduler.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kube Scheduler. Overrides `global.scrapeInterval`. |
 | kubeScheduler.scrapeTimeout | string | `10s` | The timeout for scraping Kube Scheduler metrics. Overrides `global.scrapeTimeout`. |
-| kubeScheduler.selectorLabel | string | `"component=kube-scheduler"` | Selector label. |
+| kubeScheduler.selectorLabel | string | `"component=kube-scheduler"` | Selector label. Only used when `discoveryMode` is "pod". |
 
 ### Kubelet
 

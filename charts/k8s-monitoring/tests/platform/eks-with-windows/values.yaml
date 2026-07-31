@@ -40,6 +40,16 @@ clusterMetrics:
   collector: alloy-metrics
   dataProcessors: [ec2-tags]
 
+  # On EKS the control plane is managed by AWS, so kube-scheduler and kube-controller-manager have no
+  # discoverable Pods. Scrape them from the EKS Control Plane Metrics API instead. This requires
+  # Kubernetes 1.28+ and the metrics.eks.amazonaws.com RBAC rule added to the alloy-metrics collector below.
+  controlPlane:
+    enabled: true
+  kubeScheduler:
+    discoveryMode: eks-proxy
+  kubeControllerManager:
+    discoveryMode: eks-proxy
+
 hostMetrics:
   enabled: true
   collector: alloy-metrics
@@ -79,6 +89,26 @@ collectors:
     presets: [clustered, statefulset]
     alloy:
       stabilityLevel: experimental  # Required for prometheus.enrich (ec2Enrichment processor)
+    rbac:
+      # The chart's default cluster-scoped RBAC rules, plus a rule granting read access to the EKS
+      # Control Plane Metrics API so the `eks-proxy` discoveryMode can scrape kube-scheduler and
+      # kube-controller-manager. Overriding clusterRules replaces the list, so the defaults are repeated here.
+      clusterRules:
+        - apiGroups: [""]
+          resources: [nodes]
+          verbs: [get, list, watch]
+        - apiGroups: [""]
+          resources: [nodes/pods]
+          verbs: [get, list, watch]
+        - apiGroups: [""]
+          resources: [nodes/metrics]
+          verbs: [get, list, watch]
+        - nonResourceURLs: [/metrics]
+          verbs: [get]
+        # EKS Control Plane Metrics API (metrics.eks.amazonaws.com)
+        - apiGroups: [metrics.eks.amazonaws.com]
+          resources: [ksh/metrics, kcm/metrics]
+          verbs: [get]
 
   alloy-singleton:
     presets: [singleton]

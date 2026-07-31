@@ -375,15 +375,23 @@ kubeControllerManager:
   # @section -- Kube Controller Manager
   enabled:
 
+  # -- How to discover and scrape the Kube Controller Manager. Options are "pod" (find the component's Pod via the
+  # `selectorLabel` in `kube-system`) or "eks-proxy" (scrape the EKS Control Plane Metrics API served at
+  # `/apis/metrics.eks.amazonaws.com/v1/kcm/container/metrics` on the Kubernetes API server, used by Amazon EKS where
+  # the control plane is managed by AWS and has no discoverable Pods). `eks-proxy` requires Kubernetes 1.28+ and
+  # additional RBAC; see the EKS platform example.
+  # @section -- Kube Controller Manager
+  discoveryMode: pod
+
   # -- The value for the job label.
   # @section -- Kube Controller Manager
   jobLabel: "kube-controller-manager"
 
-  # -- Selector label.
+  # -- Selector label. Only used when `discoveryMode` is "pod".
   # @section -- Kube Controller Manager
   selectorLabel: "component=kube-controller-manager"
 
-  # -- Port number used by the Kube Controller Manager, set by `--secure-port.`
+  # -- Port number used by the Kube Controller Manager, set by `--secure-port.` Only used when `discoveryMode` is "pod".
   # @section -- Kube Controller Manager
   port: 10257
 
@@ -544,15 +552,23 @@ kubeScheduler:
   # @section -- Kube Scheduler
   enabled:
 
+  # -- How to discover and scrape the Kube Scheduler. Options are "pod" (find the component's Pod via the
+  # `selectorLabel` in `kube-system`) or "eks-proxy" (scrape the EKS Control Plane Metrics API served at
+  # `/apis/metrics.eks.amazonaws.com/v1/ksh/container/metrics` on the Kubernetes API server, used by Amazon EKS where
+  # the control plane is managed by AWS and has no discoverable Pods). `eks-proxy` requires Kubernetes 1.28+ and
+  # additional RBAC; see the EKS platform example.
+  # @section -- Kube Scheduler
+  discoveryMode: pod
+
   # -- The value for the job label.
   # @section -- Kube Scheduler
   jobLabel: "kube-scheduler"
 
-  # -- Selector label.
+  # -- Selector label. Only used when `discoveryMode` is "pod".
   # @section -- Kube Scheduler
   selectorLabel: "component=kube-scheduler"
 
-  # -- Port number used by the Kube Scheduler, set by `--secure-port`.
+  # -- Port number used by the Kube Scheduler, set by `--secure-port`. Only used when `discoveryMode` is "pod".
   # @section -- Kube Scheduler
   port: 10259
 

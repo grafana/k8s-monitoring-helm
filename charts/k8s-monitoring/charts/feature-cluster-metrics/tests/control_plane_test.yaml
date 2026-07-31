@@ -15,3 +15,33 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["module.alloy"]
+
+  - it: should scrape the EKS Control Plane Metrics API when discoveryMode is eks-proxy
+    set:
+      testing: {enabled: true}
+      kubeScheduler:
+        enabled: true
+        discoveryMode: eks-proxy
+      kubeControllerManager:
+        enabled: true
+        discoveryMode: eks-proxy
+      kube-state-metrics:
+        enabled: false
+    asserts:
+      - isKind:
+          of: ConfigMap
+      # eks-proxy mode targets the API server directly, not a Pod discovered in kube-system.
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'discovery\.kubernetes "kube_scheduler"'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'discovery\.kubernetes "kube_controller_manager"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '/apis/metrics\.eks\.amazonaws\.com/v1/ksh/container/metrics'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '/apis/metrics\.eks\.amazonaws\.com/v1/kcm/container/metrics'
+      - matchSnapshot:
+          path: data["module.alloy"]
