@@ -42,7 +42,7 @@ pod_logs_via_kubernetes_api "feature" {
 {{- $featureKey := "podLogsViaKubernetesApi" }}
 {{- $featureName := "Kubernetes Pod logs via Kubernetes API" }}
 {{- $destinations := include "features.podLogsViaKubernetesApi.destinations" . | fromYamlArray }}
-{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "featureName" $featureName) }}
+{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "featureName" $featureName "Values" $.Values "featureKey" $featureKey) }}
 {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "podLogsViaKubernetesApi" "featureName" $featureName "type" "logs" "ecosystem" "loki") }}
 
 {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}

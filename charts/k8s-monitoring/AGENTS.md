@@ -125,6 +125,7 @@ charts/feature-{name}/
 -   `feature-profiles-receiver` - Kubernetes Observability feature for receiving profiles.
 -   `feature-profiling` - Gathers profiles from eBPF, Java, and pprof sources.
 -   `feature-prometheus-operator-objects` - Gathers metrics using Prometheus Operator Objects
+-   `feature-windows-event-logs` - Kubernetes Observability feature for gathering Windows event logs.
 -   `telemetry-services` - Additional Deployments to generate observability telemetry data
 <!-- END FEATURES -->
 
@@ -156,6 +157,7 @@ podLogsViaLoki:
 -   `otlp` - Send to any OTLP endpoint (Tempo, Grafana Cloud, etc.)
 -   `prometheus` - Remote write to Prometheus-compatible endpoint
 -   `pyroscope` - Send profiles to Pyroscope
+-   `router` - Route telemetry to other destinations based on an attribute value
 <!-- END DESTINATIONS -->
 
 **Configure a destination:**

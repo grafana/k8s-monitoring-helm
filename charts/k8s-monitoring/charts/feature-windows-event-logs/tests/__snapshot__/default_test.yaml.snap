@@ -1,0 +1,101 @@
+should render the Application and System channels:
+  1: |
+    |-
+      declare "windows_event_logs" {
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+        loki.source.windowsevent "application" {
+          eventlog_name          = "Application"
+          poll_interval          = "3s"
+          use_incoming_timestamp = false
+          exclude_event_data     = false
+          exclude_user_data      = false
+          exclude_event_message  = false
+          locale                 = 0
+          bookmark_path          = "C:\\ProgramData\\Grafana\\Alloy\\WindowsEventLogs\\application.xml"
+          labels = {
+            job = "integrations/windows-application-logs",
+            instance = sys.env("HOSTNAME"),
+            channel = "Application",
+          }
+          forward_to = [loki.process.windows_event_logs.receiver]
+        } // loki.source.windowsevent "application"
+        loki.source.windowsevent "system" {
+          eventlog_name          = "System"
+          poll_interval          = "3s"
+          use_incoming_timestamp = false
+          exclude_event_data     = false
+          exclude_user_data      = false
+          exclude_event_message  = false
+          locale                 = 0
+          bookmark_path          = "C:\\ProgramData\\Grafana\\Alloy\\WindowsEventLogs\\system.xml"
+          labels = {
+            job = "integrations/windows-system-logs",
+            instance = sys.env("HOSTNAME"),
+            channel = "System",
+          }
+          forward_to = [loki.process.windows_event_logs.receiver]
+        } // loki.source.windowsevent "system"
+
+        loki.process "windows_event_logs" {
+          stage.static_labels {
+            values = {
+              // add a static source label to the logs so they can be differentiated / restricted if necessary
+              "source" = "windowsevent",
+              // default level to unknown
+              level = "UNKNOWN",
+            }
+          }
+
+          // loki.source.windowsevent emits each event as a JSON document. Extract the fields needed for processing.
+          stage.json {
+            expressions = {
+              level_text = "levelText",
+            }
+          }
+
+          // Standardize the Windows event level onto the shared level values.
+          stage.match {
+            selector = "{level=\"UNKNOWN\"}"
+
+            stage.replace {
+              source = "level_text"
+              expression = "(?i)^(verbose)$"
+              replace = "DEBUG"
+            }
+
+            stage.replace {
+              source = "level_text"
+              expression = "(?i)^(information|info)$"
+              replace = "INFO"
+            }
+
+            stage.replace {
+              source = "level_text"
+              expression = "(?i)^(warning|warn)$"
+              replace = "WARN"
+            }
+
+            stage.replace {
+              source = "level_text"
+              expression = "(?i)^(error|err)$"
+              replace = "ERROR"
+            }
+
+            stage.replace {
+              source = "level_text"
+              expression = "(?i)^(critical|crit)$"
+              replace = "CRIT"
+            }
+
+            stage.labels {
+              values = {
+                level = "level_text",
+              }
+            }
+          }
+
+          forward_to = argument.logs_destinations.value
+        } // loki.process "windows_event_logs"
+      } // declare "windows_event_logs"

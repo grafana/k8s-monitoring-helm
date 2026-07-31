@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+*   Add the `windowsEventLogs` feature, which gathers Windows event logs from Windows Nodes. (@petewall)
+*   Add a `windows` collector preset, which schedules Alloy onto Windows nodes as a process-isolated container. (@petewall)
+*   Add a `windows-host-process` preset, which layers on the HostProcess settings needed for host access such as reading the Windows Event Log. (@petewall)
+*   Add a `windows-scrapeable` preset, which opens the Alloy metrics port on the Windows Node's host firewall so other collectors can scrape it. (@petewall)
+*   Add the `router` destination, which routes telemetry to different destinations based on the value of a resource attribute or label (default `k8s.namespace.name`). Routes are evaluated in order and the first match wins; unmatched data goes to the required `defaultDestinations`. (#2849) (@mbaykara)
+*   Improve the "No destinations found" validation error: when capable destinations exist but are only reachable through a `router` destination, the error now lists those destinations, names the signal-capable router(s), and shows the exact `destinations:` setting to opt the feature in. (#2924) (@mbaykara)
+*   Fix stray blank lines in the post-install notes output when the Host Metrics feature is enabled. (#2924) (@mbaykara)
+
 ## 4.3.2
 
 *   Fix chart schemas where the only valid type was `null`. (#2926) (@petewall)

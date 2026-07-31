@@ -7,4 +7,5 @@
 - otlp
 - prometheus
 - pyroscope
+- router
 {{- end -}}
