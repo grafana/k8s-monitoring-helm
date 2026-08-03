@@ -2,6 +2,20 @@
 {{- if or .Values.kubeControllerManager.enabled (and .Values.controlPlane.enabled (not (eq .Values.kubeControllerManager.enabled false))) }}
 {{- $metricAllowList := .Values.kubeControllerManager.metricsTuning.includeMetrics }}
 {{- $metricDenyList := .Values.kubeControllerManager.metricsTuning.excludeMetrics }}
+{{- if eq .Values.kubeControllerManager.discoveryMode "eks-proxy" }}
+
+discovery.relabel "kube_controller_manager" {
+  // On Amazon EKS the control plane is managed by AWS and the Kube Controller Manager has no discoverable Pod, so
+  // its metrics are scraped from the EKS Control Plane Metrics API served on the Kubernetes API server.
+  targets = [{
+    __address__      = {{ .Values.global.kubernetesAPIService | default "kubernetes.default.svc.cluster.local:443" | quote }},
+    __metrics_path__ = "/apis/metrics.eks.amazonaws.com/v1/kcm/container/metrics",
+  }]
+{{- if .Values.kubeControllerManager.extraDiscoveryRules }}
+{{ .Values.kubeControllerManager.extraDiscoveryRules | indent 2 }}
+{{- end }}
+} // discovery.relabel "kube_controller_manager"
+{{- else }}
 
 discovery.kubernetes "kube_controller_manager" {
   role = "pod"
@@ -25,6 +39,7 @@ discovery.relabel "kube_controller_manager" {
 {{ .Values.kubeControllerManager.extraDiscoveryRules | indent 2 }}
 {{- end }}
 } // discovery.relabel "kube_controller_manager"
+{{- end }}
 
 prometheus.scrape "kube_controller_manager" {
   targets           = discovery.relabel.kube_controller_manager.output
