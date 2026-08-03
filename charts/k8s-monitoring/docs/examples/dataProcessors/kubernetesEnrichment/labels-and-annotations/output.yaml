@@ -236,10 +236,9 @@ data:
     }
     otelcol.processor.filter "k8s_metadata_prometheus_gate_metrics_otlp" {
       error_mode = "ignore"
-      metric_conditions {
-        context    = "resource"
-        conditions = [
-          "not IsMatch(attributes[\"selected_destinations\"], \"(^|.*,)prometheus(,.*|$)\")",
+      metrics {
+        metric = [
+          "not IsMatch(resource.attributes[\"selected_destinations\"], \"(^|.*,)prometheus(,.*|$)\")",
         ]
       }
       output {
@@ -333,10 +332,9 @@ data:
     }
     otelcol.processor.filter "k8s_metadata_loki_gate_logs_otlp" {
       error_mode = "ignore"
-      log_conditions {
-        context    = "resource"
-        conditions = [
-          "not IsMatch(attributes[\"selected_destinations\"], \"(^|.*,)loki(,.*|$)\")",
+      logs {
+        log_record = [
+          "not IsMatch(resource.attributes[\"selected_destinations\"], \"(^|.*,)loki(,.*|$)\")",
         ]
       }
       output {
@@ -430,10 +428,9 @@ data:
     }
     otelcol.processor.filter "k8s_metadata_tempo_gate_traces_otlp" {
       error_mode = "ignore"
-      trace_conditions {
-        context    = "resource"
-        conditions = [
-          "not IsMatch(attributes[\"selected_destinations\"], \"(^|.*,)tempo(,.*|$)\")",
+      traces {
+        span = [
+          "not IsMatch(resource.attributes[\"selected_destinations\"], \"(^|.*,)tempo(,.*|$)\")",
         ]
       }
       output {

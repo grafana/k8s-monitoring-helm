@@ -242,32 +242,25 @@ loki.relabel {{ $name | quote }} {
   max_cache_size = 100
 }
 {{- else if eq .ecosystem "otlp" }}
-{{- $dropExpr := printf `not IsMatch(attributes["selected_destinations"], "%s")` $keepRegex }}
+{{- $dropExpr := printf `not IsMatch(resource.attributes["selected_destinations"], "%s")` $keepRegex }}
 {{- $block := include "pipeline.alloy.otlp.statementsBlock" .type }}
 otelcol.processor.filter {{ $name | quote }} {
   error_mode = "ignore"
-  {{- if eq .type "metrics" }}
-  metric_conditions {
-    context    = "resource"
-    conditions = [
+  {{ .type }} {
+    {{- if eq .type "metrics" }}
+    metric = [
       {{ $dropExpr | quote }},
     ]
-  }
-  {{- else if eq .type "logs" }}
-  log_conditions {
-    context    = "resource"
-    conditions = [
+    {{- else if eq .type "logs" }}
+    log_record = [
       {{ $dropExpr | quote }},
     ]
-  }
-  {{- else if eq .type "traces" }}
-  trace_conditions {
-    context    = "resource"
-    conditions = [
+    {{- else if eq .type "traces" }}
+    span = [
       {{ $dropExpr | quote }},
     ]
+    {{- end }}
   }
-  {{- end }}
   output {
     {{ .type }} = [otelcol.processor.transform.{{ $name }}_strip.input]
   }
