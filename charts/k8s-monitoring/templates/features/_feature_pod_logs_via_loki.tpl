@@ -38,8 +38,6 @@ pod_logs_via_loki "feature" {
 
 {{- define "features.podLogsViaLoki.collector.values" }}{{- end -}}
 
-{{- define "features.podLogsViaLoki.chooseCollector" -}}{{- end -}}
-
 {{- define "features.podLogsViaLoki.validate" }}
 {{- if .Values.podLogsViaLoki.enabled -}}
 {{- $featureKey := "podLogsViaLoki" }}

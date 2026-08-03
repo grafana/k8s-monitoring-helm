@@ -163,5 +163,3 @@ http://{{ include "collector.alloy.fullname" $values }}.{{ include "helper.names
 http://{{ include "collector.alloy.fullname" $values }}.{{ include "helper.namespace" . }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.http.port }}
 {{- end }}
 {{- end }}
-
-{{- define "features.applicationObservability.chooseCollector" -}}{{- end -}}

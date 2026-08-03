@@ -30,6 +30,23 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
 ---
+# Source: k8s-monitoring/charts/telemetryServices/charts/node-exporter/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-node-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: node-exporter-4.56.1
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: node-exporter
+    app.kubernetes.io/name: node-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.12.1"
+    release: k8smon
+automountServiceAccountToken: false
+---
 # Source: k8s-monitoring/charts/telemetryServices/charts/windows-exporter/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -73,7 +90,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: k8smon-alloy-linux
+  name: k8smon-alloy
   namespace: default
 data:
   config.alloy: |
@@ -740,37 +757,117 @@ data:
         loki.write.grafana_cloud_logs.receiver,
       ]
     }
-    // Feature: Host Metrics
-    declare "host_metrics" {
+    // Feature: Host Metrics - Linux Hosts
+    declare "linux_host_metrics" {
       argument "metrics_destinations" {
         comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
       }
     
-      prometheus.exporter.unix "node_exporter" {
-        rootfs_path = "/host/root"
-        procfs_path = "/host/proc"
-        sysfs_path  = "/host/sys"
-      } // prometheus.exporter.unix "node_exporter"
+      // Linux hosts via Node Exporter
+      discovery.kubernetes "node_exporter" {
+        role = "pod"
+        selectors {
+          role = "pod"
+          label = "release=k8smon,app.kubernetes.io/name=node-exporter"
+        }
+        namespaces {
+          names = ["default"]
+        }
+    
+      } // discovery.kubernetes "node_exporter"
     
       discovery.relabel "node_exporter" {
-        targets = prometheus.exporter.unix.node_exporter.targets
+        targets = discovery.kubernetes.node_exporter.targets
+    
+        // keep only the specified metrics port name, and pods that are Running and ready
+        rule {
+          source_labels = [
+            "__meta_kubernetes_pod_container_init",
+            "__meta_kubernetes_pod_phase",
+            "__meta_kubernetes_pod_ready",
+          ]
+          separator = "@"
+          regex = "false@Running@true"
+          action = "keep"
+        }
     
         // Set the instance label to the node name
         rule {
+          source_labels = ["__meta_kubernetes_pod_node_name"]
           target_label = "instance"
-          replacement = sys.env("NODE_NAME")
         }
     
-        // Override the job label set by prometheus.exporter.unix to match the Node Exporter source
         rule {
-          target_label = "job"
-          replacement = "integrations/node_exporter"
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+    
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+    
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label  = "container"
+        }
+    
+        // set a workload label
+        rule {
+          source_labels = [
+            "__meta_kubernetes_pod_controller_kind",
+            "__meta_kubernetes_pod_controller_name",
+          ]
+          separator = "/"
+          target_label  = "workload"
+        }
+        // remove the hash from the ReplicaSet
+        rule {
+          source_labels = ["workload"]
+          regex = "(ReplicaSet/.+)-.+"
+          target_label  = "workload"
+        }
+    
+        // Set the app label.
+        //
+        // Choose the first value found from the following ordered list:
+        // - pod.label[app.kubernetes.io/name]
+        // - pod.label[k8s-app]
+        // - pod.label[app]
+        rule {
+          source_labels = [
+            "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+            "__meta_kubernetes_pod_label_k8s_app",
+            "__meta_kubernetes_pod_label_app",
+          ]
+          separator = ";"
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "app"
+        }
+    
+        // Set the component label.
+        //
+        // Choose the first value found from the following ordered list:
+        // - pod.label[app.kubernetes.io/component]
+        // - pod.label[k8s-component]
+        // - pod.label[component]
+        rule {
+          source_labels = [
+            "__meta_kubernetes_pod_label_app_kubernetes_io_component",
+            "__meta_kubernetes_pod_label_k8s_component",
+            "__meta_kubernetes_pod_label_component",
+          ]
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "component"
         }
     
         rule {
           target_label = "source"
           replacement = "kubernetes"
         }
+    
       } // discovery.relabel "node_exporter"
     
       prometheus.scrape "node_exporter" {
@@ -782,6 +879,14 @@ data:
         scrape_classic_histograms = false
         scrape_native_histograms = false
         convert_classic_histograms_to_nhcb = false
+        scheme = "http"
+        tls_config {
+          insecure_skip_verify = true
+        }
+    
+        clustering {
+          enabled = true
+        }
         forward_to = [prometheus.relabel.node_exporter.receiver]
       } // prometheus.scrape "node_exporter"
     
@@ -801,6 +906,17 @@ data:
         }
         forward_to = argument.metrics_destinations.value
       } // prometheus.relabel "node_exporter"
+    } // declare "linux_host_metrics"
+    linux_host_metrics "feature" {
+      metrics_destinations = [
+        prometheus.remote_write.grafana_cloud_metrics.receiver,
+      ]
+    }
+    // Feature: Host Metrics - Windows Hosts
+    declare "windows_host_metrics" {
+      argument "metrics_destinations" {
+        comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+      }
     
       // Windows hosts via Windows Exporter
       discovery.kubernetes "windows_exporter_pods" {
@@ -862,8 +978,8 @@ data:
         }
         forward_to = argument.metrics_destinations.value
       } // prometheus.relabel "windows_exporter"
-    } // declare "host_metrics"
-    host_metrics "feature" {
+    } // declare "windows_host_metrics"
+    windows_host_metrics "feature" {
       metrics_destinations = [
         prometheus.remote_write.grafana_cloud_metrics.receiver,
       ]
@@ -1168,7 +1284,7 @@ data:
     
       alloy_integration_discovery "alloy" {
         port_name = "http-metrics"
-        label_selectors = ["app.kubernetes.io/name in (alloy-linux,alloy-windows)"]
+        label_selectors = ["app.kubernetes.io/name in (alloy)"]
       }
     
       alloy_integration_scrape "alloy" {
@@ -1907,158 +2023,6 @@ data:
       namespace = "default"
     } // remote.kubernetes.secret "grafana_cloud_metrics"
 ---
-# Source: k8s-monitoring/templates/alloy-config.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: k8smon-alloy-windows
-  namespace: default
-data:
-  config.alloy: |
-    // Feature: Windows Event Logs
-    declare "windows_event_logs" {
-      argument "logs_destinations" {
-        comment = "Must be a list of log destinations where collected logs should be forwarded to"
-      }
-      loki.source.windowsevent "application" {
-        eventlog_name          = "Application"
-        poll_interval          = "3s"
-        use_incoming_timestamp = false
-        exclude_event_data     = false
-        exclude_user_data      = false
-        exclude_event_message  = false
-        locale                 = 0
-        bookmark_path          = "C:\\ProgramData\\Grafana\\Alloy\\WindowsEventLogs\\application.xml"
-        labels = {
-          job = "integrations/windows-application-logs",
-          instance = sys.env("HOSTNAME"),
-          channel = "Application",
-        }
-        forward_to = [loki.process.windows_event_logs.receiver]
-      } // loki.source.windowsevent "application"
-      loki.source.windowsevent "system" {
-        eventlog_name          = "System"
-        poll_interval          = "3s"
-        use_incoming_timestamp = false
-        exclude_event_data     = false
-        exclude_user_data      = false
-        exclude_event_message  = false
-        locale                 = 0
-        bookmark_path          = "C:\\ProgramData\\Grafana\\Alloy\\WindowsEventLogs\\system.xml"
-        labels = {
-          job = "integrations/windows-system-logs",
-          instance = sys.env("HOSTNAME"),
-          channel = "System",
-        }
-        forward_to = [loki.process.windows_event_logs.receiver]
-      } // loki.source.windowsevent "system"
-    
-      loki.process "windows_event_logs" {
-        stage.static_labels {
-          values = {
-            // add a static source label to the logs so they can be differentiated / restricted if necessary
-            "source" = "windowsevent",
-            // default level to unknown
-            level = "UNKNOWN",
-          }
-        }
-    
-        // loki.source.windowsevent emits each event as a JSON document. Extract the fields needed for processing.
-        stage.json {
-          expressions = {
-            level_text = "levelText",
-          }
-        }
-    
-        // Standardize the Windows event level onto the shared level values.
-        stage.match {
-          selector = "{level=\"UNKNOWN\"}"
-    
-          stage.replace {
-            source = "level_text"
-            expression = "(?i)^(verbose)$"
-            replace = "DEBUG"
-          }
-    
-          stage.replace {
-            source = "level_text"
-            expression = "(?i)^(information|info)$"
-            replace = "INFO"
-          }
-    
-          stage.replace {
-            source = "level_text"
-            expression = "(?i)^(warning|warn)$"
-            replace = "WARN"
-          }
-    
-          stage.replace {
-            source = "level_text"
-            expression = "(?i)^(error|err)$"
-            replace = "ERROR"
-          }
-    
-          stage.replace {
-            source = "level_text"
-            expression = "(?i)^(critical|crit)$"
-            replace = "CRIT"
-          }
-    
-          stage.labels {
-            values = {
-              level = "level_text",
-            }
-          }
-        }
-    
-        forward_to = argument.logs_destinations.value
-      } // loki.process "windows_event_logs"
-    } // declare "windows_event_logs"
-    windows_event_logs "feature" {
-      logs_destinations = [
-        loki.write.grafana_cloud_logs.receiver,
-      ]
-    }
-    
-    
-    
-    
-    
-    // Destination: grafana-cloud-logs (loki)
-    otelcol.exporter.loki "grafana_cloud_logs" {
-      forward_to = [loki.write.grafana_cloud_logs.receiver]
-    } // otelcol.exporter.loki "grafana_cloud_logs"
-    
-    loki.write "grafana_cloud_logs" {
-      endpoint {
-        url = "https://logs-prod-006.grafana.net/loki/api/v1/push"
-        retry_on_http_429 = true
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["tenantId"])
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["LOKI_USER"])
-          password = remote.kubernetes.secret.grafana_cloud_logs.data["LOKI_PASS"]
-        }
-        tls_config {
-          insecure_skip_verify = false
-          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["ca"])
-          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["cert"])
-          key_pem = remote.kubernetes.secret.grafana_cloud_logs.data["key"]
-        }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
-      }
-      external_labels = {
-        "cluster" = "eks-with-windows-test",
-        "k8s_cluster_name" = "eks-with-windows-test",
-      }
-    } // loki.write "grafana_cloud_logs"
-    
-    remote.kubernetes.secret "grafana_cloud_logs" {
-      name      = "grafana-cloud-credentials"
-      namespace = "default"
-    } // remote.kubernetes.secret "grafana_cloud_logs"
----
 # Source: k8s-monitoring/templates/release-info.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -2075,16 +2039,15 @@ data:
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="clusterMetrics", sources="controlPlane,kubelet,kubeletResource,cadvisor,kube-state-metrics", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{feature="hostMetrics", sources="linuxHosts,windowsHosts", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="linuxHosts", source="node-exporter", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="windowsHosts", source="windows-exporter", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="alloy", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="nodeLogs", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{feature="windowsEventLogs", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="podLogsViaLoki", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="podLogsViaKubernetesApi", version="1.0.0"} 1
     # HELP grafana_kubernetes_monitoring_collector_info A metric to report the collectors of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_collector_info gauge
-    grafana_kubernetes_monitoring_collector_info{kind="daemonset", name="alloy-linux", presets="clustered,linux-host-monitor,filesystem-log-reader,daemonset", type="alloy"} 1
-    grafana_kubernetes_monitoring_collector_info{kind="daemonset", name="alloy-windows", presets="windows,windows-host-process,windows-scrapeable,daemonset", type="alloy"} 1
+    grafana_kubernetes_monitoring_collector_info{kind="daemonset", name="alloy", presets="clustered,filesystem-log-reader,daemonset", type="alloy"} 1
     # EOF
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
@@ -2491,6 +2454,34 @@ spec:
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
 ---
+# Source: k8s-monitoring/charts/telemetryServices/charts/node-exporter/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-node-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: node-exporter-4.56.1
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: node-exporter
+    app.kubernetes.io/name: node-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.12.1"
+    release: k8smon
+  annotations:
+    prometheus.io/scrape: "false"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9100
+      targetPort: 9100
+      protocol: TCP
+      name: metrics
+  selector:
+    app.kubernetes.io/name: node-exporter
+    app.kubernetes.io/instance: k8smon
+---
 # Source: k8s-monitoring/charts/telemetryServices/charts/windows-exporter/templates/service.yaml
 apiVersion: v1
 kind: Service
@@ -2517,6 +2508,134 @@ spec:
   selector:
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: k8smon
+---
+# Source: k8s-monitoring/charts/telemetryServices/charts/node-exporter/templates/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: k8smon-node-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: node-exporter-4.56.1
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: node-exporter
+    app.kubernetes.io/name: node-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.12.1"
+    release: k8smon
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: node-exporter
+      app.kubernetes.io/instance: k8smon
+  revisionHistoryLimit: 10
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+        k8s.grafana.com/logs.job: integrations/node_exporter
+      labels:
+        helm.sh/chart: node-exporter-4.56.1
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: metrics
+        app.kubernetes.io/part-of: node-exporter
+        app.kubernetes.io/name: node-exporter
+        app.kubernetes.io/instance: k8smon
+        app.kubernetes.io/version: "1.12.1"
+        release: k8smon
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+      serviceAccountName: k8smon-node-exporter
+      containers:
+        - name: node-exporter
+          image: quay.io/prometheus/node-exporter:v1.12.1
+          imagePullPolicy: IfNotPresent
+          args:
+            - --path.procfs=/host/proc
+            - --path.sysfs=/host/sys
+            - --path.rootfs=/host/root
+            - --path.udev.data=/host/root/run/udev/data
+            - --web.listen-address=[$(HOST_IP)]:9100
+            - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|erofs|sysfs|tracefs|tmpfs|ramfs)$
+          securityContext:
+            readOnlyRootFilesystem: true
+          env:
+            - name: HOST_IP
+              value: 0.0.0.0
+          ports:
+            - name: metrics
+              containerPort: 9100
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              path: /
+              port: metrics
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              path: /
+              port: metrics
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          volumeMounts:
+            - name: proc
+              mountPath: /host/proc
+              readOnly:  true
+            - name: sys
+              mountPath: /host/sys
+              readOnly: true
+            - name: root
+              mountPath: /host/root
+              mountPropagation: HostToContainer
+              readOnly: true
+      hostNetwork: true
+      hostPID: true
+      hostIPC: false
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: eks.amazonaws.com/compute-type
+                operator: NotIn
+                values:
+                - fargate
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+      volumes:
+        - name: proc
+          hostPath:
+            path: /proc
+        - name: sys
+          hostPath:
+            path: /sys
+        - name: root
+          hostPath:
+            path: /
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/windows-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -2788,7 +2907,7 @@ spec:
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
-  name: k8smon-alloy-linux
+  name: k8smon-alloy
   namespace: default
   annotations:
     helm.sdk.operatorframework.io/uninstall-wait: "true"
@@ -2796,39 +2915,37 @@ spec:
   alloy:
     clustering:
       enabled: true
-      name: alloy-linux
+      name: alloy
     configMap:
       create: false
-    extraEnv:
-    - name: NODE_NAME
-      valueFrom:
-        fieldRef:
-          fieldPath: spec.nodeName
     mounts:
       dockercontainers: true
       extra:
-      - mountPath: /host/root
-        name: host-root
-        readOnly: true
-      - mountPath: /host/proc
-        name: host-proc
-        readOnly: true
-      - mountPath: /host/sys
-        name: host-sys
-        readOnly: true
       - mountPath: /etc/release-info
         name: release-info
         readOnly: true
       varlog: true
     resources: {}
     securityContext:
-      allowPrivilegeEscalation: true
+      allowPrivilegeEscalation: false
       capabilities:
         add:
-        - SYS_TIME
+        - CHOWN
+        - DAC_OVERRIDE
+        - FOWNER
+        - FSETID
+        - KILL
+        - SETGID
+        - SETUID
+        - SETPCAP
+        - NET_BIND_SERVICE
+        - NET_RAW
+        - SYS_CHROOT
+        - MKNOD
+        - AUDIT_WRITE
+        - SETFCAP
         drop:
         - ALL
-      privileged: true
       seccompProfile:
         type: RuntimeDefault
     stabilityLevel: experimental
@@ -2843,24 +2960,12 @@ spec:
     type: daemonset
     volumes:
       extra:
-      - hostPath:
-          path: /
-          type: Directory
-        name: host-root
-      - hostPath:
-          path: /proc
-          type: Directory
-        name: host-proc
-      - hostPath:
-          path: /sys
-          type: Directory
-        name: host-sys
       - configMap:
           name: k8smon-k8s-monitoring-release-info
         name: release-info
   crds:
     create: false
-  nameOverride: alloy-linux
+  nameOverride: alloy
   rbac:
     clusterRules:
     - apiGroups:
@@ -2898,82 +3003,6 @@ spec:
       - kcm/metrics
       verbs:
       - get
----
-# Source: k8s-monitoring/templates/alloy.yaml
-apiVersion: collectors.grafana.com/v1alpha1
-kind: Alloy
-metadata:
-  name: k8smon-alloy-windows
-  namespace: default
-  annotations:
-    helm.sdk.operatorframework.io/uninstall-wait: "true"
-spec:
-  alloy:
-    command:
-    - '%CONTAINER_SANDBOX_MOUNT_POINT%\Program Files\GrafanaLabs\Alloy\alloy.exe'
-    configMap:
-      create: false
-    mounts:
-      extra:
-      - mountPath: C:\ProgramData\Grafana\Alloy\WindowsEventLogs
-        name: windowsevent-bookmarks
-    resources: {}
-    securityContext:
-      allowPrivilegeEscalation: null
-      capabilities: null
-      seccompProfile: null
-      windowsOptions:
-        hostProcess: true
-        runAsUserName: NT AUTHORITY\SYSTEM
-    stabilityLevel: experimental
-  configReloader:
-    enabled: false
-  controller:
-    dnsPolicy: ClusterFirstWithHostNet
-    hostNetwork: true
-    initContainers:
-    - args:
-      - New-NetFirewallRule
-      - -DisplayName
-      - '''alloy'''
-      - -Direction
-      - inbound
-      - -Profile
-      - Any
-      - -Action
-      - Allow
-      - -LocalPort
-      - "12345"
-      - -Protocol
-      - TCP
-      command:
-      - powershell
-      image: docker.io/grafana/alloy:v1.18.0-windowsservercore-ltsc2022
-      name: configure-firewall
-    nodeSelector:
-      kubernetes.io/os: windows
-    podAnnotations:
-      k8s.grafana.com/logs.job: integrations/alloy
-    tolerations:
-    - effect: NoSchedule
-      operator: Exists
-    type: daemonset
-    volumes:
-      extra:
-      - hostPath:
-          path: C:\ProgramData\Grafana\Alloy\WindowsEventLogs
-          type: DirectoryOrCreate
-        name: windowsevent-bookmarks
-  crds:
-    create: false
-  global:
-    podSecurityContext:
-      windowsOptions:
-        hostProcess: true
-        runAsUserName: NT AUTHORITY\SYSTEM
-  image:
-    tag: v1.18.0-windowsservercore-ltsc2022
-  nameOverride: alloy-windows
 ---
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
 apiVersion: v1
@@ -3155,13 +3184,9 @@ spec:
             - /bin/bash
             - -ce
             - |
-              echo "Deleting Alloy instance: alloy/k8smon-alloy-linux..."
-              kubectl delete alloy/k8smon-alloy-linux --ignore-not-found=true --wait
-              kubectl wait --for=delete alloy/k8smon-alloy-linux --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-linux or it may not exist."
-
-              echo "Deleting Alloy instance: alloy/k8smon-alloy-windows..."
-              kubectl delete alloy/k8smon-alloy-windows --ignore-not-found=true --wait
-              kubectl wait --for=delete alloy/k8smon-alloy-windows --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-windows or it may not exist."
+              echo "Deleting Alloy instance: alloy/k8smon-alloy..."
+              kubectl delete alloy/k8smon-alloy --ignore-not-found=true --wait
+              kubectl wait --for=delete alloy/k8smon-alloy --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy or it may not exist."
 
               kubectl patch \
                 --namespace=default \

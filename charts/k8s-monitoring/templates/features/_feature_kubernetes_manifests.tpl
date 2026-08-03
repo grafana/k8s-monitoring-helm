@@ -34,8 +34,6 @@ kubernetes_manifests "feature" {
 
 {{- define "features.kubernetesManifests.collector.values" }}{{- end -}}
 
-{{- define "features.kubernetesManifests.chooseCollector" -}}{{- end -}}
-
 {{- define "features.kubernetesManifests.validate" }}
 {{- if .Values.kubernetesManifests.enabled -}}
 {{- $featureKey := "kubernetesManifests" }}

@@ -34,8 +34,6 @@ cluster_metrics "feature" {
 
 {{- define "features.clusterMetrics.collector.values" }}{{- end -}}
 
-{{- define "features.clusterMetrics.chooseCollector" -}}{{- end -}}
-
 {{- define "features.clusterMetrics.validate" }}
 {{- if .Values.clusterMetrics.enabled }}
   {{- $featureKey := "clusterMetrics" }}

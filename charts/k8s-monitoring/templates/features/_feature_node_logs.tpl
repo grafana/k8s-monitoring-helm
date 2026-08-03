@@ -35,8 +35,6 @@ node_logs "feature" {
 
 {{- define "features.nodeLogs.collector.values" }}{{- end -}}
 
-{{- define "features.nodeLogs.chooseCollector" -}}{{- end -}}
-
 {{- define "features.nodeLogs.validate" }}
 {{- if .Values.nodeLogs.enabled -}}
 {{- $featureKey := "nodeLogs" }}

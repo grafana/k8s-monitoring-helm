@@ -39,21 +39,19 @@ tests:
               type: promql
             - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="clusterEvents"}
               type: promql
-            - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="hostMetrics", sources="linuxHosts,windowsHosts"}
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="linuxHosts"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="windowsHosts"}
               type: promql
             - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="integrations", sources="alloy"}
               type: promql
             - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="nodeLogs"}
               type: promql
-            - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="windowsEventLogs"}
-              type: promql
             - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="podLogsViaLoki"}
               type: promql
             - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="podLogsViaKubernetesApi"}
               type: promql
-            - query: grafana_kubernetes_monitoring_collector_info{cluster="$clusterName", name="alloy-linux", presets="clustered,linux-host-monitor,filesystem-log-reader,daemonset"}
-              type: promql
-            - query: grafana_kubernetes_monitoring_collector_info{cluster="$clusterName", name="alloy-windows", presets="windows,windows-host-process,windows-scrapeable,daemonset"}
+            - query: grafana_kubernetes_monitoring_collector_info{cluster="$clusterName", name="alloy", presets="clustered,filesystem-log-reader,daemonset"}
               type: promql
 
             # Cluster metrics
@@ -98,19 +96,11 @@ tests:
 
             # Integrations
             # Alloy metrics
-            - query: alloy_build_info{cluster="$clusterName", app="alloy-linux"}
-              type: promql
-            - query: alloy_build_info{cluster="$clusterName", app="alloy-windows"}
+            - query: alloy_build_info{cluster="$clusterName", app="alloy"}
               type: promql
 
             # Node logs
             - query: count_over_time({cluster="$clusterName", job="integrations/kubernetes/journal"}[1h])
-              type: logql
-
-            # Windows Event logs
-            - query: count_over_time({cluster="$clusterName", job="integrations/windows-application-logs"}[1h])
-              type: logql
-            - query: count_over_time({cluster="$clusterName", job="integrations/windows-system-logs"}[1h])
               type: logql
 
             # Pod logs

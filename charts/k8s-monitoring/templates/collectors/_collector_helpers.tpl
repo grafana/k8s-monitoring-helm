@@ -249,14 +249,20 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 
 {{/* Inputs: . (root object), featureKey (string) */}}
 {{ define "collectors.getCollectorForFeature" }}
-{{- $enabledCollectors := include "collectors.list.enabled" . | fromYamlArray }}
-{{- $collectorName := dig "collector" "" (get .Values .featureKey) }}
-{{- if not $collectorName }}
-  {{- $collectorName = include (printf "features.%s.chooseCollector" $.featureKey) $ | trim }}
+{{- $subchart := include "features.subchartName" .featureKey }}
+{{- $subfeature := include "features.subfeatureName" .featureKey -}}
+{{- $featureValues := (get .Values $subchart) }}
+
+{{- $collectorName := (dig $subfeature "collector" "" $featureValues) | default (get $featureValues "collector") }}
+
+{{- if and (not $collectorName) (eq .featureKey "selfReporting") }}
+  {{- $collectorName = include "features.selfReporting.chooseCollector" $ | trim }}
 {{- end }}
+
 {{- if not $collectorName }}
+  {{- $enabledCollectors := include "collectors.list.enabled" . | fromYamlArray }}
   {{- if eq (len $enabledCollectors) 1 }}
-    {{- $collectorName = (index $enabledCollectors 0) }}
+    {{- $collectorName = first $enabledCollectors }}
   {{- end }}
 {{- end }}
 {{- $collectorName }}

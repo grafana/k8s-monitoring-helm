@@ -134,6 +134,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| energyMetrics.collector | string | `""` | Which collector to assign the energy metrics to. If empty, the feature-level `hostMetrics.collector` is used. Set this to route energy metrics to a different collector than the Linux or Windows host metrics. |
 | energyMetrics.enabled | bool | `false` | Deploy and scrape energy metrics. |
 | energyMetrics.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Kepler. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | energyMetrics.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Kepler. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no __meta* labels are present. |
@@ -165,6 +166,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | linuxHosts.bearerTokenFile | string | `""` | The bearer token file to use when scraping metrics from Node Exporter. |
+| linuxHosts.collector | string | `""` | Which collector to assign the Linux host metrics to. If empty, the feature-level `hostMetrics.collector` is used. Set this to route Linux host metrics to a different collector than the Windows host metrics or energy metrics (for example, a Linux DaemonSet using the Alloy source). |
 | linuxHosts.enabled | bool | `false` | Scrape Linux host metrics. |
 | linuxHosts.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for discovering Node Exporter pods. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | linuxHosts.extraMetricProcessingRules | string | `""` | Rule blocks to be added for processing Linux host metrics. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
@@ -199,6 +201,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | windowsHosts.bearerTokenFile | string | `""` | The bearer token file to use when scraping metrics from Windows Exporter. |
+| windowsHosts.collector | string | `""` | Which collector to assign the Windows host metrics to. If empty, the feature-level `hostMetrics.collector` is used. Set this to route Windows host metrics to a different collector than the Linux host metrics or energy metrics (for example, a Windows DaemonSet using the Alloy source). |
 | windowsHosts.enabled | bool | `false` | Scrape node metrics |
 | windowsHosts.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Windows Exporter. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | windowsHosts.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Windows Exporter metrics. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
@@ -212,6 +215,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | windowsHosts.scheme | string | `"http"` | The scrape scheme for Windows host metrics. |
 | windowsHosts.scrapeInterval | string | `60s` | How frequently to scrape Windows host metrics. Overrides `global.scrapeInterval`. |
 | windowsHosts.scrapeTimeout | string | `10s` | The timeout for scraping Windows host metrics. Overrides `global.scrapeTimeout`. |
+| windowsHosts.source | string | `"windows-exporter"` | How to collect Windows host metrics. "windows-exporter" scrapes a Windows Exporter deployment (discovered via telemetryServices or labelMatchers). "alloy" collects host metrics directly using `prometheus.exporter.windows` on the assigned collector, which must be a DaemonSet running on Windows nodes (use the "windows", and "daemonset" collector presets) and does not require a Windows Exporter deployment. |
 <!-- markdownlint-enable no-space-in-emphasis -->
 
 <!--alex enable host-hostess hostesses-hosts-->
