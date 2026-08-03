@@ -434,10 +434,9 @@ data:
     }
     otelcol.processor.filter "scrub_pii_loki_otlp_gate_logs_otlp" {
       error_mode = "ignore"
-      log_conditions {
-        context    = "resource"
-        conditions = [
-          "not IsMatch(attributes[\"selected_destinations\"], \"(^|.*,)loki-otlp(,.*|$)\")",
+      logs {
+        log_record = [
+          "not IsMatch(resource.attributes[\"selected_destinations\"], \"(^|.*,)loki-otlp(,.*|$)\")",
         ]
       }
       output {

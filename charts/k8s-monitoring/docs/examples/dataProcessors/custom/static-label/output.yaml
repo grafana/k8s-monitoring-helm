@@ -921,10 +921,9 @@ data:
     }
     otelcol.processor.filter "static_label_tempo_gate_traces_otlp" {
       error_mode = "ignore"
-      trace_conditions {
-        context    = "resource"
-        conditions = [
-          "not IsMatch(attributes[\"selected_destinations\"], \"(^|.*,)tempo(,.*|$)\")",
+      traces {
+        span = [
+          "not IsMatch(resource.attributes[\"selected_destinations\"], \"(^|.*,)tempo(,.*|$)\")",
         ]
       }
       output {
