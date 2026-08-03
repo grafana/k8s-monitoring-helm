@@ -1,0 +1,36 @@
+---
+# yamllint disable rule:line-length
+# Writes entries to the Windows Application and System event logs so the windowsEventLogs feature always has fresh data
+# to read.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: windows-event-generator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: windows-event-generator
+  template:
+    metadata:
+      labels:
+        app: windows-event-generator
+    spec:
+      nodeSelector:
+        kubernetes.io/os: windows
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      securityContext:
+        windowsOptions:
+          hostProcess: true
+          runAsUserName: "NT AUTHORITY\\SYSTEM"
+      containers:
+        - name: event-generator
+          image: mcr.microsoft.com/windows/nanoserver:ltsc2022
+          # Keep the script on a single line: HostProcess containers rebuild the command line from the args array, and
+          # embedded newlines break PowerShell parsing ("Missing closing '}'").
+          command:
+            - powershell.exe
+            - -NoProfile
+            - -Command
+            - "while ($true) { eventcreate /T INFORMATION /ID 100 /L APPLICATION /SO K8sMonTestApp /D 'k8s-monitoring test application event'; eventcreate /T INFORMATION /ID 200 /L SYSTEM /SO K8sMonTestSys /D 'k8s-monitoring test system event'; Start-Sleep -Seconds 30 }"

@@ -1,19 +1,35 @@
-{{- define "features.hostMetrics.enabled" }}{{ .Values.hostMetrics.enabled }}{{- end }}
+{{/* Shared helpers for the Host Metrics sub-features (linuxHosts, windowsHosts, energyMetrics).
 
-{{- define "features.hostMetrics.include" }}
-{{- if .Values.hostMetrics.enabled -}}
-{{- $destinations := include "features.hostMetrics.destinations" . | fromYamlArray }}
-// Feature: Host Metrics
-{{- include "feature.hostMetrics.module" (dict "Values" $.Values.hostMetrics "Files" $.Subcharts.hostMetrics.Files "Release" $.Release "telemetryServices" $.Values.telemetryServices) }}
-host_metrics "feature" {
-  metrics_destinations = [
-    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "hostMetrics" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
-  ]
-}
-{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "hostMetrics" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") }}
+     Each sub-feature is registered as its own entry in features.list ("hostMetrics_linuxHosts",
+     "hostMetrics_windowsHosts", "hostMetrics_energyMetrics") so it can be routed to its own
+     collector. They share the parent `hostMetrics` values for destinations and dataProcessors, so
+     the pipeline helpers below are always called with featureKey "hostMetrics". */}}
+
+{{/* Returns the sub-feature key ("linuxHosts" / "windowsHosts" / "energyMetrics") that owns the
+     shared dataProcessor pipeline (stamper, processor config slices, destination gates) on the
+     collector currently being rendered. When more than one sub-feature lands on the same collector,
+     only the owner renders those shared components, so they are never defined more than once.
+     Inputs: . (root object, including .Values and .collectorName). */}}
+{{- define "features.hostMetrics.pipelineOwner" -}}
+{{- $root := . -}}
+{{- $owner := "" -}}
+{{- range $sub := (list "linuxHosts" "windowsHosts" "energyMetrics") -}}
+  {{- if not $owner -}}
+    {{- $subValues := get $root.Values.hostMetrics $sub | default dict -}}
+    {{- if and $root.Values.hostMetrics.enabled (dig "enabled" false $subValues) -}}
+      {{- $effective := include "collectors.getCollectorForFeature" (dict "Values" $root.Values "featureKey" (printf "hostMetrics_%s" $sub)) | trim -}}
+      {{- if eq $effective $root.collectorName -}}
+        {{- $owner = $sub -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
 {{- end -}}
+{{- $owner -}}
 {{- end -}}
 
+{{/* Aggregate destinations for the whole Host Metrics feature. The individual sub-features are routed
+     independently, but the NOTES output reports at the subchart level, so it needs a feature-level view
+     of the destinations. */}}
 {{- define "features.hostMetrics.destinations" }}
 {{- if .Values.hostMetrics.enabled -}}
 {{- include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "prometheus" "filter" $.Values.hostMetrics.destinations) -}}

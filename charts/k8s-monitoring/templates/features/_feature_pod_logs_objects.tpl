@@ -46,8 +46,6 @@ pod_logs_objects "feature" {
   {{- end }}
 {{- end -}}
 
-{{- define "features.podLogsObjects.chooseCollector" -}}{{- end -}}
-
 {{- define "features.podLogsObjects.validate" }}
 {{- if .Values.podLogsObjects.enabled -}}
 {{- $featureKey := "podLogsObjects" }}

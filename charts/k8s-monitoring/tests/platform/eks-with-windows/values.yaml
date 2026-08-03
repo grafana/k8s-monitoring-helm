@@ -37,70 +37,49 @@ dataProcessors:
 
 clusterMetrics:
   enabled: true
-  collector: alloy-linux
   dataProcessors: [ec2-tags]
 
 hostMetrics:
   enabled: true
-  collector: alloy-linux
   linuxHosts:
     enabled: true
-    source: alloy
   windowsHosts:
     enabled: true
 
 clusterEvents:
   enabled: true
   clustering: true
-  collector: alloy-linux
+  collector: alloy
 
 nodeLogs:
   enabled: true
-  collector: alloy-linux
-
-windowsEventLogs:
-  enabled: true
-  collector: alloy-windows
-  sources:
-    - name: application
-      eventLogName: Application
-      jobLabel: integrations/windows-application-logs
-    - name: system
-      eventLogName: System
-      jobLabel: integrations/windows-system-logs
+  collector: alloy
 
 podLogsViaLoki:
   enabled: true
-  collector: alloy-linux
 
 podLogsViaKubernetesApi:
   enabled: true
-  collector: alloy-linux
   nodeSelector:
     kubernetes.io/os: windows
 
 integrations:
-  collector: alloy-linux
   alloy:
     instances:
       - name: alloy
         labelSelectors:
-          app.kubernetes.io/name: [alloy-linux, alloy-windows]
+          app.kubernetes.io/name: [alloy]
 
 collectors:
-  alloy-linux:
-    presets: [clustered, linux-host-monitor, filesystem-log-reader, daemonset]
-    alloy:
-      stabilityLevel: experimental  # Required for prometheus.enrich (ec2Enrichment processor)
-
-  alloy-windows:
-    # `windows-scrapeable` opens the host firewall so alloy-linux can scrape this collector's metrics over hostNetwork.
-    presets: [windows, windows-host-process, windows-scrapeable, daemonset]
+  alloy:
+    presets: [clustered, filesystem-log-reader, daemonset]
     alloy:
       stabilityLevel: experimental  # Required for prometheus.enrich (ec2Enrichment processor)
 
 telemetryServices:
   kube-state-metrics:
+    deploy: true
+  node-exporter:
     deploy: true
   windows-exporter:
     deploy: true

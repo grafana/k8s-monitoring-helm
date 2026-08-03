@@ -14,12 +14,67 @@
 
 {{- define "feature.hostMetrics.windowsHosts.alloy" }}
 {{- if .Values.windowsHosts.enabled }}
+{{- $source := .Values.windowsHosts.source | default "windows-exporter" }}
+{{- $metricAllowList := include "feature.hostMetrics.windowsHosts.allowList" . | fromYamlArray }}
+{{- $metricDenyList := .Values.windowsHosts.metricsTuning.excludeMetrics }}
+{{- /* The only difference between the two sources is how the targets are discovered: an external
+       Windows Exporter deployment, or an internal prometheus.exporter.windows run by Alloy. Both
+       expose their targets as discovery.relabel.windows_exporter.output, which the shared scrape and
+       metrics tuning below consume. */}}
+{{- if eq $source "alloy" }}
+{{- include "feature.hostMetrics.windowsHosts.discovery.viaAlloy" . }}
+{{- else }}
+{{- include "feature.hostMetrics.windowsHosts.discovery.viaWindowsExporter" . }}
+{{- end }}
+
+prometheus.scrape "windows_exporter" {
+  targets  = discovery.relabel.windows_exporter.output
+  job_name   = {{ .Values.windowsHosts.jobLabel | quote }}
+  scrape_interval = {{ .Values.windowsHosts.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_timeout = {{ .Values.windowsHosts.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
+  scrape_protocols = {{ include "helper.scrapeProtocols" . }}
+  scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
+  scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
+  convert_classic_histograms_to_nhcb = {{ .Values.global.convertClassicHistogramsToNhcb }}
+{{- if ne $source "alloy" }}
+  clustering {
+    enabled = true
+  }
+{{- end }}
+{{- if or $metricAllowList $metricDenyList .Values.windowsHosts.extraMetricProcessingRules }}
+  forward_to = [prometheus.relabel.windows_exporter.receiver]
+} // prometheus.scrape "windows_exporter"
+
+prometheus.relabel "windows_exporter" {
+  max_cache_size = {{ .Values.windowsHosts.maxCacheSize | default .Values.global.maxCacheSize | int }}
+{{- if $metricAllowList }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ $metricAllowList | join "|" | quote }}
+    action = "keep"
+  }
+{{- end }}
+{{- if $metricDenyList }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ $metricDenyList | join "|" | quote }}
+    action = "drop"
+  }
+{{- end }}
+{{- if .Values.windowsHosts.extraMetricProcessingRules }}
+  {{- .Values.windowsHosts.extraMetricProcessingRules | nindent 2 }}
+{{- end }}
+{{- end }}
+  forward_to = argument.metrics_destinations.value
+} // prometheus.relabel "windows_exporter"
+{{- end }}
+{{- end }}
+
+{{- define "feature.hostMetrics.windowsHosts.discovery.viaWindowsExporter" }}
 {{- $namespace := .Values.windowsHosts.namespace }}
 {{- if dig "windows-exporter" "deploy" false (.telemetryServices | default dict) }}
   {{- $namespace = (dig "windows-exporter" "namespaceOverride" false (.telemetryServices | default dict) | default .Release.Namespace) }}
 {{- end }}
-{{- $metricAllowList := include "feature.hostMetrics.windowsHosts.allowList" . | fromYamlArray }}
-{{- $metricDenyList := .Values.windowsHosts.metricsTuning.excludeMetrics }}
 {{- $labelSelectors := list }}
 {{- if .Values.windowsHosts.labelMatchers }}
   {{- range $label, $value := .Values.windowsHosts.labelMatchers }}
@@ -71,47 +126,45 @@ discovery.relabel "windows_exporter" {
   {{- .Values.windowsHosts.extraDiscoveryRules | nindent 2 }}
 {{- end }}
 } // discovery.relabel "windows_exporter"
-
-prometheus.scrape "windows_exporter" {
-  targets  = discovery.relabel.windows_exporter.output
-  job_name   = {{ .Values.windowsHosts.jobLabel | quote }}
-  scrape_interval = {{ .Values.windowsHosts.scrapeInterval | default .Values.global.scrapeInterval | quote }}
-  scrape_timeout = {{ .Values.windowsHosts.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
-  scrape_protocols = {{ include "helper.scrapeProtocols" . }}
-  scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
-  scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
-  convert_classic_histograms_to_nhcb = {{ .Values.global.convertClassicHistogramsToNhcb }}
-  clustering {
-    enabled = true
-  }
-{{- if or $metricAllowList $metricDenyList .Values.windowsHosts.extraMetricProcessingRules }}
-  forward_to = [prometheus.relabel.windows_exporter.receiver]
-} // prometheus.scrape "windows_exporter"
-
-prometheus.relabel "windows_exporter" {
-  max_cache_size = {{ .Values.windowsHosts.maxCacheSize | default .Values.global.maxCacheSize | int }}
-{{- if $metricAllowList }}
-  rule {
-    source_labels = ["__name__"]
-    regex = {{ $metricAllowList | join "|" | quote }}
-    action = "keep"
-  }
 {{- end }}
-{{- if $metricDenyList }}
+
+{{- define "feature.hostMetrics.windowsHosts.discovery.viaAlloy" }}
+
+// Windows hosts via Alloy (prometheus.exporter.windows)
+prometheus.exporter.windows "windows_exporter" { }
+
+discovery.relabel "windows_exporter" {
+  targets = prometheus.exporter.windows.windows_exporter.targets
+
+  // Set the instance label to the node name
   rule {
-    source_labels = ["__name__"]
-    regex = {{ $metricDenyList | join "|" | quote }}
-    action = "drop"
+    action = "replace"
+    target_label = "instance"
+    replacement = sys.env("NODE_NAME")
   }
+
+  // Override the job label set by prometheus.exporter.windows to match the Windows Exporter source
+  rule {
+    action = "replace"
+    target_label = "job"
+    replacement = {{ .Values.windowsHosts.jobLabel | quote }}
+  }
+
+  // set a source label
+  rule {
+    action = "replace"
+    replacement = "kubernetes"
+    target_label = "source"
+  }
+{{- if .Values.windowsHosts.extraDiscoveryRules }}
+  {{- .Values.windowsHosts.extraDiscoveryRules | nindent 2 }}
 {{- end }}
 {{- if .Values.windowsHosts.extraMetricProcessingRules }}
   {{- .Values.windowsHosts.extraMetricProcessingRules | nindent 2 }}
-{{- end }}
   forward_to = argument.metrics_destinations.value
 } // prometheus.relabel "windows_exporter"
 {{- else }}
   forward_to = argument.metrics_destinations.value
 } // prometheus.scrape "windows_exporter"
-{{- end }}
 {{- end }}
 {{- end }}

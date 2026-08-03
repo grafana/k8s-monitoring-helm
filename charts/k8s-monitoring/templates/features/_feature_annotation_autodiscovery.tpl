@@ -50,5 +50,3 @@ annotation_autodiscovery "feature" {
   {{- include "feature.annotationAutodiscovery.validate" (dict "Values" $.Values.annotationAutodiscovery) }}
 {{- end -}}
 {{- end -}}
-
-{{- define "features.annotationAutodiscovery.chooseCollector" -}}{{- end -}}

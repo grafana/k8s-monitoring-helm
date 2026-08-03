@@ -118,7 +118,8 @@ grafana_kubernetes_monitoring_build_info{version="{{ .Chart.Version }}", namespa
 # TYPE grafana_kubernetes_monitoring_feature_info gauge
 {{- range $feature := include "features.list.enabled" . | fromYamlArray }}
   {{- if ne $feature "selfReporting" }}
-    {{- $featureSummary := include (printf "feature.%s.summary" $feature) (dict "Chart" (index $.Subcharts $feature).Chart "Values" (index $.Values $feature)) | fromYaml }}
+    {{- $subchart := (include "features.subchartName" $feature)}}
+    {{- $featureSummary := include (printf "feature.%s.summary" $feature) (dict "Chart" (get $.Subcharts $subchart).Chart "Values" (get $.Values $subchart)) | fromYaml }}
 grafana_kubernetes_monitoring_feature_info{{ include "label_list" (merge $featureSummary (dict "feature" $feature)) }} 1
     {{- end }}
   {{- end }}

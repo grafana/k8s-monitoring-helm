@@ -35,8 +35,6 @@ pod_logs_via_opentelemetry "feature" {
 
 {{- define "features.podLogsViaOpenTelemetry.collector.values" }}{{- end -}}
 
-{{- define "features.podLogsViaOpenTelemetry.chooseCollector" -}}{{- end -}}
-
 {{- define "features.podLogsViaOpenTelemetry.validate" }}
 {{- if .Values.podLogsViaOpenTelemetry.enabled -}}
 {{- $featureKey := "podLogsViaOpenTelemetry" }}

@@ -372,7 +372,7 @@ clean-examples:
 
 .PHONY: build-features
 build-features:
-	set -e && \
+	@set -e && \
 	for chart in $(FEATURE_CHARTS); do \
 		$(MAKE) -C $$chart build; \
 	done

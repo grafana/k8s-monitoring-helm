@@ -62,8 +62,8 @@ cluster_metrics "feature" {
     prometheus.remote_write.metric_store.receiver,
   ]
 }
-// Feature: Host Metrics
-declare "host_metrics" {
+// Feature: Host Metrics - Linux Hosts
+declare "linux_host_metrics" {
   argument "metrics_destinations" {
     comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
   }
@@ -211,6 +211,17 @@ declare "host_metrics" {
     }
     forward_to = argument.metrics_destinations.value
   } // prometheus.relabel "node_exporter"
+} // declare "linux_host_metrics"
+linux_host_metrics "feature" {
+  metrics_destinations = [
+    prometheus.remote_write.metric_store.receiver,
+  ]
+}
+// Feature: Host Metrics - Windows Hosts
+declare "windows_host_metrics" {
+  argument "metrics_destinations" {
+    comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+  }
 
   // Windows hosts via Windows Exporter
   discovery.kubernetes "windows_exporter_pods" {
@@ -272,8 +283,8 @@ declare "host_metrics" {
     }
     forward_to = argument.metrics_destinations.value
   } // prometheus.relabel "windows_exporter"
-} // declare "host_metrics"
-host_metrics "feature" {
+} // declare "windows_host_metrics"
+windows_host_metrics "feature" {
   metrics_destinations = [
     prometheus.remote_write.metric_store.receiver,
   ]

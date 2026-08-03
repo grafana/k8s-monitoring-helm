@@ -1,9 +1,3 @@
-{{- define "feature.hostMetrics.notes.deployments" }}{{- end }}
-
-{{- define "feature.hostMetrics.notes.task" }}
-Scrape Kubernetes Host metrics
-{{- end }}
-
 {{- define "feature.hostMetrics.notes.actions" }}
 {{- /*{{- $serviceMonitorScrapingEnabled := and .Values.prometheusOperatorObjects.enabled (dig "serviceMonitors" "enabled" true .Values.prometheusOperatorObjects)}}*/}}
 {{- /*{{- $checkForKSMServiceMonitors := and (index .Values.clusterMetrics "kube-state-metrics").enabled (index .Values.clusterMetrics "kube-state-metrics").checkForPotentialServiceMonitorConflicts }}*/}}
@@ -40,11 +34,34 @@ Scrape Kubernetes Host metrics
 {{- /*{{- end }}*/}}
 {{- end }}
 
-{{- define "feature.hostMetrics.summary" }}
-{{- $sources := list }}
-{{- if .Values.linuxHosts.enabled }}{{- $sources = append $sources "linuxHosts" }}{{ end }}
-{{- if .Values.windowsHosts.enabled }}{{- $sources = append $sources "windowsHosts" }}{{ end }}
-{{- if .Values.energyMetrics.enabled }}{{- $sources = append $sources "energyMetrics" }}{{ end }}
+{{- define "feature.hostMetrics_linuxHosts.summary" }}
+feature: linuxHosts
 version: {{ .Chart.Version }}
-sources: {{ $sources | join "," }}
+source: {{ .Values.linuxHosts.source }}
+{{- end }}
+{{- define "feature.hostMetrics_linuxHosts.notes.actions" }}{{- end }}
+{{- define "feature.hostMetrics_linuxHosts.notes.deployments" }}{{- end }}
+{{- define "feature.hostMetrics_linuxHosts.notes.task" }}
+Scrape Kubernetes Linux host metrics
+{{- end }}
+
+{{- define "feature.hostMetrics_windowsHosts.summary" }}
+feature: windowsHosts
+version: {{ .Chart.Version }}
+source: {{ .Values.windowsHosts.source }}
+{{- end }}
+{{- define "feature.hostMetrics_windowsHosts.notes.actions" }}{{- end }}
+{{- define "feature.hostMetrics_windowsHosts.notes.deployments" }}{{- end }}
+{{- define "feature.hostMetrics_windowsHosts.notes.task" }}
+Scrape Kubernetes Windows host metrics
+{{- end }}
+
+{{- define "feature.hostMetrics_energyMetrics.summary" }}
+feature: energyMetrics
+version: {{ .Chart.Version }}
+{{- end }}
+{{- define "feature.hostMetrics_energyMetrics.notes.actions" }}{{- end }}
+{{- define "feature.hostMetrics_energyMetrics.notes.deployments" }}{{- end }}
+{{- define "feature.hostMetrics_energyMetrics.notes.task" }}
+Scrape Kubernetes energy metrics
 {{- end }}

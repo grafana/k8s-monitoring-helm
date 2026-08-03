@@ -35,8 +35,6 @@ pod_logs_via_kubernetes_api "feature" {
 
 {{- define "features.podLogsViaKubernetesApi.collector.values" }}{{- end -}}
 
-{{- define "features.podLogsViaKubernetesApi.chooseCollector" -}}{{- end -}}
-
 {{- define "features.podLogsViaKubernetesApi.validate" }}
 {{- if .Values.podLogsViaKubernetesApi.enabled -}}
 {{- $featureKey := "podLogsViaKubernetesApi" }}
