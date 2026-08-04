@@ -6,16 +6,15 @@ destinations based on the Kubernetes namespace they came from, without teaching 
 
 A router is not a real telemetry backend. It is a virtual destination that evaluates a route table
 of match conditions against each record and forwards it to one or more real downstream destinations.
-A router declares an `ecosystem` -- here `opentelemetry`, because `podLogsViaOpenTelemetry` collects
-via the OpenTelemetry Protocol -- which means its conditions match on resource attributes. In this
-example, the router is named `tenantRouter` and routes on the `k8s.namespace.name` resource
-attribute:
+A router declares an `ecosystem` -- here `otlp`, because `podLogsViaOpenTelemetry` collects via the
+OpenTelemetry Protocol -- which means its conditions match on resource attributes. In this example,
+the router is named `tenantRouter` and routes on the `k8s.namespace.name` resource attribute:
 
 ```yaml
 destinations:
   tenantRouter:
     type: router
-    ecosystem: opentelemetry
+    ecosystem: otlp
     routes:
       - match:
           - resourceAttribute: k8s.namespace.name

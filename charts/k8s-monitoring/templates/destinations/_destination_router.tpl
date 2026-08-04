@@ -1,10 +1,9 @@
 {{/* The `router` destination type: a virtual destination (never a real backend) that stamps a
      `selected_destinations` marker and fans records out to real destinations through the shared gate
      helpers, so it composes with the normal destination machinery instead of duplicating it. Its
-     `ecosystem` selects the routing mechanism: `opentelemetry` matches resourceAttributes with OTTL on
-     the OTLP pipeline (metrics/logs/traces); `prometheus` matches labels with relabel on the
-     Prometheus/Loki/Pyroscope pipelines (metrics/logs/profiles). Assumes valid input --
-     destinations.router.validate runs first. */}}
+     `ecosystem` names the collection pipeline it routes: `otlp` matches resourceAttributes with OTTL
+     (metrics/logs/traces); `prometheus`/`loki`/`pyroscope` match labels with relabel (metrics, logs,
+     profiles respectively). Assumes valid input -- destinations.router.validate runs first. */}}
 
 {{/* Filters an "allDownstream" list down to the destinations that actually support a given signal. */}}
 {{/* Inputs: allDownstream ([]string), downstreamInfo (map of name -> {type, values}), signal (string) */}}
@@ -116,7 +115,7 @@ attributes["{{ .resourceAttribute }}"]
   {{- $_ := set $downstreamInfo $d (dict "type" $dest.type "values" $merged) }}
 {{- end }}
 
-{{- if eq $ecosystem "opentelemetry" }}
+{{- if eq $ecosystem "otlp" }}
 {{- /* ---------------- metrics/otlp ---------------- */}}
 {{- $metricsDownstream := include "destinations.router.downstreamForSignal" (dict "allDownstream" $allDownstream "downstreamInfo" $downstreamInfo "signal" "metrics") | fromYamlArray }}
 // ROUTER: OTLP-ecosystem metrics arrive here, get an OTTL-set "selected_destinations" resource
@@ -194,6 +193,7 @@ prometheus.relabel {{ printf "%s_metrics_prometheus" $alloyName | quote }} {
 {{ include "pipeline.alloy.gate.render" (dict "processor" $routerName "destination" $d "type" "metrics" "ecosystem" "prometheus" "destinationTarget" (include (printf "destinations.%s.alloy.prometheus.metrics.target" $info.type) (dict "destination" $info.values "destinationName" $d) | trim)) }}
 {{- end }}
 
+{{- else if eq $ecosystem "loki" }}
 {{- /* ---------------- logs/loki ---------------- */}}
 {{- $logsDownstream := include "destinations.router.downstreamForSignal" (dict "allDownstream" $allDownstream "downstreamInfo" $downstreamInfo "signal" "logs") | fromYamlArray }}
 // ROUTER: Loki-ecosystem logs arrive here, get labeled with "selected_destinations"
@@ -207,6 +207,7 @@ loki.relabel {{ printf "%s_logs_loki" $alloyName | quote }} {
 {{ include "pipeline.alloy.gate.render" (dict "processor" $routerName "destination" $d "type" "logs" "ecosystem" "loki" "destinationTarget" (include (printf "destinations.%s.alloy.loki.logs.target" $info.type) (dict "destination" $info.values "destinationName" $d) | trim)) }}
 {{- end }}
 
+{{- else if eq $ecosystem "pyroscope" }}
 {{- /* ---------------- profiles/pyroscope ---------------- */}}
 {{- $profilesDownstream := include "destinations.router.downstreamForSignal" (dict "allDownstream" $allDownstream "downstreamInfo" $downstreamInfo "signal" "profiles") | fromYamlArray }}
 // ROUTER: Pyroscope-ecosystem profiles arrive here, get labeled with "selected_destinations"
@@ -312,15 +313,14 @@ rule {
 {{- define "destinations.router.alloy.otlp.traces.target" }}otelcol.processor.transform.{{ include "helper.alloy_name" .destinationName }}_traces_otlp.input{{ end -}}
 {{- define "destinations.router.alloy.pyroscope.profiles.target" }}pyroscope.relabel.{{ include "helper.alloy_name" .destinationName }}_profiles_pyroscope.receiver{{ end -}}
 
-{{/* An opentelemetry router carries the OTLP signals (metrics/logs/traces); a prometheus router
-     carries the label-based signals (metrics/logs/profiles). supports_<signal> receives only the
-     router's own values, so it branches on `.ecosystem`. */}}
-{{- define "destinations.router.supports_metrics" }}true{{ end -}}
-{{- define "destinations.router.supports_logs" }}true{{ end -}}
-{{- define "destinations.router.supports_traces" }}{{ if eq (.ecosystem | default "") "opentelemetry" }}true{{ end }}{{ end -}}
-{{- define "destinations.router.supports_profiles" }}{{ if eq (.ecosystem | default "") "prometheus" }}true{{ end }}{{ end -}}
+{{/* An otlp router carries the OTLP signals (metrics/logs/traces); prometheus/loki/pyroscope routers
+     each carry their single label-based signal. supports_<signal> receives only the router's own
+     values, so it branches on `.ecosystem`. */}}
+{{- define "destinations.router.supports_metrics" }}{{ if has (.ecosystem | default "") (list "otlp" "prometheus") }}true{{ end }}{{ end -}}
+{{- define "destinations.router.supports_logs" }}{{ if has (.ecosystem | default "") (list "otlp" "loki") }}true{{ end }}{{ end -}}
+{{- define "destinations.router.supports_traces" }}{{ if eq (.ecosystem | default "") "otlp" }}true{{ end }}{{ end -}}
+{{- define "destinations.router.supports_profiles" }}{{ if eq (.ecosystem | default "") "pyroscope" }}true{{ end }}{{ end -}}
 
-{{/* A destination's ecosystem only affects implicit destination selection (routers are excluded from
-     it and must be opted into explicitly), so this maps the router's declared ecosystem to the
-     chart's collection-ecosystem vocabulary. */}}
-{{- define "destinations.router.ecosystem" }}{{ if eq (.ecosystem | default "") "prometheus" }}prometheus{{ else }}otlp{{ end }}{{ end -}}
+{{/* A router's ecosystem is already one of the chart's collection-ecosystem values, so return it
+     directly (used only for implicit destination selection, from which routers are excluded). */}}
+{{- define "destinations.router.ecosystem" }}{{ .ecosystem | default "otlp" }}{{ end -}}

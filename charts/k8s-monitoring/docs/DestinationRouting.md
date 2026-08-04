@@ -13,13 +13,14 @@ at the same way it would point at any other destination, by listing its name in 
 `destinations`. When a record reaches the router, the router evaluates its route table, decides
 which real destination(s) the record should go to, and forwards it there.
 
-Every router declares an `ecosystem`, which fixes both how its conditions are written and which
-collection pipelines it can serve:
+Every router declares an `ecosystem`, which names the collection pipeline it routes and fixes how
+its conditions are written:
 
--   `opentelemetry` routes OpenTelemetry Protocol data (metrics, logs, and traces) by matching
-    **resource attributes** with OTTL.
--   `prometheus` routes Prometheus/Loki/Pyroscope data (metrics, logs, and profiles) by matching
-    **labels** with relabel rules.
+-   `otlp` routes OpenTelemetry Protocol data (metrics, logs, and traces) by matching **resource
+    attributes** with OTTL.
+-   `prometheus`, `loki`, and `pyroscope` route the corresponding label-based pipeline (scraped
+    metrics, Loki logs, and Pyroscope profiles respectively) by matching **labels** with relabel
+    rules.
 
 ```yaml
 destinations:
@@ -31,7 +32,7 @@ destinations:
     url: http://tempo-stack-a.tempo.svc:443/otlp
   tenantRouter:
     type: router
-    ecosystem: opentelemetry
+    ecosystem: otlp
     routes:
       - match:
           - resourceAttribute: k8s.namespace.name
@@ -52,23 +53,24 @@ podLogsViaOpenTelemetry:
 
 A router destination supports the following fields:
 
--   `ecosystem` (string, **mandatory**) - one of `opentelemetry` or `prometheus`. Decides how each
-    condition is written and which collection pipelines the router serves.
+-   `ecosystem` (string, **mandatory**) - one of `otlp`, `prometheus`, `loki`, or `pyroscope`. Names
+    the collection pipeline the router routes, which decides how each condition is written and which
+    features can use it.
 -   `routes` (list) - an ordered list of routing rules. Each entry has:
     -   `match` (list, required, at least one entry) - a list of conditions that are ANDed together;
         the route matches only when every condition matches. Each condition has:
-        -   `resourceAttribute: <name>` (for an `opentelemetry` router) - the OpenTelemetry resource
-            attribute to match on, **or** `label: <name>` (for a `prometheus` router) - the label to
-            match on. The condition's key must match the router's `ecosystem`.
+        -   `resourceAttribute: <name>` (for an `otlp` router) - the OpenTelemetry resource attribute
+            to match on, **or** `label: <name>` (for a `prometheus`/`loki`/`pyroscope` router) - the
+            label to match on. The condition's key must match the router's `ecosystem`.
         -   `op` - one of `equals`, `notEquals`, `in`, `matches`, `notMatches`. `notEquals` and
-            `notMatches` are `opentelemetry`-only (the relabel pipelines can only keep, not exclude);
-            a `prometheus` route can only use `matches` when it is the route's single condition.
+            `notMatches` are `otlp`-only (the relabel pipelines can only keep, not exclude); a
+            label-based route can only use `matches` when it is the route's single condition.
         -   `value` - a string, or (for `op: in`) a non-empty list of strings.
     -   `destinations` (list of strings, required, at least one entry) - the real destination(s) to
         send a matching record to.
     -   `signals` (list, optional) - restricts this route to a subset of the signals the ecosystem
-        routes (`metrics`, `logs`, `traces` for `opentelemetry`; `metrics`, `logs`, `profiles` for
-        `prometheus`). When absent, the route applies to every signal the ecosystem routes.
+        routes (`metrics`, `logs`, `traces` for `otlp`; the single signal for the others). When
+        absent, the route applies to every signal the ecosystem routes.
 -   `defaultDestinations` (list of strings, **mandatory**, at least one entry) - the destination(s)
     for records that don't match any route.
 
@@ -76,24 +78,26 @@ A router destination supports the following fields:
 
 Where a record is collected -- not where it is ultimately sent -- decides which ecosystem can route
 it. Scraped metrics, Loki pod logs, and Pyroscope profiles are routed on labels; OpenTelemetry
-Protocol data is routed on resource attributes with OTTL. These are separate mechanisms, so a router
-serves exactly one of them:
+Protocol data is routed on resource attributes with OTTL. These are separate mechanisms, and each is
+its own signal-specific pipeline, so a router serves exactly one:
 
 | router `ecosystem` | serves features collecting via | signals | matches on |
 |--------------------|--------------------------------|---------|------------|
-| `opentelemetry`    | OpenTelemetry Protocol (`podLogsViaOpenTelemetry`, `applicationObservability`, …) | metrics, logs, traces | `resourceAttribute` |
-| `prometheus`       | Prometheus, Loki, Pyroscope (`clusterMetrics`, `podLogsViaLoki`, `profiling`, …)  | metrics, logs, profiles | `label` |
+| `otlp`             | OpenTelemetry Protocol (`podLogsViaOpenTelemetry`, `applicationObservability`, …) | metrics, logs, traces | `resourceAttribute` |
+| `prometheus`       | scraped Prometheus metrics (`clusterMetrics`, `annotationAutodiscovery`, …)       | metrics | `label` |
+| `loki`             | Loki logs (`podLogsViaLoki`, `clusterEvents`, …)                                  | logs | `label` |
+| `pyroscope`        | Pyroscope profiles (`profiling`, …)                                               | profiles | `label` |
 
 A feature may only route through a router whose ecosystem matches the pipeline that feature collects
 on. If a feature forwards a signal to a router of the wrong ecosystem, the chart fails the render
 with a clear error rather than silently dropping the record. Likewise, every destination a router
-fans out to (in a route or in `defaultDestinations`) must support at least one signal the ecosystem
-routes -- pointing an `opentelemetry` router at a Pyroscope (profiles-only) destination, for example,
-fails the render. Traces (Tempo) are always collected via the OpenTelemetry Protocol, so they route
-through an `opentelemetry` router; there is no label-based trace routing.
+fans out to (in a route or in `defaultDestinations`) must support the signal the ecosystem routes --
+pointing a `pyroscope` router at a metrics-only destination, for example, fails the render. Traces
+(Tempo) are always collected via the OpenTelemetry Protocol, so they route through an `otlp` router;
+there is no label-based trace routing.
 
-To split the same telemetry across both worlds -- for example scraped metrics *and* OTLP traces --
-use one router per ecosystem and point each feature at the matching one (see Example 2).
+To split the same telemetry across pipelines -- for example scraped metrics *and* OTLP traces -- use
+one router per ecosystem and point each feature at the matching one (see Example 2).
 
 ## Semantics
 
@@ -131,18 +135,18 @@ shape.
 
 The implementation differs by ecosystem, and `matches` is not anchored the same way:
 
--   On a `prometheus` router (scraped metrics, Loki, Pyroscope), the router builds an anchored
-    pattern for `equals`/`in`, and the underlying label-matching mechanism always anchors the whole
-    value (Prometheus semantics) -- including for `matches`, so the pattern must match the entire
-    label value. These pipelines can only keep matching records, so `notEquals`/`notMatches` are not
+-   On a `prometheus`/`loki`/`pyroscope` router, the router builds an anchored pattern for
+    `equals`/`in`, and the underlying label-matching mechanism always anchors the whole value
+    (Prometheus semantics) -- including for `matches`, so the pattern must match the entire label
+    value. These pipelines can only keep matching records, so `notEquals`/`notMatches` are not
     available; and a route that combines conditions joins their labels with a separator, which a
     regular expression `matches` cannot participate in, so `matches` must be a route's only
     condition.
--   On an `opentelemetry` router, `equals`/`notEquals` become exact string comparisons, `in` becomes
-    an OR-chain of comparisons (OTTL has no native list-membership operator), and
-    `matches`/`notMatches` are passed to OTTL's `IsMatch`, which matches anywhere within the
-    attribute value rather than anchoring to the whole string. All values are escaped for the
-    string-literal context they're spliced into.
+-   On an `otlp` router, `equals`/`notEquals` become exact string comparisons, `in` becomes an
+    OR-chain of comparisons (OTTL has no native list-membership operator), and `matches`/`notMatches`
+    are passed to OTTL's `IsMatch`, which matches anywhere within the attribute value rather than
+    anchoring to the whole string. All values are escaped for the string-literal context they're
+    spliced into.
 
 Because of this difference, write `matches` patterns fully anchored (`^...$`) so they behave
 consistently across both ecosystems.
@@ -181,7 +185,7 @@ destinations:
     url: http://tempo-stack-b.tempo.svc:443/otlp
   tenantRouter:
     type: router
-    ecosystem: opentelemetry
+    ecosystem: otlp
     routes:
       - match:
           - resourceAttribute: k8s.namespace.name
@@ -211,9 +215,8 @@ from `tenant-b` or `tenant-b-canary` goes to `stack-b`. Every other record goes 
 
 ### Example 2: one router per ecosystem
 
-A single router serves one ecosystem, so to route both scraped metrics / Loki logs (label-based)
-and OpenTelemetry Protocol traces at once, define one router per ecosystem and point each feature at
-the matching one:
+A router serves exactly one collection ecosystem, so routing scraped metrics, Loki logs, and OTLP
+traces at once means one router per ecosystem, each pointed at by the matching feature:
 
 ```yaml
 destinations:
@@ -227,8 +230,7 @@ destinations:
     type: otlp
     url: http://tempo.tempo.svc:443/otlp
 
-  # Label-based router for scraped metrics and Loki logs.
-  labelRouter:
+  metricsRouter:
     type: router
     ecosystem: prometheus
     routes:
@@ -236,36 +238,40 @@ destinations:
           - label: namespace
             op: equals
             value: checkout
-        destinations:
-          - mimir
-          - loki
-    defaultDestinations:
-      - mimir
-      - loki
+        destinations: [mimir]
+    defaultDestinations: [mimir]
 
-  # OpenTelemetry Protocol router for traces.
+  logsRouter:
+    type: router
+    ecosystem: loki
+    routes:
+      - match:
+          - label: namespace
+            op: equals
+            value: checkout
+        destinations: [loki]
+    defaultDestinations: [loki]
+
   traceRouter:
     type: router
-    ecosystem: opentelemetry
+    ecosystem: otlp
     routes:
       - match:
           - resourceAttribute: k8s.namespace.name
             op: equals
             value: payments
-        destinations:
-          - tempo
-    defaultDestinations:
-      - tempo
+        destinations: [tempo]
+    defaultDestinations: [tempo]
 
 clusterMetrics:
   enabled: true
   destinations:
-    - labelRouter
+    - metricsRouter
 
 podLogsViaLoki:
   enabled: true
   destinations:
-    - labelRouter
+    - logsRouter
 
 applicationObservability:
   enabled: true
@@ -273,10 +279,9 @@ applicationObservability:
     - traceRouter
 ```
 
-`labelRouter` matches the `namespace` label on the scraped-metrics and Loki pipelines; cluster
-metrics and pod logs from the `checkout` namespace go to `mimir` and `loki`, everything else falls
-back to the same defaults. `traceRouter` matches the `k8s.namespace.name` resource attribute on the
-OpenTelemetry Protocol pipeline; traces from the `payments` namespace go to `tempo`, everything else
-falls back to `tempo`. Pointing `clusterMetrics` at `traceRouter` (or `applicationObservability`'s
-traces at `labelRouter`) would fail the render, because the feature's collection pipeline wouldn't
-match the router's ecosystem.
+`metricsRouter` and `logsRouter` match the `namespace` label on the scraped-metrics and Loki
+pipelines; metrics and logs from the `checkout` namespace go to `mimir` and `loki` respectively,
+and everything else falls back to the same defaults. `traceRouter` matches the `k8s.namespace.name`
+resource attribute on the OpenTelemetry Protocol pipeline; traces from the `payments` namespace go
+to `tempo`. Pointing `clusterMetrics` at `logsRouter` or `traceRouter` (or any feature at a router
+of a different ecosystem) fails the render.

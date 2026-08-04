@@ -41,22 +41,22 @@
     {{- fail (join "\n" $msg) }}
   {{- end }}
 
-  {{- /* Ecosystem is mandatory: it decides how conditions are written (resourceAttribute for
-         opentelemetry, label for prometheus) and which signals the router serves. */}}
+  {{- /* Ecosystem is mandatory: it decides how conditions are written (resourceAttribute for otlp,
+         label for prometheus/loki/pyroscope) and which signals the router serves. */}}
   {{- $ecosystem := $router.ecosystem | default "" }}
-  {{- if not (has $ecosystem (list "opentelemetry" "prometheus")) }}
+  {{- if not (has $ecosystem (list "loki" "otlp" "prometheus" "pyroscope")) }}
     {{- $msg := list "" (printf "Destination \"%s\" (type: router) has an invalid or missing ecosystem: %q." $name $ecosystem) }}
-    {{- $msg = append $msg "A router must set ecosystem to one of: opentelemetry, prometheus." }}
+    {{- $msg = append $msg "A router must set ecosystem to one of: loki, otlp, prometheus, pyroscope." }}
     {{- $msg = append $msg "Please set:" }}
     {{- $msg = append $msg "destinations:" }}
     {{- $msg = append $msg (printf "  %s:" $name) }}
     {{- $msg = append $msg "    type: router" }}
-    {{- $msg = append $msg "    ecosystem: opentelemetry" }}
+    {{- $msg = append $msg "    ecosystem: otlp" }}
     {{- fail (join "\n" $msg) }}
   {{- end }}
-  {{- $expectedKey := ternary "resourceAttribute" "label" (eq $ecosystem "opentelemetry") }}
-  {{- $wrongKey := ternary "label" "resourceAttribute" (eq $ecosystem "opentelemetry") }}
-  {{- $allowedSignals := ternary (list "metrics" "logs" "traces") (list "metrics" "logs" "profiles") (eq $ecosystem "opentelemetry") }}
+  {{- $expectedKey := ternary "resourceAttribute" "label" (eq $ecosystem "otlp") }}
+  {{- $wrongKey := ternary "label" "resourceAttribute" (eq $ecosystem "otlp") }}
+  {{- $allowedSignals := get (dict "otlp" (list "metrics" "logs" "traces") "prometheus" (list "metrics") "loki" (list "logs") "pyroscope" (list "profiles")) $ecosystem }}
 
   {{- range $i, $route := $routes }}
     {{- $routeNum := add1 $i }}
@@ -108,7 +108,7 @@
         {{- $msg = append $msg "Please quote it so it isn't parsed as a YAML number, boolean, or null." }}
         {{- fail (join "\n" $msg) }}
       {{- end }}
-      {{- if eq $ecosystem "opentelemetry" }}
+      {{- if eq $ecosystem "otlp" }}
         {{- if not (regexMatch "^[a-zA-Z_][a-zA-Z0-9_./-]*$" $fieldValue) }}
           {{- $msg := list "" (printf "Destination \"%s\" (type: router) route #%d condition #%d has an invalid resourceAttribute: %q." $name $routeNum $condNum $fieldValue) }}
           {{- $msg = append $msg "It must start with a letter or underscore and contain only letters, digits, underscores, dots, slashes, and hyphens -- no quotes, backticks, backslashes, or whitespace." }}
@@ -128,17 +128,17 @@
         {{- $msg = append $msg "op must be one of: equals, notEquals, in, matches, notMatches." }}
         {{- fail (join "\n" $msg) }}
       {{- end }}
-      {{- /* Relabel (prometheus) has only keep/drop, so it can't express negation, and can't
-             AND-combine a regex `matches` with other conditions via a separator. */}}
-      {{- if eq $ecosystem "prometheus" }}
+      {{- /* The label-based pipelines (relabel) have only keep/drop, so they can't express negation,
+             and can't AND-combine a regular expression `matches` with other conditions via a separator. */}}
+      {{- if ne $ecosystem "otlp" }}
         {{- if or (eq $op "notEquals") (eq $op "notMatches") }}
-          {{- $msg := list "" (printf "Destination \"%s\" (type: router, ecosystem: prometheus) route #%d condition #%d uses op `%s`, which the Prometheus/Loki/Pyroscope pipelines cannot express." $name $routeNum $condNum $op) }}
-          {{- $msg = append $msg "Use equals, in, or matches -- or an opentelemetry router for negation." }}
+          {{- $msg := list "" (printf "Destination \"%s\" (type: router, ecosystem: %s) route #%d condition #%d uses op `%s`, which the Prometheus/Loki/Pyroscope pipelines cannot express." $name $ecosystem $routeNum $condNum $op) }}
+          {{- $msg = append $msg "Use equals, in, or matches -- or an otlp router for negation." }}
           {{- fail (join "\n" $msg) }}
         {{- end }}
         {{- if and (eq $op "matches") (gt (len $match) 1) }}
-          {{- $msg := list "" (printf "Destination \"%s\" (type: router, ecosystem: prometheus) route #%d condition #%d uses op `matches` alongside other conditions." $name $routeNum $condNum) }}
-          {{- $msg = append $msg "A prometheus route combines its conditions by joining labels with a separator, which a regex `matches` cannot participate in. Use `matches` in a single-condition route, or switch to equals/in." }}
+          {{- $msg := list "" (printf "Destination \"%s\" (type: router, ecosystem: %s) route #%d condition #%d uses op `matches` alongside other conditions." $name $ecosystem $routeNum $condNum) }}
+          {{- $msg = append $msg "A label-based route combines its conditions by joining labels with a separator, which a regular expression `matches` cannot participate in. Use `matches` in a single-condition route, or switch to equals/in." }}
           {{- fail (join "\n" $msg) }}
         {{- end }}
       {{- end }}
@@ -273,7 +273,7 @@
 
   {{- /* R11: every destination the router fans out to must support at least one signal this ecosystem
          routes; otherwise it can never receive anything from this router (e.g. a profiles-only
-         Pyroscope destination under an opentelemetry router). supports_<signal> can depend on a
+         Pyroscope destination under an otlp router). supports_<signal> can depend on a
          destination's own config (e.g. otlp reads logs.enabled), so resolve merged values the same
          way the router body does. */}}
   {{- $referenced := list }}
@@ -409,15 +409,13 @@
     {{- fail (join "\n" $msg) }}
   {{- end }}
 
-  {{- /* Ecosystem compatibility: the feature's collection pipeline must match the router's declared
-         ecosystem (opentelemetry <-> otlp; prometheus <-> prometheus/loki/pyroscope). This seam is the
-         only place the feature's real collection ecosystem is known. */}}
+  {{- /* Ecosystem compatibility: the feature's collection pipeline must exactly match the router's
+         declared ecosystem (both come from the same otlp/prometheus/loki/pyroscope vocabulary). This
+         seam is the only place the feature's real collection ecosystem is known. */}}
   {{- $routerEcosystem := $router.ecosystem | default "" }}
-  {{- $compatible := ternary (eq $ecosystem "otlp") (has $ecosystem (list "prometheus" "loki" "pyroscope")) (eq $routerEcosystem "opentelemetry") }}
-  {{- if not $compatible }}
+  {{- if ne $routerEcosystem $ecosystem }}
     {{- $msg := list "" (printf "Feature \"%s\" collects %s via the %s pipeline and routes it through router \"%s\", but that router is declared ecosystem: %s." $featureKey $type $ecosystem $routerName $routerEcosystem) }}
-    {{- $msg = append $msg (printf "An %s router can only route %s-collected data." $routerEcosystem (ternary "OpenTelemetry Protocol" "Prometheus/Loki/Pyroscope" (eq $routerEcosystem "opentelemetry"))) }}
-    {{- $msg = append $msg "Point this feature at a router whose ecosystem matches the feature's collection pipeline." }}
+    {{- $msg = append $msg (printf "A router only routes data collected via its own ecosystem; point this feature at a router whose ecosystem is %s." $ecosystem) }}
     {{- fail (join "\n" $msg) }}
   {{- end }}
 {{- end }}
@@ -438,7 +436,7 @@
   {{- $routes := $router.routes | default list }}
   {{- $defaultDestinations := $router.defaultDestinations | default list }}
   {{- $ecosystem := $router.ecosystem | default "" }}
-  {{- $ecosystemSignals := ternary (list "metrics" "logs" "traces") (list "metrics" "logs" "profiles") (eq $ecosystem "opentelemetry") }}
+  {{- $ecosystemSignals := get (dict "otlp" (list "metrics" "logs" "traces") "prometheus" (list "metrics") "loki" (list "logs") "pyroscope" (list "profiles")) $ecosystem }}
 
   {{- /* W-b: for each route, for each signal it covers, warn if NONE of its destinations support
          that signal. Computed the same way destinations.router.alloy computes it

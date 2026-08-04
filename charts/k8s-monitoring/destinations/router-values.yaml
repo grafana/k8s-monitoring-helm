@@ -10,24 +10,25 @@ name: ""
 # @section -- General
 disabled: false
 
-# -- The ecosystem this router routes on. `opentelemetry` routes OpenTelemetry Protocol data (metrics, logs, and
-# traces) by matching resource attributes with OTTL. `prometheus` routes Prometheus/Loki/Pyroscope data (metrics, logs,
-# and profiles) by matching labels. The ecosystem also determines how each route's `match` conditions are written:
-# `resourceAttribute` for `opentelemetry`, `label` for `prometheus`. A feature may only route through a router whose
-# ecosystem matches the pipeline that feature collects on.
+# -- The collection pipeline this router routes on: `otlp`, `prometheus`, `loki`, or `pyroscope`. `otlp` routes
+# OpenTelemetry Protocol data (metrics, logs, and traces) by matching resource attributes with OTTL. `prometheus`,
+# `loki`, and `pyroscope` route the corresponding label-based pipeline (metrics, logs, and profiles respectively) by
+# matching labels. The ecosystem also determines how each route's `match` conditions are written: `resourceAttribute`
+# for `otlp`, `label` for the others. A feature may only route through a router whose ecosystem matches the pipeline
+# that feature collects on.
 # @section -- Routing
 ecosystem: ""
 
 # -- Routing rules, evaluated in declaration order: the first rule whose `match` conditions all match wins. Records that
 # don't match any rule (or whose matched rule does not list a destination for a given signal) fall back to
 # `defaultDestinations`. Each route's `match` is a list of `{<field>, op, value}` conditions that are ANDed together,
-# where `<field>` is `resourceAttribute` (for an `opentelemetry` router) or `label` (for a `prometheus` router). `op` is
-# one of `equals`, `notEquals`, `in`, `matches`, `notMatches` (`notEquals` and `notMatches` are `opentelemetry`-only).
-# `value` is a string (or a list of strings for `in`).
+# where `<field>` is `resourceAttribute` (for an `otlp` router) or `label` (for a `prometheus`/`loki`/`pyroscope`
+# router). `op` is one of `equals`, `notEquals`, `in`, `matches`, `notMatches` (`notEquals` and `notMatches` are
+# `otlp`-only). `value` is a string (or a list of strings for `in`).
 # @section -- Routing
 # @default -- []
 routes: []
-# For an `opentelemetry` router, match on resource attributes:
+# For an `otlp` router, match on resource attributes:
 # - match:
 #     - resourceAttribute: k8s.namespace.name
 #       op: equals
@@ -38,7 +39,7 @@ routes: []
 #   signals:
 #     - metrics
 #     - logs
-# For a `prometheus` router, match on labels instead:
+# For a `prometheus`/`loki`/`pyroscope` router, match on labels instead:
 # - match:
 #     - label: namespace
 #       op: in
