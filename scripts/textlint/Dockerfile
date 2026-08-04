@@ -5,7 +5,7 @@
 FROM node:24-alpine
 
 # renovate: datasource=npm depName=textlint
-ARG TEXTLINT_VERSION=15.7.1
+ARG TEXTLINT_VERSION=15.8.0
 # renovate: datasource=npm depName=textlint-filter-rule-comments
 ARG TEXTLINT_FILTER_RULE_COMMENTS_VERSION=1.3.0
 # renovate: datasource=npm depName=textlint-rule-common-misspellings
