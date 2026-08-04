@@ -12,8 +12,12 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
+          ecosystem: opentelemetry
           routes:
-            - match: {equals: tenant-a}
+            - match:
+                - resourceAttribute: k8s.namespace.name
+                  op: equals
+                  value: tenant-a
               destinations: [platform]
     asserts:
       - failedTemplate:
@@ -27,7 +31,7 @@ tests:
                 defaultDestinations:
                   - my-destination
 
-  - it: rejects a route with no match condition (R2)
+  - it: requires a valid ecosystem (opentelemetry or prometheus)
     set:
       cluster: {name: test-cluster}
       destinations:
@@ -36,25 +40,100 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
+          routes:
+            - match:
+                - resourceAttribute: k8s.namespace.name
+                  op: equals
+                  value: tenant-a
+              destinations: [platform]
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router) has an invalid or missing ecosystem: "".
+            A router must set ecosystem to one of: opentelemetry, prometheus.
+            Please set:
+            destinations:
+              my-router:
+                type: router
+                ecosystem: opentelemetry
+
+  - it: rejects a destination that supports no signal the router's ecosystem routes (R11)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        my-profiles:
+          type: pyroscope
+          url: https://pyroscope.example.com
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          ecosystem: opentelemetry
+          routes:
+            - match:
+                - resourceAttribute: k8s.namespace.name
+                  op: equals
+                  value: tenant-a
+              destinations: [my-profiles]
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router, ecosystem: opentelemetry) fans out to destination "my-profiles" (type: pyroscope), which cannot receive any signal an opentelemetry router routes (metrics, logs, traces).
+            Point this router only at destinations that support metrics/logs/traces, or change the router's ecosystem.
+
+  - it: rejects a route whose match is not a list of conditions (RM0)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          ecosystem: opentelemetry
+          routes:
+            - match: {equals: tenant-a}
+              destinations: [platform]
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router) has a route (#1) whose match is not a list.
+            A route's match must be a list of {resourceAttribute, op, value} conditions (ANDed together).
+            Please set:
+            destinations:
+              my-router:
+                type: router
+                ecosystem: opentelemetry
+                routes:
+                  - match:
+                      - resourceAttribute: k8s.namespace.name
+                        op: equals
+                        value: my-value
+
+  - it: rejects a route with an empty match (RM0)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          ecosystem: opentelemetry
           routes:
             - destinations: [platform]
           defaultDestinations: [platform]
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Destination "my-router" (type: router) has a route (#1) with no match condition.
-            Every route must set exactly one of match.equals, match.in, or match.matches.
-            Please set:
-            destinations:
-              my-router:
-                type: router
-                routes:
-                  - match:
-                      equals: my-value
-                    destinations:
-                      - my-destination
+            Destination "my-router" (type: router) has a route (#1) with an empty match.
+            Every route needs at least one match condition.
 
-  - it: rejects a route with multiple match conditions (R2)
+  - it: rejects a match condition that is not a map (RM1)
     set:
       cluster: {name: test-cluster}
       destinations:
@@ -63,18 +142,19 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
+          ecosystem: opentelemetry
           routes:
-            - match: {equals: tenant-a, in: [tenant-b]}
+            - match:
+                - "k8s.namespace.name"
               destinations: [platform]
           defaultDestinations: [platform]
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Destination "my-router" (type: router) has a route (#1) with multiple match conditions set: equals, in.
-            Exactly one of match.equals, match.in, or match.matches is required per route.
-            Please remove all but one of these fields.
+            Destination "my-router" (type: router) route #1 condition #1 is not a map.
+            Each condition must be a map with resourceAttribute, op, and value.
 
-  - it: rejects match.in given as a string instead of a list (R2b)
+  - it: rejects a match condition that uses the wrong key for the router's ecosystem (RM1)
     set:
       cluster: {name: test-cluster}
       destinations:
@@ -83,24 +163,20 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
+          ecosystem: opentelemetry
           routes:
-            - match: {in: "foo"}
+            - match:
+                - label: namespace
+                  op: equals
+                  value: tenant-a
               destinations: [platform]
           defaultDestinations: [platform]
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Destination "my-router" (type: router) has a route (#1) whose match.in value is not a list: foo.
-            The `in` match must be a list, e.g. `in: [value1, value2]`.
-            Please set:
-            destinations:
-              my-router:
-                type: router
-                routes:
-                  - match:
-                      in: [my-value-a, my-value-b]
+            Destination "my-router" (type: router, ecosystem: opentelemetry) route #1 condition #1 uses `label`, but an opentelemetry router matches on `resourceAttribute`.
 
-  - it: rejects an empty match.in list (R3)
+  - it: rejects a match condition that omits the ecosystem's expected key (RM1)
     set:
       cluster: {name: test-cluster}
       destinations:
@@ -109,24 +185,19 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
+          ecosystem: opentelemetry
           routes:
-            - match: {in: []}
+            - match:
+                - op: equals
+                  value: tenant-a
               destinations: [platform]
           defaultDestinations: [platform]
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Destination "my-router" (type: router) has a route (#1) with an empty match.in list.
-            match.in needs at least one value to match against.
-            Please set:
-            destinations:
-              my-router:
-                type: router
-                routes:
-                  - match:
-                      in: [my-value-a, my-value-b]
+            Destination "my-router" (type: router, ecosystem: opentelemetry) route #1 condition #1 must set `resourceAttribute`.
 
-  - it: rejects a non-string match.equals value (R4)
+  - it: rejects a resourceAttribute that isn't a valid attribute name (RM1)
     set:
       cluster: {name: test-cluster}
       destinations:
@@ -135,23 +206,21 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
+          ecosystem: opentelemetry
           routes:
-            - match: {equals: true}
+            - match:
+                - resourceAttribute: "bad attr"
+                  op: equals
+                  value: tenant-a
               destinations: [platform]
           defaultDestinations: [platform]
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Destination "my-router" (type: router) has a route (#1) whose match.equals value is not a string: true.
-            Please quote it so it isn't parsed as a YAML number, boolean, or null:
-            destinations:
-              my-router:
-                type: router
-                routes:
-                  - match:
-                      equals: "true"
+            Destination "my-router" (type: router) route #1 condition #1 has an invalid resourceAttribute: "bad attr".
+            It must start with a letter or underscore and contain only letters, digits, underscores, dots, slashes, and hyphens -- no quotes, backticks, backslashes, or whitespace.
 
-  - it: rejects a non-string entry in match.in (R4)
+  - it: rejects a label that isn't a valid Prometheus label name (RM1)
     set:
       cluster: {name: test-cluster}
       destinations:
@@ -160,23 +229,21 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
+          ecosystem: prometheus
           routes:
-            - match: {in: [123]}
+            - match:
+                - label: "bad label"
+                  op: equals
+                  value: tenant-a
               destinations: [platform]
           defaultDestinations: [platform]
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Destination "my-router" (type: router) has a route (#1) whose match.in list contains a non-string value: 123.
-            Please quote it so it isn't parsed as a YAML number, boolean, or null:
-            destinations:
-              my-router:
-                type: router
-                routes:
-                  - match:
-                      in: ["123"]
+            Destination "my-router" (type: router) route #1 condition #1 has an invalid label: "bad label".
+            A label must be a valid Prometheus label name: start with a letter or underscore and contain only letters, digits, and underscores.
 
-  - it: rejects a non-string match.matches value (R4)
+  - it: rejects a match condition with an invalid or missing op (RM2)
     set:
       cluster: {name: test-cluster}
       destinations:
@@ -185,23 +252,21 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
+          ecosystem: opentelemetry
           routes:
-            - match: {matches: false}
+            - match:
+                - resourceAttribute: k8s.namespace.name
+                  op: startsWith
+                  value: tenant-a
               destinations: [platform]
           defaultDestinations: [platform]
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Destination "my-router" (type: router) has a route (#1) whose match.matches value is not a string: false.
-            Please quote it so it isn't parsed as a YAML number, boolean, or null:
-            destinations:
-              my-router:
-                type: router
-                routes:
-                  - match:
-                      matches: "false"
+            Destination "my-router" (type: router) route #1 condition #1 has an invalid or missing op: "startsWith".
+            op must be one of: equals, notEquals, in, matches, notMatches.
 
-  - it: rejects a match.matches value that does not compile as a regex (R5)
+  - it: rejects a prometheus router condition using a negating op (RM2)
     set:
       cluster: {name: test-cluster}
       destinations:
@@ -210,8 +275,176 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
+          ecosystem: prometheus
           routes:
-            - match: {matches: "["}
+            - match:
+                - label: namespace
+                  op: notEquals
+                  value: tenant-a
+              destinations: [platform]
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router, ecosystem: prometheus) route #1 condition #1 uses op `notEquals`, which the Prometheus/Loki/Pyroscope pipelines cannot express.
+            Use equals, in, or matches -- or an opentelemetry router for negation.
+
+  - it: rejects a prometheus router that combines op `matches` with other conditions (RM2)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          ecosystem: prometheus
+          routes:
+            - match:
+                - label: namespace
+                  op: matches
+                  value: "^tenant-.*$"
+                - label: team
+                  op: equals
+                  value: team-a
+              destinations: [platform]
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router, ecosystem: prometheus) route #1 condition #1 uses op `matches` alongside other conditions.
+            A prometheus route combines its conditions by joining labels with a separator, which a regex `matches` cannot participate in. Use `matches` in a single-condition route, or switch to equals/in.
+
+  - it: rejects op `in` whose value is a string instead of a list (RM3)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          ecosystem: opentelemetry
+          routes:
+            - match:
+                - resourceAttribute: k8s.namespace.name
+                  op: in
+                  value: "foo"
+              destinations: [platform]
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router) route #1 condition #1 uses op `in`, so value must be a list: foo.
+            Please set value to a list, e.g. `value: [a, b]`.
+
+  - it: rejects op `in` with an empty value list (RM3)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          ecosystem: opentelemetry
+          routes:
+            - match:
+                - resourceAttribute: k8s.namespace.name
+                  op: in
+                  value: []
+              destinations: [platform]
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router) route #1 condition #1 uses op `in` with an empty value list.
+            `in` needs at least one value to match against.
+
+  - it: rejects a non-string value for a scalar op (RM3)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          ecosystem: opentelemetry
+          routes:
+            - match:
+                - resourceAttribute: k8s.namespace.name
+                  op: equals
+                  value: true
+              destinations: [platform]
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router) route #1 condition #1 op `equals` requires a string value: true.
+            Please quote it so it isn't parsed as a YAML number, boolean, or null.
+
+  - it: rejects a non-string entry in an `in` value list (RM3)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          ecosystem: opentelemetry
+          routes:
+            - match:
+                - resourceAttribute: k8s.namespace.name
+                  op: in
+                  value: [123]
+              destinations: [platform]
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router) route #1 condition #1 has a non-string value in its `in` list: 123.
+            Please quote it so it isn't parsed as a YAML number, boolean, or null.
+
+  - it: rejects a non-string value for op `matches` (RM3)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          ecosystem: opentelemetry
+          routes:
+            - match:
+                - resourceAttribute: k8s.namespace.name
+                  op: matches
+                  value: false
+              destinations: [platform]
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router) route #1 condition #1 op `matches` requires a string value: false.
+            Please quote it so it isn't parsed as a YAML number, boolean, or null.
+
+  - it: rejects a `matches` value that does not compile as a regex (RM4)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          ecosystem: opentelemetry
+          routes:
+            - match:
+                - resourceAttribute: k8s.namespace.name
+                  op: matches
+                  value: "["
               destinations: [platform]
           defaultDestinations: [platform]
     asserts:
@@ -227,8 +460,12 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
+          ecosystem: opentelemetry
           routes:
-            - match: {equals: tenant-a}
+            - match:
+                - resourceAttribute: k8s.namespace.name
+                  op: equals
+                  value: tenant-a
               destinations: [doesnotexist]
           defaultDestinations: [platform]
     asserts:
@@ -238,6 +475,40 @@ tests:
             The destination must exist and be enabled.
             Please reference one of the known destinations:
               platform
+
+  - it: rejects a route with an empty or missing destinations list (R5b)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          ecosystem: opentelemetry
+          routes:
+            - match:
+                - resourceAttribute: k8s.namespace.name
+                  op: equals
+                  value: tenant-a
+              destinations: []
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router) has a route (#1) with an empty or missing destinations list.
+            A route with no destinations would silently drop every record that matches it.
+            Please set at least one destination:
+            destinations:
+              my-router:
+                type: router
+                routes:
+                  - match:
+                      - resourceAttribute: k8s.namespace.name
+                        op: equals
+                        value: my-value
+                    destinations:
+                      - my-destination
 
   - it: rejects a defaultDestinations entry that is disabled (R6)
     set:
@@ -249,6 +520,7 @@ tests:
           disabled: true
         my-router:
           type: router
+          ecosystem: opentelemetry
           routes: []
           defaultDestinations: [platform]
     asserts:
@@ -267,8 +539,12 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
+          ecosystem: opentelemetry
           routes:
-            - match: {equals: tenant-a}
+            - match:
+                - resourceAttribute: k8s.namespace.name
+                  op: equals
+                  value: tenant-a
               destinations: [platform]
               signals: []
           defaultDestinations: [platform]
@@ -287,8 +563,12 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
+          ecosystem: opentelemetry
           routes:
-            - match: {equals: tenant-a}
+            - match:
+                - resourceAttribute: k8s.namespace.name
+                  op: equals
+                  value: tenant-a
               destinations: [platform]
               signals: [bogus]
           defaultDestinations: [platform]
@@ -297,6 +577,30 @@ tests:
           errorMessage: |-
             Destination "my-router" (type: router) has a route (#1) with an unknown signal "bogus".
             Please use one of: metrics, logs, traces, profiles.
+
+  - it: rejects a signal the router's ecosystem does not route (R7)
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          ecosystem: prometheus
+          routes:
+            - match:
+                - label: namespace
+                  op: equals
+                  value: tenant-a
+              destinations: [platform]
+              signals: [traces]
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Destination "my-router" (type: router, ecosystem: prometheus) has a route (#1) covering the "traces" signal, which this ecosystem does not route.
+            An prometheus router routes: metrics, logs, profiles.
 
   - it: rejects a route destination that is itself a router (R8)
     set:
@@ -307,12 +611,17 @@ tests:
           url: https://otlp.example.com
         other-router:
           type: router
+          ecosystem: opentelemetry
           routes: []
           defaultDestinations: [platform]
         my-router:
           type: router
+          ecosystem: opentelemetry
           routes:
-            - match: {equals: tenant-a}
+            - match:
+                - resourceAttribute: k8s.namespace.name
+                  op: equals
+                  value: tenant-a
               destinations: [other-router]
           defaultDestinations: [platform]
     asserts:
@@ -331,10 +640,12 @@ tests:
           url: https://otlp.example.com
         other-router:
           type: router
+          ecosystem: opentelemetry
           routes: []
           defaultDestinations: [platform]
         my-router:
           type: router
+          ecosystem: opentelemetry
           routes: []
           defaultDestinations: [other-router]
     asserts:
@@ -353,9 +664,12 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          attribute: k8s.namespace.name
+          ecosystem: opentelemetry
           routes:
-            - match: {equals: tenant-a}
+            - match:
+                - resourceAttribute: k8s.namespace.name
+                  op: equals
+                  value: tenant-a
               destinations: [platform]
           defaultDestinations: [platform]
       collectors: {alloy-receiver: {extraConfig: "// simulated feature"}}
@@ -368,8 +682,8 @@ tests:
 # false-positive-prone R10 (see destinations/_destination_router_validations.tpl). Unlike the
 # suite above, these cases need a real, enabled feature forwarding real telemetry through the
 # router -- that is the whole point of the seam (only pipeline.alloy.targets.forFeature knows
-# which signal a feature is actually sending) -- so they render alloy-config.yaml, not
-# validations.yaml.
+# which signal a feature is actually sending, and via which collection ecosystem) -- so they
+# render alloy-config.yaml, not validations.yaml.
 suite: Validations - Router Destination Seam Check (destinations.router.assertCanCarry)
 templates:
   - alloy-config.yaml
@@ -392,7 +706,7 @@ tests:
           url: https://prometheus.example.com/api/v1/write
         my-router:
           type: router
-          attribute: "k8s.namespace.name"
+          ecosystem: opentelemetry
           routes: []
           defaultDestinations: [mimir]
     asserts:
@@ -420,9 +734,12 @@ tests:
           url: https://prometheus.example.com/api/v1/write
         my-router:
           type: router
-          attribute: "k8s.namespace.name"
+          ecosystem: opentelemetry
           routes:
-            - match: {equals: tenant-a}
+            - match:
+                - resourceAttribute: k8s.namespace.name
+                  op: equals
+                  value: tenant-a
               destinations: [mimir]
               signals: [logs]
           defaultDestinations: [mimir]
@@ -432,6 +749,61 @@ tests:
             Feature "podLogsViaOpenTelemetry" sends logs to router destination "my-router", but that router has no route or defaultDestinations entry that can accept logs.
             logs reaching this router would be dropped.
             Please add a destination that supports logs to the router's routes or defaultDestinations.
+
+  - it: fails when an opentelemetry feature routes OTLP telemetry through a prometheus-ecosystem router (ecosystem mismatch)
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      podLogsViaOpenTelemetry:
+        enabled: true
+        destinations: [my-router]
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+          alloy:
+            stabilityLevel: public-preview
+      destinations:
+        loki-dest:
+          type: loki
+          url: https://loki.example.com
+        my-router:
+          type: router
+          ecosystem: prometheus
+          defaultDestinations: [loki-dest]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Feature "podLogsViaOpenTelemetry" collects logs via the otlp pipeline and routes it through router "my-router", but that router is declared ecosystem: prometheus.
+            An prometheus router can only route Prometheus/Loki/Pyroscope-collected data.
+            Point this feature at a router whose ecosystem matches the feature's collection pipeline.
+
+  - it: fails when a prometheus feature routes metrics through an opentelemetry-ecosystem router (ecosystem mismatch)
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      clusterMetrics:
+        enabled: true
+        destinations: [my-router]
+      telemetryServices:
+        kube-state-metrics:
+          deploy: true
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      destinations:
+        platform:
+          type: otlp
+          url: https://otlp.example.com
+        my-router:
+          type: router
+          ecosystem: opentelemetry
+          defaultDestinations: [platform]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Feature "clusterMetrics" collects metrics via the prometheus pipeline and routes it through router "my-router", but that router is declared ecosystem: opentelemetry.
+            An opentelemetry router can only route OpenTelemetry Protocol-collected data.
+            Point this feature at a router whose ecosystem matches the feature's collection pipeline.
 
   - it: allows a no-routes fan-out router with otlp defaultDestinations when the only feature routed through it sends logs (false-positive fix)
     set:
@@ -454,11 +826,12 @@ tests:
           url: https://otlp-b.example.com
         fanout:
           type: router
+          ecosystem: opentelemetry
           defaultDestinations: [a, b]
     asserts:
       - notFailedTemplate: {}
 
-  - it: allows a metrics-only feature through a router whose defaultDestinations is otlp-only
+  - it: allows a metrics-only prometheus feature through a prometheus router whose defaultDestinations is otlp-only
     set:
       cluster: {name: test-cluster}
       selfReporting: {enabled: false}
@@ -477,6 +850,7 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
+          ecosystem: prometheus
           defaultDestinations: [platform]
     asserts:
       - notFailedTemplate: {}
@@ -510,8 +884,12 @@ tests:
           url: https://loki.example.com
         my-router:
           type: router
+          ecosystem: prometheus
           routes:
-            - match: {equals: tenant-a}
+            - match:
+                - label: namespace
+                  op: equals
+                  value: tenant-a
               destinations: [loki-dest]
               signals: [logs]
           defaultDestinations: [platform]

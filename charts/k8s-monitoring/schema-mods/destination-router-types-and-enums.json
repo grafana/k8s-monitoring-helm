@@ -1,9 +1,8 @@
 {
   "definitions": {
     "router-destination": {"properties": {
-      "attribute": {
-        "type": "string",
-        "pattern": "^[a-zA-Z_][a-zA-Z0-9_./-]*$"
+      "ecosystem": {
+        "enum": ["opentelemetry", "prometheus"]
       },
       "defaultDestinations": {
         "type": "array",
@@ -25,15 +24,23 @@
               "items": {"enum": ["metrics", "logs", "traces", "profiles"]}
             },
             "match": {
-              "type": "object",
-              "properties": {
-                "in": {"type": "array"}
-              },
-              "oneOf": [
-                {"required": ["equals"]},
-                {"required": ["in"]},
-                {"required": ["matches"]}
-              ]
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "resourceAttribute": {"type": "string"},
+                  "label": {"type": "string"},
+                  "op": {
+                    "enum": ["equals", "notEquals", "in", "matches", "notMatches"]
+                  }
+                },
+                "oneOf": [
+                  {"required": ["resourceAttribute"]},
+                  {"required": ["label"]}
+                ],
+                "required": ["op", "value"]
+              }
             }
           }
         }
