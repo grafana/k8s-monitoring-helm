@@ -136,7 +136,8 @@ The implementation differs by ecosystem, and `matches` is not anchored the same 
     value (Prometheus semantics) -- including for `matches`, so the pattern must match the entire
     label value. These pipelines can only keep matching records, so `notEquals`/`notMatches` are not
     available; and a route that combines conditions joins their labels with a separator, which a
-    regex `matches` cannot participate in, so `matches` must be a route's only condition.
+    regular expression `matches` cannot participate in, so `matches` must be a route's only
+    condition.
 -   On an `opentelemetry` router, `equals`/`notEquals` become exact string comparisons, `in` becomes
     an OR-chain of comparisons (OTTL has no native list-membership operator), and
     `matches`/`notMatches` are passed to OTTL's `IsMatch`, which matches anywhere within the
