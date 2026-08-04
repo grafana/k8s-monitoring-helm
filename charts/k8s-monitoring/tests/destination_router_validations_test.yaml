@@ -750,7 +750,7 @@ tests:
             logs reaching this router would be dropped.
             Please add a destination that supports logs to the router's routes or defaultDestinations.
 
-  - it: fails when an opentelemetry feature routes OTLP telemetry through a prometheus-ecosystem router (ecosystem mismatch)
+  - it: fails when an opentelemetry feature routes OTLP telemetry through a loki-ecosystem router (ecosystem mismatch)
     set:
       cluster: {name: test-cluster}
       selfReporting: {enabled: false}
@@ -768,16 +768,15 @@ tests:
           url: https://loki.example.com
         my-router:
           type: router
-          ecosystem: prometheus
+          ecosystem: loki
           defaultDestinations: [loki-dest]
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Feature "podLogsViaOpenTelemetry" collects logs via the otlp pipeline and routes it through router "my-router", but that router is declared ecosystem: prometheus.
-            An prometheus router can only route Prometheus/Loki/Pyroscope-collected data.
-            Point this feature at a router whose ecosystem matches the feature's collection pipeline.
+            Feature "podLogsViaOpenTelemetry" collects logs via the otlp pipeline and routes it through router "my-router", but that router is declared ecosystem: loki.
+            A router only routes data collected via its own ecosystem; point this feature at a router whose ecosystem is otlp.
 
-  - it: fails when a prometheus feature routes metrics through an opentelemetry-ecosystem router (ecosystem mismatch)
+  - it: fails when a prometheus feature routes metrics through an otlp-ecosystem router (ecosystem mismatch)
     set:
       cluster: {name: test-cluster}
       selfReporting: {enabled: false}
@@ -802,8 +801,7 @@ tests:
       - failedTemplate:
           errorMessage: |-
             Feature "clusterMetrics" collects metrics via the prometheus pipeline and routes it through router "my-router", but that router is declared ecosystem: otlp.
-            An opentelemetry router can only route OpenTelemetry Protocol-collected data.
-            Point this feature at a router whose ecosystem matches the feature's collection pipeline.
+            A router only routes data collected via its own ecosystem; point this feature at a router whose ecosystem is prometheus.
 
   - it: allows a no-routes fan-out router with otlp defaultDestinations when the only feature routed through it sends logs (false-positive fix)
     set:
