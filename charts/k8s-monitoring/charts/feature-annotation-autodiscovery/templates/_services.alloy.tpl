@@ -28,6 +28,11 @@ discovery.kubernetes "services" {
     label = {{ $labelSelectors | join "," | quote }}
   }
 {{- end }}
+{{- if .Values.attachNamespaceMetadata }}
+  attach_metadata {
+    namespace = true
+  }
+{{- end }}
 } // discovery.kubernetes "services"
 
 discovery.relabel "annotation_autodiscovery_services" {

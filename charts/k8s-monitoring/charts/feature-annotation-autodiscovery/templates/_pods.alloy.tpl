@@ -28,7 +28,7 @@ discovery.kubernetes "pods" {
     label = {{ $labelSelectors | join "," | quote }}
   }
 {{- end }}
-{{- include "feature.annotationAutodiscovery.attachNodeMetadata" . | indent 2 }}
+{{- include "feature.annotationAutodiscovery.attachMetadata" . | indent 2 }}
 } // discovery.kubernetes "pods"
 
 discovery.relabel "annotation_autodiscovery_pods" {

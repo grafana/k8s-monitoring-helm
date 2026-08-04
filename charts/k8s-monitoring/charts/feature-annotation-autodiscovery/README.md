@@ -77,6 +77,16 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | annotations.metricsScrapeTimeout | string | `"k8s.grafana.com/metrics.scrapeTimeout"` | Annotation for overriding the scrape timeout for this service or pod. Value should be a duration like "15s, 1m". Overrides metrics.autoDiscover.scrapeTimeout |
 | annotations.scrape | string | `"k8s.grafana.com/scrape"` | Annotation for enabling scraping for this service or pod. Value should be either "true" or "false" |
 
+### Discovery Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| attachNamespaceMetadata | bool | `false` | Attach namespace metadata to discovered pods and services. When enabled, all namespace labels are available for relabeling via `__meta_kubernetes_namespace_label_*`. |
+| excludeNamespaces | list | `[]` | The list of namespaces to exclude from autodiscovery. |
+| extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for discovered pods and services. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
+| labelSelectors | object | `{}` | Filter the list of discovered pods and services by labels. Example: `labelSelectors: { 'app': 'myapp' }` will only discover pods and services with the label `app=myapp`. Example: `labelSelectors: { 'app': ['myapp', 'myotherapp'] }` will only discover pods and services with the label `app=myapp` or `app=myotherapp`. |
+| namespaces | list | `[]` | The list of namespaces to include in autodiscovery. If empty, all namespaces are included. |
+
 ### Scrape Settings
 
 | Key | Type | Default | Description |
@@ -84,15 +94,6 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | bearerToken | object | `{"enabled":true,"token":"/var/run/secrets/kubernetes.io/serviceaccount/token"}` | Sets bearer_token_file line in the prometheus.scrape annotation_autodiscovery. |
 | scrapeInterval | string | 60s | How frequently to scrape metrics from discovered pods and services. Only used if the `k8s.grafana.com/metrics.scrapeInterval` annotation is not set. Overrides `global.scrapeInterval`. |
 | scrapeTimeout | string | 10s | The scrape timeout for discovered pods and services. Only used if the `k8s.grafana.com/metrics.scrapeTimeout` annotation is not set. Overrides `global.scrapeTimeout`. |
-
-### Discovery Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| excludeNamespaces | list | `[]` | The list of namespaces to exclude from autodiscovery. |
-| extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for discovered pods and services. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
-| labelSelectors | object | `{}` | Filter the list of discovered pods and services by labels. Example: `labelSelectors: { 'app': 'myapp' }` will only discover pods and services with the label `app=myapp`. Example: `labelSelectors: { 'app': ['myapp', 'myotherapp'] }` will only discover pods and services with the label `app=myapp` or `app=myotherapp`. |
-| namespaces | list | `[]` | The list of namespaces to include in autodiscovery. If empty, all namespaces are included. |
 
 ### Metric Processing Settings
 
