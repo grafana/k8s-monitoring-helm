@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Add `attachNamespaceMetadata` to the annotationAutodiscovery feature to add namespace labels available for relabeling rules. (#2874) (@petewall)
 *   Collect Windows host metrics directly with Alloy by setting `hostMetrics.windowsHosts.source: alloy`, which uses the built-in `prometheus.exporter.windows` instead of deploying and scraping a separate Windows Exporter. (@petewall)
 *   Route the Host Metrics sub-features to different collectors. `hostMetrics.linuxHosts`, `hostMetrics.windowsHosts`, and `hostMetrics.energyMetrics` each accept their own `collector`, falling back to the feature-level `hostMetrics.collector`. This makes it possible to collect Linux host metrics on a Linux DaemonSet and Windows host metrics on a Windows DaemonSet at the same time. (@petewall)
 *   Add the `windowsEventLogs` feature, which gathers Windows event logs from Windows Nodes. (@petewall)

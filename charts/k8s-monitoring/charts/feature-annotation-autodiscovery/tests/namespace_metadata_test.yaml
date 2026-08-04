@@ -1,0 +1,59 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Annotation Autodiscovery - Namespace Metadata
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should not add the attach_metadata block by default
+    set:
+      testing: {enabled: true}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: attach_metadata
+
+  - it: should attach namespace metadata to pods and services when attachNamespaceMetadata is enabled
+    set:
+      testing: {enabled: true}
+      attachNamespaceMetadata: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      # discovery.kubernetes "pods"
+      - matchRegex:
+          path: data["module.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # attach_metadata {
+          #   namespace = true
+          # }
+          pattern: |-
+            \s*  attach_metadata \{
+            \s*    namespace = true
+            \s*  \}
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should attach both namespace and node metadata to pods when both are enabled
+    set:
+      testing: {enabled: true}
+      attachNamespaceMetadata: true
+      nodeLabels:
+        nodePool: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # attach_metadata {
+          #   namespace = true
+          #   node = true
+          # }
+          pattern: |-
+            \s*  attach_metadata \{
+            \s*    namespace = true
+            \s*    node = true
+            \s*  \}
+      - matchSnapshot:
+          path: data["module.alloy"]
