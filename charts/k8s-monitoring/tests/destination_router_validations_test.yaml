@@ -12,7 +12,7 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes:
             - match:
                 - resourceAttribute: k8s.namespace.name
@@ -31,7 +31,7 @@ tests:
                 defaultDestinations:
                   - my-destination
 
-  - it: requires a valid ecosystem (opentelemetry or prometheus)
+  - it: requires a valid ecosystem (one of loki, otlp, prometheus, pyroscope)
     set:
       cluster: {name: test-cluster}
       destinations:
@@ -51,12 +51,12 @@ tests:
       - failedTemplate:
           errorMessage: |-
             Destination "my-router" (type: router) has an invalid or missing ecosystem: "".
-            A router must set ecosystem to one of: opentelemetry, prometheus.
+            A router must set ecosystem to one of: loki, otlp, prometheus, pyroscope.
             Please set:
             destinations:
               my-router:
                 type: router
-                ecosystem: opentelemetry
+                ecosystem: otlp
 
   - it: rejects a destination that supports no signal the router's ecosystem routes (R11)
     set:
@@ -70,7 +70,7 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes:
             - match:
                 - resourceAttribute: k8s.namespace.name
@@ -81,7 +81,7 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Destination "my-router" (type: router, ecosystem: opentelemetry) fans out to destination "my-profiles" (type: pyroscope), which cannot receive any signal an opentelemetry router routes (metrics, logs, traces).
+            Destination "my-router" (type: router, ecosystem: otlp) fans out to destination "my-profiles" (type: pyroscope), which cannot receive any signal an otlp router routes (metrics, logs, traces).
             Point this router only at destinations that support metrics/logs/traces, or change the router's ecosystem.
 
   - it: rejects a route whose match is not a list of conditions (RM0)
@@ -93,7 +93,7 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes:
             - match: {equals: tenant-a}
               destinations: [platform]
@@ -107,7 +107,7 @@ tests:
             destinations:
               my-router:
                 type: router
-                ecosystem: opentelemetry
+                ecosystem: otlp
                 routes:
                   - match:
                       - resourceAttribute: k8s.namespace.name
@@ -123,7 +123,7 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes:
             - destinations: [platform]
           defaultDestinations: [platform]
@@ -142,7 +142,7 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes:
             - match:
                 - "k8s.namespace.name"
@@ -163,7 +163,7 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes:
             - match:
                 - label: namespace
@@ -174,7 +174,7 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Destination "my-router" (type: router, ecosystem: opentelemetry) route #1 condition #1 uses `label`, but an opentelemetry router matches on `resourceAttribute`.
+            Destination "my-router" (type: router, ecosystem: otlp) route #1 condition #1 uses `label`, but an otlp router matches on `resourceAttribute`.
 
   - it: rejects a match condition that omits the ecosystem's expected key (RM1)
     set:
@@ -185,7 +185,7 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes:
             - match:
                 - op: equals
@@ -195,7 +195,7 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Destination "my-router" (type: router, ecosystem: opentelemetry) route #1 condition #1 must set `resourceAttribute`.
+            Destination "my-router" (type: router, ecosystem: otlp) route #1 condition #1 must set `resourceAttribute`.
 
   - it: rejects a resourceAttribute that isn't a valid attribute name (RM1)
     set:
@@ -206,7 +206,7 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes:
             - match:
                 - resourceAttribute: "bad attr"
@@ -252,7 +252,7 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes:
             - match:
                 - resourceAttribute: k8s.namespace.name
@@ -287,7 +287,7 @@ tests:
       - failedTemplate:
           errorMessage: |-
             Destination "my-router" (type: router, ecosystem: prometheus) route #1 condition #1 uses op `notEquals`, which the Prometheus/Loki/Pyroscope pipelines cannot express.
-            Use equals, in, or matches -- or an opentelemetry router for negation.
+            Use equals, in, or matches -- or an otlp router for negation.
 
   - it: rejects a prometheus router that combines op `matches` with other conditions (RM2)
     set:
@@ -313,7 +313,7 @@ tests:
       - failedTemplate:
           errorMessage: |-
             Destination "my-router" (type: router, ecosystem: prometheus) route #1 condition #1 uses op `matches` alongside other conditions.
-            A prometheus route combines its conditions by joining labels with a separator, which a regex `matches` cannot participate in. Use `matches` in a single-condition route, or switch to equals/in.
+            A label-based route combines its conditions by joining labels with a separator, which a regular expression `matches` cannot participate in. Use `matches` in a single-condition route, or switch to equals/in.
 
   - it: rejects op `in` whose value is a string instead of a list (RM3)
     set:
@@ -324,7 +324,7 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes:
             - match:
                 - resourceAttribute: k8s.namespace.name
@@ -347,7 +347,7 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes:
             - match:
                 - resourceAttribute: k8s.namespace.name
@@ -370,7 +370,7 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes:
             - match:
                 - resourceAttribute: k8s.namespace.name
@@ -393,7 +393,7 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes:
             - match:
                 - resourceAttribute: k8s.namespace.name
@@ -416,7 +416,7 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes:
             - match:
                 - resourceAttribute: k8s.namespace.name
@@ -439,7 +439,7 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes:
             - match:
                 - resourceAttribute: k8s.namespace.name
@@ -460,7 +460,7 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes:
             - match:
                 - resourceAttribute: k8s.namespace.name
@@ -485,7 +485,7 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes:
             - match:
                 - resourceAttribute: k8s.namespace.name
@@ -520,7 +520,7 @@ tests:
           disabled: true
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes: []
           defaultDestinations: [platform]
     asserts:
@@ -539,7 +539,7 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes:
             - match:
                 - resourceAttribute: k8s.namespace.name
@@ -563,7 +563,7 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes:
             - match:
                 - resourceAttribute: k8s.namespace.name
@@ -600,7 +600,7 @@ tests:
       - failedTemplate:
           errorMessage: |-
             Destination "my-router" (type: router, ecosystem: prometheus) has a route (#1) covering the "traces" signal, which this ecosystem does not route.
-            An prometheus router routes: metrics, logs, profiles.
+            An prometheus router routes: metrics.
 
   - it: rejects a route destination that is itself a router (R8)
     set:
@@ -611,12 +611,12 @@ tests:
           url: https://otlp.example.com
         other-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes: []
           defaultDestinations: [platform]
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes:
             - match:
                 - resourceAttribute: k8s.namespace.name
@@ -640,12 +640,12 @@ tests:
           url: https://otlp.example.com
         other-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes: []
           defaultDestinations: [platform]
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes: []
           defaultDestinations: [other-router]
     asserts:
@@ -664,7 +664,7 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes:
             - match:
                 - resourceAttribute: k8s.namespace.name
@@ -706,7 +706,7 @@ tests:
           url: https://prometheus.example.com/api/v1/write
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes: []
           defaultDestinations: [mimir]
     asserts:
@@ -734,7 +734,7 @@ tests:
           url: https://prometheus.example.com/api/v1/write
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           routes:
             - match:
                 - resourceAttribute: k8s.namespace.name
@@ -796,12 +796,12 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           defaultDestinations: [platform]
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Feature "clusterMetrics" collects metrics via the prometheus pipeline and routes it through router "my-router", but that router is declared ecosystem: opentelemetry.
+            Feature "clusterMetrics" collects metrics via the prometheus pipeline and routes it through router "my-router", but that router is declared ecosystem: otlp.
             An opentelemetry router can only route OpenTelemetry Protocol-collected data.
             Point this feature at a router whose ecosystem matches the feature's collection pipeline.
 
@@ -826,7 +826,7 @@ tests:
           url: https://otlp-b.example.com
         fanout:
           type: router
-          ecosystem: opentelemetry
+          ecosystem: otlp
           defaultDestinations: [a, b]
     asserts:
       - notFailedTemplate: {}
