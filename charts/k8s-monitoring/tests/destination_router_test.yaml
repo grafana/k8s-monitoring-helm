@@ -303,56 +303,54 @@ tests:
       - notMatchRegex:
           path: data["config.alloy"]
           pattern: 'my_router_loki_only_dest_gate_metrics'
-      # Sanity: loki-only-dest DOES get a logs gate, proving the signal filter -- not a rendering
-      # bug -- is why it's absent from the metrics gates above.
+      # Sanity: the default ("platform"), which DOES support metrics, gets its own per-downstream
+      # metrics gate, proving the gate machinery renders for capable destinations -- so
+      # loki-only-dest's absence from the metrics gates is the per-signal support filter (loki can't
+      # carry metrics), not a rendering bug.
       - matchRegex:
           path: data["config.alloy"]
-          pattern: 'my_router_loki_only_dest_gate_logs'
+          pattern: 'prometheus\.relabel "my_router_platform_gate_metrics_prometheus"'
 
   - it: a route's signals filter only applies its rule to the matching signal's router component (F6/route.signals)
     set:
       cluster: {name: test-cluster}
       selfReporting: {enabled: false}
       destinations:
-        mimir:
-          type: prometheus
-          url: https://prometheus-mimir.example.com
+        platform:
+          type: otlp
+          url: https://otlp-platform.example.com
         loki-dest:
           type: loki
           url: https://loki.example.com
         my-router:
           type: router
-          ecosystem: prometheus
+          ecosystem: otlp
           routes:
             - match:
-                - label: namespace
+                - resourceAttribute: k8s.namespace.name
                   op: equals
                   value: tenant-a
               destinations: [loki-dest]
               signals: [logs]
-          defaultDestinations: [mimir, loki-dest]
-      clusterMetrics:
+          defaultDestinations: [platform]
+      podLogsViaOpenTelemetry:
         enabled: true
         destinations: [my-router]
-        collector: alloy-metrics
-      podLogsViaLoki:
-        enabled: true
-        destinations: [my-router]
-        collector: alloy-logs
-      telemetryServices:
-        kube-state-metrics:
-          deploy: true
       collectors:
-        alloy-metrics:
-          presets: [clustered]
         alloy-logs:
           presets: [filesystem-log-reader, daemonset]
+          alloy:
+            stabilityLevel: public-preview
     asserts:
       - isKind:
           of: ConfigMap
+      # The route's signals:[logs] filter makes its selected_destinations OTTL rule render ONLY in
+      # the logs transform...
       - matchRegex:
           path: data["config.alloy"]
-          pattern: 'loki\.relabel "my_router_logs_loki" \{[\s\S]*?rule \{\s*source_labels = \["namespace"\]\s*regex\s*= "\^tenant-a\$"\s*target_label\s*= "selected_destinations"\s*replacement\s*= "loki-dest"\s*\}[\s\S]*?\} // loki\.relabel "my_router_logs_loki"'
+          pattern: 'otelcol\.processor\.transform "my_router_logs_otlp" \{[\s\S]*?set\(attributes\[\\"selected_destinations\\"\], \\"loki-dest\\"\) where attributes\[\\"k8s\.namespace\.name\\"\] == \\"tenant-a\\"[\s\S]*?\} // otelcol\.processor\.transform "my_router_logs_otlp"'
+      # ...and NOT in the metrics transform, which the otlp router still renders but where the
+      # logs-only route rule is filtered out (only the default marker remains).
       - notMatchRegex:
           path: data["config.alloy"]
-          pattern: 'prometheus\.relabel "my_router_metrics_prometheus" \{[\s\S]*?rule \{\s*source_labels = \["namespace"\]\s*regex\s*= "\^tenant-a\$"\s*target_label\s*= "selected_destinations"\s*replacement\s*= "loki-dest"\s*\}[\s\S]*?\} // prometheus\.relabel "my_router_metrics_prometheus"'
+          pattern: 'otelcol\.processor\.transform "my_router_metrics_otlp" \{[\s\S]*?set\(attributes\[\\"selected_destinations\\"\], \\"loki-dest\\"\) where attributes\[\\"k8s\.namespace\.name\\"\] == \\"tenant-a\\"[\s\S]*?\} // otelcol\.processor\.transform "my_router_metrics_otlp"'

@@ -857,39 +857,33 @@ tests:
     set:
       cluster: {name: test-cluster}
       selfReporting: {enabled: false}
-      clusterMetrics:
+      podLogsViaOpenTelemetry:
         enabled: true
         destinations: [my-router]
-        collector: alloy-metrics
-      podLogsViaLoki:
-        enabled: true
-        destinations: [my-router]
-        collector: alloy-logs
-      telemetryServices:
-        kube-state-metrics:
-          deploy: true
       collectors:
-        alloy-metrics:
-          presets: [clustered]
         alloy-logs:
           presets: [filesystem-log-reader, daemonset]
+          alloy:
+            stabilityLevel: public-preview
       destinations:
-        platform:
+        metrics-only:
           type: otlp
           url: https://otlp.example.com
+          logs: {enabled: false}
+          traces: {enabled: false}
         loki-dest:
           type: loki
           url: https://loki.example.com
         my-router:
           type: router
-          ecosystem: prometheus
+          ecosystem: otlp
           routes:
             - match:
-                - label: namespace
+                - resourceAttribute: k8s.namespace.name
                   op: equals
                   value: tenant-a
               destinations: [loki-dest]
               signals: [logs]
-          defaultDestinations: [platform]
+          defaultDestinations: [metrics-only]
     asserts:
       - notFailedTemplate: {}
