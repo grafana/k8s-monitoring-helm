@@ -153,6 +153,13 @@ beyla:
   service:
     targetPort: 9090
 
+  # -- Check for a host port conflict before deploying Beyla.
+  # Beyla runs with hostNetwork enabled and binds its port on every node, so any DaemonSet already binding
+  # the same host port (another Beyla or an unrelated workload) causes a conflict. If a conflict is detected,
+  # the install fails with guidance to pick a unique port. Set to false to skip the check.
+  # @section -- Beyla
+  portConflictCheck: true
+
   # @ignored
   podAnnotations:
     k8s.grafana.com/job: default/beyla

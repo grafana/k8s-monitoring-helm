@@ -1,0 +1,544 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Validations - Beyla port conflict
+templates:
+  - validations.yaml
+tests:
+  - it: fails when another Beyla is found binding the same host port
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      autoInstrumentation:
+        enabled: true
+        collector: alloy-metrics
+    kubernetesProvider:
+      scheme:
+        "v1/Node":
+          gvr:
+            version: "v1"
+            resource: "nodes"
+          namespaced: false
+        "apps/v1/DaemonSet":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "daemonsets"
+          namespaced: true
+        "apps/v1/Deployment":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "deployments"
+          namespaced: true
+      objects:
+        - kind: Node
+          apiVersion: v1
+          metadata:
+            name: node1
+        - kind: Deployment
+          apiVersion: apps/v1
+          metadata:
+            name: some-app
+            namespace: default
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: app
+                    image: registry.k8s.io/pause:3.9
+        - kind: DaemonSet
+          apiVersion: apps/v1
+          metadata:
+            name: beyla
+            namespace: beyla
+            labels:
+              app.kubernetes.io/name: beyla
+          spec:
+            template:
+              spec:
+                hostNetwork: true
+                containers:
+                  - name: beyla
+                    image: docker.io/grafana/beyla:3.25.0
+                    ports:
+                      - name: metrics
+                        containerPort: "9090"
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            A workload already appears to bind host port 9090 on this cluster's nodes.
+            Found DaemonSet "beyla" in namespace "beyla".
+            Beyla runs with hostNetwork enabled and binds this port on every node, so deploying it will cause a host port conflict.
+
+            Deploy Beyla on a different, unused port:
+            autoInstrumentation:
+              beyla:
+                service:
+                  targetPort: <unique-port>
+
+            If this detection is incorrect, you can disable this check:
+            autoInstrumentation:
+              beyla:
+                portConflictCheck: false
+
+  - it: fails when an unrelated hostNetwork DaemonSet already binds the same host port
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      autoInstrumentation:
+        enabled: true
+        collector: alloy-metrics
+    kubernetesProvider:
+      scheme:
+        "v1/Node":
+          gvr:
+            version: "v1"
+            resource: "nodes"
+          namespaced: false
+        "apps/v1/DaemonSet":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "daemonsets"
+          namespaced: true
+        "apps/v1/Deployment":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "deployments"
+          namespaced: true
+      objects:
+        - kind: Node
+          apiVersion: v1
+          metadata:
+            name: node1
+        - kind: Deployment
+          apiVersion: apps/v1
+          metadata:
+            name: some-app
+            namespace: default
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: app
+                    image: registry.k8s.io/pause:3.9
+        - kind: DaemonSet
+          apiVersion: apps/v1
+          metadata:
+            name: some-agent
+            namespace: monitoring
+            labels:
+              app.kubernetes.io/name: some-agent
+          spec:
+            template:
+              spec:
+                hostNetwork: true
+                containers:
+                  - name: agent
+                    image: registry.k8s.io/pause:3.9
+                    ports:
+                      - containerPort: "9090"
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            A workload already appears to bind host port 9090 on this cluster's nodes.
+            Found DaemonSet "some-agent" in namespace "monitoring".
+            Beyla runs with hostNetwork enabled and binds this port on every node, so deploying it will cause a host port conflict.
+
+            Deploy Beyla on a different, unused port:
+            autoInstrumentation:
+              beyla:
+                service:
+                  targetPort: <unique-port>
+
+            If this detection is incorrect, you can disable this check:
+            autoInstrumentation:
+              beyla:
+                portConflictCheck: false
+
+  - it: detects a conflict on a custom port via hostPort
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      autoInstrumentation:
+        enabled: true
+        collector: alloy-metrics
+        beyla:
+          service:
+            targetPort: 9095
+    kubernetesProvider:
+      scheme:
+        "v1/Node":
+          gvr:
+            version: "v1"
+            resource: "nodes"
+          namespaced: false
+        "apps/v1/DaemonSet":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "daemonsets"
+          namespaced: true
+        "apps/v1/Deployment":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "deployments"
+          namespaced: true
+      objects:
+        - kind: Node
+          apiVersion: v1
+          metadata:
+            name: node1
+        - kind: Deployment
+          apiVersion: apps/v1
+          metadata:
+            name: some-app
+            namespace: default
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: app
+                    image: registry.k8s.io/pause:3.9
+        - kind: DaemonSet
+          apiVersion: apps/v1
+          metadata:
+            name: custom-agent
+            namespace: monitoring
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: agent
+                    image: registry.k8s.io/pause:3.9
+                    ports:
+                      - hostPort: "9095"
+                        containerPort: "9095"
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            A workload already appears to bind host port 9095 on this cluster's nodes.
+            Found DaemonSet "custom-agent" in namespace "monitoring".
+            Beyla runs with hostNetwork enabled and binds this port on every node, so deploying it will cause a host port conflict.
+
+            Deploy Beyla on a different, unused port:
+            autoInstrumentation:
+              beyla:
+                service:
+                  targetPort: <unique-port>
+
+            If this detection is incorrect, you can disable this check:
+            autoInstrumentation:
+              beyla:
+                portConflictCheck: false
+
+  - it: does not fail when the existing DaemonSet binds a different host port
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      autoInstrumentation:
+        enabled: true
+        collector: alloy-metrics
+    kubernetesProvider:
+      scheme:
+        "v1/Node":
+          gvr:
+            version: "v1"
+            resource: "nodes"
+          namespaced: false
+        "apps/v1/DaemonSet":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "daemonsets"
+          namespaced: true
+        "apps/v1/Deployment":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "deployments"
+          namespaced: true
+      objects:
+        - kind: Node
+          apiVersion: v1
+          metadata:
+            name: node1
+        - kind: Deployment
+          apiVersion: apps/v1
+          metadata:
+            name: some-app
+            namespace: default
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: app
+                    image: registry.k8s.io/pause:3.9
+        - kind: DaemonSet
+          apiVersion: apps/v1
+          metadata:
+            name: beyla
+            namespace: beyla
+            labels:
+              app.kubernetes.io/name: beyla
+          spec:
+            template:
+              spec:
+                hostNetwork: true
+                containers:
+                  - name: beyla
+                    image: docker.io/grafana/beyla:3.25.0
+                    ports:
+                      - containerPort: "9091"
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: does not fail for a pod-local containerPort with no hostNetwork or hostPort
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      autoInstrumentation:
+        enabled: true
+        collector: alloy-metrics
+    kubernetesProvider:
+      scheme:
+        "v1/Node":
+          gvr:
+            version: "v1"
+            resource: "nodes"
+          namespaced: false
+        "apps/v1/DaemonSet":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "daemonsets"
+          namespaced: true
+        "apps/v1/Deployment":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "deployments"
+          namespaced: true
+      objects:
+        - kind: Node
+          apiVersion: v1
+          metadata:
+            name: node1
+        - kind: Deployment
+          apiVersion: apps/v1
+          metadata:
+            name: some-app
+            namespace: default
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: app
+                    image: registry.k8s.io/pause:3.9
+        - kind: DaemonSet
+          apiVersion: apps/v1
+          metadata:
+            name: some-agent
+            namespace: monitoring
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: agent
+                    image: registry.k8s.io/pause:3.9
+                    ports:
+                      - containerPort: "9090"
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: ignores the Beyla managed by this release
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      autoInstrumentation:
+        enabled: true
+        collector: alloy-metrics
+    kubernetesProvider:
+      scheme:
+        "v1/Node":
+          gvr:
+            version: "v1"
+            resource: "nodes"
+          namespaced: false
+        "apps/v1/DaemonSet":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "daemonsets"
+          namespaced: true
+        "apps/v1/Deployment":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "deployments"
+          namespaced: true
+      objects:
+        - kind: Node
+          apiVersion: v1
+          metadata:
+            name: node1
+        - kind: Deployment
+          apiVersion: apps/v1
+          metadata:
+            name: some-app
+            namespace: default
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: app
+                    image: registry.k8s.io/pause:3.9
+        - kind: DaemonSet
+          apiVersion: apps/v1
+          metadata:
+            name: RELEASE-NAME-beyla
+            namespace: NAMESPACE
+            labels:
+              app.kubernetes.io/name: beyla
+              app.kubernetes.io/instance: RELEASE-NAME
+          spec:
+            template:
+              spec:
+                hostNetwork: true
+                containers:
+                  - name: beyla
+                    image: docker.io/grafana/beyla:3.25.0
+                    ports:
+                      - containerPort: "9090"
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: does not fail when the port conflict check is disabled, even with a conflicting workload
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      autoInstrumentation:
+        enabled: true
+        collector: alloy-metrics
+        beyla:
+          portConflictCheck: false
+    kubernetesProvider:
+      scheme:
+        "v1/Node":
+          gvr:
+            version: "v1"
+            resource: "nodes"
+          namespaced: false
+        "apps/v1/DaemonSet":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "daemonsets"
+          namespaced: true
+        "apps/v1/Deployment":
+          gvr:
+            group: "apps"
+            version: "v1"
+            resource: "deployments"
+          namespaced: true
+      objects:
+        - kind: Node
+          apiVersion: v1
+          metadata:
+            name: node1
+        - kind: Deployment
+          apiVersion: apps/v1
+          metadata:
+            name: some-app
+            namespace: default
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: app
+                    image: registry.k8s.io/pause:3.9
+        - kind: DaemonSet
+          apiVersion: apps/v1
+          metadata:
+            name: beyla
+            namespace: beyla
+            labels:
+              app.kubernetes.io/name: beyla
+          spec:
+            template:
+              spec:
+                hostNetwork: true
+                containers:
+                  - name: beyla
+                    image: docker.io/grafana/beyla:3.25.0
+                    ports:
+                      - containerPort: "9090"
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: does not fail when no conflicting workload is present
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        metrics-service:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      autoInstrumentation:
+        enabled: true
+        collector: alloy-metrics
+    asserts:
+      - notFailedTemplate: {}
