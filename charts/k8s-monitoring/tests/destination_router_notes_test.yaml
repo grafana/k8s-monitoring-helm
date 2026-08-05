@@ -3,48 +3,6 @@ suite: Destinations - Notes - Router warnings
 templates:
   - NOTES.txt
 tests:
-  - it: warns when the attribute has no valid Prometheus/Loki/Pyroscope label equivalent (W-a)
-    set:
-      cluster: {name: test-cluster}
-      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["my-router"]}}
-      selfReporting: {enabled: false}
-      destinations:
-        platform:
-          type: otlp
-          url: https://otlp.example.com
-        my-router:
-          type: router
-          attribute: "some.weird-attr"
-          routes:
-            - match: {equals: tenant-a}
-              destinations: [platform]
-          defaultDestinations: [platform]
-    asserts:
-      - matchRegexRaw:
-          pattern: 'Router "my-router" routes on attribute "some\.weird-attr"'
-      - matchRegexRaw:
-          pattern: 'only OTLP-collected telemetry can route on an arbitrary attribute'
-
-  - it: does not warn W-a for the well-known k8s.namespace.name attribute
-    set:
-      cluster: {name: test-cluster}
-      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["my-router"]}}
-      selfReporting: {enabled: false}
-      destinations:
-        platform:
-          type: otlp
-          url: https://otlp.example.com
-        my-router:
-          type: router
-          attribute: "k8s.namespace.name"
-          routes:
-            - match: {equals: tenant-a}
-              destinations: [platform]
-          defaultDestinations: [platform]
-    asserts:
-      - notMatchRegexRaw:
-          pattern: 'has no valid label equivalent'
-
   - it: warns when a route covers a signal none of its destinations support (W-b)
     set:
       cluster: {name: test-cluster}
@@ -59,9 +17,12 @@ tests:
           url: https://loki.example.com
         my-router:
           type: router
-          attribute: "k8s.namespace.name"
+          ecosystem: otlp
           routes:
-            - match: {equals: tenant-a}
+            - match:
+                - resourceAttribute: k8s.namespace.name
+                  op: equals
+                  value: tenant-a
               destinations: [logs-only]
               signals: [metrics, logs]
           defaultDestinations: [platform]
@@ -85,12 +46,18 @@ tests:
           url: https://loki.example.com
         my-router:
           type: router
-          attribute: "k8s.namespace.name"
+          ecosystem: otlp
           routes:
-            - match: {equals: tenant-a}
+            - match:
+                - resourceAttribute: k8s.namespace.name
+                  op: equals
+                  value: tenant-a
               destinations: [platform]
               signals: [metrics]
-            - match: {equals: tenant-b}
+            - match:
+                - resourceAttribute: k8s.namespace.name
+                  op: equals
+                  value: tenant-b
               destinations: [logs-only]
               signals: [traces]
           defaultDestinations: [platform]
@@ -121,9 +88,12 @@ tests:
           url: https://otlp2.example.com
         my-router:
           type: router
-          attribute: "k8s.namespace.name"
+          ecosystem: prometheus
           routes:
-            - match: {equals: tenant-a}
+            - match:
+                - label: namespace
+                  op: equals
+                  value: tenant-a
               destinations: [platform]
               signals: [metrics]
           defaultDestinations: [platform]
@@ -152,9 +122,12 @@ tests:
           url: https://otlp.example.com
         my-router:
           type: router
-          attribute: "k8s.namespace.name"
+          ecosystem: prometheus
           routes:
-            - match: {equals: tenant-a}
+            - match:
+                - label: namespace
+                  op: equals
+                  value: tenant-a
               destinations: [platform]
               signals: [metrics]
           defaultDestinations: [platform]

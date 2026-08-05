@@ -1,7 +1,7 @@
 ---
 # -- The name for this router destination. A router is not a real telemetry backend: it is a
 # virtual destination that a feature points at (`destinations: [myRouter]`) which then fans
-# telemetry out to real destinations based on an attribute value.
+# telemetry out to real destinations based on the route match conditions.
 # @section -- General
 name: ""
 
@@ -10,41 +10,44 @@ name: ""
 # @section -- General
 disabled: false
 
-# -- The resource attribute (OTLP-ecosystem telemetry) or label (Prometheus/Loki/Pyroscope-ecosystem telemetry) whose
-# value decides which downstream destination(s) a given record is routed to. Must start with a letter or underscore
-# and contain only letters, digits, underscores, dots, slashes, and hyphens (no quotes, backticks, backslashes, or
-# whitespace). The well-known value `k8s.namespace.name` is automatically mapped to the `namespace` label for
-# label-based ecosystems. Any other attribute that is ALSO a valid Prometheus label name (letters/digits/underscore
-# only, starting with a letter or underscore -- so no dots, slashes, or hyphens) is used verbatim as the label name.
-# Attributes outside that stricter label-name grammar have no label equivalent, so label-based ecosystems fall back
-# to `defaultDestinations` only.
+# -- The collection pipeline this router routes on: `otlp`, `prometheus`, `loki`, or `pyroscope`. `otlp` routes
+# OpenTelemetry Protocol data (metrics, logs, and traces) by matching resource attributes with OTTL. `prometheus`,
+# `loki`, and `pyroscope` route the corresponding label-based pipeline (metrics, logs, and profiles respectively) by
+# matching labels. The ecosystem also determines how each route's `match` conditions are written: `resourceAttribute`
+# for `otlp`, `label` for the others. A feature may only route through a router whose ecosystem matches the pipeline
+# that feature collects on.
 # @section -- Routing
-attribute: "k8s.namespace.name"
+ecosystem: ""
 
-# -- Routing rules, evaluated in declaration order: the first rule whose `match` matches wins. Records that don't
-# match any rule (or whose matched rule does not list a destination for a given signal) fall back to
-# `defaultDestinations`.
+# -- Routing rules, evaluated in declaration order: the first rule whose `match` conditions all match wins. Records that
+# don't match any rule (or whose matched rule does not list a destination for a given signal) fall back to
+# `defaultDestinations`. Each route's `match` is a list of `{<field>, op, value}` conditions that are ANDed together,
+# where `<field>` is `resourceAttribute` (for an `otlp` router) or `label` (for a `prometheus`/`loki`/`pyroscope`
+# router). `op` is one of `equals`, `notEquals`, `in`, `matches`, `notMatches` (`notEquals` and `notMatches` are
+# `otlp`-only). `value` is a string (or a list of strings for `in`).
 # @section -- Routing
 # @default -- []
 routes: []
+# For an `otlp` router, match on resource attributes:
 # - match:
-#     equals: "team-a"
+#     - resourceAttribute: k8s.namespace.name
+#       op: equals
+#       value: team-a
 #   destinations:
-#     - team-a-mimir
+#     - team-a-otlp
 #   # -- Optional: restrict this route to specific signals. Defaults to all signals.
 #   signals:
 #     - metrics
 #     - logs
+# For a `prometheus`/`loki`/`pyroscope` router, match on labels instead:
 # - match:
-#     in:
-#       - team-b
-#       - team-c
+#     - label: namespace
+#       op: in
+#       value:
+#         - team-b
+#         - team-c
 #   destinations:
 #     - shared-mimir
-# - match:
-#     matches: "^team-.*-canary$"
-#   destinations:
-#     - canary-mimir
 
 # -- Destinations to fall back to when no route matches. MANDATORY: every router must define at least one default
 # destination, otherwise unmatched telemetry has nowhere to go.

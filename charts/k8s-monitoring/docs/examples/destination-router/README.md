@@ -8,18 +8,22 @@ This example shows how to use the `router` destination to fan pod logs out to di
 destinations based on the Kubernetes namespace they came from, without teaching the
 `podLogsViaOpenTelemetry` feature anything about tenant-specific plumbing.
 
-A router is not a real telemetry backend. It is a virtual destination that inspects an attribute
-(or the mapped label, for label-based collection pipelines) on each record and forwards it to one
-or more real downstream destinations. In this example, the router is named `tenantRouter` and
-routes on the default attribute, `k8s.namespace.name`:
+A router is not a real telemetry backend. It is a virtual destination that evaluates a route table
+of match conditions against each record and forwards it to one or more real downstream destinations.
+A router declares an `ecosystem` -- here `otlp`, because `podLogsViaOpenTelemetry` collects via the
+OpenTelemetry Protocol -- which means its conditions match on resource attributes. In this example,
+the router is named `tenantRouter` and routes on the `k8s.namespace.name` resource attribute:
 
 ```yaml
 destinations:
   tenantRouter:
     type: router
+    ecosystem: otlp
     routes:
       - match:
-          equals: tenant-a
+          - resourceAttribute: k8s.namespace.name
+            op: equals
+            value: tenant-a
         destinations:
           - stack-a
     defaultDestinations:
@@ -39,9 +43,9 @@ podLogsViaOpenTelemetry:
     - tenantRouter
 ```
 
-For a complete reference of the router configuration options, routing semantics, and how routing
-behaves across the different collection pipelines (scraped metrics, Loki logs, Pyroscope profiles,
-and OpenTelemetry Protocol), refer to [Destination routing](../../DestinationRouting.md).
+For a complete reference of the router configuration options, routing semantics, and how the
+`ecosystem` field determines which collection pipelines a router serves, refer to
+[Destination routing](../../DestinationRouting.md).
 
 ## Values
 
@@ -68,11 +72,14 @@ destinations:
     traces: {enabled: true}
   tenantRouter:
     type: router
-    # Routes on the default attribute, k8s.namespace.name, which is automatically mapped to the
-    # "namespace" label for label-based collection pipelines.
+    # This router routes OpenTelemetry Protocol data (podLogsViaOpenTelemetry collects via OTLP), so
+    # it matches on resource attributes.
+    ecosystem: otlp
     routes:
       - match:
-          equals: tenant-a
+          - resourceAttribute: k8s.namespace.name
+            op: equals
+            value: tenant-a
         destinations:
           - stack-a
     # MANDATORY: every router must define at least one fallback destination for records that

@@ -596,50 +596,8 @@ data:
     } // otelcol.exporter.otlphttp "stack_a"
     
     // Destination: tenantRouter (router)
-    // ROUTER: prometheus-ecosystem metrics arrive here, get labeled with "selected_destinations"
-    // based on k8s.namespace.name (label "namespace"), and fan out to one gate per downstream destination.
-    prometheus.relabel "tenantrouter_metrics_prometheus" {
-    
-      rule {
-        target_label = "selected_destinations"
-        replacement  = "platform"
-      }
-      rule {
-        source_labels = ["namespace"]
-        regex         = "^tenant-a$"
-        target_label  = "selected_destinations"
-        replacement   = "stack-a"
-      }
-      forward_to = [prometheus.relabel.tenantrouter_platform_gate_metrics_prometheus.receiver, prometheus.relabel.tenantrouter_stack_a_gate_metrics_prometheus.receiver, ]
-    } // prometheus.relabel "tenantrouter_metrics_prometheus"
-    
-    prometheus.relabel "tenantrouter_platform_gate_metrics_prometheus" {
-      forward_to = [otelcol.receiver.prometheus.platform.receiver]
-      rule {
-        source_labels = ["selected_destinations"]
-        regex         = "(^|.*,)platform(,.*|$)"
-        action        = "keep"
-      }
-      rule {
-        action = "labeldrop"
-        regex  = "selected_destinations"
-      }
-    }
-    
-    prometheus.relabel "tenantrouter_stack_a_gate_metrics_prometheus" {
-      forward_to = [otelcol.receiver.prometheus.stack_a.receiver]
-      rule {
-        source_labels = ["selected_destinations"]
-        regex         = "(^|.*,)stack-a(,.*|$)"
-        action        = "keep"
-      }
-      rule {
-        action = "labeldrop"
-        regex  = "selected_destinations"
-      }
-    }
     // ROUTER: OTLP-ecosystem metrics arrive here, get an OTTL-set "selected_destinations" resource
-    // attribute based on k8s.namespace.name, and fan out to one gate per downstream destination.
+    // attribute based on the route match conditions, and fan out to one gate per downstream destination.
     otelcol.processor.transform "tenantrouter_metrics_otlp" {
       error_mode = "ignore"
       metric_statements {
@@ -704,52 +662,8 @@ data:
         metrics = [otelcol.processor.attributes.stack_a.input]
       }
     }
-    // ROUTER: Loki-ecosystem logs arrive here, get labeled with "selected_destinations"
-    // based on k8s.namespace.name (label "namespace"), and fan out to one gate per downstream destination.
-    loki.relabel "tenantrouter_logs_loki" {
-    
-      rule {
-        target_label = "selected_destinations"
-        replacement  = "platform"
-      }
-      rule {
-        source_labels = ["namespace"]
-        regex         = "^tenant-a$"
-        target_label  = "selected_destinations"
-        replacement   = "stack-a"
-      }
-      forward_to = [loki.relabel.tenantrouter_platform_gate_logs_loki.receiver, loki.relabel.tenantrouter_stack_a_gate_logs_loki.receiver, ]
-    } // loki.relabel "tenantrouter_logs_loki"
-    
-    loki.relabel "tenantrouter_platform_gate_logs_loki" {
-      forward_to = [otelcol.receiver.loki.platform.receiver]
-      rule {
-        source_labels = ["selected_destinations"]
-        regex         = "(^|.*,)platform(,.*|$)"
-        action        = "keep"
-      }
-      rule {
-        action = "labeldrop"
-        regex  = "selected_destinations"
-      }
-      max_cache_size = 100
-    }
-    
-    loki.relabel "tenantrouter_stack_a_gate_logs_loki" {
-      forward_to = [otelcol.receiver.loki.stack_a.receiver]
-      rule {
-        source_labels = ["selected_destinations"]
-        regex         = "(^|.*,)stack-a(,.*|$)"
-        action        = "keep"
-      }
-      rule {
-        action = "labeldrop"
-        regex  = "selected_destinations"
-      }
-      max_cache_size = 100
-    }
     // ROUTER: OTLP-ecosystem logs arrive here, get an OTTL-set "selected_destinations" resource
-    // attribute based on k8s.namespace.name, and fan out to one gate per downstream destination.
+    // attribute based on the route match conditions, and fan out to one gate per downstream destination.
     otelcol.processor.transform "tenantrouter_logs_otlp" {
       error_mode = "ignore"
       log_statements {
@@ -815,7 +729,7 @@ data:
       }
     }
     // ROUTER: OTLP traces arrive here, get an OTTL-set "selected_destinations" resource attribute
-    // based on k8s.namespace.name, and fan out to one gate per downstream destination.
+    // based on the route match conditions, and fan out to one gate per downstream destination.
     otelcol.processor.transform "tenantrouter_traces_otlp" {
       error_mode = "ignore"
       trace_statements {
@@ -880,16 +794,6 @@ data:
         traces = [otelcol.processor.attributes.stack_a.input]
       }
     }
-    // ROUTER: Pyroscope-ecosystem profiles arrive here, get labeled with "selected_destinations"
-    // based on k8s.namespace.name (label "namespace"), and fan out to one gate per downstream destination.
-    pyroscope.relabel "tenantrouter_profiles_pyroscope" {
-    
-      rule {
-        target_label = "selected_destinations"
-        replacement  = "platform"
-      }
-      forward_to = []
-    } // pyroscope.relabel "tenantrouter_profiles_pyroscope"
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
