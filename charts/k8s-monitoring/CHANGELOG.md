@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Service Integrations: Fix an issue where validation wouldn't catch if a collector was not assigned. (@petewall)
 *   Cluster Metrics: add a `discoveryMode` option to `kubeScheduler` and `kubeControllerManager`, `eks-proxy` to scrape the control plane from the Amazon EKS Control Plane Metrics API (`metrics.eks.amazonaws.com`). (#2915) (@petewall)
 *   Add `extraResourceAttributes` and `extraResourceAttributesFrom` options to the OTLP destination. (#2913) (@petewall)
 *   Update kube-state-metrics to 8.1.3 and OpenCost to 2.5.29 (@petewall)

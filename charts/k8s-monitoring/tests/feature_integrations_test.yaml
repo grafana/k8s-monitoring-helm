@@ -25,6 +25,35 @@ tests:
             Please add a destination with metrics support.
             See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md for more details.
 
+  - it: requires a collector to be assigned when multiple collectors are enabled
+    template: validations.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prom.prom.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+        alloy-singleton:
+          enabled: true
+      integrations:
+        alloy:
+          instances:
+            - name: alloy
+              labelSelectors:
+                app.kubernetes.io/name: alloy-metrics
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Service Integrations feature requires a collector to be assigned.
+            Please assign one by setting the following:
+            integrations:
+              collector: alloy-metrics or alloy-singleton
+            See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/README.md for more details.
+
   - it: works with a metrics-only integration
     template: alloy-config.yaml
     set:
@@ -48,6 +77,43 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["config.alloy"]
+
+  - it: works with an explicitly assigned collector when multiple collectors are enabled
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prom.prom.svc:9090/api/v1/write
+        loki:
+          type: loki
+          url: http://loki.loki.svc:3100/loki/api/v1/push
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+        alloy-singleton:
+          enabled: true
+      # clusterEvents keeps alloy-singleton in use so the render exercises the multi-collector path
+      clusterEvents:
+        enabled: true
+        collector: alloy-singleton
+      integrations:
+        collector: alloy-metrics
+        alloy:
+          instances:
+            - name: alloy
+              labelSelectors:
+                app.kubernetes.io/name: alloy-metrics
+    asserts:
+      - documentIndex: 0
+        isKind:
+          of: ConfigMap
+      - documentIndex: 0
+        matchRegex:
+          path: data["config.alloy"]
+          pattern: alloy_integration "integration"
 
   - it: works with multiple metrics-only integrations
     template: alloy-config.yaml
