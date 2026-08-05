@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Allow for regexes to be used in the `namespaces` list for many features. (#2860) (@petewall)
 *   Add a validation that detects a host port conflict before the Auto-Instrumentation feature deploys Beyla. Beyla runs with `hostNetwork` enabled, so any existing DaemonSet already binding the same host port would collide with it. Disable with `autoInstrumentation.beyla.portConflictCheck: false`. (#2893) (@petewall)
 *   Add `attachNamespaceMetadata` to the annotationAutodiscovery feature to add namespace labels available for relabeling rules. (#2874) (@petewall)
 *   Collect Windows host metrics directly with Alloy by setting `hostMetrics.windowsHosts.source: alloy`, which uses the built-in `prometheus.exporter.windows` instead of deploying and scraping a separate Windows Exporter. (@petewall)

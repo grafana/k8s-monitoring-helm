@@ -90,7 +90,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | excludeNamespaces | list | `[]` | Do not capture logs from any pods in these namespaces. |
 | extraDiscoveryRules | string | `""` | Rules to filter pods for log gathering. Only used for "volumes" or "kubernetesApi" gather methods. |
 | labelSelectors | object | `{}` | Filter the list of discovered pods and services by labels. Only for the "volumes" gather method. Example: `labelSelectors: { 'app': 'myapp' }` will only discover pods with the label `app=myapp`. Example: `labelSelectors: { 'app': ['myapp', 'myotherapp'] }` will only discover pods with the label `app=myapp` or `app=myotherapp`. |
-| namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
+| namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces). Entries may be exact namespace names or regular expressions (e.g. `team-.*`), and the two styles can be mixed. Regexes are fully anchored, so they must match the entire namespace name Note: When every entry is an exact name, the pod discovery is much more efficient. If any entry is a regex, the collector must fetch pods from all namespaces, then filter them internally, which can cause performance issues on large clusters. |
 | nodeSelectors | object | `{}` | Filter the list of discovered nodes by labels. Only for the "volumes" gather method. Example: `nodeSelectors: { 'kubernetes.io/os': 'linux' }` |
 
 ### Processing settings
