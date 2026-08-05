@@ -30,3 +30,50 @@ tests:
       - notMatchRegex:
           path: data["module.alloy"]
           pattern: scrape_protocols =
+
+  - it: emits all histogram scrape options when configured
+    set:
+      testing: {enabled: true}
+      global:
+        scrapeClassicHistograms: true
+        scrapeNativeHistograms: true
+        convertClassicHistogramsToNhcb: true
+        nativeHistogramBucketLimit: 100
+        nativeHistogramMinBucketFactor: 1.1
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: scrape_classic_histograms = true
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: scrape_native_histograms = true
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: convert_classic_histograms_to_nhcb = true
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: native_histogram_bucket_limit = 100
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: native_histogram_min_bucket_factor = 1\.1
+
+  - it: disables histogram bucket merging options by default
+    set:
+      testing: {enabled: true}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: scrape_classic_histograms = false
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: convert_classic_histograms_to_nhcb = false
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: native_histogram_bucket_limit = 0
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: native_histogram_min_bucket_factor = 0
