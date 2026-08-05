@@ -21,3 +21,12 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["module.alloy"]
+  - it: filters via discovery.relabel when the namespaces list contains a regex
+    set:
+      testing: {enabled: true}
+      namespaces: ["default", "team-.*"]
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

@@ -1,21 +1,13 @@
-should attach both namespace and node metadata when both are enabled:
+should filter via discovery.relabel when the namespaces list contains a regex:
   1: |
     |-
-      declare "pod_logs_via_loki" {
+      declare "pod_logs_via_kubernetes_api" {
         argument "logs_destinations" {
           comment = "Must be a list of log destinations where collected logs should be forwarded to"
         }
 
         discovery.kubernetes "pods" {
           role = "pod"
-          selectors {
-            role = "pod"
-            field = "spec.nodeName=" + sys.env("HOSTNAME")
-          }
-          attach_metadata {
-            namespace = true
-            node = true
-          }
         } // discovery.kubernetes "pods"
 
         discovery.relabel "filtered_pods" {
@@ -24,6 +16,11 @@ should attach both namespace and node metadata when both are enabled:
             source_labels = ["__meta_kubernetes_namespace"]
             action = "replace"
             target_label = "namespace"
+          }
+          rule {  // namespaces contains a regex, so pods cannot be pre-filtered by discovery.kubernetes; keep only matching namespaces here
+            source_labels = ["namespace"]
+            regex = "default|team-.*"
+            action = "keep"
           }
           rule {  // Drop anything with a "falsy" annotation value
             source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
@@ -41,7 +38,6 @@ should attach both namespace and node metadata when both are enabled:
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            replacement = "$1"
             target_label = "job"
           }
 
@@ -49,21 +45,23 @@ should attach both namespace and node metadata when both are enabled:
           rule {
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
-            replacement = "$1"
             target_label = "tmp_container_runtime"
           }
+
           // explicitly set service_name. if not set, loki will automatically try to populate a default.
           // see https://grafana.com/docs/loki/latest/get-started/labels/#default-labels-for-all-users
           //
           // choose the first value found from the following ordered list:
           // - pod.annotation[resource.opentelemetry.io/service.name]
           // - pod.label[app.kubernetes.io/name]
+          // - k8s.pod.name
           // - k8s.container.name
           rule {
+            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-              "__meta_kubernetes_pod_container_name",
+              "container",
             ]
             separator = ";"
             regex = "^(?:;*)?([^;]+).*$"
@@ -77,6 +75,7 @@ should attach both namespace and node metadata when both are enabled:
           // - pod.annotation[resource.opentelemetry.io/service.namespace]
           // - pod.namespace
           rule {
+            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
               "namespace",
@@ -118,47 +117,15 @@ should attach both namespace and node metadata when both are enabled:
             regex = "(.+)"
             target_label = "app_kubernetes_io_name"
           }
-
-          // Set the pod log path.
-          rule {
-            source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
-            separator = "/"
-            replacement = "/var/log/pods/*$1/*.log"
-            target_label = "__path__"
-          }
-
-          // If kubernetes.io/config.mirror is set, this is a static pod, created by the kubelet.
-          // It's logs live on a different path.
-          rule {
-            source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
-            separator = "/"
-            regex = "(.+/.+)"
-            replacement = "/var/log/pods/*$1/*.log"
-            target_label = "__path__"
-          }
-
-          rule {
-            source_labels = [
-              "__meta_kubernetes_node_label_karpenter_sh_nodepool",
-              "__meta_kubernetes_node_label_cloud_google_com_gke_nodepool",
-              "__meta_kubernetes_node_label_eks_amazonaws_com_nodegroup",
-              "__meta_kubernetes_node_label_kubernetes_azure_com_agentpool",
-              "__meta_kubernetes_node_label_agentpool",
-            ]
-            regex = "^(?:;*)?([^;]+).*$"
-            target_label = "nodepool"
-          }
         } // discovery.relabel "filtered_pods"
 
-        local.file_match "pod_logs" {
-          path_targets = discovery.relabel.filtered_pods.output
-        } // local.file_match "pod_logs"
-
-        loki.source.file "pod_logs" {
-          targets    = local.file_match.pod_logs.targets
-          tail_from_end = true
+        loki.source.kubernetes "pod_logs" {
+          targets = discovery.relabel.filtered_pods.output
+          clustering {
+            enabled = true
+          }
           forward_to = [loki.process.pod_logs.receiver]
-        } // loki.source.file "pod_logs"
+        } // loki.source.kubernetes "pod_logs"
 
         loki.process "pod_logs" {
           stage.match {
@@ -209,23 +176,19 @@ should attach both namespace and node metadata when both are enabled:
 
           forward_to = argument.logs_destinations.value
         } // loki.process "pod_logs"
-      } // declare "pod_logs_via_loki"
-should attach namespace metadata when attachNamespaceMetadata is enabled:
+      } // declare "pod_logs_via_kubernetes_api"
+should pre-filter in discovery.kubernetes when all namespaces are exact names:
   1: |
     |-
-      declare "pod_logs_via_loki" {
+      declare "pod_logs_via_kubernetes_api" {
         argument "logs_destinations" {
           comment = "Must be a list of log destinations where collected logs should be forwarded to"
         }
 
         discovery.kubernetes "pods" {
           role = "pod"
-          selectors {
-            role = "pod"
-            field = "spec.nodeName=" + sys.env("HOSTNAME")
-          }
-          attach_metadata {
-            namespace = true
+          namespaces {
+            names = ["default","kube-system","my-app-1"]
           }
         } // discovery.kubernetes "pods"
 
@@ -252,7 +215,6 @@ should attach namespace metadata when attachNamespaceMetadata is enabled:
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            replacement = "$1"
             target_label = "job"
           }
 
@@ -260,21 +222,23 @@ should attach namespace metadata when attachNamespaceMetadata is enabled:
           rule {
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
-            replacement = "$1"
             target_label = "tmp_container_runtime"
           }
+
           // explicitly set service_name. if not set, loki will automatically try to populate a default.
           // see https://grafana.com/docs/loki/latest/get-started/labels/#default-labels-for-all-users
           //
           // choose the first value found from the following ordered list:
           // - pod.annotation[resource.opentelemetry.io/service.name]
           // - pod.label[app.kubernetes.io/name]
+          // - k8s.pod.name
           // - k8s.container.name
           rule {
+            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-              "__meta_kubernetes_pod_container_name",
+              "container",
             ]
             separator = ";"
             regex = "^(?:;*)?([^;]+).*$"
@@ -288,6 +252,7 @@ should attach namespace metadata when attachNamespaceMetadata is enabled:
           // - pod.annotation[resource.opentelemetry.io/service.namespace]
           // - pod.namespace
           rule {
+            action = "replace"
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
               "namespace",
@@ -329,35 +294,15 @@ should attach namespace metadata when attachNamespaceMetadata is enabled:
             regex = "(.+)"
             target_label = "app_kubernetes_io_name"
           }
-
-          // Set the pod log path.
-          rule {
-            source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
-            separator = "/"
-            replacement = "/var/log/pods/*$1/*.log"
-            target_label = "__path__"
-          }
-
-          // If kubernetes.io/config.mirror is set, this is a static pod, created by the kubelet.
-          // It's logs live on a different path.
-          rule {
-            source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
-            separator = "/"
-            regex = "(.+/.+)"
-            replacement = "/var/log/pods/*$1/*.log"
-            target_label = "__path__"
-          }
         } // discovery.relabel "filtered_pods"
 
-        local.file_match "pod_logs" {
-          path_targets = discovery.relabel.filtered_pods.output
-        } // local.file_match "pod_logs"
-
-        loki.source.file "pod_logs" {
-          targets    = local.file_match.pod_logs.targets
-          tail_from_end = true
+        loki.source.kubernetes "pod_logs" {
+          targets = discovery.relabel.filtered_pods.output
+          clustering {
+            enabled = true
+          }
           forward_to = [loki.process.pod_logs.receiver]
-        } // loki.source.file "pod_logs"
+        } // loki.source.kubernetes "pod_logs"
 
         loki.process "pod_logs" {
           stage.match {
@@ -408,4 +353,4 @@ should attach namespace metadata when attachNamespaceMetadata is enabled:
 
           forward_to = argument.logs_destinations.value
         } // loki.process "pod_logs"
-      } // declare "pod_logs_via_loki"
+      } // declare "pod_logs_via_kubernetes_api"
