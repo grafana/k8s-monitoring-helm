@@ -26,26 +26,6 @@
   {{- $routes := $router.routes | default list }}
   {{- $defaultDestinations := $router.defaultDestinations | default list }}
 
-  {{- /* R0: `attribute` (defaults to k8s.namespace.name when unset) must be a syntactically
-         valid attribute name: non-empty, starting with a letter/underscore, containing only
-         letters/digits/underscore/dot/slash/hyphen, and critically no quotes, backticks,
-         backslashes, or whitespace. destinations.router.ottlCondition splices this value
-         unquoted into `attributes["<attribute>"]`, so anything outside this grammar (e.g.
-         `foo"] == "x`) would let user input break out of the OTTL string literal and inject
-         arbitrary OTTL/Alloy syntax. */}}
-  {{- $attribute := $router.attribute | default "k8s.namespace.name" }}
-  {{- if not (regexMatch "^[a-zA-Z_][a-zA-Z0-9_./-]*$" $attribute) }}
-    {{- $msg := list "" (printf "Destination \"%s\" (type: router) has an invalid attribute: %q." $name $attribute) }}
-    {{- $msg = append $msg "Please use a valid attribute name." }}
-    {{- $msg = append $msg "It must start with a letter or underscore and contain only letters, digits, underscores, dots, slashes, and hyphens -- no quotes, backticks, backslashes, or whitespace." }}
-    {{- $msg = append $msg "Please set:" }}
-    {{- $msg = append $msg "destinations:" }}
-    {{- $msg = append $msg (printf "  %s:" $name) }}
-    {{- $msg = append $msg "    type: router" }}
-    {{- $msg = append $msg "    attribute: k8s.namespace.name" }}
-    {{- fail (join "\n" $msg) }}
-  {{- end }}
-
   {{- /* R1: defaultDestinations is mandatory. A router is a terminal destination: records that
          don't match any route (or match a route that doesn't cover their signal) fall back to
          defaultDestinations, so unmatched telemetry always needs somewhere to land. */}}
@@ -61,119 +41,140 @@
     {{- fail (join "\n" $msg) }}
   {{- end }}
 
+  {{- /* Ecosystem is mandatory: it decides how conditions are written (resourceAttribute for otlp,
+         label for prometheus/loki/pyroscope) and which signals the router serves. */}}
+  {{- $ecosystem := $router.ecosystem | default "" }}
+  {{- if not (has $ecosystem (list "loki" "otlp" "prometheus" "pyroscope")) }}
+    {{- $msg := list "" (printf "Destination \"%s\" (type: router) has an invalid or missing ecosystem: %q." $name $ecosystem) }}
+    {{- $msg = append $msg "A router must set ecosystem to one of: loki, otlp, prometheus, pyroscope." }}
+    {{- $msg = append $msg "Please set:" }}
+    {{- $msg = append $msg "destinations:" }}
+    {{- $msg = append $msg (printf "  %s:" $name) }}
+    {{- $msg = append $msg "    type: router" }}
+    {{- $msg = append $msg "    ecosystem: otlp" }}
+    {{- fail (join "\n" $msg) }}
+  {{- end }}
+  {{- $expectedKey := ternary "resourceAttribute" "label" (eq $ecosystem "otlp") }}
+  {{- $wrongKey := ternary "label" "resourceAttribute" (eq $ecosystem "otlp") }}
+  {{- $allowedSignals := get (dict "otlp" (list "metrics" "logs" "traces") "prometheus" (list "metrics") "loki" (list "logs") "pyroscope" (list "profiles")) $ecosystem }}
+
   {{- range $i, $route := $routes }}
     {{- $routeNum := add1 $i }}
-    {{- $match := $route.match | default dict }}
-    {{- $matchKeys := list }}
-    {{- range $k := list "equals" "in" "matches" }}
-      {{- if hasKey $match $k }}{{- $matchKeys = append $matchKeys $k }}{{- end }}
-    {{- end }}
-
-    {{- /* R2: exactly one of equals/in/matches. */}}
-    {{- if eq (len $matchKeys) 0 }}
-      {{- $msg := list "" (printf "Destination \"%s\" (type: router) has a route (#%d) with no match condition." $name $routeNum) }}
-      {{- $msg = append $msg "Every route must set exactly one of match.equals, match.in, or match.matches." }}
+    {{- $match := $route.match | default list }}
+    {{- if not (kindIs "slice" $match) }}
+      {{- $msg := list "" (printf "Destination \"%s\" (type: router) has a route (#%d) whose match is not a list." $name $routeNum) }}
+      {{- $msg = append $msg (printf "A route's match must be a list of {%s, op, value} conditions (ANDed together)." $expectedKey) }}
       {{- $msg = append $msg "Please set:" }}
       {{- $msg = append $msg "destinations:" }}
       {{- $msg = append $msg (printf "  %s:" $name) }}
       {{- $msg = append $msg "    type: router" }}
+      {{- $msg = append $msg (printf "    ecosystem: %s" $ecosystem) }}
       {{- $msg = append $msg "    routes:" }}
       {{- $msg = append $msg "      - match:" }}
-      {{- $msg = append $msg "          equals: my-value" }}
-      {{- $msg = append $msg "        destinations:" }}
-      {{- $msg = append $msg "          - my-destination" }}
+      {{- $msg = append $msg (printf "          - %s: k8s.namespace.name" $expectedKey) }}
+      {{- $msg = append $msg "            op: equals" }}
+      {{- $msg = append $msg "            value: my-value" }}
       {{- fail (join "\n" $msg) }}
-    {{- else if gt (len $matchKeys) 1 }}
-      {{- $msg := list "" (printf "Destination \"%s\" (type: router) has a route (#%d) with multiple match conditions set: %s." $name $routeNum (join ", " $matchKeys)) }}
-      {{- $msg = append $msg "Exactly one of match.equals, match.in, or match.matches is required per route." }}
-      {{- $msg = append $msg "Please remove all but one of these fields." }}
+    {{- end }}
+    {{- if empty $match }}
+      {{- $msg := list "" (printf "Destination \"%s\" (type: router) has a route (#%d) with an empty match." $name $routeNum) }}
+      {{- $msg = append $msg "Every route needs at least one match condition." }}
       {{- fail (join "\n" $msg) }}
     {{- end }}
 
-    {{- /* R2b: `in` must be a list. A scalar value here (e.g. `in: foo` parsed as a YAML string)
-           passes the schema's `oneOf` required-key check and R3's `empty` check below (a
-           non-empty string is not "empty"), but R4's and the body's `range $v := $match.in` over
-           a plain string is not supported by Go's text/template range action, so it fails render
-           with a raw, confusing "range can't iterate over ..." error. Catch it here, before any
-           range over match.in, with a clear message instead. */}}
-    {{- if and (hasKey $match "in") (not (kindIs "slice" $match.in)) }}
-      {{- $msg := list "" (printf "Destination \"%s\" (type: router) has a route (#%d) whose match.in value is not a list: %v." $name $routeNum $match.in) }}
-      {{- $msg = append $msg "The `in` match must be a list, e.g. `in: [value1, value2]`." }}
-      {{- $msg = append $msg "Please set:" }}
-      {{- $msg = append $msg "destinations:" }}
-      {{- $msg = append $msg (printf "  %s:" $name) }}
-      {{- $msg = append $msg "    type: router" }}
-      {{- $msg = append $msg "    routes:" }}
-      {{- $msg = append $msg "      - match:" }}
-      {{- $msg = append $msg "          in: [my-value-a, my-value-b]" }}
-      {{- fail (join "\n" $msg) }}
-    {{- end }}
+    {{- range $ci, $cond := $match }}
+      {{- $condNum := add1 $ci }}
 
-    {{- /* R3: `in` must be non-empty. Only reachable when it's the sole match key (R2 already
-           failed on zero or multiple match keys). */}}
-    {{- if and (hasKey $match "in") (empty $match.in) }}
-      {{- $msg := list "" (printf "Destination \"%s\" (type: router) has a route (#%d) with an empty match.in list." $name $routeNum) }}
-      {{- $msg = append $msg "match.in needs at least one value to match against." }}
-      {{- $msg = append $msg "Please set:" }}
-      {{- $msg = append $msg "destinations:" }}
-      {{- $msg = append $msg (printf "  %s:" $name) }}
-      {{- $msg = append $msg "    type: router" }}
-      {{- $msg = append $msg "    routes:" }}
-      {{- $msg = append $msg "      - match:" }}
-      {{- $msg = append $msg "          in: [my-value-a, my-value-b]" }}
-      {{- fail (join "\n" $msg) }}
-    {{- end }}
-
-    {{- /* R4: match values must be strings. They get spliced into a regex (equals/in, via
-           regexQuoteMeta) or used verbatim as a regex (matches), so a YAML value parsed as a
-           bool/number/null (e.g. an unquoted `true` or `123`) is very likely not what the user
-           meant to match against. */}}
-    {{- if hasKey $match "equals" }}
-      {{- if not (kindIs "string" $match.equals) }}
-        {{- $msg := list "" (printf "Destination \"%s\" (type: router) has a route (#%d) whose match.equals value is not a string: %v." $name $routeNum $match.equals) }}
-        {{- $msg = append $msg "Please quote it so it isn't parsed as a YAML number, boolean, or null:" }}
-        {{- $msg = append $msg "destinations:" }}
-        {{- $msg = append $msg (printf "  %s:" $name) }}
-        {{- $msg = append $msg "    type: router" }}
-        {{- $msg = append $msg "    routes:" }}
-        {{- $msg = append $msg "      - match:" }}
-        {{- $msg = append $msg (printf "          equals: \"%v\"" $match.equals) }}
+      {{- if not (kindIs "map" $cond) }}
+        {{- $msg := list "" (printf "Destination \"%s\" (type: router) route #%d condition #%d is not a map." $name $routeNum $condNum) }}
+        {{- $msg = append $msg (printf "Each condition must be a map with %s, op, and value." $expectedKey) }}
         {{- fail (join "\n" $msg) }}
       {{- end }}
-    {{- end }}
-    {{- if hasKey $match "in" }}
-      {{- range $v := $match.in }}
-        {{- if not (kindIs "string" $v) }}
-          {{- $msg := list "" (printf "Destination \"%s\" (type: router) has a route (#%d) whose match.in list contains a non-string value: %v." $name $routeNum $v) }}
-          {{- $msg = append $msg "Please quote it so it isn't parsed as a YAML number, boolean, or null:" }}
-          {{- $msg = append $msg "destinations:" }}
-          {{- $msg = append $msg (printf "  %s:" $name) }}
-          {{- $msg = append $msg "    type: router" }}
-          {{- $msg = append $msg "    routes:" }}
-          {{- $msg = append $msg "      - match:" }}
-          {{- $msg = append $msg (printf "          in: [\"%v\"]" $v) }}
+
+      {{- /* A condition matches on the key for the router's ecosystem. Its value is spliced unquoted
+             into the generated OTTL/relabel, so its grammar is enforced to keep user input from
+             breaking out of the surrounding Alloy. */}}
+      {{- if hasKey $cond $wrongKey }}
+        {{- $msg := list "" (printf "Destination \"%s\" (type: router, ecosystem: %s) route #%d condition #%d uses `%s`, but an %s router matches on `%s`." $name $ecosystem $routeNum $condNum $wrongKey $ecosystem $expectedKey) }}
+        {{- fail (join "\n" $msg) }}
+      {{- end }}
+      {{- if not (hasKey $cond $expectedKey) }}
+        {{- $msg := list "" (printf "Destination \"%s\" (type: router, ecosystem: %s) route #%d condition #%d must set `%s`." $name $ecosystem $routeNum $condNum $expectedKey) }}
+        {{- fail (join "\n" $msg) }}
+      {{- end }}
+      {{- $fieldValue := get $cond $expectedKey }}
+      {{- if not (kindIs "string" $fieldValue) }}
+        {{- $msg := list "" (printf "Destination \"%s\" (type: router) route #%d condition #%d %s must be a string: %v." $name $routeNum $condNum $expectedKey $fieldValue) }}
+        {{- $msg = append $msg "Please quote it so it isn't parsed as a YAML number, boolean, or null." }}
+        {{- fail (join "\n" $msg) }}
+      {{- end }}
+      {{- if eq $ecosystem "otlp" }}
+        {{- if not (regexMatch "^[a-zA-Z_][a-zA-Z0-9_./-]*$" $fieldValue) }}
+          {{- $msg := list "" (printf "Destination \"%s\" (type: router) route #%d condition #%d has an invalid resourceAttribute: %q." $name $routeNum $condNum $fieldValue) }}
+          {{- $msg = append $msg "It must start with a letter or underscore and contain only letters, digits, underscores, dots, slashes, and hyphens -- no quotes, backticks, backslashes, or whitespace." }}
+          {{- fail (join "\n" $msg) }}
+        {{- end }}
+      {{- else }}
+        {{- if not (regexMatch "^[a-zA-Z_][a-zA-Z0-9_]*$" $fieldValue) }}
+          {{- $msg := list "" (printf "Destination \"%s\" (type: router) route #%d condition #%d has an invalid label: %q." $name $routeNum $condNum $fieldValue) }}
+          {{- $msg = append $msg "A label must be a valid Prometheus label name: start with a letter or underscore and contain only letters, digits, and underscores." }}
           {{- fail (join "\n" $msg) }}
         {{- end }}
       {{- end }}
-    {{- end }}
-    {{- if hasKey $match "matches" }}
-      {{- if not (kindIs "string" $match.matches) }}
-        {{- $msg := list "" (printf "Destination \"%s\" (type: router) has a route (#%d) whose match.matches value is not a string: %v." $name $routeNum $match.matches) }}
-        {{- $msg = append $msg "Please quote it so it isn't parsed as a YAML number, boolean, or null:" }}
-        {{- $msg = append $msg "destinations:" }}
-        {{- $msg = append $msg (printf "  %s:" $name) }}
-        {{- $msg = append $msg "    type: router" }}
-        {{- $msg = append $msg "    routes:" }}
-        {{- $msg = append $msg "      - match:" }}
-        {{- $msg = append $msg (printf "          matches: \"%v\"" $match.matches) }}
+
+      {{- $op := $cond.op | default "" }}
+      {{- if not (has $op (list "equals" "notEquals" "in" "matches" "notMatches")) }}
+        {{- $msg := list "" (printf "Destination \"%s\" (type: router) route #%d condition #%d has an invalid or missing op: %q." $name $routeNum $condNum $op) }}
+        {{- $msg = append $msg "op must be one of: equals, notEquals, in, matches, notMatches." }}
         {{- fail (join "\n" $msg) }}
       {{- end }}
+      {{- /* The label-based pipelines (relabel) have only keep/drop, so they can't express negation,
+             and can't AND-combine a regular expression `matches` with other conditions via a separator. */}}
+      {{- if ne $ecosystem "otlp" }}
+        {{- if or (eq $op "notEquals") (eq $op "notMatches") }}
+          {{- $msg := list "" (printf "Destination \"%s\" (type: router, ecosystem: %s) route #%d condition #%d uses op `%s`, which the Prometheus/Loki/Pyroscope pipelines cannot express." $name $ecosystem $routeNum $condNum $op) }}
+          {{- $msg = append $msg "Use equals, in, or matches -- or an otlp router for negation." }}
+          {{- fail (join "\n" $msg) }}
+        {{- end }}
+        {{- if and (eq $op "matches") (gt (len $match) 1) }}
+          {{- $msg := list "" (printf "Destination \"%s\" (type: router, ecosystem: %s) route #%d condition #%d uses op `matches` alongside other conditions." $name $ecosystem $routeNum $condNum) }}
+          {{- $msg = append $msg "A label-based route combines its conditions by joining labels with a separator, which a regular expression `matches` cannot participate in. Use `matches` in a single-condition route, or switch to equals/in." }}
+          {{- fail (join "\n" $msg) }}
+        {{- end }}
+      {{- end }}
 
-      {{- /* R5: matches must compile as a regex. mustRegexMatch fails the template with Go's
-             regexp compile error if it doesn't, which is acceptable here: the body
-             (destinations.router.ottlCondition / matchRegex) uses this same string as a regex, so
-             a compile error here is exactly the error the user needs to see. */}}
-      {{- $_ := mustRegexMatch $match.matches "" }}
+      {{- /* A non-string YAML value (unquoted bool/number/null) is almost never what the user meant
+             to match against. */}}
+      {{- if eq $op "in" }}
+        {{- if not (kindIs "slice" $cond.value) }}
+          {{- $msg := list "" (printf "Destination \"%s\" (type: router) route #%d condition #%d uses op `in`, so value must be a list: %v." $name $routeNum $condNum $cond.value) }}
+          {{- $msg = append $msg "Please set value to a list, e.g. `value: [a, b]`." }}
+          {{- fail (join "\n" $msg) }}
+        {{- end }}
+        {{- if empty $cond.value }}
+          {{- $msg := list "" (printf "Destination \"%s\" (type: router) route #%d condition #%d uses op `in` with an empty value list." $name $routeNum $condNum) }}
+          {{- $msg = append $msg "`in` needs at least one value to match against." }}
+          {{- fail (join "\n" $msg) }}
+        {{- end }}
+        {{- range $v := $cond.value }}
+          {{- if not (kindIs "string" $v) }}
+            {{- $msg := list "" (printf "Destination \"%s\" (type: router) route #%d condition #%d has a non-string value in its `in` list: %v." $name $routeNum $condNum $v) }}
+            {{- $msg = append $msg "Please quote it so it isn't parsed as a YAML number, boolean, or null." }}
+            {{- fail (join "\n" $msg) }}
+          {{- end }}
+        {{- end }}
+      {{- else }}
+        {{- if not (kindIs "string" $cond.value) }}
+          {{- $msg := list "" (printf "Destination \"%s\" (type: router) route #%d condition #%d op `%s` requires a string value: %v." $name $routeNum $condNum $op $cond.value) }}
+          {{- $msg = append $msg "Please quote it so it isn't parsed as a YAML number, boolean, or null." }}
+          {{- fail (join "\n" $msg) }}
+        {{- end }}
+        {{- /* The value is used as a regex below, so a compile failure here is exactly the error the
+               user needs. */}}
+        {{- if or (eq $op "matches") (eq $op "notMatches") }}
+          {{- $_ := mustRegexMatch $cond.value "" }}
+        {{- end }}
+      {{- end }}
     {{- end }}
 
     {{- /* R5b: every route must have at least one destination. An empty or missing destinations
@@ -190,7 +191,9 @@
       {{- $msg = append $msg "    type: router" }}
       {{- $msg = append $msg "    routes:" }}
       {{- $msg = append $msg "      - match:" }}
-      {{- $msg = append $msg "          equals: my-value" }}
+      {{- $msg = append $msg (printf "          - %s: k8s.namespace.name" $expectedKey) }}
+      {{- $msg = append $msg "            op: equals" }}
+      {{- $msg = append $msg "            value: my-value" }}
       {{- $msg = append $msg "        destinations:" }}
       {{- $msg = append $msg "          - my-destination" }}
       {{- fail (join "\n" $msg) }}
@@ -219,6 +222,11 @@
         {{- if not (has $s (list "metrics" "logs" "traces" "profiles")) }}
           {{- $msg := list "" (printf "Destination \"%s\" (type: router) has a route (#%d) with an unknown signal \"%s\"." $name $routeNum $s) }}
           {{- $msg = append $msg "Please use one of: metrics, logs, traces, profiles." }}
+          {{- fail (join "\n" $msg) }}
+        {{- end }}
+        {{- if not (has $s $allowedSignals) }}
+          {{- $msg := list "" (printf "Destination \"%s\" (type: router, ecosystem: %s) has a route (#%d) covering the \"%s\" signal, which this ecosystem does not route." $name $ecosystem $routeNum $s) }}
+          {{- $msg = append $msg (printf "An %s router routes: %s." $ecosystem (join ", " $allowedSignals)) }}
           {{- fail (join "\n" $msg) }}
         {{- end }}
       {{- end }}
@@ -259,6 +267,39 @@
         {{- $msg = append $msg "Routing telemetry from one router into another router would create a cycle in the generated Alloy pipeline, so it is not supported." }}
         {{- $msg = append $msg "Please point routes and defaultDestinations at real (non-router) destinations." }}
         {{- fail (join "\n" $msg) }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+
+  {{- /* R11: every destination the router fans out to must support at least one signal this ecosystem
+         routes; otherwise it can never receive anything from this router (e.g. a profiles-only
+         Pyroscope destination under an otlp router). supports_<signal> can depend on a
+         destination's own config (e.g. otlp reads logs.enabled), so resolve merged values the same
+         way the router body does. */}}
+  {{- $referenced := list }}
+  {{- range $route := $routes }}
+    {{- range $d := ($route.destinations | default list) }}
+      {{- if not (has $d $referenced) }}{{- $referenced = append $referenced $d }}{{- end }}
+    {{- end }}
+  {{- end }}
+  {{- range $d := $defaultDestinations }}
+    {{- if not (has $d $referenced) }}{{- $referenced = append $referenced $d }}{{- end }}
+  {{- end }}
+  {{- range $d := $referenced }}
+    {{- if hasKey $enabledDestinations $d }}
+      {{- $dest := get $enabledDestinations $d }}
+      {{- if ne $dest.type "router" }}
+        {{- $defaults := (printf "destinations/%s-values.yaml" $dest.type) | $root.Files.Get | fromYaml }}
+        {{- $merged := mergeOverwrite $defaults $dest }}
+        {{- $supportsAny := false }}
+        {{- range $s := $allowedSignals }}
+          {{- if eq (include (printf "destinations.%s.supports_%s" $dest.type $s) $merged) "true" }}{{- $supportsAny = true }}{{- end }}
+        {{- end }}
+        {{- if not $supportsAny }}
+          {{- $msg := list "" (printf "Destination \"%s\" (type: router, ecosystem: %s) fans out to destination \"%s\" (type: %s), which cannot receive any signal an %s router routes (%s)." $name $ecosystem $d $dest.type $ecosystem (join ", " $allowedSignals)) }}
+          {{- $msg = append $msg (printf "Point this router only at destinations that support %s, or change the router's ecosystem." (join "/" $allowedSignals)) }}
+          {{- fail (join "\n" $msg) }}
+        {{- end }}
       {{- end }}
     {{- end }}
   {{- end }}
@@ -311,6 +352,7 @@
   {{- $featureKey := .featureKey }}
   {{- $routerName := .routerName }}
   {{- $type := .type }}
+  {{- $ecosystem := .ecosystem }}
   {{- $allDestinations := $root.Values.destinations | default dict }}
   {{- $enabledDestinations := include "destinations.getEnabled" $allDestinations | fromYaml }}
   {{- $router := get $enabledDestinations $routerName }}
@@ -366,6 +408,16 @@
     {{- $msg = append $msg (printf "Please add a destination that supports %s to the router's routes or defaultDestinations." $type) }}
     {{- fail (join "\n" $msg) }}
   {{- end }}
+
+  {{- /* Ecosystem compatibility: the feature's collection pipeline must exactly match the router's
+         declared ecosystem (both come from the same otlp/prometheus/loki/pyroscope vocabulary). This
+         seam is the only place the feature's real collection ecosystem is known. */}}
+  {{- $routerEcosystem := $router.ecosystem | default "" }}
+  {{- if ne $routerEcosystem $ecosystem }}
+    {{- $msg := list "" (printf "Feature \"%s\" collects %s via the %s pipeline and routes it through router \"%s\", but that router is declared ecosystem: %s." $featureKey $type $ecosystem $routerName $routerEcosystem) }}
+    {{- $msg = append $msg (printf "A router only routes data collected via its own ecosystem; point this feature at a router whose ecosystem is %s." $ecosystem) }}
+    {{- fail (join "\n" $msg) }}
+  {{- end }}
 {{- end }}
 
 {{/* Phase 4: soft, render-time warnings for a single enabled router destination. Telemetry still
@@ -381,20 +433,10 @@
   {{- $router := .Destination }}
   {{- $allDestinations := $root.Values.destinations | default dict }}
   {{- $enabledDestinations := include "destinations.getEnabled" $allDestinations | fromYaml }}
-  {{- $attribute := $router.attribute | default "k8s.namespace.name" }}
   {{- $routes := $router.routes | default list }}
   {{- $defaultDestinations := $router.defaultDestinations | default list }}
-
-  {{- /* W-a: the attribute has no valid Prometheus/Loki/Pyroscope label equivalent (same
-         promotion rule as the body's $labelName in destinations.router.alloy). On those
-         label-based collection pipelines, routing is applied before any OTLP conversion could
-         happen, so an attribute that can't become a label falls through to defaultDestinations
-         on those ecosystems even if the matched downstream is itself an OTLP destination -- only
-         telemetry that is actually collected via OTLP can route on an arbitrary attribute. */}}
-  {{- if and (ne $attribute "k8s.namespace.name") (not (regexMatch "^[a-zA-Z_][a-zA-Z0-9_]*$" $attribute)) }}
-
-WARNING: Router "{{ $name }}" routes on attribute "{{ $attribute }}", which is not "k8s.namespace.name" and does not match the Prometheus/Loki/Pyroscope label-name grammar (^[a-zA-Z_][a-zA-Z0-9_]*$), so it has no valid label equivalent. On the Prometheus, Loki, and Pyroscope collection pipelines (scraped metrics, Loki pod logs, Pyroscope profiles), routing on "{{ $attribute }}" falls through to defaultDestinations -- even when the matched destination is OTLP -- because routing is applied on the collection pipeline before any OTLP conversion; only OTLP-collected telemetry can route on an arbitrary attribute.
-  {{- end }}
+  {{- $ecosystem := $router.ecosystem | default "" }}
+  {{- $ecosystemSignals := get (dict "otlp" (list "metrics" "logs" "traces") "prometheus" (list "metrics") "loki" (list "logs") "pyroscope" (list "profiles")) $ecosystem }}
 
   {{- /* W-b: for each route, for each signal it covers, warn if NONE of its destinations support
          that signal. Computed the same way destinations.router.alloy computes it
@@ -421,7 +463,7 @@ WARNING: Router "{{ $name }}" routes on attribute "{{ $attribute }}", which is n
   {{- range $i, $route := $routes }}
     {{- $routeNum := add1 $i }}
     {{- $routeDestinations := $route.destinations | default list }}
-    {{- $signals := $route.signals | default (list "metrics" "logs" "traces" "profiles") }}
+    {{- $signals := $route.signals | default $ecosystemSignals }}
     {{- range $signal := $signals }}
       {{- $covered := include "destinations.router.downstreamForSignal" (dict "allDownstream" $routeDestinations "downstreamInfo" $downstreamInfo "signal" $signal) | fromYamlArray }}
       {{- if empty $covered }}

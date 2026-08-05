@@ -33,7 +33,7 @@
        enter the check -- zero-cost, zero-diff for the overwhelmingly common case. */}}
 {{- range $destName := $destinationNames }}
   {{- if and (hasKey $root.Values.destinations $destName) (eq (get $root.Values.destinations $destName).type "router") }}
-    {{- include "destinations.router.assertCanCarry" (dict "root" $root "featureKey" $featureKey "routerName" $destName "type" $type) }}
+    {{- include "destinations.router.assertCanCarry" (dict "root" $root "featureKey" $featureKey "routerName" $destName "type" $type "ecosystem" $ecosystem) }}
   {{- end }}
 {{- end -}}
 {{- if empty $chain -}}

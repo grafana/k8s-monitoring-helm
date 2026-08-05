@@ -3184,10 +3184,6 @@
         "router-destination": {
             "type": "object",
             "properties": {
-                "attribute": {
-                    "type": "string",
-                    "pattern": "^[a-zA-Z_][a-zA-Z0-9_./-]*$"
-                },
                 "defaultDestinations": {
                     "type": "array",
                     "minItems": 1,
@@ -3197,6 +3193,15 @@
                 },
                 "disabled": {
                     "type": "boolean"
+                },
+                "ecosystem": {
+                    "type": "string",
+                    "enum": [
+                        "loki",
+                        "otlp",
+                        "prometheus",
+                        "pyroscope"
+                    ]
                 },
                 "name": {
                     "type": "string"
@@ -3225,29 +3230,44 @@
                                 }
                             },
                             "match": {
-                                "type": "object",
-                                "properties": {
-                                    "in": {
-                                        "type": "array"
-                                    }
-                                },
-                                "oneOf": [
-                                    {
-                                        "required": [
-                                            "equals"
-                                        ]
+                                "type": "array",
+                                "minItems": 1,
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "resourceAttribute": {
+                                            "type": "string"
+                                        },
+                                        "label": {
+                                            "type": "string"
+                                        },
+                                        "op": {
+                                            "enum": [
+                                                "equals",
+                                                "notEquals",
+                                                "in",
+                                                "matches",
+                                                "notMatches"
+                                            ]
+                                        }
                                     },
-                                    {
-                                        "required": [
-                                            "in"
-                                        ]
-                                    },
-                                    {
-                                        "required": [
-                                            "matches"
-                                        ]
-                                    }
-                                ]
+                                    "oneOf": [
+                                        {
+                                            "required": [
+                                                "resourceAttribute"
+                                            ]
+                                        },
+                                        {
+                                            "required": [
+                                                "label"
+                                            ]
+                                        }
+                                    ],
+                                    "required": [
+                                        "op",
+                                        "value"
+                                    ]
+                                }
                             }
                         }
                     }
