@@ -64,6 +64,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | beyla.maxCacheSize | string | 100000 | Sets the max_cache_size for the prometheus.relabel component for Beyla. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
 | beyla.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | beyla.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
+| beyla.portConflictCheck | bool | `true` | Check for a host port conflict before deploying Beyla. Beyla runs with hostNetwork enabled and binds its port on every node, so any DaemonSet already binding the same host port (another Beyla or an unrelated workload) causes a conflict. If a conflict is detected, the install fails with guidance to pick a unique port. Set to false to skip the check. |
 | beyla.preset | string | `"application"` | The configuration preset to use. Valid options are "application" or "network". |
 | beyla.scrapeInterval | string | 60s | How frequently to scrape metrics from Beyla. Overrides `global.scrapeInterval`. |
 | beyla.service | object | `{"targetPort":9090}` | The port number for the Beyla service. |
