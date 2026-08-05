@@ -85,7 +85,21 @@
 {{- $featureName := "Service Integrations" }}
 
 {{- $metricIntegrations := include "feature.integrations.configured.metrics" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
+{{- $logOutputIntegrations := include "feature.integrations.configured.logOutput" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
 {{- $destinations := include "features.integrations.destinations" . | fromYamlArray }}
+
+{{- /*
+Integrations that scrape exporters (metrics) or emit exporter logs (logOutput) run on a dedicated
+collector, so one must be assigned. When it isn't, and more than one collector is enabled, the
+collector auto-selection returns empty and the entire integrations config would be silently dropped;
+validate here so the user gets a clear error instead. Log-parsing integrations (logRules only) attach
+to the Pod Logs feature's collector rather than an integrations collector, so they need no assignment.
+*/}}
+{{- if or $metricIntegrations $logOutputIntegrations }}
+  {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" "integrations") }}
+  {{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" "integrations" "featureName" $featureName) }}
+{{- end }}
+
 {{- if $metricIntegrations }}
   {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "featureName" $featureName) }}
   {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "integrations" "featureName" $featureName "type" "metrics" "ecosystem" "prometheus") }}
@@ -93,7 +107,6 @@
   {{- include "collectors.validate.clusteringEnabled" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName "featureName" $featureName) }}
 {{- end }}
 
-{{- $logOutputIntegrations := include "feature.integrations.configured.logOutput" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
 {{- if $logOutputIntegrations }}
   {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "featureName" $featureName) }}
   {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "integrations" "featureName" $featureName "type" "logs" "ecosystem" "loki") }}
