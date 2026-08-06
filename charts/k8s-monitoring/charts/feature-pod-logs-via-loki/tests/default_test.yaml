@@ -101,3 +101,45 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["module.alloy"]
+
+  - it: should filter to namespaces matching a regular expression
+    set:
+      testing: {enabled: true}
+      namespaces: ["team-.*"]
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'rule \{\s*source_labels = \["namespace"\]\s*regex = "team-\.\*"\s*action = "keep"\s*\}'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'namespaces \{'
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should allow multiple namespace patterns, matched as alternation
+    set:
+      testing: {enabled: true}
+      namespaces: ["team-a", "team-b.*"]
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'rule \{\s*source_labels = \["namespace"\]\s*regex = "team-a\|team-b\.\*"\s*action = "keep"\s*\}'
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should exclude namespaces matching a regular expression
+    set:
+      testing: {enabled: true}
+      excludeNamespaces: ["kube-.*"]
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'rule \{\s*source_labels = \["namespace"\]\s*regex = "kube-\.\*"\s*action = "drop"\s*\}'
+      - matchSnapshot:
+          path: data["module.alloy"]

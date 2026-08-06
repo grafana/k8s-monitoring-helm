@@ -87,10 +87,10 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | annotationSelector | string | `"logs.grafana.com/pods.enabled"` | Pod annotation to use for controlling log discovery. If a pod has this annotation, it will either enable or disable gathering of logs, depending on the value of the discoveryMethod. |
 | attachNamespaceMetadata | bool | `false` | Attach namespace metadata to pod discovery targets. When enabled, all namespace labels are available as log labels via `__meta_kubernetes_namespace_label_*`. |
 | discoveryMethod | string | `"all"` | Controls the behavior of discovering pods for logs. Possible values: `all`, `annotation`. When set to "all", every pod (filtered by the namespace and label selectors) will have their logs gathered. When set to "annotation", only pods with the annotation selector set to something other than "false", "no" or "skip" will have their logs gathered. |
-| excludeNamespaces | list | `[]` | Do not capture logs from any pods in these namespaces. |
+| excludeNamespaces | list | `[]` | Do not capture logs from pods in namespaces matching these regular expressions. Each entry is matched as a RE2 regular expression against the full namespace name (e.g. `team-.*`). |
 | extraDiscoveryRules | string | `""` | Rules to filter pods for log gathering. Only used for "volumes" or "kubernetesApi" gather methods. |
 | labelSelectors | object | `{}` | Filter the list of discovered pods and services by labels. Only for the "volumes" gather method. Example: `labelSelectors: { 'app': 'myapp' }` will only discover pods with the label `app=myapp`. Example: `labelSelectors: { 'app': ['myapp', 'myotherapp'] }` will only discover pods with the label `app=myapp` or `app=myotherapp`. |
-| namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
+| namespaces | list | `[]` | Only capture logs from pods in namespaces matching these regular expressions (`[]` means all namespaces). Each entry is matched as a RE2 regular expression against the full namespace name (e.g. `team-.*`). |
 | nodeSelectors | object | `{}` | Filter the list of discovered nodes by labels. Only for the "volumes" gather method. Example: `nodeSelectors: { 'kubernetes.io/os': 'linux' }` |
 
 ### Processing settings

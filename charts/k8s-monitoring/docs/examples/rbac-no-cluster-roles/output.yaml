@@ -118,9 +118,6 @@ data:
           role = "pod"
           field = "spec.nodeName=" + sys.env("HOSTNAME")
         }
-        namespaces {
-          names = ["default"]
-        }
       } // discovery.kubernetes "pods"
     
       discovery.relabel "filtered_pods" {
@@ -129,6 +126,11 @@ data:
           source_labels = ["__meta_kubernetes_namespace"]
           action = "replace"
           target_label = "namespace"
+        }
+        rule {
+          source_labels = ["namespace"]
+          regex = "default"
+          action = "keep"
         }
         rule {  // Drop anything with a "falsy" annotation value
           source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
