@@ -1,4 +1,4 @@
-should attach both namespace and node metadata when both are enabled:
+should filter via discovery.relabel when the namespaces list contains a regex:
   1: |
     |-
       declare "pod_logs_via_loki" {
@@ -12,10 +12,6 @@ should attach both namespace and node metadata when both are enabled:
             role = "pod"
             field = "spec.nodeName=" + sys.env("HOSTNAME")
           }
-          attach_metadata {
-            namespace = true
-            node = true
-          }
         } // discovery.kubernetes "pods"
 
         discovery.relabel "filtered_pods" {
@@ -24,6 +20,11 @@ should attach both namespace and node metadata when both are enabled:
             source_labels = ["__meta_kubernetes_namespace"]
             action = "replace"
             target_label = "namespace"
+          }
+          rule {  // namespaces contains a regex, so pods cannot be pre-filtered by discovery.kubernetes; keep only matching namespaces here
+            source_labels = ["namespace"]
+            regex = "default|team-.*"
+            action = "keep"
           }
           rule {  // Drop anything with a "falsy" annotation value
             source_labels = ["__meta_kubernetes_pod_annotation_logs_grafana_com_pods_enabled"]
@@ -136,18 +137,6 @@ should attach both namespace and node metadata when both are enabled:
             replacement = "/var/log/pods/*$1/*.log"
             target_label = "__path__"
           }
-
-          rule {
-            source_labels = [
-              "__meta_kubernetes_node_label_karpenter_sh_nodepool",
-              "__meta_kubernetes_node_label_cloud_google_com_gke_nodepool",
-              "__meta_kubernetes_node_label_eks_amazonaws_com_nodegroup",
-              "__meta_kubernetes_node_label_kubernetes_azure_com_agentpool",
-              "__meta_kubernetes_node_label_agentpool",
-            ]
-            regex = "^(?:;*)?([^;]+).*$"
-            target_label = "nodepool"
-          }
         } // discovery.relabel "filtered_pods"
 
         local.file_match "pod_logs" {
@@ -210,7 +199,7 @@ should attach both namespace and node metadata when both are enabled:
           forward_to = argument.logs_destinations.value
         } // loki.process "pod_logs"
       } // declare "pod_logs_via_loki"
-should attach namespace metadata when attachNamespaceMetadata is enabled:
+should pre-filter in discovery.kubernetes when all namespaces are exact names:
   1: |
     |-
       declare "pod_logs_via_loki" {
@@ -224,8 +213,8 @@ should attach namespace metadata when attachNamespaceMetadata is enabled:
             role = "pod"
             field = "spec.nodeName=" + sys.env("HOSTNAME")
           }
-          attach_metadata {
-            namespace = true
+          namespaces {
+            names = ["default","kube-system","my-app-1"]
           }
         } // discovery.kubernetes "pods"
 

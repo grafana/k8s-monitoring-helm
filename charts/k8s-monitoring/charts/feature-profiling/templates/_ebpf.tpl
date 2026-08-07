@@ -1,5 +1,9 @@
 {{ define "feature.profiling.ebpf.alloy" }}
 {{- if .Values.ebpf.enabled }}
+{{- $namespacesHaveRegex := "" }}
+{{- if .Values.ebpf.namespaces }}
+  {{- $namespacesHaveRegex = include "feature.profiling.namespaces.hasRegex" .Values.ebpf.namespaces }}
+{{- end }}
 {{- $scrapeAnnotation := include "pod_annotation" (printf "%s/cpu.ebpf.%s" $.Values.annotations.prefix $.Values.ebpf.annotations.enable) }}
 {{- $labelSelectors := list }}
 {{- range $k, $v := .Values.ebpf.labelSelectors }}
@@ -19,7 +23,7 @@ discovery.kubernetes "ebpf_pods" {
 {{- end }}
     field = "spec.nodeName=" + sys.env("HOSTNAME")
   }
-{{- if .Values.ebpf.namespaces }}
+{{- if and .Values.ebpf.namespaces (ne $namespacesHaveRegex "true") }}
   namespaces {
     names = {{ .Values.ebpf.namespaces | toJson }}
   }
@@ -50,6 +54,13 @@ discovery.relabel "ebpf_pods" {
     source_labels = ["__meta_kubernetes_namespace"]
     target_label = "namespace"
   }
+{{- if eq $namespacesHaveRegex "true" }}
+  rule {  // namespaces contains a regex, so pods cannot be pre-filtered by discovery.kubernetes; keep only matching namespaces here
+    source_labels = ["namespace"]
+    regex = "{{ .Values.ebpf.namespaces | join "|" }}"
+    action = "keep"
+  }
+{{- end }}
 {{- if .Values.ebpf.excludeNamespaces }}
   rule {
     source_labels = ["namespace"]

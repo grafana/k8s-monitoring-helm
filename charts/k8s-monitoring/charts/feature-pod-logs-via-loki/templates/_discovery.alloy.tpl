@@ -1,4 +1,8 @@
 {{- define "feature.podLogsViaLoki.discovery.alloy" }}
+{{- $namespacesHaveRegex := "" }}
+{{- if .Values.namespaces }}
+  {{- $namespacesHaveRegex = include "feature.podLogsViaLoki.namespaces.hasRegex" .Values.namespaces }}
+{{- end }}
 {{- $labelSelectors := list }}
 {{- range $k, $v := .Values.labelSelectors }}
   {{- if kindIs "slice" $v }}
@@ -21,7 +25,7 @@ discovery.kubernetes "pods" {
     role = "pod"
     field = "spec.nodeName=" + sys.env("HOSTNAME")
   }
-{{- if .Values.namespaces }}
+{{- if and .Values.namespaces (ne $namespacesHaveRegex "true") }}
   namespaces {
     names = {{ .Values.namespaces | toJson }}
   }
@@ -66,6 +70,13 @@ discovery.relabel "filtered_pods" {
     action = "replace"
     target_label = "namespace"
   }
+{{- if eq $namespacesHaveRegex "true" }}
+  rule {  // namespaces contains a regex, so pods cannot be pre-filtered by discovery.kubernetes; keep only matching namespaces here
+    source_labels = ["namespace"]
+    regex = "{{ .Values.namespaces | join "|" }}"
+    action = "keep"
+  }
+{{- end }}
 {{- if .Values.excludeNamespaces }}
   rule {
     source_labels = ["namespace"]

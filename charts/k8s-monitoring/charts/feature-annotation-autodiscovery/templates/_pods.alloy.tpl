@@ -1,8 +1,12 @@
 {{- define "feature.annotationAutodiscovery.pods" }}
+{{- $namespacesHaveRegex := "" }}
+{{- if .Values.namespaces }}
+  {{- $namespacesHaveRegex = include "feature.annotationAutodiscovery.namespaces.hasRegex" .Values.namespaces }}
+{{- end }}
 
 discovery.kubernetes "pods" {
   role = "pod"
-{{- if .Values.namespaces }}
+{{- if and .Values.namespaces (ne $namespacesHaveRegex "true") }}
   namespaces {
     names = {{ .Values.namespaces | toJson }}
   }
@@ -33,6 +37,13 @@ discovery.kubernetes "pods" {
 
 discovery.relabel "annotation_autodiscovery_pods" {
   targets = discovery.kubernetes.pods.targets
+{{- if eq $namespacesHaveRegex "true" }}
+  rule {  // namespaces contains a regex, so pods cannot be pre-filtered by discovery.kubernetes; keep only matching namespaces here
+    source_labels = ["__meta_kubernetes_namespace"]
+    regex = "{{ .Values.namespaces | join "|" }}"
+    action = "keep"
+  }
+{{- end }}
 {{- if .Values.excludeNamespaces }}
   rule {
     source_labels = ["__meta_kubernetes_namespace"]
