@@ -1,5 +1,9 @@
 {{ define "feature.profiling.java.alloy" }}
 {{- if .Values.java.enabled }}
+{{- $namespacesHaveRegex := "" }}
+{{- if .Values.java.namespaces }}
+  {{- $namespacesHaveRegex = include "feature.profiling.namespaces.hasRegex" .Values.java.namespaces }}
+{{- end }}
 {{- $scrapeAnnotation := include "pod_annotation" (printf "%s/java.%s" $.Values.annotations.prefix $.Values.java.annotations.enable) }}
 {{- $labelSelectors := list }}
 {{- range $k, $v := .Values.java.labelSelectors }}
@@ -19,7 +23,7 @@ discovery.kubernetes "java_pods" {
 {{- end }}
     field = "spec.nodeName=" + sys.env("HOSTNAME")
   }
-{{- if .Values.java.namespaces }}
+{{- if and .Values.java.namespaces (ne $namespacesHaveRegex "true") }}
   namespaces {
     names = {{ .Values.java.namespaces | toJson }}
   }
@@ -76,6 +80,13 @@ discovery.relabel "java_pods" {
     source_labels = ["__meta_kubernetes_namespace"]
     target_label = "namespace"
   }
+{{- if eq $namespacesHaveRegex "true" }}
+  rule {  // namespaces contains a regex, so pods cannot be pre-filtered by discovery.kubernetes; keep only matching namespaces here
+    source_labels = ["namespace"]
+    regex = "{{ .Values.java.namespaces | join "|" }}"
+    action = "keep"
+  }
+{{- end }}
 {{- if .Values.java.excludeNamespaces }}
   rule {
     source_labels = ["namespace"]

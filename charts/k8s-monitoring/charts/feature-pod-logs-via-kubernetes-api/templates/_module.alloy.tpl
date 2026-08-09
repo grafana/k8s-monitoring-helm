@@ -1,4 +1,8 @@
 {{- define "feature.podLogsViaKubernetesApi.module" }}
+{{- $namespacesHaveRegex := "" }}
+{{- if .Values.namespaces }}
+  {{- $namespacesHaveRegex = include "feature.podLogsViaKubernetesApi.namespaces.hasRegex" .Values.namespaces }}
+{{- end }}
 {{- $labelSelectors := list }}
 {{- range $k, $v := .Values.labelSelectors }}
   {{- if kindIs "slice" $v }}
@@ -22,7 +26,7 @@ declare "pod_logs_via_kubernetes_api" {
 
   discovery.kubernetes "pods" {
     role = "pod"
-{{- if .Values.namespaces }}
+{{- if and .Values.namespaces (ne $namespacesHaveRegex "true") }}
     namespaces {
       names = {{ .Values.namespaces | toJson }}
     }

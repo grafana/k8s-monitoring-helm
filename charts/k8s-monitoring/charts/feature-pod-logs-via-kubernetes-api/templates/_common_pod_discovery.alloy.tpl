@@ -1,4 +1,8 @@
 {{- define "feature.podLogsViaKubernetesApi.discovery.alloy" }}
+{{- $namespacesHaveRegex := "" }}
+{{- if .Values.namespaces }}
+  {{- $namespacesHaveRegex = include "feature.podLogsViaKubernetesApi.namespaces.hasRegex" .Values.namespaces }}
+{{- end }}
 discovery.relabel "filtered_pods" {
   targets = discovery.kubernetes.pods.targets
   rule {
@@ -6,6 +10,13 @@ discovery.relabel "filtered_pods" {
     action = "replace"
     target_label = "namespace"
   }
+{{- if eq $namespacesHaveRegex "true" }}
+  rule {  // namespaces contains a regex, so pods cannot be pre-filtered by discovery.kubernetes; keep only matching namespaces here
+    source_labels = ["namespace"]
+    regex = "{{ .Values.namespaces | join "|" }}"
+    action = "keep"
+  }
+{{- end }}
 {{- if .Values.excludeNamespaces }}
   rule {
     source_labels = ["namespace"]
