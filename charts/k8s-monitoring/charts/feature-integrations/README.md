@@ -24,7 +24,8 @@ integrations:
   cert-manager:
     instances:
       - name: cert-manager
-        namespace: kube-system
+        namespaces:
+          - kube-system
         labelSelectors:
           app.kubernetes.io/name: cert-manager
 ```
@@ -46,7 +47,7 @@ For all possible values for a specific integration, refer to the previous table 
 
 ## Testing
 
-This chart contains unit tests to verify the generated configuration. The hidden value `deployAsConfigMap` will render
+This chart contains unit tests to verify the generated configuration. The hidden value `testing.enabled` will render
 the generated configuration into a ConfigMap object. While this ConfigMap is not used during regular operation, you can
 use it to show the outcome of a given values file.
 
