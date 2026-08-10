@@ -35,14 +35,12 @@ node_logs "feature" {
 
 {{- define "features.nodeLogs.collector.values" }}{{- end -}}
 
-{{- define "features.nodeLogs.chooseCollector" -}}{{- end -}}
-
 {{- define "features.nodeLogs.validate" }}
 {{- if .Values.nodeLogs.enabled -}}
 {{- $featureKey := "nodeLogs" }}
 {{- $featureName := "Kubernetes Node logs" }}
 {{- $destinations := include "features.nodeLogs.destinations" . | fromYamlArray }}
-{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "featureName" $featureName) }}
+{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "featureName" $featureName "Values" $.Values "featureKey" $featureKey) }}
 {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "nodeLogs" "featureName" $featureName "type" "logs" "ecosystem" "loki") }}
 
 {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}

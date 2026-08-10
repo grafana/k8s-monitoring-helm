@@ -1,0 +1,50 @@
+{
+  "definitions": {
+    "router-destination": {"properties": {
+      "ecosystem": {
+        "enum": ["loki", "otlp", "prometheus", "pyroscope"]
+      },
+      "defaultDestinations": {
+        "type": "array",
+        "minItems": 1,
+        "items": {"type": "string"}
+      },
+      "routes": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "destinations": {
+              "type": "array",
+              "minItems": 1,
+              "items": {"type": "string"}
+            },
+            "signals": {
+              "type": "array",
+              "items": {"enum": ["metrics", "logs", "traces", "profiles"]}
+            },
+            "match": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "resourceAttribute": {"type": "string"},
+                  "label": {"type": "string"},
+                  "op": {
+                    "enum": ["equals", "notEquals", "in", "matches", "notMatches"]
+                  }
+                },
+                "oneOf": [
+                  {"required": ["resourceAttribute"]},
+                  {"required": ["label"]}
+                ],
+                "required": ["op", "value"]
+              }
+            }
+          }
+        }
+      }
+    }}
+  }
+}

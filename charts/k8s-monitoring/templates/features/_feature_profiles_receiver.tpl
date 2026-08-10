@@ -46,8 +46,6 @@ profiles_receiver "feature" {
 {{- end -}}
 {{- end -}}
 
-{{- define "features.profilesReceiver.chooseCollector" -}}{{- end -}}
-
 {{- define "features.profilesReceiver.validate" }}
 {{- if .Values.profilesReceiver.enabled -}}
   {{- $featureKey := "profilesReceiver" }}
@@ -55,7 +53,7 @@ profiles_receiver "feature" {
 
   {{/* Destination validations */}}
   {{- $destinations := include "features.profilesReceiver.destinations" . | fromYamlArray }}
-  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "profiles" "ecosystem" "pyroscope" "featureName" $featureName) }}
+  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "profiles" "ecosystem" "pyroscope" "featureName" $featureName "Values" $.Values "featureKey" $featureKey) }}
   {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "profilesReceiver" "featureName" $featureName "type" "profiles" "ecosystem" "pyroscope") }}
 
   {{/* Collector validations */}}

@@ -184,9 +184,10 @@ otelcol.processor.batch "k8s_metadata_out_metrics_otlp" {
 }
 otelcol.processor.filter "k8s_metadata_prometheus_gate_metrics_otlp" {
   error_mode = "ignore"
-  metrics {
-    metric = [
-      "not IsMatch(resource.attributes[\"selected_destinations\"], \"(^|.*,)prometheus(,.*|$)\")",
+  metric_conditions {
+    context    = "resource"
+    conditions = [
+      "not IsMatch(attributes[\"selected_destinations\"], \"(^|.*,)prometheus(,.*|$)\")",
     ]
   }
   output {
@@ -280,9 +281,10 @@ otelcol.processor.batch "k8s_metadata_out_logs_otlp" {
 }
 otelcol.processor.filter "k8s_metadata_loki_gate_logs_otlp" {
   error_mode = "ignore"
-  logs {
-    log_record = [
-      "not IsMatch(resource.attributes[\"selected_destinations\"], \"(^|.*,)loki(,.*|$)\")",
+  log_conditions {
+    context    = "resource"
+    conditions = [
+      "not IsMatch(attributes[\"selected_destinations\"], \"(^|.*,)loki(,.*|$)\")",
     ]
   }
   output {
@@ -376,9 +378,10 @@ otelcol.processor.batch "k8s_metadata_out_traces_otlp" {
 }
 otelcol.processor.filter "k8s_metadata_tempo_gate_traces_otlp" {
   error_mode = "ignore"
-  traces {
-    span = [
-      "not IsMatch(resource.attributes[\"selected_destinations\"], \"(^|.*,)tempo(,.*|$)\")",
+  trace_conditions {
+    context    = "resource"
+    conditions = [
+      "not IsMatch(attributes[\"selected_destinations\"], \"(^|.*,)tempo(,.*|$)\")",
     ]
   }
   output {
@@ -397,7 +400,6 @@ otelcol.processor.transform "k8s_metadata_tempo_gate_traces_otlp_strip" {
     traces = [otelcol.processor.attributes.tempo.input]
   }
 }
-
 // Feature: Cluster Metrics
 declare "cluster_metrics" {
   argument "metrics_destinations" {
@@ -727,12 +729,6 @@ prometheus.relabel "k8s_metadata_prometheus_gate_metrics_prometheus" {
     regex  = "selected_destinations"
   }
 }
-
-
-
-
-
-
 // Feature: Pod Logs (Loki)
 declare "pod_logs_via_loki" {
   argument "logs_destinations" {
@@ -986,9 +982,6 @@ loki.relabel "k8s_metadata_loki_gate_logs_loki" {
   }
   max_cache_size = 100
 }
-
-
-
 // Feature: Profiles Receiver
 declare "profiles_receiver" {
   argument "profiles_destinations" {
@@ -1060,8 +1053,6 @@ pyroscope.relabel "k8s_metadata_pyroscope_gate_profiles_pyroscope" {
     regex  = "selected_destinations"
   }
 }
-
-
 // Self Reporting
 prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   set_collectors = ["textfile"]

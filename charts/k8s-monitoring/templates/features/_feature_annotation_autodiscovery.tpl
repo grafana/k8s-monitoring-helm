@@ -40,7 +40,7 @@ annotation_autodiscovery "feature" {
   {{- $featureName := "Annotation Autodiscovery" }}
 
   {{- $destinations := include "features.annotationAutodiscovery.destinations" . | fromYamlArray }}
-  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "featureName" $featureName) }}
+  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "featureName" $featureName "Values" $.Values "featureKey" $featureKey) }}
   {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "annotationAutodiscovery" "featureName" $featureName "type" "metrics" "ecosystem" "prometheus") }}
 
   {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
@@ -50,5 +50,3 @@ annotation_autodiscovery "feature" {
   {{- include "feature.annotationAutodiscovery.validate" (dict "Values" $.Values.annotationAutodiscovery) }}
 {{- end -}}
 {{- end -}}
-
-{{- define "features.annotationAutodiscovery.chooseCollector" -}}{{- end -}}

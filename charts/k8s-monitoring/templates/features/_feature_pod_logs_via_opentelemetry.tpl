@@ -35,14 +35,12 @@ pod_logs_via_opentelemetry "feature" {
 
 {{- define "features.podLogsViaOpenTelemetry.collector.values" }}{{- end -}}
 
-{{- define "features.podLogsViaOpenTelemetry.chooseCollector" -}}{{- end -}}
-
 {{- define "features.podLogsViaOpenTelemetry.validate" }}
 {{- if .Values.podLogsViaOpenTelemetry.enabled -}}
 {{- $featureKey := "podLogsViaOpenTelemetry" }}
 {{- $featureName := "Kubernetes Pod logs via OpenTelemetry" }}
 {{- $destinations := include "features.podLogsViaOpenTelemetry.destinations" . | fromYamlArray }}
-{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "otlp" "featureName" $featureName) }}
+{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "otlp" "featureName" $featureName "Values" $.Values "featureKey" $featureKey) }}
 {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" $featureKey "featureName" $featureName "type" "logs" "ecosystem" "otlp") }}
 
 {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}

@@ -34,14 +34,12 @@ cost_metrics "feature" {
 
 {{- define "features.costMetrics.collector.values" }}{{- end -}}
 
-{{- define "features.costMetrics.chooseCollector" -}}{{- end -}}
-
 {{- define "features.costMetrics.validate" }}
 {{- if .Values.costMetrics.enabled }}
   {{- $featureKey := "costMetrics" }}
   {{- $featureName := "Kubernetes Cluster metrics" }}
   {{- $destinations := include "features.costMetrics.destinations" . | fromYamlArray }}
-  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "featureName" $featureName) }}
+  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "featureName" $featureName "Values" $.Values "featureKey" $featureKey) }}
   {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "costMetrics" "featureName" $featureName "type" "metrics" "ecosystem" "prometheus") }}
 
   {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}

@@ -101,19 +101,19 @@ application_observability "feature" {
   {{/* Destination validations */}}
   {{- if .Values.applicationObservability.metrics.enabled -}}
     {{- $metricDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
-    {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $metricDestinations "type" "metrics" "ecosystem" "otlp" "featureName" $featureName) }}
+    {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $metricDestinations "type" "metrics" "ecosystem" "otlp" "featureName" $featureName "Values" $.Values "featureKey" $featureKey) }}
     {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" $featureKey "featureName" $featureName "type" "metrics" "ecosystem" "otlp") }}
   {{- end -}}
 
   {{- if .Values.applicationObservability.logs.enabled -}}
     {{- $logDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "logs" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
-    {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $logDestinations "type" "logs" "ecosystem" "otlp" "featureName" $featureName) }}
+    {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $logDestinations "type" "logs" "ecosystem" "otlp" "featureName" $featureName "Values" $.Values "featureKey" $featureKey) }}
     {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" $featureKey "featureName" $featureName "type" "logs" "ecosystem" "otlp") }}
   {{- end -}}
 
   {{- if .Values.applicationObservability.traces.enabled -}}
     {{- $traceDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "traces" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
-    {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $traceDestinations "type" "traces" "ecosystem" "otlp" "featureName" $featureName) }}
+    {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $traceDestinations "type" "traces" "ecosystem" "otlp" "featureName" $featureName "Values" $.Values "featureKey" $featureKey) }}
     {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" $featureKey "featureName" $featureName "type" "traces" "ecosystem" "otlp") }}
   {{- end -}}
 
@@ -163,5 +163,3 @@ http://{{ include "collector.alloy.fullname" $values }}.{{ include "helper.names
 http://{{ include "collector.alloy.fullname" $values }}.{{ include "helper.namespace" . }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.http.port }}
 {{- end }}
 {{- end }}
-
-{{- define "features.applicationObservability.chooseCollector" -}}{{- end -}}

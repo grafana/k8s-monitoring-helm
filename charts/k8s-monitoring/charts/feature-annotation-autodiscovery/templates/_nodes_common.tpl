@@ -1,15 +1,20 @@
-{{- define "feature.annotationAutodiscovery.attachNodeMetadata" }}
-{{- $attachMetadata := false -}}
-{{- $attachMetadata = or $attachMetadata .Values.nodeLabels.nodePool -}}
-{{- $attachMetadata = or $attachMetadata .Values.nodeLabels.region -}}
-{{- $attachMetadata = or $attachMetadata .Values.nodeLabels.availabilityZone -}}
-{{- $attachMetadata = or $attachMetadata .Values.nodeLabels.nodeRole -}}
-{{- $attachMetadata = or $attachMetadata .Values.nodeLabels.nodeOS -}}
-{{- $attachMetadata = or $attachMetadata .Values.nodeLabels.nodeArchitecture -}}
-{{- $attachMetadata = or $attachMetadata .Values.nodeLabels.instanceType -}}
-{{- if eq $attachMetadata true }}
+{{- define "feature.annotationAutodiscovery.attachMetadata" }}
+{{- $attachNodeMetadata := false -}}
+{{- $attachNodeMetadata = or $attachNodeMetadata .Values.nodeLabels.nodePool -}}
+{{- $attachNodeMetadata = or $attachNodeMetadata .Values.nodeLabels.region -}}
+{{- $attachNodeMetadata = or $attachNodeMetadata .Values.nodeLabels.availabilityZone -}}
+{{- $attachNodeMetadata = or $attachNodeMetadata .Values.nodeLabels.nodeRole -}}
+{{- $attachNodeMetadata = or $attachNodeMetadata .Values.nodeLabels.nodeOS -}}
+{{- $attachNodeMetadata = or $attachNodeMetadata .Values.nodeLabels.nodeArchitecture -}}
+{{- $attachNodeMetadata = or $attachNodeMetadata .Values.nodeLabels.instanceType -}}
+{{- if or .Values.attachNamespaceMetadata $attachNodeMetadata }}
 attach_metadata {
+{{- if .Values.attachNamespaceMetadata }}
+  namespace = true
+{{- end }}
+{{- if $attachNodeMetadata }}
   node = true
+{{- end }}
 }
 {{- end }}
 {{- end }}

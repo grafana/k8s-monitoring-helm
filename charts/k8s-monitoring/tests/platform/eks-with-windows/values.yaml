@@ -37,12 +37,11 @@ dataProcessors:
 
 clusterMetrics:
   enabled: true
-  collector: alloy-metrics
   dataProcessors: [ec2-tags]
 
   # On EKS the control plane is managed by AWS, so kube-scheduler and kube-controller-manager have no
   # discoverable Pods. Scrape them from the EKS Control Plane Metrics API instead. This requires
-  # Kubernetes 1.28+ and the metrics.eks.amazonaws.com RBAC rule added to the alloy-metrics collector below.
+  # Kubernetes 1.28+ and the metrics.eks.amazonaws.com RBAC rule added to the alloy collector below.
   controlPlane:
     enabled: true
   kubeScheduler:
@@ -52,7 +51,6 @@ clusterMetrics:
 
 hostMetrics:
   enabled: true
-  collector: alloy-metrics
   linuxHosts:
     enabled: true
   windowsHosts:
@@ -60,33 +58,31 @@ hostMetrics:
 
 clusterEvents:
   enabled: true
-  collector: alloy-singleton
+  clustering: true
+  collector: alloy
 
 nodeLogs:
   enabled: true
-  collector: alloy-logs
+  collector: alloy
 
 podLogsViaLoki:
   enabled: true
-  collector: alloy-logs
 
 podLogsViaKubernetesApi:
   enabled: true
-  collector: alloy-logs
   nodeSelector:
     kubernetes.io/os: windows
 
 integrations:
-  collector: alloy-metrics
   alloy:
     instances:
       - name: alloy
         labelSelectors:
-          app.kubernetes.io/name: [alloy-metrics, alloy-singleton, alloy-logs]
+          app.kubernetes.io/name: [alloy]
 
 collectors:
-  alloy-metrics:
-    presets: [clustered, statefulset]
+  alloy:
+    presets: [clustered, filesystem-log-reader, daemonset]
     alloy:
       stabilityLevel: experimental  # Required for prometheus.enrich (ec2Enrichment processor)
     rbac:
@@ -109,16 +105,6 @@ collectors:
         - apiGroups: [metrics.eks.amazonaws.com]
           resources: [ksh/metrics, kcm/metrics]
           verbs: [get]
-
-  alloy-singleton:
-    presets: [singleton]
-
-  alloy-logs:
-    presets: [filesystem-log-reader, daemonset]
-    alloy:
-      clustering:
-        name: alloy-logs
-        enabled: true
 
 telemetryServices:
   kube-state-metrics:

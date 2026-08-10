@@ -1,0 +1,36 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Host Metrics - Windows hosts via Alloy
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should render prometheus.exporter.windows when source is alloy
+    set:
+      testing: {enabled: true}
+      windowsHosts:
+        enabled: true
+        source: alloy
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should not render Windows Exporter discovery when source is alloy
+    set:
+      testing: {enabled: true}
+      windowsHosts:
+        enabled: true
+        source: alloy
+    asserts:
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: discovery\.kubernetes "windows_exporter_pods"
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: clustering \{
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: prometheus\.exporter\.windows "windows_exporter"
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: replacement = sys\.env\("NODE_NAME"\)

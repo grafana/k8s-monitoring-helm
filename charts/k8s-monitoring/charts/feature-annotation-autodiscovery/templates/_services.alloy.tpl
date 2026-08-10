@@ -1,8 +1,12 @@
 {{- define "feature.annotationAutodiscovery.services" }}
+{{- $namespacesHaveRegex := "" }}
+{{- if .Values.namespaces }}
+  {{- $namespacesHaveRegex = include "feature.annotationAutodiscovery.namespaces.hasRegex" .Values.namespaces }}
+{{- end }}
 
 discovery.kubernetes "services" {
   role = "service"
-{{- if .Values.namespaces }}
+{{- if and .Values.namespaces (ne $namespacesHaveRegex "true") }}
   namespaces {
     names = {{ .Values.namespaces | toJson }}
   }
@@ -28,10 +32,22 @@ discovery.kubernetes "services" {
     label = {{ $labelSelectors | join "," | quote }}
   }
 {{- end }}
+{{- if .Values.attachNamespaceMetadata }}
+  attach_metadata {
+    namespace = true
+  }
+{{- end }}
 } // discovery.kubernetes "services"
 
 discovery.relabel "annotation_autodiscovery_services" {
   targets = discovery.kubernetes.services.targets
+{{- if eq $namespacesHaveRegex "true" }}
+  rule {  // namespaces contains a regex, so services cannot be pre-filtered by discovery.kubernetes; keep only matching namespaces here
+    source_labels = ["__meta_kubernetes_namespace"]
+    regex = "{{ .Values.namespaces | join "|" }}"
+    action = "keep"
+  }
+{{- end }}
 {{- if .Values.excludeNamespaces }}
   rule {
     source_labels = ["__meta_kubernetes_namespace"]

@@ -1,5 +1,9 @@
 {{ define "feature.profiling.pprof.alloy" }}
 {{- if .Values.pprof.enabled }}
+{{- $namespacesHaveRegex := "" }}
+{{- if .Values.pprof.namespaces }}
+  {{- $namespacesHaveRegex = include "feature.profiling.namespaces.hasRegex" .Values.pprof.namespaces }}
+{{- end }}
 {{- $labelSelectors := list }}
 {{- range $k, $v := .Values.pprof.labelSelectors }}
   {{- if kindIs "slice" $v }}
@@ -18,7 +22,7 @@ discovery.kubernetes "pprof_pods" {
 {{- end }}
     field = "spec.nodeName=" + sys.env("HOSTNAME")
   }
-{{- if .Values.pprof.namespaces }}
+{{- if and .Values.pprof.namespaces (ne $namespacesHaveRegex "true") }}
   namespaces {
     names = {{ .Values.pprof.namespaces | toJson }}
   }
@@ -41,6 +45,13 @@ discovery.relabel "pprof_pods" {
     source_labels = ["__meta_kubernetes_namespace"]
     target_label  = "namespace"
   }
+{{- if eq $namespacesHaveRegex "true" }}
+  rule {  // namespaces contains a regex, so pods cannot be pre-filtered by discovery.kubernetes; keep only matching namespaces here
+    source_labels = ["namespace"]
+    regex = "{{ .Values.pprof.namespaces | join "|" }}"
+    action = "keep"
+  }
+{{- end }}
 {{- if .Values.pprof.excludeNamespaces }}
   rule {
     source_labels = ["namespace"]

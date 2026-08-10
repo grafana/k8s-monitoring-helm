@@ -104,3 +104,47 @@ tests:
           presets: [privileged, host-storage, host-cgroup, daemonset]
     asserts:
       - notFailedTemplate: {}
+
+  - it: errors when a feature references a collector that does not exist
+    set:
+      cluster: {name: test-cluster}
+      clusterMetrics: {enabled: true, collector: does-not-exist}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The feature clusterMetrics is referencing a collector named "does-not-exist" but it does not exist.
+            Please assign the feature to one of these collectors:
+            clusterMetrics:
+              collector: alloy-metrics
+
+  - it: lists all available collectors when the referenced collector does not exist
+    set:
+      cluster: {name: test-cluster}
+      clusterMetrics: {enabled: true, collector: typo-metrics}
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+        alloy-metrics:
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The feature clusterMetrics is referencing a collector named "typo-metrics" but it does not exist.
+            Please assign the feature to one of these collectors:
+            clusterMetrics:
+              collector: alloy-logs or alloy-metrics
+
+  - it: does not error when a feature references an existing collector
+    set:
+      cluster: {name: test-cluster}
+      profiling: {enabled: true, ebpf: {enabled: true}, collector: alloy-profiles}
+      destinations:
+        pyro: {type: pyroscope, url: http://pyroscope.pyroscope.svc:4040}
+      collectors:
+        alloy-profiles:
+          presets: [privileged, daemonset]
+    asserts:
+      - notFailedTemplate: {}

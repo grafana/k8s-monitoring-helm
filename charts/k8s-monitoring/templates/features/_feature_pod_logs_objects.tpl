@@ -46,14 +46,12 @@ pod_logs_objects "feature" {
   {{- end }}
 {{- end -}}
 
-{{- define "features.podLogsObjects.chooseCollector" -}}{{- end -}}
-
 {{- define "features.podLogsObjects.validate" }}
 {{- if .Values.podLogsObjects.enabled -}}
 {{- $featureKey := "podLogsObjects" }}
 {{- $featureName := "Alloy PodLogs Objects" }}
 {{- $destinations := include "features.podLogsObjects.destinations" . | fromYamlArray }}
-{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "featureName" $featureName) }}
+{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "featureName" $featureName "Values" $.Values "featureKey" $featureKey) }}
 {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "podLogsObjects" "featureName" $featureName "type" "logs" "ecosystem" "loki") }}
 
 {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}

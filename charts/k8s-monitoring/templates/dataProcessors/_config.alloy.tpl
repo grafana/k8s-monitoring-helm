@@ -12,17 +12,34 @@
 
      Inputs: root (.), featureKey (string), destinationNames ([]string), type, ecosystem. */}}
 {{- define "pipeline.alloy.targets.forFeature" -}}
-{{- $dp := default dict .root.Values.dataProcessors -}}
-{{- $chosenDataProcessors := dig "dataProcessors" list (default dict (get .root.Values .featureKey)) }}
+{{- $root := .root -}}
+{{- $featureKey := .featureKey -}}
+{{- $destinationNames := .destinationNames -}}
+{{- $type := .type -}}
+{{- $ecosystem := .ecosystem -}}
+{{- $dp := default dict $root.Values.dataProcessors -}}
+{{- $chosenDataProcessors := dig "dataProcessors" list (default dict (get $root.Values $featureKey)) }}
 {{- /* Resolve the chain for THIS (type, ecosystem). Only route through a stamper when at
        least one chosen processor actually supports this tuple; otherwise the stamper ref
        would be emitted here but never rendered by feature.render.forFeature (which branches
        on the same resolved chain), leaving a dangling Alloy reference. */}}
-{{- $chain := include "dataProcessors.get" (dict "dataProcessors" $dp "chosen" $chosenDataProcessors "type" .type "ecosystem" .ecosystem) | fromYamlArray -}}
+{{- $chain := include "dataProcessors.get" (dict "dataProcessors" $dp "chosen" $chosenDataProcessors "type" $type "ecosystem" $ecosystem) | fromYamlArray -}}
+{{- /* Precise router-capability check (replaces the old router-side R10 inference, see
+       destinations.router.assertCanCarry in destinations/_destination_router_validations.tpl for
+       the full rationale): this define is called once per (feature, type, ecosystem) tuple the
+       feature actually emits, with destinationNames already resolved for that tuple, so it is
+       the only seam where "the feature really sends `.type`" and "this router can carry `.type`"
+       can both be known at once. Guarded on type == router so non-router configs never even
+       enter the check -- zero-cost, zero-diff for the overwhelmingly common case. */}}
+{{- range $destName := $destinationNames }}
+  {{- if and (hasKey $root.Values.destinations $destName) (eq (get $root.Values.destinations $destName).type "router") }}
+    {{- include "destinations.router.assertCanCarry" (dict "root" $root "featureKey" $featureKey "routerName" $destName "type" $type "ecosystem" $ecosystem) }}
+  {{- end }}
+{{- end -}}
 {{- if empty $chain -}}
-{{- include "destinations.alloy.targets" (dict "destinations" .root.Values.destinations "destinationNames" .destinationNames "type" .type "ecosystem" .ecosystem) -}}
+{{- include "destinations.alloy.targets" (dict "destinations" $root.Values.destinations "destinationNames" $destinationNames "type" $type "ecosystem" $ecosystem) -}}
 {{- else }}
-{{ include "pipeline.alloy.stamper.ref" (dict "feature" .featureKey "type" .type "ecosystem" .ecosystem) }},
+{{ include "pipeline.alloy.stamper.ref" (dict "feature" $featureKey "type" $type "ecosystem" $ecosystem) }},
 {{- end -}}
 {{- end }}
 
@@ -225,25 +242,32 @@ loki.relabel {{ $name | quote }} {
   max_cache_size = 100
 }
 {{- else if eq .ecosystem "otlp" }}
-{{- $dropExpr := printf `not IsMatch(resource.attributes["selected_destinations"], "%s")` $keepRegex }}
+{{- $dropExpr := printf `not IsMatch(attributes["selected_destinations"], "%s")` $keepRegex }}
 {{- $block := include "pipeline.alloy.otlp.statementsBlock" .type }}
 otelcol.processor.filter {{ $name | quote }} {
   error_mode = "ignore"
-  {{ .type }} {
-    {{- if eq .type "metrics" }}
-    metric = [
+  {{- if eq .type "metrics" }}
+  metric_conditions {
+    context    = "resource"
+    conditions = [
       {{ $dropExpr | quote }},
     ]
-    {{- else if eq .type "logs" }}
-    log_record = [
-      {{ $dropExpr | quote }},
-    ]
-    {{- else if eq .type "traces" }}
-    span = [
-      {{ $dropExpr | quote }},
-    ]
-    {{- end }}
   }
+  {{- else if eq .type "logs" }}
+  log_conditions {
+    context    = "resource"
+    conditions = [
+      {{ $dropExpr | quote }},
+    ]
+  }
+  {{- else if eq .type "traces" }}
+  trace_conditions {
+    context    = "resource"
+    conditions = [
+      {{ $dropExpr | quote }},
+    ]
+  }
+  {{- end }}
   output {
     {{ .type }} = [otelcol.processor.transform.{{ $name }}_strip.input]
   }

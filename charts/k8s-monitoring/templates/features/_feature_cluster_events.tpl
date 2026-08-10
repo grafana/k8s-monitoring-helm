@@ -34,14 +34,12 @@ cluster_events "feature" {
 
 {{- define "features.clusterEvents.collector.values" }}{{- end -}}
 
-{{- define "features.clusterEvents.chooseCollector" -}}{{- end -}}
-
 {{- define "features.clusterEvents.validate" }}
 {{- if .Values.clusterEvents.enabled -}}
 {{- $featureKey := "clusterEvents" }}
 {{- $featureName := "Kubernetes Cluster events" }}
 {{- $destinationNames := include "features.clusterEvents.destinations" . | fromYamlArray }}
-{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinationNames "type" "logs" "ecosystem" "loki" "featureName" $featureName) }}
+{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinationNames "type" "logs" "ecosystem" "loki" "featureName" $featureName "Values" $.Values "featureKey" $featureKey) }}
 {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "clusterEvents" "featureName" $featureName "type" "logs" "ecosystem" "loki") }}
 {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
 {{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}

@@ -236,9 +236,10 @@ data:
     }
     otelcol.processor.filter "k8s_metadata_prometheus_gate_metrics_otlp" {
       error_mode = "ignore"
-      metrics {
-        metric = [
-          "not IsMatch(resource.attributes[\"selected_destinations\"], \"(^|.*,)prometheus(,.*|$)\")",
+      metric_conditions {
+        context    = "resource"
+        conditions = [
+          "not IsMatch(attributes[\"selected_destinations\"], \"(^|.*,)prometheus(,.*|$)\")",
         ]
       }
       output {
@@ -332,9 +333,10 @@ data:
     }
     otelcol.processor.filter "k8s_metadata_loki_gate_logs_otlp" {
       error_mode = "ignore"
-      logs {
-        log_record = [
-          "not IsMatch(resource.attributes[\"selected_destinations\"], \"(^|.*,)loki(,.*|$)\")",
+      log_conditions {
+        context    = "resource"
+        conditions = [
+          "not IsMatch(attributes[\"selected_destinations\"], \"(^|.*,)loki(,.*|$)\")",
         ]
       }
       output {
@@ -428,9 +430,10 @@ data:
     }
     otelcol.processor.filter "k8s_metadata_tempo_gate_traces_otlp" {
       error_mode = "ignore"
-      traces {
-        span = [
-          "not IsMatch(resource.attributes[\"selected_destinations\"], \"(^|.*,)tempo(,.*|$)\")",
+      trace_conditions {
+        context    = "resource"
+        conditions = [
+          "not IsMatch(attributes[\"selected_destinations\"], \"(^|.*,)tempo(,.*|$)\")",
         ]
       }
       output {
@@ -449,7 +452,6 @@ data:
         traces = [otelcol.processor.attributes.tempo.input]
       }
     }
-    
     // Feature: Cluster Metrics
     declare "cluster_metrics" {
       argument "metrics_destinations" {
@@ -779,12 +781,6 @@ data:
         regex  = "selected_destinations"
       }
     }
-    
-    
-    
-    
-    
-    
     // Feature: Pod Logs (Loki)
     declare "pod_logs_via_loki" {
       argument "logs_destinations" {
@@ -1038,9 +1034,6 @@ data:
       }
       max_cache_size = 100
     }
-    
-    
-    
     // Feature: Profiles Receiver
     declare "profiles_receiver" {
       argument "profiles_destinations" {
@@ -1112,8 +1105,6 @@ data:
         regex  = "selected_destinations"
       }
     }
-    
-    
     // Self Reporting
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]

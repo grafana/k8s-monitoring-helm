@@ -1,0 +1,28 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Feature - Pod Logs via Loki - Namespace Filtering
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should pre-filter in discovery.kubernetes when all namespaces are exact names
+    set:
+      testing: {enabled: true}
+      namespaces:
+        - default
+        - kube-system
+        - my-app-1
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+  - it: should filter via discovery.relabel when the namespaces list contains a regex
+    set:
+      testing: {enabled: true}
+      namespaces:
+        - default
+        - "team-.*"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

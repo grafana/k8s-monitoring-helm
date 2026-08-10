@@ -1,0 +1,262 @@
+// Feature: Host Metrics - Windows Hosts
+declare "windows_host_metrics" {
+  argument "metrics_destinations" {
+    comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+  }
+
+  // Windows hosts via Alloy (prometheus.exporter.windows)
+  prometheus.exporter.windows "windows_exporter" { }
+
+  discovery.relabel "windows_exporter" {
+    targets = prometheus.exporter.windows.windows_exporter.targets
+
+    // Set the instance label to the node name
+    rule {
+      action = "replace"
+      target_label = "instance"
+      replacement = sys.env("NODE_NAME")
+    }
+
+    // Override the job label set by prometheus.exporter.windows to match the Windows Exporter source
+    rule {
+      action = "replace"
+      target_label = "job"
+      replacement = "integrations/windows-exporter"
+    }
+
+    // set a source label
+    rule {
+      action = "replace"
+      replacement = "kubernetes"
+      target_label = "source"
+    }
+    forward_to = argument.metrics_destinations.value
+  } // prometheus.scrape "windows_exporter"
+
+  prometheus.scrape "windows_exporter" {
+    targets  = discovery.relabel.windows_exporter.output
+    job_name   = "integrations/windows-exporter"
+    scrape_interval = "60s"
+    scrape_timeout = "10s"
+    scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+    scrape_classic_histograms = false
+    scrape_native_histograms = false
+    convert_classic_histograms_to_nhcb = false
+    forward_to = [prometheus.relabel.windows_exporter.receiver]
+  } // prometheus.scrape "windows_exporter"
+
+  prometheus.relabel "windows_exporter" {
+    max_cache_size = 100000
+    rule {
+      source_labels = ["__name__"]
+      regex = "up|scrape_samples_scraped|windows_.*|node_cpu_seconds_total|node_filesystem_size_bytes|node_filesystem_avail_bytes|container_cpu_usage_seconds_total"
+      action = "keep"
+    }
+    forward_to = argument.metrics_destinations.value
+  } // prometheus.relabel "windows_exporter"
+} // declare "windows_host_metrics"
+windows_host_metrics "feature" {
+  metrics_destinations = [
+    prometheus.remote_write.grafana_cloud_metrics.receiver,
+  ]
+}
+// Feature: Windows Event Logs
+declare "windows_event_logs" {
+  argument "logs_destinations" {
+    comment = "Must be a list of log destinations where collected logs should be forwarded to"
+  }
+  loki.source.windowsevent "application" {
+    eventlog_name          = "Application"
+    poll_interval          = "3s"
+    use_incoming_timestamp = false
+    exclude_event_data     = false
+    exclude_user_data      = false
+    exclude_event_message  = false
+    locale                 = 0
+    bookmark_path          = "C:\\ProgramData\\Grafana\\Alloy\\WindowsEventLogs\\application.xml"
+    labels = {
+      job = "integrations/windows-application-logs",
+      instance = sys.env("HOSTNAME"),
+      channel = "Application",
+    }
+    forward_to = [loki.process.windows_event_logs.receiver]
+  } // loki.source.windowsevent "application"
+  loki.source.windowsevent "system" {
+    eventlog_name          = "System"
+    poll_interval          = "3s"
+    use_incoming_timestamp = false
+    exclude_event_data     = false
+    exclude_user_data      = false
+    exclude_event_message  = false
+    locale                 = 0
+    bookmark_path          = "C:\\ProgramData\\Grafana\\Alloy\\WindowsEventLogs\\system.xml"
+    labels = {
+      job = "integrations/windows-system-logs",
+      instance = sys.env("HOSTNAME"),
+      channel = "System",
+    }
+    forward_to = [loki.process.windows_event_logs.receiver]
+  } // loki.source.windowsevent "system"
+
+  loki.process "windows_event_logs" {
+    stage.static_labels {
+      values = {
+        // add a static source label to the logs so they can be differentiated / restricted if necessary
+        "source" = "windowsevent",
+        // default level to unknown
+        level = "UNKNOWN",
+      }
+    }
+
+    // loki.source.windowsevent emits each event as a JSON document. Extract the fields needed for processing.
+    stage.json {
+      expressions = {
+        level_text = "levelText",
+      }
+    }
+
+    // Standardize the Windows event level onto the shared level values.
+    stage.match {
+      selector = "{level=\"UNKNOWN\"}"
+
+      stage.replace {
+        source = "level_text"
+        expression = "(?i)^(verbose)$"
+        replace = "DEBUG"
+      }
+
+      stage.replace {
+        source = "level_text"
+        expression = "(?i)^(information|info)$"
+        replace = "INFO"
+      }
+
+      stage.replace {
+        source = "level_text"
+        expression = "(?i)^(warning|warn)$"
+        replace = "WARN"
+      }
+
+      stage.replace {
+        source = "level_text"
+        expression = "(?i)^(error|err)$"
+        replace = "ERROR"
+      }
+
+      stage.replace {
+        source = "level_text"
+        expression = "(?i)^(critical|crit)$"
+        replace = "CRIT"
+      }
+
+      stage.labels {
+        values = {
+          level = "level_text",
+        }
+      }
+    }
+
+    forward_to = argument.logs_destinations.value
+  } // loki.process "windows_event_logs"
+} // declare "windows_event_logs"
+windows_event_logs "feature" {
+  logs_destinations = [
+    loki.write.grafana_cloud_logs.receiver,
+  ]
+}
+
+
+
+
+
+// Destination: grafana-cloud-logs (loki)
+otelcol.exporter.loki "grafana_cloud_logs" {
+  forward_to = [loki.write.grafana_cloud_logs.receiver]
+} // otelcol.exporter.loki "grafana_cloud_logs"
+
+loki.write "grafana_cloud_logs" {
+  endpoint {
+    url = "https://logs-prod-006.grafana.net/loki/api/v1/push"
+    retry_on_http_429 = true
+    tenant_id = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["tenantId"])
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["LOKI_USER"])
+      password = remote.kubernetes.secret.grafana_cloud_logs.data["LOKI_PASS"]
+    }
+    tls_config {
+      insecure_skip_verify = false
+      ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["ca"])
+      cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["cert"])
+      key_pem = remote.kubernetes.secret.grafana_cloud_logs.data["key"]
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+  external_labels = {
+    "cluster" = "eks-alloy-on-windows-test",
+    "k8s_cluster_name" = "eks-alloy-on-windows-test",
+  }
+} // loki.write "grafana_cloud_logs"
+
+remote.kubernetes.secret "grafana_cloud_logs" {
+  name      = "grafana-cloud-credentials"
+  namespace = "default"
+} // remote.kubernetes.secret "grafana_cloud_logs"
+
+
+// Destination: grafana-cloud-metrics (prometheus)
+otelcol.exporter.prometheus "grafana_cloud_metrics" {
+  add_metric_suffixes = true
+  resource_to_telemetry_conversion = false
+  keep_identifying_resource_attributes = true
+  forward_to = [prometheus.remote_write.grafana_cloud_metrics.receiver]
+} // otelcol.exporter.prometheus "grafana_cloud_metrics"
+
+prometheus.remote_write "grafana_cloud_metrics" {
+  endpoint {
+    url = "https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push"
+    headers = {
+      "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["tenantId"]),
+    }
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["PROMETHEUS_USER"])
+      password = remote.kubernetes.secret.grafana_cloud_metrics.data["PROMETHEUS_PASS"]
+    }
+    tls_config {
+      insecure_skip_verify = false
+      ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["ca"])
+      cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["cert"])
+      key_pem = remote.kubernetes.secret.grafana_cloud_metrics.data["key"]
+    }
+    send_native_histograms = false
+
+    queue_config {
+      capacity = 10000
+      min_shards = 1
+      max_shards = 50
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "30ms"
+      max_backoff = "5s"
+      retry_on_http_429 = true
+      sample_age_limit = "0s"
+    }
+  }
+
+  wal {
+    truncate_frequency = "2h"
+    min_keepalive_time = "5m"
+    max_keepalive_time = "8h"
+  }
+  external_labels = {
+    "cluster" = "eks-alloy-on-windows-test",
+    "k8s_cluster_name" = "eks-alloy-on-windows-test",
+  }
+} // prometheus.remote_write "grafana_cloud_metrics"
+
+remote.kubernetes.secret "grafana_cloud_metrics" {
+  name      = "grafana-cloud-credentials"
+  namespace = "default"
+} // remote.kubernetes.secret "grafana_cloud_metrics"
+

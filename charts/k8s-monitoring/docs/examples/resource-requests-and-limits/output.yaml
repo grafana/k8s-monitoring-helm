@@ -477,7 +477,6 @@ data:
         prometheus.remote_write.prometheus.receiver,
       ]
     }
-    
     // Feature: Cost Metrics
     declare "cost_metrics" {
       argument "metrics_destinations" {
@@ -535,8 +534,8 @@ data:
         prometheus.remote_write.prometheus.receiver,
       ]
     }
-    // Feature: Host Metrics
-    declare "host_metrics" {
+    // Feature: Host Metrics - Linux Hosts
+    declare "linux_host_metrics" {
       argument "metrics_destinations" {
         comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
       }
@@ -684,6 +683,17 @@ data:
         }
         forward_to = argument.metrics_destinations.value
       } // prometheus.relabel "node_exporter"
+    } // declare "linux_host_metrics"
+    linux_host_metrics "feature" {
+      metrics_destinations = [
+        prometheus.remote_write.prometheus.receiver,
+      ]
+    }
+    // Feature: Host Metrics - Windows Hosts
+    declare "windows_host_metrics" {
+      argument "metrics_destinations" {
+        comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+      }
     
       // Windows hosts via Windows Exporter
       discovery.kubernetes "windows_exporter_pods" {
@@ -745,6 +755,17 @@ data:
         }
         forward_to = argument.metrics_destinations.value
       } // prometheus.relabel "windows_exporter"
+    } // declare "windows_host_metrics"
+    windows_host_metrics "feature" {
+      metrics_destinations = [
+        prometheus.remote_write.prometheus.receiver,
+      ]
+    }
+    // Feature: Host Metrics - Energy Metrics
+    declare "energy_metrics" {
+      argument "metrics_destinations" {
+        comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+      }
     
       // Energy metrics via Kepler
       discovery.kubernetes "kepler" {
@@ -794,22 +815,12 @@ data:
         }
         forward_to = argument.metrics_destinations.value
       } // prometheus.relabel "kepler"
-    } // declare "host_metrics"
-    host_metrics "feature" {
+    } // declare "energy_metrics"
+    energy_metrics "feature" {
       metrics_destinations = [
         prometheus.remote_write.prometheus.receiver,
       ]
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     // Self Reporting
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
@@ -961,7 +972,9 @@ data:
     grafana_kubernetes_monitoring_feature_info{feature="autoInstrumentation", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="costMetrics", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{feature="hostMetrics", sources="linuxHosts,windowsHosts,energyMetrics", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="linuxHosts", source="node-exporter", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="windowsHosts", source="windows-exporter", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="energyMetrics", version="1.0.0"} 1
     # HELP grafana_kubernetes_monitoring_collector_info A metric to report the collectors of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_collector_info gauge
     grafana_kubernetes_monitoring_collector_info{kind="statefulset", name="alloy-metrics", presets="clustered,statefulset", replicas="1", type="alloy"} 1

@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+*   Allow for regexes to be used in the `namespaces` list for many features. (#2860) (@petewall)
+*   Add a validation that detects a host port conflict before the Auto-Instrumentation feature deploys Beyla. Beyla runs with `hostNetwork` enabled, so any existing DaemonSet already binding the same host port would collide with it. Disable with `autoInstrumentation.beyla.portConflictCheck: false`. (#2893) (@petewall)
+*   Add `attachNamespaceMetadata` to the annotationAutodiscovery feature to add namespace labels available for relabeling rules. (#2874) (@petewall)
+*   Collect Windows host metrics directly with Alloy by setting `hostMetrics.windowsHosts.source: alloy`, which uses the built-in `prometheus.exporter.windows` instead of deploying and scraping a separate Windows Exporter. (@petewall)
+*   Route the Host Metrics sub-features to different collectors. `hostMetrics.linuxHosts`, `hostMetrics.windowsHosts`, and `hostMetrics.energyMetrics` each accept their own `collector`, falling back to the feature-level `hostMetrics.collector`. This makes it possible to collect Linux host metrics on a Linux DaemonSet and Windows host metrics on a Windows DaemonSet at the same time. (@petewall)
+*   Add the `windowsEventLogs` feature, which gathers Windows event logs from Windows Nodes. (@petewall)
+*   Add a `windows` collector preset, which schedules Alloy onto Windows nodes as a process-isolated container. (@petewall)
+*   Add a `windows-host-process` preset, which layers on the HostProcess settings needed for host access such as reading the Windows Event Log. (@petewall)
+*   Add a `windows-scrapeable` preset, which opens the Alloy metrics port on the Windows Node's host firewall so other collectors can scrape it. (@petewall)
+*   Add the `router` destination, which routes telemetry to different destinations based on the value of a resource attribute or label (default `k8s.namespace.name`). Routes are evaluated in order and the first match wins; unmatched data goes to the required `defaultDestinations`. (#2849) (@mbaykara)
+*   Improve the "No destinations found" validation error: when capable destinations exist but are only reachable through a `router` destination, the error now lists those destinations, names the signal-capable router(s), and shows the exact `destinations:` setting to opt the feature in. (#2924) (@mbaykara)
+*   Fix stray blank lines in the post-install notes output when the Host Metrics feature is enabled. (#2924) (@mbaykara)
+
 ## 4.3.3
 
 *   Update Alloy Operator to 0.6.3 (@TylerHelmuth)

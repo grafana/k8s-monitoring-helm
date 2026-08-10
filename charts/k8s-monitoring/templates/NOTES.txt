@@ -5,7 +5,8 @@ This chart will install the following components:
 * Grafana Alloy Operator
 {{- end }}
 {{- range $feature := (include "features.list.enabled" .) | fromYamlArray }}
-  {{- include (printf "feature.%s.notes.deployments" $feature) (dict "Values" (index $.Values $feature)) | indent 0 }}
+  {{- $subchart := (include "features.subchartName" $feature)}}
+  {{- include (printf "feature.%s.notes.deployments" $feature) (dict "Values" (index $.Values $subchart)) | indent 0 }}
 {{- end }}
 {{- include "collectors.notes.deployments" . }}
 {{- include "telemetry-services.notes.deployments" (index .Values "telemetry-services" | default dict) }}
@@ -44,3 +45,4 @@ It will:
 {{- end }}
 {{- include "collectors.notes.warnings" . }}
 {{- include "destinations.notes.inferredAuth" . }}
+{{- include "destinations.notes.router" . }}

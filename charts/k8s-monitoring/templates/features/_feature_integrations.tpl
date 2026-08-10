@@ -46,13 +46,13 @@
 
 {{- define "features.integrations.destinations.isTranslating" }}
 {{- $isTranslating := false -}}
-{{/*{{- $destinations := include "features.integrations.destinations" . | fromYamlArray -}}*/}}
-{{/*{{ range $destination := $destinations -}}*/}}
-{{/*  {{- $destinationEcosystem := include "destination.getEcosystem" (deepCopy $ | merge (dict "destination" $destination)) -}}*/}}
-{{/*  {{- if ne $destinationEcosystem "prometheus" -}}*/}}
-{{/*    {{- $isTranslating = true -}}*/}}
-{{/*  {{- end -}}*/}}
-{{/*{{- end -}}*/}}
+{{- /*{{- $destinations := include "features.integrations.destinations" . | fromYamlArray -}}*/}}
+{{- /*{{ range $destination := $destinations -}}*/}}
+{{- /*  {{- $destinationEcosystem := include "destination.getEcosystem" (deepCopy $ | merge (dict "destination" $destination)) -}}*/}}
+{{- /*  {{- if ne $destinationEcosystem "prometheus" -}}*/}}
+{{- /*    {{- $isTranslating = true -}}*/}}
+{{- /*  {{- end -}}*/}}
+{{- /*{{- end -}}*/}}
 {{- $isTranslating -}}
 {{- end -}}
 
@@ -78,8 +78,6 @@
 
 {{- define "features.integrations.collector.values" }}{{ end -}}
 
-{{- define "features.integrations.chooseCollector" -}}{{- end -}}
-
 {{- define "features.integrations.validate" }}
 {{- if eq (include "features.integrations.enabled" .) "true" }}
 {{- $featureName := "Service Integrations" }}
@@ -101,14 +99,14 @@ to the Pod Logs feature's collector rather than an integrations collector, so th
 {{- end }}
 
 {{- if $metricIntegrations }}
-  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "featureName" $featureName) }}
+  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "featureName" $featureName "Values" $.Values "featureKey" "integrations") }}
   {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "integrations" "featureName" $featureName "type" "metrics" "ecosystem" "prometheus") }}
   {{- $collectorName := $.Values.integrations.collector }}
   {{- include "collectors.validate.clusteringEnabled" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName "featureName" $featureName) }}
 {{- end }}
 
 {{- if $logOutputIntegrations }}
-  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "featureName" $featureName) }}
+  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "featureName" $featureName "Values" $.Values "featureKey" "integrations") }}
   {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "integrations" "featureName" $featureName "type" "logs" "ecosystem" "loki") }}
 {{- end }}
 

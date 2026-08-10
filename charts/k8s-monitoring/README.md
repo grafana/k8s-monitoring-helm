@@ -424,6 +424,7 @@ details:
 |  | profilesReceiver(feature-profiles-receiver) | 1.0.0 |
 |  | profiling(feature-profiling) | 1.0.0 |
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
+|  | windowsEventLogs(feature-windows-event-logs) | 1.0.0 |
 |  | telemetryServices(telemetry-services) | 1.0.0 |
 | https://grafana.github.io/helm-charts | alloy-operator | 0.6.3 |
 <!-- markdownlint-enable no-bare-urls -->
@@ -673,6 +674,15 @@ details:
 | telemetryServices.opencost.deploy | bool | `false` | Deploy OpenCost to calculate and expose Kubernetes cost allocation metrics. |
 | telemetryServices.sdkInjector.deploy | bool | `false` | Deploy the SDK Injector. |
 | telemetryServices.windows-exporter.deploy | bool | `false` | Deploy Windows Exporter to gather Windows node hardware and OS metrics. |
+
+### Features - Windows Event Logs
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| windowsEventLogs | object | Disabled | Windows event logs. Requires a destination that supports logs and a collector using the `windows` preset. To see the valid options, please see the [Windows Event Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-windows-event-logs). |
+| windowsEventLogs.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
+| windowsEventLogs.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
+| windowsEventLogs.enabled | bool | `false` | Enable gathering event logs from Windows Kubernetes Cluster Nodes. |
 
 ### Other Values
 

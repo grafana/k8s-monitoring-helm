@@ -34,14 +34,12 @@ kubernetes_manifests "feature" {
 
 {{- define "features.kubernetesManifests.collector.values" }}{{- end -}}
 
-{{- define "features.kubernetesManifests.chooseCollector" -}}{{- end -}}
-
 {{- define "features.kubernetesManifests.validate" }}
 {{- if .Values.kubernetesManifests.enabled -}}
 {{- $featureKey := "kubernetesManifests" }}
 {{- $featureName := "Kubernetes Manifests" }}
 {{- $destinationNames := include "features.kubernetesManifests.destinations" . | fromYamlArray }}
-{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinationNames "type" "logs" "ecosystem" "loki" "featureName" $featureName) }}
+{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinationNames "type" "logs" "ecosystem" "loki" "featureName" $featureName "Values" $.Values "featureKey" $featureKey) }}
 {{- include "dataProcessors.validate.feature" (dict "root" $ "featureKey" "kubernetesManifests" "featureName" $featureName "type" "logs" "ecosystem" "loki") }}
 {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
 {{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}

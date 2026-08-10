@@ -1,0 +1,49 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Profiling - Namespace Filtering
+templates:
+  - test/configmap.yaml
+tests:
+  - it: eBPF pre-filters in discovery.kubernetes when all namespaces are exact names
+    set:
+      testing: {enabled: true}
+      ebpf: {enabled: true, namespaces: [default, my-app-1]}
+      java: {enabled: false}
+      pprof: {enabled: false}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+  - it: eBPF filters via discovery.relabel when the namespaces list contains a regex
+    set:
+      testing: {enabled: true}
+      ebpf: {enabled: true, namespaces: [default, "team-.*"]}
+      java: {enabled: false}
+      pprof: {enabled: false}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+  - it: Java filters via discovery.relabel when the namespaces list contains a regex
+    set:
+      testing: {enabled: true}
+      ebpf: {enabled: false}
+      java: {enabled: true, namespaces: [default, "team-.*"]}
+      pprof: {enabled: false}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+  - it: pprof filters via discovery.relabel when the namespaces list contains a regex
+    set:
+      testing: {enabled: true}
+      ebpf: {enabled: false}
+      java: {enabled: false}
+      pprof: {enabled: true, namespaces: [default, "team-.*"]}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

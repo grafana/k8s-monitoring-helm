@@ -5,10 +5,13 @@
 - clusterMetrics
 - clusterEvents
 - costMetrics
-- hostMetrics
+- hostMetrics_linuxHosts
+- hostMetrics_windowsHosts
+- hostMetrics_energyMetrics
 - integrations
 - kubernetesManifests
 - nodeLogs
+- windowsEventLogs
 - podLogsViaLoki
 - podLogsViaOpenTelemetry
 - podLogsViaKubernetesApi
@@ -17,6 +20,14 @@
 - profiling
 - prometheusOperatorObjects
 - selfReporting
+{{- end }}
+
+{{- define "features.subchartName" }}
+{{- first (regexSplit "_" . -1) }}
+{{- end }}
+
+{{- define "features.subfeatureName" }}
+{{- last (regexSplit "_" . -1) }}
 {{- end }}
 
 {{- define "features.list.enabled" }}

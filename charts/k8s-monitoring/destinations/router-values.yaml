@@ -1,0 +1,55 @@
+---
+# -- The name for this router destination. A router is not a real telemetry backend: it is a
+# virtual destination that a feature points at (`destinations: [myRouter]`) which then fans
+# telemetry out to real destinations based on the route match conditions.
+# @section -- General
+name: ""
+
+# -- Set to `true` to disable this destination. Disabled destinations are excluded from all telemetry data flows, which
+# is useful for removing a destination that was defined in a shared or parent values file.
+# @section -- General
+disabled: false
+
+# -- The collection pipeline this router routes on: `otlp`, `prometheus`, `loki`, or `pyroscope`. `otlp` routes
+# OpenTelemetry Protocol data (metrics, logs, and traces) by matching resource attributes with OTTL. `prometheus`,
+# `loki`, and `pyroscope` route the corresponding label-based pipeline (metrics, logs, and profiles respectively) by
+# matching labels. The ecosystem also determines how each route's `match` conditions are written: `resourceAttribute`
+# for `otlp`, `label` for the others. A feature may only route through a router whose ecosystem matches the pipeline
+# that feature collects on.
+# @section -- Routing
+ecosystem: ""
+
+# -- Routing rules, evaluated in declaration order: the first rule whose `match` conditions all match wins. Records that
+# don't match any rule (or whose matched rule does not list a destination for a given signal) fall back to
+# `defaultDestinations`. Each route's `match` is a list of `{<field>, op, value}` conditions that are ANDed together,
+# where `<field>` is `resourceAttribute` (for an `otlp` router) or `label` (for a `prometheus`/`loki`/`pyroscope`
+# router). `op` is one of `equals`, `notEquals`, `in`, `matches`, `notMatches` (`notEquals` and `notMatches` are
+# `otlp`-only). `value` is a string (or a list of strings for `in`).
+# @section -- Routing
+# @default -- []
+routes: []
+# For an `otlp` router, match on resource attributes:
+# - match:
+#     - resourceAttribute: k8s.namespace.name
+#       op: equals
+#       value: team-a
+#   destinations:
+#     - team-a-otlp
+#   # -- Optional: restrict this route to specific signals. Defaults to all signals.
+#   signals:
+#     - metrics
+#     - logs
+# For a `prometheus`/`loki`/`pyroscope` router, match on labels instead:
+# - match:
+#     - label: namespace
+#       op: in
+#       value:
+#         - team-b
+#         - team-c
+#   destinations:
+#     - shared-mimir
+
+# -- Destinations to fall back to when no route matches. MANDATORY: every router must define at least one default
+# destination, otherwise unmatched telemetry has nowhere to go.
+# @section -- Routing
+defaultDestinations: []

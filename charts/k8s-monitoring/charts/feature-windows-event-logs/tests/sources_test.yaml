@@ -1,0 +1,25 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Windows Event Logs - Sources
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should render a custom list of sources, including an XPath filter and an XML-form query
+    set:
+      testing: {enabled: true}
+      sources:
+        - name: application
+          eventLogName: Application
+          jobLabel: integrations/windows-application-logs
+          # Only gather Warning (Level=3), Error (Level=2), and Critical (Level=1) events.
+          xpathQuery: "*[System[(Level=1 or Level=2 or Level=3)]]"
+          labels:
+            environment: production
+        # An XML-form query specifies the channel itself, so no eventLogName is required.
+        - name: low-memory
+          jobLabel: integrations/windows-low-memory
+          xpathQuery: "System/*[UserData/LowOnMemory]"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

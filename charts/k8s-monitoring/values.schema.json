@@ -778,6 +778,31 @@
                 }
             }
         },
+        "windowsEventLogs": {
+            "type": "object",
+            "properties": {
+                "collector": {
+                    "type": "string"
+                },
+                "dataProcessors": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "destinations": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
         "podLogs": {
             "properties": {
                 "destinations": {
@@ -3156,6 +3181,103 @@
                 }
             }
         },
+        "router-destination": {
+            "type": "object",
+            "properties": {
+                "defaultDestinations": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "disabled": {
+                    "type": "boolean"
+                },
+                "ecosystem": {
+                    "type": "string",
+                    "enum": [
+                        "loki",
+                        "otlp",
+                        "prometheus",
+                        "pyroscope"
+                    ]
+                },
+                "name": {
+                    "type": "string"
+                },
+                "routes": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "destinations": {
+                                "type": "array",
+                                "minItems": 1,
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "signals": {
+                                "type": "array",
+                                "items": {
+                                    "enum": [
+                                        "metrics",
+                                        "logs",
+                                        "traces",
+                                        "profiles"
+                                    ]
+                                }
+                            },
+                            "match": {
+                                "type": "array",
+                                "minItems": 1,
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "resourceAttribute": {
+                                            "type": "string"
+                                        },
+                                        "label": {
+                                            "type": "string"
+                                        },
+                                        "op": {
+                                            "enum": [
+                                                "equals",
+                                                "notEquals",
+                                                "in",
+                                                "matches",
+                                                "notMatches"
+                                            ]
+                                        }
+                                    },
+                                    "oneOf": [
+                                        {
+                                            "required": [
+                                                "resourceAttribute"
+                                            ]
+                                        },
+                                        {
+                                            "required": [
+                                                "label"
+                                            ]
+                                        }
+                                    ],
+                                    "required": [
+                                        "op",
+                                        "value"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "type": {
+                    "type": "string",
+                    "const": "router"
+                }
+            }
+        },
         "dataProcessor": {
             "type": "object",
             "anyOf": [
@@ -3202,6 +3324,9 @@
                 },
                 {
                     "$ref": "#/definitions/pyroscope-destination"
+                },
+                {
+                    "$ref": "#/definitions/router-destination"
                 }
             ]
         },

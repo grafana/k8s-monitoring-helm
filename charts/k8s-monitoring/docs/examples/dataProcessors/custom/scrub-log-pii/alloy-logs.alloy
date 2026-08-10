@@ -387,9 +387,10 @@ otelcol.processor.batch "scrub_pii_out_logs_otlp" {
 }
 otelcol.processor.filter "scrub_pii_loki_otlp_gate_logs_otlp" {
   error_mode = "ignore"
-  logs {
-    log_record = [
-      "not IsMatch(resource.attributes[\"selected_destinations\"], \"(^|.*,)loki-otlp(,.*|$)\")",
+  log_conditions {
+    context    = "resource"
+    conditions = [
+      "not IsMatch(attributes[\"selected_destinations\"], \"(^|.*,)loki-otlp(,.*|$)\")",
     ]
   }
   output {
@@ -408,12 +409,6 @@ otelcol.processor.transform "scrub_pii_loki_otlp_gate_logs_otlp_strip" {
     logs = [otelcol.processor.attributes.loki_otlp.input]
   }
 }
-
-
-
-
-
-
 
 livedebugging {
   enabled = true
