@@ -25,7 +25,7 @@ PROMETHEUS_COMMUNITY_KEYRING := ../../../../keys/prometheus-community-pubkey.gpg
 COSIGN ?= cosign
 HAS_COSIGN := $(shell command -v $(COSIGN) 2> /dev/null)
 # renovate: datasource=docker depName=ghcr.io/sigstore/cosign/cosign
-COSIGN_IMAGE_VERSION = v3.1.2
+COSIGN_IMAGE_VERSION = v3.1.3
 OPENCOST_VERSION := $(shell yq '.dependencies[] | select(.name == "opencost") | .version' Chart.yaml)
 OPENCOST_OCI_CHART := ghcr.io/opencost/charts/opencost
 OPENCOST_COSIGN_IDENTITY := https://github.com/opencost/opencost-helm-chart/.github/workflows/publish.yml@refs/heads/main
