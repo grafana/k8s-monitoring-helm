@@ -159,12 +159,5 @@ discovery.relabel "windows_exporter" {
 {{- if .Values.windowsHosts.extraDiscoveryRules }}
   {{- .Values.windowsHosts.extraDiscoveryRules | nindent 2 }}
 {{- end }}
-{{- if .Values.windowsHosts.extraMetricProcessingRules }}
-  {{- .Values.windowsHosts.extraMetricProcessingRules | nindent 2 }}
-  forward_to = argument.metrics_destinations.value
 } // discovery.relabel "windows_exporter"
-{{- else }}
-  forward_to = argument.metrics_destinations.value
-} // discovery.relabel "windows_exporter"
-{{- end }}
 {{- end }}
