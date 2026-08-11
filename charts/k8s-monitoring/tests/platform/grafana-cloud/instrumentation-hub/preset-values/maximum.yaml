@@ -33,6 +33,10 @@ collectors:
 
   alloy-deployment:
     presets: [xlarge, clustered, otel-receiver, deployment]
+    # Expose a stable, predictably-named Service for the otel-receiver preset so injected SDKs have a consistent OTLP endpoint.
+    extraService:
+      enabled: true
+      name: otel-receiver
     controller:
       autoscaling:
         horizontal:

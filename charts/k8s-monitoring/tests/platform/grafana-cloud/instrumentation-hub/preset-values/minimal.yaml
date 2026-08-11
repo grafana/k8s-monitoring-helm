@@ -15,6 +15,10 @@ collectorCommon:
 collectors:
   alloy:
     presets: [large, root, host-network, host-storage, host-cgroup, host-tracefs, clustered, service-discovery, filesystem-log-reader, otel-receiver, daemonset]
+    # Expose a stable, predictably-named Service for the otel-receiver preset so injected SDKs have a consistent OTLP endpoint.
+    extraService:
+      enabled: true
+      name: otel-receiver
 
 # Add these if Kubernetes monitoring is enabled
 telemetryServices:
