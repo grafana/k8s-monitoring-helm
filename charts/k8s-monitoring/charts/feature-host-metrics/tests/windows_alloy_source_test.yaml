@@ -34,3 +34,28 @@ tests:
       - matchRegex:
           path: data["module.alloy"]
           pattern: replacement = sys\.env\("NODE_NAME"\)
+
+  - it: should keep extraMetricProcessingRules in prometheus.relabel and out of discovery.relabel when source is alloy
+    set:
+      testing: {enabled: true}
+      windowsHosts:
+        enabled: true
+        source: alloy
+        extraMetricProcessingRules: |-
+          rule {
+            target_label = "color"
+            replacement = "red"
+          }
+    asserts:
+      # discovery.relabel is a target-discovery component: it must not gain a forward_to
+      # argument (invalid River) nor the metric-processing rules.
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'discovery\.relabel "windows_exporter" \{[\s\S]*forward_to[\s\S]*?\} // discovery\.relabel "windows_exporter"'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'discovery\.relabel "windows_exporter" \{[\s\S]*replacement = "red"[\s\S]*?\} // discovery\.relabel "windows_exporter"'
+      # the extra rule belongs in prometheus.relabel, which forwards to the destinations.
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'prometheus\.relabel "windows_exporter" \{[\s\S]*replacement = "red"[\s\S]*forward_to = argument\.metrics_destinations\.value[\s\S]*?\} // prometheus\.relabel "windows_exporter"'
