@@ -1,0 +1,65 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: instrumentation-hub-minimal
+
+# Minimal tier: a single `alloy` collector (daemonset) carrying the
+# service-discovery + otel-receiver presets, mirroring the unified-helm-wizard
+# "lightweight" onboarding. Because the collector is a daemonset, FM's
+# otel-receiver pipeline (workloadType=deployment) cannot match it — so this tier
+# exercises the survey + k8s-monitoring instrumentation families only. See the
+# plan for context.
+
+subject:
+  releaseName: grafana-cloud
+  path: ../../../../..
+  valuesFile: values.yaml
+  set:
+    - key: "cluster.name"
+      valueFrom: clusterName
+
+cluster:
+  type: kind
+  name: ihub-e2e-minimal
+
+dependencies:
+  - preset: test-parameters
+    namespace: default
+  - preset: test-parameters
+    namespace: toolbox
+  - file: grafana-cloud-credentials.yaml
+  - file: expected-components.yaml
+
+tests:
+  - type: kubernetes-objects-test
+    values:
+      checks:
+        - {kind: DaemonSet, name: grafana-cloud-alloy, namespace: default}
+        - {kind: Service, name: grafana-cloud-otel-receiver, namespace: default}
+        - {kind: Deployment, name: grafana-cloud-alloy-operator, namespace: default}
+        - {kind: Deployment, name: grafana-cloud-k8s-injection-controller, namespace: default}
+
+  # Primary assertion (REQUIRES the toolbox `remotecfg-components-test` type —
+  # prerequisite). Only the daemonset role is checked: this tier has no deployment
+  # collector, so no otel-receiver pipeline is expected.
+  - type: remotecfg-components-test
+    values:
+      attempts: 20
+      delay: 15
+      envFrom:
+        - configMapRef: {name: expected-components}
+      checks:
+        - {role: daemonset, namespace: default, selector: "app.kubernetes.io/name=alloy,app.kubernetes.io/instance=grafana-cloud-alloy"}
+
+  - type: query-test
+    values:
+      tests:
+        - env:
+            NAMESPACE: default
+            PROMETHEUS_URL: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/api/v1/query
+          envFrom:
+            - secretRef: {name: grafana-cloud-credentials}
+            - configMapRef: {name: test-parameters}
+          queries:
+            - query: alloy_build_info{collector_id="grafana-cloud-$clusterName-default-alloy-$clusterName-control-plane"}
+              type: promql

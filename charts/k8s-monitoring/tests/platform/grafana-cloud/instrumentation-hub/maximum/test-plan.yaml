@@ -1,0 +1,63 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: instrumentation-hub-maximum
+
+# Maximum tier: same two-collector topology as standard (alloy-daemonset +
+# alloy-deployment) plus autoscaling (VPA on the daemonset, HPA on the
+# deployment), mirroring the unified-helm-wizard "scalable" onboarding. Pipeline
+# matching is identical to standard; the autoscaling config is the delta under
+# test. See the plan for context.
+
+subject:
+  releaseName: grafana-cloud
+  path: ../../../../..
+  valuesFile: values.yaml
+  set:
+    - key: "cluster.name"
+      valueFrom: clusterName
+
+cluster:
+  type: kind
+  name: ihub-e2e-maximum
+
+dependencies:
+  - preset: test-parameters
+    namespace: default
+  - preset: test-parameters
+    namespace: toolbox
+  - file: grafana-cloud-credentials.yaml
+  - file: expected-components.yaml
+
+tests:
+  - type: kubernetes-objects-test
+    values:
+      checks:
+        - {kind: DaemonSet, name: grafana-cloud-alloy-daemonset, namespace: default}
+        - {kind: Deployment, name: grafana-cloud-alloy-deployment, namespace: default}
+        - {kind: Service, name: grafana-cloud-otel-receiver, namespace: default}
+        - {kind: Deployment, name: grafana-cloud-alloy-operator, namespace: default}
+        - {kind: Deployment, name: grafana-cloud-k8s-injection-controller, namespace: default}
+
+  - type: remotecfg-components-test
+    values:
+      attempts: 20
+      delay: 15
+      envFrom:
+        - configMapRef: {name: expected-components}
+      checks:
+        - {role: daemonset, namespace: default, selector: "app.kubernetes.io/name=alloy-daemonset,app.kubernetes.io/instance=grafana-cloud-alloy-daemonset"}
+        - {role: deployment, namespace: default, selector: "app.kubernetes.io/name=alloy-deployment,app.kubernetes.io/instance=grafana-cloud-alloy-deployment"}
+
+  - type: query-test
+    values:
+      tests:
+        - env:
+            NAMESPACE: default
+            PROMETHEUS_URL: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/api/v1/query
+          envFrom:
+            - secretRef: {name: grafana-cloud-credentials}
+            - configMapRef: {name: test-parameters}
+          queries:
+            - query: alloy_build_info{collector_id="grafana-cloud-$clusterName-default-alloy-daemonset-$clusterName-control-plane"}
+              type: promql

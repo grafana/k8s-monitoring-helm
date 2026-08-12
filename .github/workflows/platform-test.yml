@@ -198,6 +198,43 @@ jobs:
             GRAFANA_CLOUD_OTLP_USERNAME=${{ env.VAULT_REPO_SECRET_NAME }}:otlp-username
             GRAFANA_CLOUD_RW_POLICY_TOKEN=${{ env.VAULT_REPO_SECRET_NAME }}:access-policy-token
 
+      # The instrumentation-hub tests provision their Fleet Management pipelines
+      # via gcx (against the same platform-test stack as the Vault credentials
+      # above). Provisioning/teardown need a Grafana Cloud access-policy token
+      # with Fleet Management *write* scope (the read-only metrics token cannot
+      # Set*/remove pipelines) plus the platform-test stack slug so gcx can
+      # resolve the FM endpoint. These map to two keys that must exist in the
+      # `grafana-cloud` Vault secret:
+      #   - fleet-management-write-token: access-policy token, fleet-management:write scope
+      #   - stack-slug: the platform-test Grafana Cloud stack slug (not secret; kept here with the creds)
+      # Missing keys fail only the instrumentation-hub matrix legs (label-gated).
+      # gcx reads GRAFANA_CLOUD_TOKEN + GRAFANA_CLOUD_STACK from the environment
+      # (its CI env-var auth path); no gcx login/config file is required.
+      - name: Fetch Fleet Management provisioning credentials from Vault
+        if: ${{ startsWith(matrix.test, 'grafana-cloud/instrumentation-hub') }}
+        uses: grafana/shared-workflows/actions/get-vault-secrets@a37de51f3d713a30a9e4b21bcdfbd38170020593  # v1.3.0
+        env:
+          VAULT_REPO_SECRET_NAME: grafana-cloud
+        with:
+          repo_secrets: |
+            GRAFANA_CLOUD_TOKEN=${{ env.VAULT_REPO_SECRET_NAME }}:fleet-management-write-token
+            GRAFANA_CLOUD_STACK=${{ env.VAULT_REPO_SECRET_NAME }}:stack-slug
+
+      - name: Install gcx
+        if: ${{ startsWith(matrix.test, 'grafana-cloud/instrumentation-hub') }}
+        env:
+          GCX_VERSION: 1.0.0
+          GCX_SHA256: c88c65958d19d83dc3a192a2a5037e08307a9c776019f24249b89f369c9c4d41
+        run: |
+          tarball="gcx_${GCX_VERSION}_linux_amd64.tar.gz"
+          url="https://github.com/grafana/gcx/releases/download/v${GCX_VERSION}/${tarball}"
+          cd /tmp
+          curl -sSL --fail-with-body "${url}" -o "${tarball}"
+          echo "${GCX_SHA256}  ${tarball}" | sha256sum -c -
+          tar -xzf "${tarball}" gcx
+          sudo install -m 0755 gcx /usr/local/bin/gcx
+          gcx --version
+
       - name: Run test
         env:
           KUBECONFIG: "${{ github.workspace }}/source/charts/k8s-monitoring/tests/platform/${{ matrix.test }}/kubeconfig.yaml"
@@ -206,3 +243,12 @@ jobs:
         run: |
           make -C "${TEST_DIRECTORY}" clean all
           helm-chart-toolbox/tools/helm-test/helm-test "${TEST_DIRECTORY}"
+
+      # Always remove the per-cluster Fleet Management pipelines this run created,
+      # even on failure/timeout, so the shared platform-test stack does not
+      # accumulate orphaned rows.
+      - name: Teardown Fleet Management pipelines
+        if: ${{ always() && startsWith(matrix.test, 'grafana-cloud/instrumentation-hub') }}
+        env:
+          TEST_DIRECTORY: "source/charts/k8s-monitoring/tests/platform/${{ matrix.test }}"
+        run: make -C "${TEST_DIRECTORY}" teardown

@@ -1,16 +1,22 @@
 ---
+# Instrumentation Hub "scalable" tier: same two-collector topology as standard
+# plus autoscaling (VPA on the daemonset, HPA on the deployment). cluster.name is
+# set from the toolbox clusterName at install time (see test-plan set:).
 cluster:
-  name: maximum-cluster
+  name: ihub-e2e-maximum
 
 collectorCommon:
   alloy:
     remoteConfig:
       enabled: true
-      url: https://remote-config.example.com/alloy
+      url: https://fleet-management-prod-008.grafana.net
       auth:
         type: basic
-        username: 12345
-        password: my-remote-cfg-password
+        usernameKey: GRAFANA_CLOUD_FLEET_MGMT_USER
+        passwordKey: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
+      secret:
+        create: false
+        name: grafana-cloud-credentials
 
 collectors:
   alloy-daemonset:
@@ -33,6 +39,10 @@ collectors:
 
   alloy-deployment:
     presets: [xlarge, clustered, otel-receiver, deployment]
+    # Stable OTLP receiver Service (grafana-k8s-plugin#3250).
+    extraService:
+      enabled: true
+      name: otel-receiver
     controller:
       autoscaling:
         horizontal:
@@ -42,7 +52,6 @@ collectors:
           targetCPUUtilizationPercentage: 75
           targetMemoryUtilizationPercentage: 80
 
-# Add these if Kubernetes monitoring is enabled
 telemetryServices:
   node-exporter:
     deploy: true
@@ -58,4 +67,4 @@ telemetryServices:
   sdkInjector:
     deploy: true
     # This must match the format: system:serviceaccount:$(POD_NAMESPACE):${ReleaseName}-${CollectorName}
-    allowedConfigMapWriters: system:serviceaccount:$(POD_NAMESPACE):grafana-cloud-alloy-daemonset
+    allowedConfigMapWriters: system:serviceaccount:$(POD_NAMESPACE):grafana-cloud-alloy-daemonset,system:serviceaccount:$(POD_NAMESPACE):grafana-cloud-alloy-deployment

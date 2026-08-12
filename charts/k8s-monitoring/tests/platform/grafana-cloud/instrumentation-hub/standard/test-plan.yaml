@@ -1,0 +1,80 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: instrumentation-hub-standard
+
+# Standard tier: two collectors (alloy-daemonset + alloy-deployment), mirroring
+# the unified-helm-wizard "standard" onboarding. The daemonset collector receives
+# the survey + k8s-monitoring instrumentation pipelines; the deployment collector
+# receives the otel-receiver pipeline. See the plan for context.
+#
+# cluster.name is fixed (not random): provisioning + expected-component derivation
+# happen in `make all` before the kind cluster exists, so the name must be known
+# up front. Teardown (make teardown) removes the per-cluster FM pipelines.
+
+subject:
+  releaseName: grafana-cloud
+  path: ../../../../..
+  valuesFile: values.yaml
+  set:
+    - key: "cluster.name"
+      valueFrom: clusterName
+
+cluster:
+  type: kind
+  name: ihub-e2e-standard
+
+dependencies:
+  - preset: test-parameters
+    namespace: default
+  - preset: test-parameters
+    namespace: toolbox
+  - file: grafana-cloud-credentials.yaml
+  # Expected components derived from FM (make all → ../scripts/derive-expected.sh).
+  - file: expected-components.yaml
+
+tests:
+  # Backstop 1: the expected collector topology exists.
+  # NOTE: object names below are release-prefixed; confirm against regenerated
+  # .rendered/ output (some telemetryServices names differ, e.g. beyla cache).
+  - type: kubernetes-objects-test
+    values:
+      checks:
+        - {kind: DaemonSet, name: grafana-cloud-alloy-daemonset, namespace: default}
+        - {kind: Deployment, name: grafana-cloud-alloy-deployment, namespace: default}
+        - {kind: Service, name: grafana-cloud-otel-receiver, namespace: default}
+        - {kind: Deployment, name: grafana-cloud-alloy-operator, namespace: default}
+        - {kind: Deployment, name: grafana-cloud-k8s-injection-controller, namespace: default}
+
+  # Primary assertion: each collector is running the components FM holds for this
+  # cluster (expected derived from FM, compared to Alloy's remotecfg components).
+  #
+  # REQUIRES the `remotecfg-components-test` type in grafana/helm-chart-toolbox
+  # (prerequisite; the comparator lives there as Go). It reads the expected
+  # components from the expected-components ConfigMap (EXPECTED_<ROLE> env) and
+  # compares them to each Alloy pod's /api/v0/web/remotecfg/components.
+  - type: remotecfg-components-test
+    values:
+      attempts: 20
+      delay: 15
+      envFrom:
+        - configMapRef: {name: expected-components}
+      # role → collector pods to check (confirm Alloy pod labels via a live run)
+      checks:
+        - {role: daemonset, namespace: default, selector: "app.kubernetes.io/name=alloy-daemonset,app.kubernetes.io/instance=grafana-cloud-alloy-daemonset"}
+        - {role: deployment, namespace: default, selector: "app.kubernetes.io/name=alloy-deployment,app.kubernetes.io/instance=grafana-cloud-alloy-deployment"}
+
+  # Backstop 2: the daemonset collector's self-metrics reached Grafana Cloud.
+  # NOTE: confirm the multi-collector collector_id format against a live run.
+  - type: query-test
+    values:
+      tests:
+        - env:
+            NAMESPACE: default
+            PROMETHEUS_URL: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/api/v1/query
+          envFrom:
+            - secretRef: {name: grafana-cloud-credentials}
+            - configMapRef: {name: test-parameters}
+          queries:
+            - query: alloy_build_info{collector_id="grafana-cloud-$clusterName-default-alloy-daemonset-$clusterName-control-plane"}
+              type: promql

@@ -1,0 +1,45 @@
+---
+# Instrumentation Hub "lightweight" tier: a single daemonset alloy collector
+# carrying the service-discovery + otel-receiver presets. cluster.name is set from
+# the toolbox clusterName at install time (see test-plan set:).
+cluster:
+  name: ihub-e2e-minimal
+
+collectorCommon:
+  alloy:
+    remoteConfig:
+      enabled: true
+      url: https://fleet-management-prod-008.grafana.net
+      auth:
+        type: basic
+        usernameKey: GRAFANA_CLOUD_FLEET_MGMT_USER
+        passwordKey: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
+      secret:
+        create: false
+        name: grafana-cloud-credentials
+
+collectors:
+  alloy:
+    presets: [large, root, host-network, host-storage, host-cgroup, host-tracefs, clustered, service-discovery, filesystem-log-reader, otel-receiver, daemonset]
+    # Stable OTLP receiver Service so injected SDKs get one predictable endpoint
+    # (grafana-k8s-plugin#3250). Rides the collector carrying the otel-receiver preset.
+    extraService:
+      enabled: true
+      name: otel-receiver
+
+telemetryServices:
+  node-exporter:
+    deploy: true
+
+  kube-state-metrics:
+    deploy: true
+
+  beyla:
+    deploy: true
+    k8sCache:
+      replicas: 1
+
+  sdkInjector:
+    deploy: true
+    # This must match the format: system:serviceaccount:$(POD_NAMESPACE):${ReleaseName}-${CollectorName}
+    allowedConfigMapWriters: system:serviceaccount:$(POD_NAMESPACE):grafana-cloud-alloy
