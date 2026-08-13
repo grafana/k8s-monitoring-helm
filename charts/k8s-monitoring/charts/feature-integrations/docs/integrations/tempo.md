@@ -4,6 +4,13 @@ This integration captures the metrics and logs to understand the health and perf
 
 ## Values
 
+### General Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| collector | string | `""` | The collector to assign this instance to. When empty, the feature-level `integrations.collector` is used. |
+| name | string | `""` | Name for this Tempo instance. |
+
 ### Discovery Settings
 
 | Key | Type | Default | Description |
@@ -46,9 +53,3 @@ This integration captures the metrics and logs to understand the health and perf
 |-----|------|---------|-------------|
 | metrics.scrapeInterval | string | `60s` | How frequently to scrape metrics from Tempo. |
 | metrics.scrapeTimeout | string | `10s` | The timeout for scraping metrics from Tempo. |
-
-### General Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| name | string | `""` | Name for this Tempo instance. |
