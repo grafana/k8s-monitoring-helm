@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-*   Service Integrations: assign individual integration instances to different collectors. Each instance accepts its own `collector`, falling back to the feature-level `integrations.collector`. This makes it possible to spread instances (for example, multiple MySQL databases) across collectors to balance resource usage. The per-instance collector routes the instance's metrics and exporter logs; log-parsing (`logs`) still runs on the Pod Logs feature's collector. (#2616) (@TylerHelmuth)
+*   Route integration instances to different collectors by setting collector on each instance. (#2616) (@TylerHelmuth)
 
 ## 4.4.0
 
