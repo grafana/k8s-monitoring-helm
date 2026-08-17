@@ -162,7 +162,7 @@ collector, so they need no assignment.
         {{- $instanceCollector := dig "collector" "" $instance }}
         {{- if $instanceCollector }}
           {{- if not (has $instanceCollector $enabledCollectors) }}
-            {{- $msg := list "" (printf "The %s feature has a %s instance %q assigned to collector %q, but that collector does not exist or is disabled." $featureName $type (dig "name" "" $instance) $instanceCollector) }}
+            {{- $msg := list "" (printf "The %s feature has an instance %q of type %q assigned to collector %q, but that collector does not exist or is disabled." $featureName (dig "name" "" $instance) $type $instanceCollector) }}
             {{- $msg = append $msg "Please assign it to one of the enabled collectors:" }}
             {{- $msg = append $msg (printf "  collector: %s" (include "english_list_or" $enabledCollectors)) }}
             {{- $msg = append $msg "See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/README.md for more details." }}
