@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+*   Fix the Prometheus destination so the cluster label honors `cluster.nameFrom`. (#2963) (@TylerHelmuth)
+
 ## 4.4.0
 
 *   Allow for regexes to be used in the `namespaces` list for many features. (#2860) (@petewall)
