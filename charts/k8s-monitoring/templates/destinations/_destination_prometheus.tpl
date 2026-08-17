@@ -269,7 +269,7 @@ prometheus.remote_write {{ include "helper.alloy_name" $.destinationName | quote
 {{- if or .clusterLabels .extraLabels .extraLabelsFrom }}
   external_labels = {
   {{- range $label := .clusterLabels }}
-    {{ include "escape_label" $label | quote }} = {{ $.Values.cluster.name | quote }},
+    {{ include "escape_label" $label | quote }} = {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }},
   {{- end }}
   {{- range $key, $value := .extraLabels }}
     {{ $key }} = {{ $value | quote }},

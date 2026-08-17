@@ -3,6 +3,7 @@
 ## Unreleased
 
 *   Route integration instances to different collectors by setting collector on each instance. (#2616) (@TylerHelmuth)
+*   Fix the Prometheus destination so the cluster label honors `cluster.nameFrom`. (#2963) (@TylerHelmuth)
 
 ## 4.4.0
 
