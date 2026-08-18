@@ -1,9 +1,11 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
 suite: Feature - Profiling
 templates:
+  - alloy-config.yaml
   - validations.yaml
 tests:
   - it: requires at least one profiling sub-type when profiling.enabled is true
+    template: validations.yaml
     set:
       cluster:
         name: ci-test-cluster
@@ -31,6 +33,7 @@ tests:
                 enabled: true
 
   - it: passes validation when ebpf is enabled
+    template: validations.yaml
     set:
       cluster:
         name: ci-test-cluster
@@ -50,6 +53,7 @@ tests:
       - notFailedTemplate: {}
 
   - it: passes validation when java is enabled
+    template: validations.yaml
     set:
       cluster:
         name: ci-test-cluster
@@ -69,6 +73,7 @@ tests:
       - notFailedTemplate: {}
 
   - it: passes validation when pprof is enabled
+    template: validations.yaml
     set:
       cluster:
         name: ci-test-cluster
@@ -88,6 +93,7 @@ tests:
       - notFailedTemplate: {}
 
   - it: does not run profiling validation when profiling.enabled is false
+    template: validations.yaml
     set:
       cluster:
         name: ci-test-cluster
@@ -105,3 +111,172 @@ tests:
           alloy: {clustering: {enabled: true}}
     asserts:
       - notFailedTemplate: {}
+
+  - it: routes profiling sub-features to their per-sub-feature collectors
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      selfReporting: {enabled: false}
+      destinations:
+        pyro:
+          type: pyroscope
+          url: http://pyroscope.pyroscope.svc:4040
+      profiling:
+        enabled: true
+        collector: alloy-profiles
+        # ebpf inherits the feature-level collector (alloy-profiles)
+        ebpf:
+          enabled: true
+        # java overrides to a different collector
+        java:
+          enabled: true
+          collector: alloy-java
+        # pprof overrides to a different collector
+        pprof:
+          enabled: true
+          collector: alloy-pprof
+      collectors:
+        alloy-profiles:
+          presets: [privileged, daemonset]
+        alloy-java:
+          presets: [privileged, daemonset]
+        alloy-pprof:
+          enabled: true
+    asserts:
+      # documents are sorted alphabetically by collector name:
+      # 0 = alloy-java, 1 = alloy-pprof, 2 = alloy-profiles
+      - documentIndex: 0
+        matchRegex:
+          path: data["config.alloy"]
+          pattern: '// Profiles: Java'
+      - documentIndex: 0
+        notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'discovery.kubernetes "(ebpf|pprof)_pods"'
+      - documentIndex: 1
+        matchRegex:
+          path: data["config.alloy"]
+          pattern: 'discovery.kubernetes "pprof_pods"'
+      - documentIndex: 1
+        notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'discovery.kubernetes "(ebpf|java)_pods"'
+      - documentIndex: 2
+        matchRegex:
+          path: data["config.alloy"]
+          pattern: 'discovery.kubernetes "ebpf_pods"'
+      - documentIndex: 2
+        notMatchRegex:
+          path: data["config.alloy"]
+          pattern: '// Profiles: (Java|pprof)'
+
+  - it: fails when a sub-feature names a disabled or missing collector
+    template: validations.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        pyro:
+          type: pyroscope
+          url: http://pyroscope.pyroscope.svc:4040
+      profiling:
+        enabled: true
+        collector: alloy-profiles
+        ebpf:
+          enabled: true
+        pprof:
+          enabled: true
+          collector: does-not-exist
+      collectors:
+        alloy-profiles:
+          presets: [privileged, daemonset]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Profiling feature has "pprof" enabled and assigned to collector "does-not-exist", but that collector does not exist or is disabled.
+            Please assign it to one of the enabled collectors:
+              collector: alloy-profiles
+            See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/README.md for more details.
+
+  - it: fails when a sub-feature has no collector and one cannot be auto-selected
+    template: validations.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        pyro:
+          type: pyroscope
+          url: http://pyroscope.pyroscope.svc:4040
+      # Neither the feature nor the sub-feature sets a collector, and with more than
+      # one enabled collector there is no single collector to fall back to.
+      profiling:
+        enabled: true
+        ebpf:
+          enabled: true
+      collectors:
+        alloy-a:
+          presets: [privileged, daemonset]
+        alloy-b:
+          presets: [privileged, daemonset]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Profiling feature requires a collector to be assigned.
+            Please assign one by setting the following:
+            profiling:
+              collector: alloy-a or alloy-b
+            See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/README.md for more details.
+
+  - it: co-locates multiple sub-features assigned to the same collector
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      selfReporting: {enabled: false}
+      destinations:
+        pyro:
+          type: pyroscope
+          url: http://pyroscope.pyroscope.svc:4040
+      profiling:
+        enabled: true
+        collector: alloy-shared
+        # ebpf inherits the feature-level collector (alloy-shared)
+        ebpf:
+          enabled: true
+        # java explicitly names the same collector as ebpf
+        java:
+          enabled: true
+          collector: alloy-shared
+        # pprof runs on its own collector
+        pprof:
+          enabled: true
+          collector: alloy-other
+      collectors:
+        alloy-shared:
+          presets: [privileged, daemonset]
+        alloy-other:
+          presets: [privileged, daemonset]
+    asserts:
+      # documents are sorted alphabetically by collector name:
+      # 0 = alloy-other, 1 = alloy-shared
+      - documentIndex: 0
+        matchRegex:
+          path: data["config.alloy"]
+          pattern: 'discovery.kubernetes "pprof_pods"'
+      - documentIndex: 0
+        notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'discovery.kubernetes "(ebpf|java)_pods"'
+      - documentIndex: 1
+        matchRegex:
+          path: data["config.alloy"]
+          pattern: '// Profiles: eBPF'
+      - documentIndex: 1
+        matchRegex:
+          path: data["config.alloy"]
+          pattern: '// Profiles: Java'
+      - documentIndex: 1
+        notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'discovery.kubernetes "pprof_pods"'
