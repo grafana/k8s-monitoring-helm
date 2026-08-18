@@ -207,13 +207,13 @@ jobs:
           repo_secrets: |
             GRAFANA_TOKEN=${{ env.VAULT_REPO_SECRET_NAME }}:gcx-service-account-token
             GRAFANA_CLOUD_TOKEN=${{ env.VAULT_REPO_SECRET_NAME }}:fleet-management-token
-            GRAFANA_CLOUD_STACK=${{ env.VAULT_REPO_SECRET_NAME }}:stack-slug
 
       - name: Install gcx
         if: ${{ startsWith(matrix.test, 'grafana-cloud/ihub') }}
         env:
           GCX_VERSION: 1.0.0
           GCX_SHA256: c88c65958d19d83dc3a192a2a5037e08307a9c776019f24249b89f369c9c4d41
+          GRAFANA_CLOUD_STACK: helmchart
         run: |
           tarball="gcx_${GCX_VERSION}_linux_amd64.tar.gz"
           url="https://github.com/grafana/gcx/releases/download/v${GCX_VERSION}/${tarball}"
