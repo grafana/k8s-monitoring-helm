@@ -10,10 +10,6 @@ SCRIPTS := ../scripts
 
 export IHUB_APP_NAMESPACE := default
 
-# helm-test tool. Until the remotecfg-components-test type is merged into the
-# helm-chart-toolbox main branch, point this at your local toolbox checkout (on a
-# branch that has the type) so run-test uses it, e.g. add to .envrc or run:
-#   HELM_TEST=/path/to/helm-chart-toolbox/tools/helm-test/helm-test make run-test
 HELM_TEST ?= helm-test
 
 .PHONY: run-test run-test-direnv
