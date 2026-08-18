@@ -41,6 +41,23 @@ tests:
           path: data["config.alloy"]
           pattern: '// Destination: disabledMetrics \(prometheus\)'
 
+  - it: uses cluster.nameFrom for the cluster label
+    set:
+      cluster:
+        nameFrom: sys.env("CLUSTER_NAME")
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: prometheus
+          url: https://prometheus.example.com
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '"k8s_cluster_name" = sys\.env\("CLUSTER_NAME"\),'
+
   - it: allows you to disable keepIdentifyingResourceAttributes
     set:
       cluster: {name: test-cluster}
