@@ -1,0 +1,362 @@
+---
+suite: Test pre-install config validator hook
+templates:
+  - templates/hooks/pre-install_validate-config.yaml
+tests:
+  - it: should render nothing by default (opt-in)
+    set:
+      collectors:
+        alloy-metrics:
+          extraConfig: " "
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render nothing when no collectors enabled
+    set:
+      configValidator:
+        enabled: true
+      collectors: {}
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render a ConfigMap and a Pod per enabled collector
+    set:
+      configValidator:
+        enabled: true
+      collectors:
+        alloy-metrics:
+          extraConfig: " "
+    asserts:
+      - hasDocuments:
+          count: 2
+      - documentIndex: 0
+        isKind:
+          of: ConfigMap
+      - documentIndex: 1
+        isKind:
+          of: Pod
+      - documentIndex: 0
+        equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: pre-install,pre-upgrade
+      - documentIndex: 1
+        equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: pre-install,pre-upgrade
+      - documentIndex: 1
+        equal:
+          path: metadata.annotations["helm.sh/hook-weight"]
+          value: "-5"
+
+  - it: should render a Pod per collector when multiple are enabled
+    set:
+      configValidator:
+        enabled: true
+      collectors:
+        alloy-metrics:
+          extraConfig: " "
+        alloy-singleton:
+          extraConfig: " "
+    asserts:
+      - hasDocuments:
+          count: 4
+
+  - it: should use the default Alloy image tag when neither tag nor digest is set
+    set:
+      configValidator:
+        enabled: true
+      collectors:
+        alloy-metrics:
+          extraConfig: " "
+    asserts:
+      - documentIndex: 1
+        matchRegex:
+          path: spec.containers[0].image
+          pattern: "^docker\\.io/grafana/alloy:v[0-9]+\\.[0-9]+\\.[0-9]+"
+
+  - it: should use per-collector image.tag when set
+    set:
+      configValidator:
+        enabled: true
+      collectors:
+        alloy-metrics:
+          extraConfig: " "
+          image:
+            tag: v9.9.9
+    asserts:
+      - documentIndex: 1
+        equal:
+          path: spec.containers[0].image
+          value: docker.io/grafana/alloy:v9.9.9
+
+  - it: should use per-collector image.digest when set
+    set:
+      configValidator:
+        enabled: true
+      collectors:
+        alloy-metrics:
+          extraConfig: " "
+          image:
+            tag: v9.9.9
+            digest: sha256:deadbeef
+    asserts:
+      - documentIndex: 1
+        equal:
+          path: spec.containers[0].image
+          value: docker.io/grafana/alloy@sha256:deadbeef
+
+  - it: should honor global.image.registry override
+    set:
+      configValidator:
+        enabled: true
+      global:
+        image:
+          registry: my-registry.example.com
+      collectors:
+        alloy-metrics:
+          extraConfig: " "
+    asserts:
+      - documentIndex: 1
+        matchRegex:
+          path: spec.containers[0].image
+          pattern: "^my-registry\\.example\\.com/grafana/alloy:"
+
+  - it: should propagate imagePullSecrets from global
+    set:
+      configValidator:
+        enabled: true
+      global:
+        image:
+          pullSecrets:
+            - name: my-pull-secret
+      collectors:
+        alloy-metrics:
+          extraConfig: " "
+    asserts:
+      - documentIndex: 1
+        equal:
+          path: spec.imagePullSecrets[0].name
+          value: my-pull-secret
+
+  - it: should propagate configValidator pod customization
+    set:
+      configValidator:
+        enabled: true
+        serviceAccount:
+          name: my-sa
+        extraArgs:
+          - --disable-reporting
+        nodeSelector:
+          kubernetes.io/os: linux
+        tolerations:
+          - key: arm
+            operator: Exists
+        extraLabels:
+          team: observability
+        extraAnnotations:
+          example.com/owner: pete
+      collectors:
+        alloy-metrics:
+          extraConfig: " "
+    asserts:
+      - documentIndex: 1
+        equal:
+          path: spec.serviceAccountName
+          value: my-sa
+      - documentIndex: 1
+        equal:
+          path: spec.nodeSelector["kubernetes.io/os"]
+          value: linux
+      - documentIndex: 1
+        equal:
+          path: spec.tolerations[0].key
+          value: arm
+      - documentIndex: 1
+        equal:
+          path: metadata.labels.team
+          value: observability
+      - documentIndex: 1
+        equal:
+          path: metadata.annotations["example.com/owner"]
+          value: pete
+      - documentIndex: 1
+        matchRegex:
+          path: spec.containers[0].command[2]
+          pattern: --disable-reporting
+
+  - it: should apply global namespaceOverride
+    set:
+      configValidator:
+        enabled: true
+      global:
+        namespaceOverride: observability
+      collectors:
+        alloy-metrics:
+          extraConfig: " "
+    asserts:
+      - documentIndex: 0
+        equal:
+          path: metadata.namespace
+          value: observability
+      - documentIndex: 1
+        equal:
+          path: metadata.namespace
+          value: observability
+
+  - it: should use configValidator.image overrides
+    set:
+      configValidator:
+        enabled: true
+        image:
+          registry: my.registry.io
+          repository: custom/alloy
+          tag: v1.99.0
+          pullPolicy: Always
+      collectors:
+        alloy-metrics:
+          extraConfig: " "
+    asserts:
+      - documentIndex: 1
+        equal:
+          path: spec.containers[0].image
+          value: my.registry.io/custom/alloy:v1.99.0
+      - documentIndex: 1
+        equal:
+          path: spec.containers[0].imagePullPolicy
+          value: Always
+
+  - it: should prefer configValidator.image.digest over tag
+    set:
+      configValidator:
+        enabled: true
+        image:
+          digest: sha256:abc123
+      collectors:
+        alloy-metrics:
+          extraConfig: " "
+    asserts:
+      - documentIndex: 1
+        equal:
+          path: spec.containers[0].image
+          value: docker.io/grafana/alloy@sha256:abc123
+
+  - it: should propagate imagePullSecrets from configValidator.image
+    set:
+      configValidator:
+        enabled: true
+        image:
+          pullSecrets:
+            - name: cv-secret
+      collectors:
+        alloy-metrics:
+          extraConfig: " "
+    asserts:
+      - documentIndex: 1
+        equal:
+          path: spec.imagePullSecrets[0].name
+          value: cv-secret
+
+  - it: should apply securityContext and resources to the container
+    set:
+      configValidator:
+        enabled: true
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 473
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 10m
+            memory: 64Mi
+      collectors:
+        alloy-metrics:
+          extraConfig: " "
+    asserts:
+      - documentIndex: 1
+        equal:
+          path: spec.containers[0].securityContext.runAsUser
+          value: 473
+      - documentIndex: 1
+        equal:
+          path: spec.containers[0].securityContext.readOnlyRootFilesystem
+          value: true
+      - documentIndex: 1
+        equal:
+          path: spec.containers[0].resources.requests.cpu
+          value: 10m
+
+  - it: should drop runAsUser when explicitly set to null
+    set:
+      configValidator:
+        enabled: true
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: null
+      collectors:
+        alloy-metrics:
+          extraConfig: " "
+    asserts:
+      - documentIndex: 1
+        notExists:
+          path: spec.containers[0].securityContext.runAsUser
+      - documentIndex: 1
+        equal:
+          path: spec.containers[0].securityContext.runAsNonRoot
+          value: true
+
+  - it: should apply podLabels and podAnnotations to the Pod but not the ConfigMap
+    set:
+      configValidator:
+        enabled: true
+        podLabels:
+          lbl.example.com/pod: "true"
+        podAnnotations:
+          ann.example.com/pod: "yes"
+      collectors:
+        alloy-metrics:
+          extraConfig: " "
+    asserts:
+      - documentIndex: 1
+        equal:
+          path: metadata.labels["lbl.example.com/pod"]
+          value: "true"
+      - documentIndex: 1
+        equal:
+          path: metadata.annotations["ann.example.com/pod"]
+          value: "yes"
+      - documentIndex: 0
+        notExists:
+          path: metadata.labels["lbl.example.com/pod"]
+
+  - it: should mount a writable storage emptyDir and point alloy run at it
+    set:
+      configValidator:
+        enabled: true
+      collectors:
+        alloy-metrics:
+          extraConfig: " "
+    asserts:
+      - documentIndex: 1
+        contains:
+          path: spec.volumes
+          content:
+            name: alloy-storage
+            emptyDir: {}
+      - documentIndex: 1
+        matchRegex:
+          path: spec.containers[0].command[2]
+          pattern: --storage.path=/tmp/alloy
+
+  - it: snapshot of the rendered Pod spec
+    set:
+      configValidator:
+        enabled: true
+      collectors:
+        alloy-metrics:
+          extraConfig: " "
+    asserts:
+      - documentIndex: 1
+        matchSnapshot:
+          path: spec

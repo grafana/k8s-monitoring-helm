@@ -6,65 +6,10 @@
   {{- end }}
 {{- end }}
 {{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
-{{- $destinationNames := (get $.Values.collectors $collectorName).includeDestinations | default list }}
-{{- $collectorContext := dict "Values" $.Values "Chart" $.Chart "Files" $.Files "Release" $.Release "Subcharts" $.Subcharts "Template" $.Template "Capabilities" $.Capabilities "collectorName" $collectorName }}
-{{- range $featureKey := include "features.list" $ | fromYamlArray }}
-  {{- $featureCollectorNames := include "collectors.getCollectorsForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) | fromYamlArray }}
-  {{- if has $collectorName $featureCollectorNames }}
-    {{- $destinationNames = concat $destinationNames ((include (printf "features.%s.destinations" $featureKey) $collectorContext) | fromYamlArray) }}
-  {{- end }}
-{{- end }}
-
-{{/* Router destination type. Any enabled `type: router` destination that ended up in
-     $destinationNames (because a feature pointed at it) fans out to real destinations that are
-     never referenced by a feature directly, so those downstream destinations would otherwise
-     never get a body rendered and the router's gates would dangle. Union them in here, before
-     destinations.alloy.config renders bodies below. Single-level only: a router referencing
-     another router is not resolved transitively by this pass. */}}
-{{- range $routerCandidateName := $destinationNames }}
-  {{- if hasKey $.Values.destinations $routerCandidateName }}
-    {{- $routerCandidate := get $.Values.destinations $routerCandidateName }}
-    {{- if and (eq $routerCandidate.type "router") (not $routerCandidate.disabled) }}
-      {{- range $downstreamName := ($routerCandidate.defaultDestinations | default list) }}
-        {{- if and (hasKey $.Values.destinations $downstreamName) (not (get $.Values.destinations $downstreamName).disabled) }}
-          {{- $destinationNames = append $destinationNames $downstreamName }}
-        {{- end }}
-      {{- end }}
-      {{- range $route := ($routerCandidate.routes | default list) }}
-        {{- range $downstreamName := ($route.destinations | default list) }}
-          {{- if and (hasKey $.Values.destinations $downstreamName) (not (get $.Values.destinations $downstreamName).disabled) }}
-            {{- $destinationNames = append $destinationNames $downstreamName }}
-          {{- end }}
-        {{- end }}
-      {{- end }}
-    {{- end }}
-  {{- end }}
-{{- end }}
-
 {{/* Save the top level object and add the collector name */}}
 {{- $values := dict "Values" $.Values "Chart" $.Chart "Files" $.Files "Release" $.Release "Subcharts" $.Subcharts "Template" $.Template "Capabilities" $.Capabilities "collectorName" $collectorName }}
 {{- $collectorValues := include "collector.alloy.values" $values | fromYaml }}
-{{- $alloyConfig := "" }}
-{{- range $featureKey := include "features.list" . | fromYamlArray }}
-  {{- $featureCollectorNames := include "collectors.getCollectorsForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) | fromYamlArray }}
-  {{- if has $collectorName $featureCollectorNames }}
-    {{- $featureConfig := include (printf "features.%s.include" $featureKey) $values | trim }}
-    {{- if $featureConfig }}
-      {{ $alloyConfig = cat $alloyConfig ($featureConfig | nindent 0) }}
-    {{- end }}
-  {{- end }}
-{{- end }}
-{{- $dataProcessorSharedComponents := include "dataProcessors.alloy.collectorComponents" (dict "Values" $.Values "config" $alloyConfig) | trim }}
-{{- if $dataProcessorSharedComponents }}
-  {{- $alloyConfig = cat $alloyConfig ($dataProcessorSharedComponents | nindent 0) }}
-{{- end }}
-{{- $alloyConfig = cat $alloyConfig (include "collectors.logging.alloy" $collectorValues | trim | nindent 0) }}
-{{- $alloyConfig = cat $alloyConfig (include "collectors.liveDebugging.alloy" $collectorValues | trim | nindent 0) }}
-{{- $alloyConfig = cat $alloyConfig (include "collectors.remoteConfig.alloy" $values | trim | nindent 0) }}
-{{- $alloyConfig = cat $alloyConfig (include "collectors.extraConfig.alloy" $values | trim | nindent 0) }}
-{{- $alloyConfig = cat $alloyConfig (include "destinations.alloy.rules" (deepCopy $ | merge (dict "collectorName" $collectorName)) | trim | nindent 0) }}
-{{- $alloyConfig = cat $alloyConfig (include "destinations.alloy.config" (deepCopy $ | merge (dict "destinationNames" ($destinationNames | uniq | sortAlpha))) | trim | nindent 0) }}
-
+{{- $alloyConfig := include "collector.alloy.config" $values }}
 {{- range $replacement := $.Values.replaceComponent }}
   {{- $before := $alloyConfig }}
   {{- $alloyConfig = include "replaceComponent.apply" (dict "config" $alloyConfig "replacement" $replacement) }}

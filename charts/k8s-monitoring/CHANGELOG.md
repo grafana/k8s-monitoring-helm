@@ -4,6 +4,7 @@
 
 *   Fix the Prometheus destination so the cluster label honors `cluster.nameFrom`. (#2963) (@TylerHelmuth)
 *   Route integration instances to different collectors by setting collector on each instance. (#2616) (@TylerHelmuth)
+*   Add an opt-in pre-install/pre-upgrade hook that validates each enabled collector's generated Alloy config via `alloy fmt` and `alloy run`, aborting the install/upgrade on syntax or load errors. Enable with `configValidator.enabled: true`. The validator image and pod settings (`configValidator.image`, `podLabels`, `podAnnotations`, `securityContext`, `resources`, `nodeSelector`, `tolerations`) are configurable like the Alloy Operator hooks; the image defaults to the per-collector Alloy image, then to the Alloy version pinned by this chart. (@petewall)
 
 ## 4.4.0
 
