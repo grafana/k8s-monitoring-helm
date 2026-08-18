@@ -74,6 +74,14 @@ integrations:
 
 ## Values
 
+### General Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| collector | string | `""` | The collector to assign this instance to. When empty, the feature-level `integrations.collector` is used. |
+| jobLabel | string | `"integration/postgresql"` | The value of the job label for scraped metrics and logs |
+| name | string | `""` | Name for this PostgreSQL instance. |
+
 ### Database Observability - Cloud Provider
 
 | Key | Type | Default | Description |
@@ -169,13 +177,6 @@ integrations:
 | exporter.collectors.statioUserTables.enabled | bool | `true` | Enable the statio_user_tables collector. |
 | exporter.collectors.wal.enabled | bool | `true` | Enable the wal collector. |
 | exporter.collectors.xlogLocation.enabled | bool | `false` | Enable the xlog_location collector. |
-
-### General Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| jobLabel | string | `"integration/postgresql"` | The value of the job label for scraped metrics and logs |
-| name | string | `""` | Name for this PostgreSQL instance. |
 
 ### Logs Settings
 

@@ -7,10 +7,11 @@
 {{- end }}
 {{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
 {{- $destinationNames := (get $.Values.collectors $collectorName).includeDestinations | default list }}
+{{- $collectorContext := dict "Values" $.Values "Chart" $.Chart "Files" $.Files "Release" $.Release "Subcharts" $.Subcharts "Template" $.Template "Capabilities" $.Capabilities "collectorName" $collectorName }}
 {{- range $featureKey := include "features.list" $ | fromYamlArray }}
-  {{- $featureCollectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) }}
-  {{- if eq $collectorName $featureCollectorName }}
-    {{- $destinationNames = concat $destinationNames ((include (printf "features.%s.destinations" $featureKey) $) | fromYamlArray) }}
+  {{- $featureCollectorNames := include "collectors.getCollectorsForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) | fromYamlArray }}
+  {{- if has $collectorName $featureCollectorNames }}
+    {{- $destinationNames = concat $destinationNames ((include (printf "features.%s.destinations" $featureKey) $collectorContext) | fromYamlArray) }}
   {{- end }}
 {{- end }}
 
@@ -45,8 +46,8 @@
 {{- $collectorValues := include "collector.alloy.values" $values | fromYaml }}
 {{- $alloyConfig := "" }}
 {{- range $featureKey := include "features.list" . | fromYamlArray }}
-  {{- $featureCollectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) }}
-  {{- if eq $collectorName $featureCollectorName }}
+  {{- $featureCollectorNames := include "collectors.getCollectorsForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) | fromYamlArray }}
+  {{- if has $collectorName $featureCollectorNames }}
     {{- $featureConfig := include (printf "features.%s.include" $featureKey) $values | trim }}
     {{- if $featureConfig }}
       {{ $alloyConfig = cat $alloyConfig ($featureConfig | nindent 0) }}

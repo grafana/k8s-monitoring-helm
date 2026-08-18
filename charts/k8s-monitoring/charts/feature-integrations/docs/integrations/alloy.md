@@ -5,6 +5,14 @@ Alloy instances.
 
 ## Values
 
+### General Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| collector | string | `""` | The collector to assign this instance to. When empty, the feature-level `integrations.collector` is used. |
+| jobLabel | string | `"integrations/alloy"` | The value of the job label for scraped metrics and logs |
+| name | string | `""` | Name for this Alloy instance. |
+
 ### Discovery Settings
 
 | Key | Type | Default | Description |
@@ -14,13 +22,6 @@ Alloy instances.
 | labelSelectors | object | `{}` | Discover Alloy instances based on label selectors. At least one is required. |
 | metrics.portName | string | `"http-metrics"` | Name of the port to scrape metrics from. |
 | namespaces | list | `[]` | Namespaces to look for Alloy instances in. Will automatically look for Alloy instances in all namespaces unless specified here |
-
-### General Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| jobLabel | string | `"integrations/alloy"` | The value of the job label for scraped metrics and logs |
-| name | string | `""` | Name for this Alloy instance. |
 
 ### Metric Processing Settings
 
