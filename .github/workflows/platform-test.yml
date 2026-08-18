@@ -24,18 +24,30 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: 'false'
+          fetch-depth: 0
 
       - name: List tests
         id: list_tests
         working-directory: charts/k8s-monitoring/tests/platform
         env:
           LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           allTests=$(find . -name test-plan.yaml -exec dirname {} \; | sed -e "s/^\.\///g" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')
           manualOnlyTests=$(find . -name .manual-only -type f -exec dirname {} \; | sed "s|^\./||" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             # Filter out labels that don't start with "platform-test-" and remove the prefix
             chosenTests=$(echo "${LABELS}" | jq --raw-output --compact-output '[.[] | select(startswith("platform-test-")) | sub("^platform-test-"; "")]')
+
+            # Always run the Instrumentation Hub tests when this PR changes the chart version.
+            baseVersion=$(git show "${BASE_SHA}:charts/k8s-monitoring/Chart.yaml" 2>/dev/null | yq eval '.version' - || true)
+            headVersion=$(yq eval '.version' ../../Chart.yaml)
+            echo "Chart version: base='${baseVersion}' head='${headVersion}'"
+            if [ -n "${headVersion}" ] && [ "${baseVersion}" != "${headVersion}" ]; then
+              echo "Chart version changed; forcing Instrumentation Hub tests to run."
+              ihubTests=$(jq --null-input --compact-output --argjson allTests "${allTests}" '$allTests | map(select(startswith("grafana-cloud/ihub")))')
+              chosenTests=$(jq --null-input --compact-output --argjson chosen "${chosenTests}" --argjson ihub "${ihubTests}" '$chosen + $ihub | unique')
+            fi
 
             # Choose the tests that match the labels
             tests=$(jq --null-input --compact-output --argjson allTests "${allTests}" --argjson chosenTests "${chosenTests}" '$allTests | map(select(. as $test | $chosenTests | index($test)))')
@@ -213,7 +225,6 @@ jobs:
         env:
           GCX_VERSION: 1.0.0
           GCX_SHA256: c88c65958d19d83dc3a192a2a5037e08307a9c776019f24249b89f369c9c4d41
-          GRAFANA_CLOUD_STACK: helmchart
         run: |
           tarball="gcx_${GCX_VERSION}_linux_amd64.tar.gz"
           url="https://github.com/grafana/gcx/releases/download/v${GCX_VERSION}/${tarball}"
@@ -223,7 +234,6 @@ jobs:
           tar -xzf "${tarball}" gcx
           sudo install -m 0755 gcx /usr/local/bin/gcx
           gcx --version
-          echo "GRAFANA_SERVER=https://${GRAFANA_CLOUD_STACK}.grafana.net" >> "${GITHUB_ENV}"
 
       - name: Run test
         env:

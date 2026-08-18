@@ -8,6 +8,9 @@
 CLUSTER := $(shell yq eval '.cluster.name' test-plan.yaml)
 SCRIPTS := ../scripts
 
+export GRAFANA_CLOUD_STACK := helmchart
+export GRAFANA_SERVER := https://$(GRAFANA_CLOUD_STACK).grafana.net
+
 HELM_TEST ?= helm-test
 
 .PHONY: run-test run-test-direnv
