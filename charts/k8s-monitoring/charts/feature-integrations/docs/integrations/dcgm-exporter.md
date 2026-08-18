@@ -3,6 +3,14 @@
 <!-- textlint-disable terminology -->
 ## Values
 
+### General Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| collector | string | `""` | The collector to assign this instance to. When empty, the feature-level `integrations.collector` is used. |
+| jobLabel | string | `"integrations/dcgm-exporter"` | The value of the job label for scraped metrics |
+| name | string | `""` | Name for this DCGM Exporter instance. |
+
 ### Discovery Settings
 
 | Key | Type | Default | Description |
@@ -12,13 +20,6 @@
 | labelSelectors | object | `{}` | Discover DCGM Exporter instances based on label selectors. At least one is required. |
 | metrics.portName | string | `"metrics"` | Name of the port to scrape metrics from. |
 | namespaces | list | `[]` | Namespaces to look for DCGM Exporter instances in. Will automatically look for DCGM Exporter instances in all namespaces unless specified here |
-
-### General Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| jobLabel | string | `"integrations/dcgm-exporter"` | The value of the job label for scraped metrics |
-| name | string | `""` | Name for this DCGM Exporter instance. |
 
 ### Metrics Settings
 

@@ -3,6 +3,14 @@
 <!-- textlint-disable terminology -->
 ## Values
 
+### General Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| collector | string | `""` | The collector to assign this instance to. When empty, the feature-level `integrations.collector` is used. |
+| jobLabel | string | `"integration/istio"` | The value of the job label for scraped metrics and logs |
+| name | string | `""` | Name for this Istio integration instance. |
+
 ### Istiod Metrics Settings
 
 | Key | Type | Default | Description |
@@ -18,13 +26,6 @@
 | istiodMetrics.serviceName | string | `"istiod"` | The name of the Istiod Kubernetes service. |
 | istiodMetrics.tuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | istiodMetrics.tuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
-
-### General Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| jobLabel | string | `"integration/istio"` | The value of the job label for scraped metrics and logs |
-| name | string | `""` | Name for this Istio integration instance. |
 
 ### Sidecar Metrics Settings
 

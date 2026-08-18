@@ -133,6 +133,54 @@ tests:
                   clustering:
                     enabled: true
 
+  - it: requires clustering on a collector assigned to an integration instance
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        prom: {type: prometheus, url: "http://prom:9090"}
+      integrations:
+        collector: alloy-metrics
+        alloy:
+          instances:
+            - name: alloy
+              collector: alloy-metrics-2
+              labelSelectors:
+                app.kubernetes.io/name: alloy
+      collectors:
+        alloy-metrics: {presets: [clustered, statefulset]}
+        alloy-metrics-2: {}
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Service Integrations feature requires clustering to be enabled on the alloy-metrics-2 collector.
+            Please set:
+            collectors:
+              alloy-metrics-2:
+                presets: [clustered]
+            OR
+              alloy-metrics-2:
+                alloy:
+                  clustering:
+                    enabled: true
+
+  - it: does not require clustering on an auto-selected collector with integrations
+    set:
+      cluster: {name: test-cluster}
+      destinations:
+        prom: {type: prometheus, url: "http://prom:9090"}
+      # No integrations.collector and no per-instance collector: the collector is auto-selected,
+      # so clustering is not validated (preserving behavior from before per-instance routing).
+      integrations:
+        alloy:
+          instances:
+            - name: alloy
+              labelSelectors:
+                app.kubernetes.io/name: alloy
+      collectors:
+        alloy-metrics: {presets: [daemonset]}
+    asserts:
+      - notFailedTemplate: {}
+
   - it: does not require clustering on a singleton collector with integrations
     set:
       cluster: {name: test-cluster}

@@ -22,8 +22,8 @@
 {{- define "collectors.validate.featuresEnabled" }}
 {{- $collectorsUtilized := list }}
 {{- range $featureKey := include "features.list.enabled" . | fromYamlArray }}
-  {{- $assignedCollector := include "collectors.getCollectorForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) }}
-  {{- $collectorsUtilized = append $collectorsUtilized $assignedCollector }}
+  {{- $assignedCollectors := include "collectors.getCollectorsForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) | fromYamlArray }}
+  {{- $collectorsUtilized = concat $collectorsUtilized $assignedCollectors }}
 {{- end }}
 
 {{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Route integration instances to different collectors by setting collector on each instance. (#2616) (@TylerHelmuth)
 *   Fix the Prometheus destination so the cluster label honors `cluster.nameFrom`. (#2963) (@TylerHelmuth)
 *   Cluster Metrics: when `kubeScheduler.discoveryMode` is `eks-proxy`, collect the EKS Control Plane resource metrics (`kube_pod_resource_request` and `kube_pod_resource_limit`). (#2977)
 
