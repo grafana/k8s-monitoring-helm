@@ -1,0 +1,34 @@
+---
+# A simple workload that pushes log lines to the Loki Logs Receiver's push API,
+# exercising the loki.source.api receiver opened by the lokiLogsReceiver feature.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: log-source
+  namespace: default
+  labels:
+    app: log-source
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: log-source
+  template:
+    metadata:
+      labels:
+        app: log-source
+    spec:
+      containers:
+        - name: log-pusher
+          image: curlimages/curl:8.10.1
+          args:
+            - /bin/sh
+            - -c
+            - |
+              while true; do
+                curl -sS -XPOST \
+                  -H "Content-Type: text/plain" \
+                  --data-binary "level=INFO log line from loki-logs-receiver example" \
+                  "http://k8smon-alloy-receiver.default.svc:3500/loki/api/v1/raw"
+                sleep 5
+              done
