@@ -3,6 +3,14 @@
 <!-- textlint-disable terminology -->
 ## Values
 
+### General Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| collector | string | `""` | The collector to assign this instance to. When empty, the feature-level `integrations.collector` is used. |
+| jobLabel | string | `"integrations/cert-manager"` | The value of the job label for scraped metrics and logs |
+| name | string | `""` | Name for this cert-manager instance. |
+
 ### Discovery Settings
 
 | Key | Type | Default | Description |
@@ -12,13 +20,6 @@
 | labelSelectors | object | `{}` | Discover cert-manager instances based on label selectors. At least one is required. |
 | metrics.portName | string | `"http-metrics"` | Name of the port to scrape metrics from. |
 | namespaces | list | `[]` | Namespaces to look for cert-manager instances. Will automatically look for cert-manager instances in all namespaces unless specified here |
-
-### General Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| jobLabel | string | `"integrations/cert-manager"` | The value of the job label for scraped metrics and logs |
-| name | string | `""` | Name for this cert-manager instance. |
 
 ### Metric Processing Settings
 

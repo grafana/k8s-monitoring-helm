@@ -115,6 +115,237 @@ tests:
           path: data["config.alloy"]
           pattern: alloy_integration "integration"
 
+  - it: assigns integration instances to their per-instance collectors
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      selfReporting: {enabled: false}
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prom.prom.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+        alloy-metrics-2:
+          presets: [clustered, statefulset]
+      integrations:
+        collector: alloy-metrics
+        alloy:
+          instances:
+            # inherits the feature-level collector (alloy-metrics)
+            - name: alloy-a
+              labelSelectors:
+                app.kubernetes.io/name: alloy-a
+            # overrides to a different collector
+            - name: alloy-b
+              collector: alloy-metrics-2
+              labelSelectors:
+                app.kubernetes.io/name: alloy-b
+    asserts:
+      # document 0 is the alloy-metrics collector, document 1 is alloy-metrics-2 (sorted alphabetically)
+      - documentIndex: 0
+        matchRegex:
+          path: data["config.alloy"]
+          pattern: alloy_integration_discovery "alloy_a"
+      - documentIndex: 0
+        notMatchRegex:
+          path: data["config.alloy"]
+          pattern: alloy_integration_discovery "alloy_b"
+      - documentIndex: 1
+        matchRegex:
+          path: data["config.alloy"]
+          pattern: alloy_integration_discovery "alloy_b"
+      - documentIndex: 1
+        notMatchRegex:
+          path: data["config.alloy"]
+          pattern: alloy_integration_discovery "alloy_a"
+
+  - it: allows omitting the feature-level collector when each instance sets its own
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      selfReporting: {enabled: false}
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prom.prom.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+        alloy-metrics-2:
+          presets: [clustered, statefulset]
+      integrations:
+        alloy:
+          instances:
+            - name: alloy-a
+              collector: alloy-metrics
+              labelSelectors:
+                app.kubernetes.io/name: alloy-a
+            - name: alloy-b
+              collector: alloy-metrics-2
+              labelSelectors:
+                app.kubernetes.io/name: alloy-b
+    asserts:
+      - documentIndex: 0
+        matchRegex:
+          path: data["config.alloy"]
+          pattern: alloy_integration_discovery "alloy_a"
+      - documentIndex: 1
+        matchRegex:
+          path: data["config.alloy"]
+          pattern: alloy_integration_discovery "alloy_b"
+
+  - it: does not require an integrations collector for a log-parsing-only instance
+    template: validations.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prom.prom.svc:9090/api/v1/write
+        loki:
+          type: loki
+          url: http://loki.loki.svc:3100/loki/api/v1/push
+      podLogsViaLoki:
+        enabled: true
+        collector: alloy-logs
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+      # No feature-level integrations.collector is set on purpose.
+      integrations:
+        mysql:
+          instances:
+            # metrics instance with its own collector
+            - name: db-a
+              collector: alloy-metrics
+              exporter:
+                dataSourceName: "root:password@db-a:3306/"
+              logs: {enabled: false}
+            # log-parsing-only instance: metrics disabled, no collector needed
+            - name: db-b
+              metrics: {enabled: false}
+              exporter:
+                dataSourceName: "root:password@db-b:3306/"
+              logs:
+                enabled: true
+                labelSelectors:
+                  app.kubernetes.io/name: db-b
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: does not clustering-check a log-parsing-only instance's collector
+    template: validations.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prom.prom.svc:9090/api/v1/write
+        loki:
+          type: loki
+          url: http://loki.loki.svc:3100/loki/api/v1/push
+      podLogsViaLoki:
+        enabled: true
+        collector: alloy-logs
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+      integrations:
+        mysql:
+          instances:
+            # metrics instance on a clustered collector
+            - name: db-a
+              collector: alloy-metrics
+              exporter:
+                dataSourceName: "root:password@db-a:3306/"
+              logs: {enabled: false}
+            # log-parsing-only instance whose collector points at a non-clustered
+            # daemonset; it attaches to Pod Logs, so it must not be clustering-checked
+            - name: db-b
+              collector: alloy-logs
+              metrics: {enabled: false}
+              exporter:
+                dataSourceName: "root:password@db-b:3306/"
+              logs:
+                enabled: true
+                labelSelectors:
+                  app.kubernetes.io/name: db-b
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: fails when an instance names a disabled or missing collector
+    template: validations.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prom.prom.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+        alloy-metrics-2:
+          presets: [clustered, statefulset]
+      integrations:
+        collector: alloy-metrics
+        alloy:
+          instances:
+            - name: alloy-a
+              labelSelectors:
+                app.kubernetes.io/name: alloy-a
+            - name: alloy-b
+              collector: does-not-exist
+              labelSelectors:
+                app.kubernetes.io/name: alloy-b
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Service Integrations feature has an instance "alloy-b" of type "alloy" assigned to collector "does-not-exist", but that collector does not exist or is disabled.
+            Please assign it to one of the enabled collectors:
+              collector: alloy-metrics or alloy-metrics-2
+            See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/README.md for more details.
+
+  - it: fails when an instance inherits a disabled or missing feature-level collector
+    template: validations.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prom:
+          type: prometheus
+          url: http://prom.prom.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+        disabled-one:
+          enabled: false
+      integrations:
+        collector: disabled-one
+        alloy:
+          instances:
+            - name: alloy
+              labelSelectors:
+                app.kubernetes.io/name: alloy
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Service Integrations feature wants to use a collector named "disabled-one", but that collector does not exist or is disabled.
+            Please assign one by setting the following:
+            integrations:
+              collector: alloy-metrics
+            See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/README.md for more details.
+
   - it: works with multiple metrics-only integrations
     template: alloy-config.yaml
     set:
