@@ -281,6 +281,8 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{- $collectors := list -}}
 {{- if eq .featureKey "integrations" -}}
 {{- $collectors = include "collectors.integrations.assignedCollectors" . | fromYamlArray -}}
+{{- else if eq .featureKey "profiling" -}}
+{{- $collectors = include "collectors.profiling.assignedCollectors" . | fromYamlArray -}}
 {{- end -}}
 {{- if not $collectors -}}
 {{- $collectorName := include "collectors.getCollectorForFeature" . | trim -}}
