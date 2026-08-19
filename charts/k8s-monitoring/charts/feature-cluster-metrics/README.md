@@ -254,6 +254,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kubeScheduler.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | kubeScheduler.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. An empty list means keep all. |
 | kubeScheduler.port | int | `10259` | Port number used by the Kube Scheduler, set by `--secure-port`. Only used when `discoveryMode` is "pod". |
+| kubeScheduler.resourceMetrics | bool | `false` | Collect the EKS Control Plane resource metrics ( `kube_pod_resource_requests` and `kube_pod_resource_limits`). Only used when `discoveryMode` is "eks-proxy". Because of the high metric volume, this is served from a separate endpoint by AWS: `/apis/metrics.eks.amazonaws.com/v1/ksh/container/resourcemetrics`. |
 | kubeScheduler.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kube Scheduler. Overrides `global.scrapeInterval`. |
 | kubeScheduler.scrapeTimeout | string | `10s` | The timeout for scraping Kube Scheduler metrics. Overrides `global.scrapeTimeout`. |
 | kubeScheduler.selectorLabel | string | `"component=kube-scheduler"` | Selector label. Only used when `discoveryMode` is "pod". |

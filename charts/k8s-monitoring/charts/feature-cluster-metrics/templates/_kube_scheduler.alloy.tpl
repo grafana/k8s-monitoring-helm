@@ -10,7 +10,10 @@ discovery.relabel "kube_scheduler" {
   targets = [{
     __address__      = {{ .Values.global.kubernetesAPIService | default "kubernetes.default.svc.cluster.local:443" | quote }},
     __metrics_path__ = "/apis/metrics.eks.amazonaws.com/v1/ksh/container/metrics",
-  }]
+  }{{- if .Values.kubeScheduler.resourceMetrics }}, {
+    __address__      = {{ .Values.global.kubernetesAPIService | default "kubernetes.default.svc.cluster.local:443" | quote }},
+    __metrics_path__ = "/apis/metrics.eks.amazonaws.com/v1/ksh/container/resourcemetrics",
+  }{{- end }}]
 {{- if .Values.kubeScheduler.extraDiscoveryRules }}
 {{ .Values.kubeScheduler.extraDiscoveryRules | indent 2 }}
 {{- end }}

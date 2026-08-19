@@ -3,6 +3,7 @@
 ## Unreleased
 
 *   Fix the Prometheus destination so the cluster label honors `cluster.nameFrom`. (#2963) (@TylerHelmuth)
+*   Cluster Metrics: add a `kubeScheduler.resourceMetrics` option to collect the EKS Control Plane resource metrics (`kube_pod_resource_requests` and `kube_pod_resource_limits`) from the separate `/apis/metrics.eks.amazonaws.com/v1/ksh/container/resourcemetrics` endpoint when using `kubeScheduler.discoveryMode: eks-proxy`. (#2977)
 
 ## 4.4.0
 
