@@ -1,0 +1,233 @@
+# Upgrade guide
+
+This page lists the breaking changes introduced in each major version of the chart and how to migrate between them. The
+most recent version is listed first.
+
+## Version 4.0
+
+v4.0 introduces several significant changes to the chart configuration values. Refer to the migration
+[documentation](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/helm-chart-config/helm-chart/migrate-helm-chart/)
+for strategies to migrate from v3. You can also use the
+[migration utility](https://github.com/grafana/k8s-monitoring-helm-migrator) to automatically convert your v3 values
+file to v4 format.
+
+### Destinations converted to map
+
+Destinations are now defined as a map instead of a list. Each destination is given a name as its key.
+
+Before (v3):
+
+```yaml
+destinations:
+  - type: prometheus
+    url: https://prometheus.example.com/api/prom/push
+```
+
+After (v4):
+
+```yaml
+destinations:
+  myPrometheus:
+    type: prometheus
+    url: https://prometheus.example.com/api/prom/push
+```
+
+### Collectors converted to map
+
+Named Alloy instances (e.g. `alloy-metrics`, `alloy-logs`) have been replaced by a `collectors` map. You can now
+define collectors with any name.
+
+Before (v3):
+
+```yaml
+alloy-metrics:
+  enabled: true
+alloy-singleton:
+  enabled: true
+```
+
+After (v4):
+
+```yaml
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-singleton: {}
+```
+
+### Prometheus Operator Object CRDs removed
+
+Prometheus Operator Object CRDs (ServiceMonitor, PodMonitor, Probe) are no longer bundled with this chart. If you use
+the `prometheusOperatorObjects` feature, you must install the CRDs separately before deploying the chart:
+
+```shell
+helm upgrade --install --repo https://prometheus-community.github.io/helm-charts prometheus-operator-crds
+```
+
+### Pod logs features rebuilt
+
+The pod logs features have been rebuilt. The `labelsToKeep` option has been removed, and the features have been split
+into `podLogsViaLoki` and `podLogsViaOpenTelemetry` to better match destination types.
+
+The default for `onlyGatherNewLogLines` has changed from `false` to `true`. This means Alloy will only gather new log
+lines instead of reading from the beginning of log files. This was done because frequent restarts of the Alloy pods
+would cause massive spikes of historical log gathering if not paired with
+[collector storage](docs/examples/collector-storage) for maintaining log file positions. This also can cause some logs
+to be missed, if they were running before Alloy was ready. To restore the previous behavior, set
+`onlyGatherNewLogLines: false` in your pod logs feature configuration:
+
+```yaml
+podLogsViaLoki:
+  onlyGatherNewLogLines: false
+```
+
+### Telemetry services extracted
+
+Supplemental telemetry services (kube-state-metrics, Node Exporter, OpenCost, Kepler, Windows Exporter) have been
+extracted from feature charts into their own `telemetryServices` subchart. These are now configured under the
+`telemetryServices` section. This splits the values for configuring the way those services are deployed from the Alloy
+configuration that will utilize them.
+
+Before (v3):
+
+```yaml
+clusterMetrics:
+  enabled: true
+  kube-state-metrics:
+    # Deployment configuration *and* collector configuration
+  node-exporter:
+    # Deployment configuration *and* collector configuration
+  windows-exporter:
+    # Deployment configuration *and* collector configuration
+  kepler:
+    # Deployment configuration *and* collector configuration
+  opencost:
+    # Deployment configuration *and* collector configuration
+```
+
+After (v4):
+
+```yaml
+clusterMetrics:
+  enabled: true
+  kube-state-metrics:
+    # Collector configuration only
+
+hostMetrics:
+  linuxHosts:
+    enabled: true
+    # Collector configuration only
+  windowsHosts:
+    enabled: true
+    # Collector configuration only
+  energyMetrics:
+    enabled: true
+    # Collector configuration only
+costMetrics:
+  enabled: true
+  # Collector configuration only
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+    # Deployment configuration only
+  node-exporter:
+    deploy: true
+    # Deployment configuration only
+  windows-exporter:
+    deploy: true
+    # Deployment configuration only
+  kepler:
+    deploy: true
+    # Deployment configuration only
+  opencost:
+    deploy: true
+    # Deployment configuration only
+```
+
+### Cluster Metrics feature split
+
+The Cluster Metrics feature has been split into three features:
+
+<!--alex disable hostesses-hosts-->
+*   `clusterMetrics` only gathering metrics about the Kubernetes cluster, using sources including Kubelet, cAdvisor,
+    kube-state-metrics, and the control plane.
+*   `hostMetrics` gathers metrics about the Kubernetes nodes, using sources including Node Exporter for Linux hosts,
+    Windows Exporter for Windows hosts, and Kepler for energy metrics.
+*   `costMetrics` gathers metrics about the cost of running the Kubernetes cluster, using OpenCost.
+<!--alex enable hostesses-hosts-->
+
+### Pod Logs feature split
+
+The Pod Logs feature has been split into three features:
+
+*   `podLogsViaLoki` gathers Pod logs via the file system, using the Loki format. This was previously the `podLogs`
+    feature, using `gatherMethod: volumes`.
+*   `podLogsViaOpenTelemetry` gathers Pod logs via the file system, using the OpenTelemetry format. This was previously
+    the `podLogs` feature, using `gatherMethod: filelog`.
+*   `podLogsViaKubernetesAPI` gathers Pod logs in the Loki format by streaming them from the Kubernetes API server. This
+    was previously the `podLogs` feature, using `gatherMethod: kubernetesAPI`.
+
+## Version 3.5
+
+### Native histogram scraping turned off by default
+
+Version 3.5.7 added the Alloy v1.11.0 upgrade, which changed the default of `scrape_native_histograms` on
+`prometheus.scrape` components from `true` to `false`. To expose this, the chart added a global toggle
+`global.scrapeNativeHistograms`, which also defaults to `false`. Clusters that relied on native histograms being
+scraped implicitly in earlier chart versions will stop receiving them after upgrading.
+
+To restore the previous behavior, set:
+
+```yaml
+global:
+  scrapeNativeHistograms: true
+```
+
+The chart automatically prepends `PrometheusProto` to `global.scrapeProtocols` when this is enabled, since
+`PrometheusProto` is the only protocol that can carry native histograms.
+
+## Version 3.4
+
+<!--alex disable hook-->
+<!--alex disable hooks-->
+### Alloy no longer deployed by hooks
+
+Version 3.3 deployed the Alloy instances during a post-install Helm hook. This caused problems where Alloy instances
+were not handled properly when running upgrades or when using deployment tools like ArgoCD.
+
+When upgrading to v3.4 or later, the Alloy resources will no longer be deployed by Helm hooks, but the upgrade may fail
+with this message:
+
+```text
+Error: UPGRADE FAILED: Unable to continue with update: Alloy "k8smon-alloy-metrics" in namespace "default" exists and cannot be imported into the current release: invalid ownership metadata; label validation error: missing key "app.kubernetes.io/managed-by": must be set to "Helm"; annotation validation error: missing key "meta.helm.sh/release-name": must be set to "k8smon"; annotation validation error: missing key "meta.helm.sh/release-namespace": must be set to "default"
+```
+
+To resolve this, when you run the upgrade, use the `--take-ownership` flag which will update the Alloy resources to be
+properly managed by Helm again.
+
+## Version 3.0
+
+### Alloy Operator
+
+v3.0 introduces the use of the [Alloy Operator](https://github.com/grafana/alloy-operator) to manage the creation and
+lifecycle of Alloy instances. When upgrading from v2.0 to v3.0 or later, you may need to install the Alloy CRD.
+
+To do this, run the following command:
+
+```shell
+kubectl apply -f https://github.com/grafana/alloy-operator/releases/latest/download/collectors.grafana.com_alloy.yaml
+```
+
+### Pod Logs
+
+v3.0 also moves the `pod` and `k8s.pod.name` fields from labels to structured metadata in the pod logs feature. If your
+logs destination does not support structured metadata, you may not see these labels on your logs.
+
+## Version 2.1
+
+Version 2.1 was re-versioned to be 3.0. If you are on 2.1, please upgrade to 3.0.
+
+## Version 2.0
+
+v2 introduces some significant changes to the chart configuration values. Refer to the migration [documentation](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/helm-chart-config/helm-chart/migrate-helm-chart/) for tools and strategies to migrate from v1.
