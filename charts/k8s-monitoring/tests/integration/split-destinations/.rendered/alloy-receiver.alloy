@@ -285,8 +285,8 @@ otelcol.processor.transform "alltraces" {
   trace_statements {
     context = "resource"
     statements = [
-      `set(attributes["cluster"], "split-destinations-cluster")`,
-      `set(attributes["k8s.cluster.name"], "split-destinations-cluster")`,
+      `set(attributes["cluster"], "split-destinations-cluster") where attributes["cluster"] == nil`,
+      `set(attributes["k8s.cluster.name"], "split-destinations-cluster") where attributes["k8s.cluster.name"] == nil`,
       `delete_key(attributes, "process.pid")`,
       `delete_key(attributes, "process.parent_pid")`,
       `delete_key(attributes, "process.executable.path")`,
@@ -452,8 +452,8 @@ otelcol.processor.transform "productiontraces" {
   trace_statements {
     context = "resource"
     statements = [
-      `set(attributes["cluster"], "split-destinations-cluster")`,
-      `set(attributes["k8s.cluster.name"], "split-destinations-cluster")`,
+      `set(attributes["cluster"], "split-destinations-cluster") where attributes["cluster"] == nil`,
+      `set(attributes["k8s.cluster.name"], "split-destinations-cluster") where attributes["k8s.cluster.name"] == nil`,
       `delete_key(attributes, "process.pid")`,
       `delete_key(attributes, "process.parent_pid")`,
       `delete_key(attributes, "process.executable.path")`,

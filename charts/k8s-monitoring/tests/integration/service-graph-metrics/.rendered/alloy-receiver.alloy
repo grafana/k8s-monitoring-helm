@@ -278,8 +278,8 @@ otelcol.processor.transform "localtempo" {
   trace_statements {
     context = "resource"
     statements = [
-      `set(attributes["cluster"], "service-graph-metrics-test")`,
-      `set(attributes["k8s.cluster.name"], "service-graph-metrics-test")`,
+      `set(attributes["cluster"], "service-graph-metrics-test") where attributes["cluster"] == nil`,
+      `set(attributes["k8s.cluster.name"], "service-graph-metrics-test") where attributes["k8s.cluster.name"] == nil`,
       `delete_key(attributes, "process.pid")`,
       `delete_key(attributes, "process.parent_pid")`,
       `delete_key(attributes, "process.executable.path")`,

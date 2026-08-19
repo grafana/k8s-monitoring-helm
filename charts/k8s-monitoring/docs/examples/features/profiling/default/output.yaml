@@ -1103,7 +1103,7 @@ data:
     } // declare "profiling"
     profiling "feature" {
       profiles_destinations = [
-        pyroscope.write.pyroscope.receiver,
+        pyroscope.relabel.pyroscope.receiver,
       ]
     }
     
@@ -1112,6 +1112,22 @@ data:
     
     
     // Destination: pyroscope (pyroscope)
+    pyroscope.relabel "pyroscope" {
+      rule {
+        source_labels = ["cluster"]
+        regex         = "^$"
+        target_label  = "cluster"
+        replacement   = "profiling-cluster"
+      }
+      rule {
+        source_labels = ["k8s_cluster_name"]
+        regex         = "^$"
+        target_label  = "k8s_cluster_name"
+        replacement   = "profiling-cluster"
+      }
+      forward_to = [pyroscope.write.pyroscope.receiver]
+    } // pyroscope.relabel "pyroscope"
+    
     pyroscope.write "pyroscope" {
       endpoint {
         url = "http://pyroscope.pyroscope.svc:4040"
@@ -1123,11 +1139,6 @@ data:
         min_backoff_period = "500ms"
         max_backoff_period = "5m"
         max_backoff_retries = "10"
-      }
-    
-      external_labels = {
-        "cluster" = "profiling-cluster",
-        "k8s_cluster_name" = "profiling-cluster",
       }
     } // pyroscope.write "pyroscope"
 ---

@@ -285,8 +285,8 @@ otelcol.processor.transform "traces_service" {
   trace_statements {
     context = "resource"
     statements = [
-      `set(attributes["cluster"], "external-secrets-example-cluster")`,
-      `set(attributes["k8s.cluster.name"], "external-secrets-example-cluster")`,
+      `set(attributes["cluster"], "external-secrets-example-cluster") where attributes["cluster"] == nil`,
+      `set(attributes["k8s.cluster.name"], "external-secrets-example-cluster") where attributes["k8s.cluster.name"] == nil`,
       `delete_key(attributes, "process.pid")`,
       `delete_key(attributes, "process.parent_pid")`,
       `delete_key(attributes, "process.executable.path")`,

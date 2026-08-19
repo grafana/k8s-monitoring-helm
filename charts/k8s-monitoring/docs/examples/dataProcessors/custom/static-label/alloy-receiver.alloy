@@ -202,7 +202,7 @@ pyroscope.relabel "static_label_out_profiles_pyroscope" {
   forward_to = [pyroscope.relabel.static_label_pyroscope_gate_profiles_pyroscope.receiver]
 }
 pyroscope.relabel "static_label_pyroscope_gate_profiles_pyroscope" {
-  forward_to = [pyroscope.write.pyroscope.receiver]
+  forward_to = [pyroscope.relabel.pyroscope.receiver]
   rule {
     source_labels = ["selected_destinations"]
     regex         = "(^|.*,)pyroscope(,.*|$)"
@@ -294,6 +294,22 @@ prometheus.remote_write "prometheus" {
 } // prometheus.remote_write "prometheus"
 
 // Destination: pyroscope (pyroscope)
+pyroscope.relabel "pyroscope" {
+  rule {
+    source_labels = ["cluster"]
+    regex         = "^$"
+    target_label  = "cluster"
+    replacement   = "static-label"
+  }
+  rule {
+    source_labels = ["k8s_cluster_name"]
+    regex         = "^$"
+    target_label  = "k8s_cluster_name"
+    replacement   = "static-label"
+  }
+  forward_to = [pyroscope.write.pyroscope.receiver]
+} // pyroscope.relabel "pyroscope"
+
 pyroscope.write "pyroscope" {
   endpoint {
     url = "http://pyroscope.pyroscope.svc:4040"
@@ -305,11 +321,6 @@ pyroscope.write "pyroscope" {
     min_backoff_period = "500ms"
     max_backoff_period = "5m"
     max_backoff_retries = "10"
-  }
-
-  external_labels = {
-    "cluster" = "static-label",
-    "k8s_cluster_name" = "static-label",
   }
 } // pyroscope.write "pyroscope"
 
@@ -326,8 +337,8 @@ otelcol.processor.transform "tempo" {
   trace_statements {
     context = "resource"
     statements = [
-      `set(attributes["cluster"], "static-label")`,
-      `set(attributes["k8s.cluster.name"], "static-label")`,
+      `set(attributes["cluster"], "static-label") where attributes["cluster"] == nil`,
+      `set(attributes["k8s.cluster.name"], "static-label") where attributes["k8s.cluster.name"] == nil`,
       `delete_key(attributes, "process.pid")`,
       `delete_key(attributes, "process.parent_pid")`,
       `delete_key(attributes, "process.executable.path")`,

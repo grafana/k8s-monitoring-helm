@@ -60,6 +60,6 @@ prometheus_metrics_receiver "feature" {
   {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
   {{- $collectorValues := (include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml) }}
   {{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}
-  {{- include "collectors.requireExtraPort" (dict "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.prometheusMetricsReceiver.port "portName" "metrics" "portProtocol" "TCP") }}
+  {{- include "collectors.requireExtraPort" (dict "collectorName" $collectorName "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.prometheusMetricsReceiver.port "portName" "metrics" "portProtocol" "TCP") }}
 {{- end -}}
 {{- end -}}

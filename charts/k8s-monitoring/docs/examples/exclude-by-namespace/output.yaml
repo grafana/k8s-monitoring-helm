@@ -1372,7 +1372,7 @@ data:
     } // declare "profiling"
     profiling "feature" {
       profiles_destinations = [
-        pyroscope.write.pyroscope.receiver,
+        pyroscope.relabel.pyroscope.receiver,
       ]
     }
     
@@ -1403,6 +1403,22 @@ data:
     } // loki.write "loki"
     
     // Destination: pyroscope (pyroscope)
+    pyroscope.relabel "pyroscope" {
+      rule {
+        source_labels = ["cluster"]
+        regex         = "^$"
+        target_label  = "cluster"
+        replacement   = "exclude-by-namespace-cluster"
+      }
+      rule {
+        source_labels = ["k8s_cluster_name"]
+        regex         = "^$"
+        target_label  = "k8s_cluster_name"
+        replacement   = "exclude-by-namespace-cluster"
+      }
+      forward_to = [pyroscope.write.pyroscope.receiver]
+    } // pyroscope.relabel "pyroscope"
+    
     pyroscope.write "pyroscope" {
       endpoint {
         url = "http://pyroscope.pyroscope.svc:4040"
@@ -1414,11 +1430,6 @@ data:
         min_backoff_period = "500ms"
         max_backoff_period = "5m"
         max_backoff_retries = "10"
-      }
-    
-      external_labels = {
-        "cluster" = "exclude-by-namespace-cluster",
-        "k8s_cluster_name" = "exclude-by-namespace-cluster",
       }
     } // pyroscope.write "pyroscope"
 ---
@@ -2653,8 +2664,8 @@ data:
       trace_statements {
         context = "resource"
         statements = [
-          `set(attributes["cluster"], "exclude-by-namespace-cluster")`,
-          `set(attributes["k8s.cluster.name"], "exclude-by-namespace-cluster")`,
+          `set(attributes["cluster"], "exclude-by-namespace-cluster") where attributes["cluster"] == nil`,
+          `set(attributes["k8s.cluster.name"], "exclude-by-namespace-cluster") where attributes["k8s.cluster.name"] == nil`,
           `delete_key(attributes, "process.pid")`,
           `delete_key(attributes, "process.parent_pid")`,
           `delete_key(attributes, "process.executable.path")`,

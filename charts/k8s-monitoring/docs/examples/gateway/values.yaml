@@ -1,0 +1,61 @@
+---
+cluster:
+  name: gateway
+
+destinations:
+  prometheus:
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+    extraLabels:
+      gateway: "check"
+  loki:
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+    extraLabels:
+      gateway: "check"
+  tempo:
+    type: otlp
+    url: tempo.tempo.svc:4317
+    tls:
+      insecure: true
+      insecureSkipVerify: true
+    metrics: {enabled: false}
+    logs: {enabled: false}
+    traces: {enabled: true}
+    extraResourceAttributes:
+      gateway: "check"
+  pyroscope:
+    type: pyroscope
+    url: http://pyroscope.pyroscope.svc:4040
+    extraLabels:
+      gateway: "check"
+
+prometheusMetricsReceiver:
+  enabled: true
+
+lokiLogsReceiver:
+  enabled: true
+
+profilesReceiver:
+  enabled: true
+
+applicationObservability:
+  enabled: true
+  receivers:
+    otlp:
+      grpc: {enabled: true}
+  metrics: {enabled: false}
+  logs: {enabled: false}
+  traces: {enabled: true}
+
+collectors:
+  alloyGateway:
+    presets: [deployment]
+    extraService:
+      enabled: true
+      fullname: gateway

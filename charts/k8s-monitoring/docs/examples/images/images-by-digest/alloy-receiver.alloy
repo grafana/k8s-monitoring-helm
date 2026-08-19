@@ -258,8 +258,8 @@ otelcol.processor.transform "tempo" {
   trace_statements {
     context = "resource"
     statements = [
-      `set(attributes["cluster"], "images-by-digest-example-cluster")`,
-      `set(attributes["k8s.cluster.name"], "images-by-digest-example-cluster")`,
+      `set(attributes["cluster"], "images-by-digest-example-cluster") where attributes["cluster"] == nil`,
+      `set(attributes["k8s.cluster.name"], "images-by-digest-example-cluster") where attributes["k8s.cluster.name"] == nil`,
       `delete_key(attributes, "process.pid")`,
       `delete_key(attributes, "process.parent_pid")`,
       `delete_key(attributes, "process.executable.path")`,

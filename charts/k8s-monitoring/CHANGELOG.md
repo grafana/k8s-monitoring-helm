@@ -8,6 +8,7 @@
 *   Route integration instances to different collectors by setting collector on each instance. (#2616) (@TylerHelmuth)
 *   Route the Profiling sub-features to different collectors by setting collector on each sub-feature. (#2949) (@TylerHelmuth)
 *   When collector is experimental, use the new `prometheus.exporter.static` for selfReporting. (#2923) (@petewall)
+*   The OTLP and Pyroscope destiations no longer overwrite the cluster labels if they're already set. (#2985) (@petewall)
 
 ## 4.4.0
 
