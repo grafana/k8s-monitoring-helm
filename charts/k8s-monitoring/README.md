@@ -416,6 +416,7 @@ details:
 |  | hostMetrics(feature-host-metrics) | 1.0.0 |
 |  | integrations(feature-integrations) | 1.0.0 |
 |  | kubernetesManifests(feature-kubernetes-manifests) | 1.0.0 |
+|  | lokiLogsReceiver(feature-loki-logs-receiver) | 1.0.0 |
 |  | nodeLogs(feature-node-logs) | 1.0.0 |
 |  | podLogsObjects(feature-pod-logs-objects) | 1.0.0 |
 |  | podLogsViaKubernetesApi(feature-pod-logs-via-kubernetes-api) | 1.0.0 |
@@ -573,6 +574,15 @@ details:
 | kubernetesManifests.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | kubernetesManifests.destinations | list | `[]` | The destinations where Kubernetes manifest logs will be sent. If empty, all logs-capable destinations will be used. |
 | kubernetesManifests.enabled | bool | `false` | Enable collecting Kubernetes manifest files and modifications. |
+
+### Features - Loki Logs Receiver
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| lokiLogsReceiver | object | Disabled | Loki Logs Receiver enables receiving logs over the Loki API from applications. Requires a destination that supports logs. To see the valid options, please see the [Loki Logs Receiver feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-loki-logs-receiver). |
+| lokiLogsReceiver.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
+| lokiLogsReceiver.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
+| lokiLogsReceiver.enabled | bool | `false` | Enable receiving logs over the Loki API. |
 
 ### Features - Node Logs
 

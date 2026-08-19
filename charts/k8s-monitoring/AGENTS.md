@@ -86,6 +86,7 @@ From the repository root, prefix paths with `charts/k8s-monitoring/`.
 | `feature-node-logs` | `nodeLogs` |
 | `feature-pod-logs` | `podLogs` |
 | `feature-pod-logs-via-kubernetes-api` | `podLogsViaKubernetesApi` |
+| `feature-loki-logs-receiver` | `lokiLogsReceiver` |
 | `feature-profiling` | `profiling` |
 | `feature-profiles-receiver` | `profilesReceiver` |
 | `feature-prometheus-operator-objects` | `prometheusOperatorObjects` |
@@ -117,6 +118,7 @@ charts/feature-{name}/
 -   `feature-host-metrics` - Gathers Kubernetes Host metrics
 -   `feature-integrations` - Service integrations
 -   `feature-kubernetes-manifests` - Gathers Kubernetes resource manifests and changes as logs
+-   `feature-loki-logs-receiver` - Kubernetes Observability feature for receiving logs over the Loki API.
 -   `feature-node-logs` - Kubernetes Observability feature for gathering Cluster Node logs.
 -   `feature-pod-logs-objects` - Kubernetes Observability feature for gathering logs using PodLogs objects.
 -   `feature-pod-logs-via-kubernetes-api` - Kubernetes Observability feature for gathering Pod logs by streaming them from the Kubernetes API.

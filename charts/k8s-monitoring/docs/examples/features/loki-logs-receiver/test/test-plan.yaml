@@ -1,0 +1,49 @@
+# yamllint disable rule:line-length
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: loki-logs-receiver
+
+subject:
+  releaseName: k8smon
+  path: ../../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: log-source.yaml
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Loki
+              type: loki
+              url: http://loki-gateway.loki.svc:8080
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: loki-logs-receiver-cluster
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+          queries:
+            # Logs pushed to the receiver arrive at Loki, carrying the static
+            # "source" label added by the feature's logProcessingRules.
+            - query: sum(count_over_time({cluster="$CLUSTER", source="loki-logs-receiver"}[1h]))
+              type: logql
