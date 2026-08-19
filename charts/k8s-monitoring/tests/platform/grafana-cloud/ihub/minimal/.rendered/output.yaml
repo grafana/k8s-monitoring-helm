@@ -35,7 +35,7 @@ kind: ServiceAccount
 automountServiceAccountToken: true
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-8.1.3
+    helm.sh/chart: kube-state-metrics-8.3.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -145,7 +145,7 @@ data:
     } // remote.kubernetes.secret "alloy_remote_cfg"
     
     remotecfg {
-      id = string.format("k8smon-%s-%s-%s-%s", "instrumentation-hub-test-cluster", "default", "alloy", sys.env("K8S_NODE_NAME"))
+      id = string.format("k8smon-%s-%s-%s-%s", "ihub-e2e-minimal", "default", "alloy", sys.env("K8S_NODE_NAME"))
       url = "https://fleet-management-prod-008.grafana.net"
       basic_auth {
         username = convert.nonsensitive(remote.kubernetes.secret.alloy_remote_cfg.data["GRAFANA_CLOUD_FLEET_MGMT_USER"])
@@ -159,10 +159,10 @@ data:
       }
       poll_frequency = "30s"
       attributes = {
-        "cluster" = "instrumentation-hub-test-cluster",
+        "cluster" = "ihub-e2e-minimal",
         "namespace" = "default",
         "platform" = "kubernetes",
-        "presets" = "root,host-network,host-storage,host-cgroup,host-tracefs,clustered,service-discovery,filesystem-log-reader,otel-receiver,daemonset",
+        "presets" = "large,root,host-network,host-storage,host-cgroup,host-tracefs,clustered,service-discovery,filesystem-log-reader,otel-receiver,daemonset",
         "release" = "k8smon",
         "service-discovery" = "true",
         "source" = "k8s-monitoring",
@@ -262,7 +262,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-8.1.3
+    helm.sh/chart: kube-state-metrics-8.3.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -544,7 +544,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-8.1.3
+    helm.sh/chart: kube-state-metrics-8.3.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -916,7 +916,7 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-8.1.3
+    helm.sh/chart: kube-state-metrics-8.3.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -987,6 +987,40 @@ spec:
     app.kubernetes.io/name: k8s-injection-controller
     app.kubernetes.io/instance: k8smon
     control-plane: controller-manager
+---
+# Source: k8s-monitoring/templates/receiver-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-otel-receiver
+  labels:
+    
+    helm.sh/chart: k8s-monitoring-4.4.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: networking
+spec:
+  type: ClusterIP
+  selector:
+    
+    app.kubernetes.io/name: alloy
+    app.kubernetes.io/instance: k8smon-alloy
+  internalTrafficPolicy: Cluster
+  ports:
+    - name: http-metrics
+      port: 12345
+      targetPort: 12345
+      protocol: "TCP"
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+      appProtocol: grpc
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+      protocol: TCP
+      appProtocol: http
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/node-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -1236,7 +1270,7 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-8.1.3
+    helm.sh/chart: kube-state-metrics-8.3.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -1256,7 +1290,7 @@ spec:
   template:
     metadata:
       labels:        
-        helm.sh/chart: kube-state-metrics-8.1.3
+        helm.sh/chart: kube-state-metrics-8.3.0
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: kube-state-metrics
@@ -1393,7 +1427,7 @@ spec:
             - name: WATCH_NAMESPACE
               value: "default"
             - name: ALLOWED_CONFIGMAP_WRITERS
-              value: "system:serviceaccount:$(POD_NAMESPACE):k8smon-alloy"
+              value: "system:serviceaccount:$(POD_NAMESPACE):grafana-cloud-alloy"
           ports:
             - name: health
               containerPort: 8081
@@ -1576,7 +1610,7 @@ spec:
         fieldRef:
           fieldPath: metadata.name
     - name: CLUSTER_NAME
-      value: instrumentation-hub-test-cluster
+      value: ihub-e2e-minimal
     - name: GCLOUD_RW_API_KEY
       valueFrom:
         secretKeyRef:
@@ -1604,7 +1638,13 @@ spec:
       - mountPath: /sys/kernel/tracing
         name: tracefs
       varlog: true
-    resources: {}
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 2Gi
+      requests:
+        cpu: 500m
+        memory: 1Gi
     securityContext:
       allowPrivilegeEscalation: true
       capabilities:

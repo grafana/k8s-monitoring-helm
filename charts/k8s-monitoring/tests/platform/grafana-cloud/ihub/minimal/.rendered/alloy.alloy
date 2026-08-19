@@ -4,7 +4,7 @@ remote.kubernetes.secret "alloy_remote_cfg" {
 } // remote.kubernetes.secret "alloy_remote_cfg"
 
 remotecfg {
-  id = string.format("k8smon-%s-%s-%s-%s", "instrumentation-hub-test-cluster", "default", "alloy", sys.env("K8S_NODE_NAME"))
+  id = string.format("k8smon-%s-%s-%s-%s", "ihub-e2e-minimal", "default", "alloy", sys.env("K8S_NODE_NAME"))
   url = "https://fleet-management-prod-008.grafana.net"
   basic_auth {
     username = convert.nonsensitive(remote.kubernetes.secret.alloy_remote_cfg.data["GRAFANA_CLOUD_FLEET_MGMT_USER"])
@@ -18,10 +18,10 @@ remotecfg {
   }
   poll_frequency = "30s"
   attributes = {
-    "cluster" = "instrumentation-hub-test-cluster",
+    "cluster" = "ihub-e2e-minimal",
     "namespace" = "default",
     "platform" = "kubernetes",
-    "presets" = "root,host-network,host-storage,host-cgroup,host-tracefs,clustered,service-discovery,filesystem-log-reader,otel-receiver,daemonset",
+    "presets" = "large,root,host-network,host-storage,host-cgroup,host-tracefs,clustered,service-discovery,filesystem-log-reader,otel-receiver,daemonset",
     "release" = "k8smon",
     "service-discovery" = "true",
     "source" = "k8s-monitoring",
