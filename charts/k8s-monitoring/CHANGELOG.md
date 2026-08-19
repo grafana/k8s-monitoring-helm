@@ -4,11 +4,12 @@
 
 *   Add the `prometheusMetricsReceiver` feature, which opens a receiver so applications can push Prometheus-formatted metrics to the in-cluster Alloy, which then forwards them to any metrics-capable destination. (#2179) (@petewall)
 *   Add the `lokiLogsReceiver` feature, which opens a Loki API receiver so applications can push Loki-formatted logs to the in-cluster Alloy, which then forwards them to any logs-capable destination. (#2179) (@petewall)
+*   Route integration instances to different collectors by setting collector on each instance. (#2616) (@TylerHelmuth)
+*   Route the Profiling sub-features to different collectors by setting collector on each sub-feature. (#2949) (@TylerHelmuth)
+*   When collector is experimental, use the new `prometheus.exporter.static` for selfReporting. (#2923) (@petewall)
 
 ## 4.4.1
 
-*   Route integration instances to different collectors by setting collector on each instance. (#2616) (@TylerHelmuth)
-*   Route the Profiling sub-features to different collectors by setting collector on each sub-feature. (#2949) (@TylerHelmuth)
 *   Fix the Prometheus destination so the cluster label honors `cluster.nameFrom`. (#2963) (@TylerHelmuth)
 *   Cluster Metrics: when `kubeScheduler.discoveryMode` is `eks-proxy`, collect the EKS Control Plane resource metrics (`kube_pod_resource_request` and `kube_pod_resource_limit`). (#2977)
 *   Host Metrics: honor `windowsHosts.scheme` and `windowsHosts.bearerTokenFile` when scraping an external Windows Exporter. (#2961) (@petewall)
