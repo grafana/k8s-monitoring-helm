@@ -1875,47 +1875,40 @@ data:
       ]
     }
     // Self Reporting
-    prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
-      set_collectors = ["textfile"]
-      textfile {
-        directory = "/etc/release-info"
-      }
-    } // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
+    prometheus.exporter.static "kubernetes_monitoring_telemetry" {
+      text = `
     
-    discovery.relabel "kubernetes_monitoring_telemetry" {
-      targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
-      rule {
-        target_label = "instance"
-        action = "replace"
-        replacement = "k8smon"
-      }
-      rule {
-        target_label = "job"
-        action = "replace"
-        replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-      }
-    } // discovery.relabel "kubernetes_monitoring_telemetry"
+    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_build_info gauge
+    grafana_kubernetes_monitoring_build_info{version="4.4.0", namespace="default"} 1
+    # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_feature_info gauge
+    grafana_kubernetes_monitoring_feature_info{feature="clusterMetrics", sources="controlPlane,kubelet,kubeletResource,cadvisor,kube-state-metrics", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="linuxHosts", source="node-exporter", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="windowsHosts", source="windows-exporter", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="alloy", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="nodeLogs", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="podLogsViaLoki", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="podLogsViaKubernetesApi", version="1.0.0"} 1
+    # HELP grafana_kubernetes_monitoring_collector_info A metric to report the collectors of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_collector_info gauge
+    grafana_kubernetes_monitoring_collector_info{kind="daemonset", name="alloy", presets="clustered,filesystem-log-reader,daemonset", type="alloy"} 1
+    # EOF
+      `
+    } // prometheus.exporter.static "kubernetes_monitoring_telemetry"
     
     prometheus.scrape "kubernetes_monitoring_telemetry" {
       job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-      targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+      targets    = prometheus.exporter.static.kubernetes_monitoring_telemetry.targets
       scrape_interval = "60s"
       clustering {
         enabled = true
       }
-      forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-    } // prometheus.scrape "kubernetes_monitoring_telemetry"
-    
-    prometheus.relabel "kubernetes_monitoring_telemetry" {
-      rule {
-        source_labels = ["__name__"]
-        regex = "grafana_kubernetes_monitoring_.*"
-        action = "keep"
-      }
       forward_to = [
         prometheus.remote_write.grafana_cloud_metrics.receiver,
       ]
-    } // prometheus.relabel "kubernetes_monitoring_telemetry"
+    } // prometheus.scrape "kubernetes_monitoring_telemetry"
     // Processor: ec2-tags (ec2Enrichment) — shared EC2 instance discovery
     discovery.ec2 "ec2_tags_instances" {
       region = "ap-northeast-2"
@@ -2920,10 +2913,6 @@ spec:
       create: false
     mounts:
       dockercontainers: true
-      extra:
-      - mountPath: /etc/release-info
-        name: release-info
-        readOnly: true
       varlog: true
     resources: {}
     securityContext:
@@ -2958,11 +2947,6 @@ spec:
     - effect: NoSchedule
       operator: Exists
     type: daemonset
-    volumes:
-      extra:
-      - configMap:
-          name: k8smon-k8s-monitoring-release-info
-        name: release-info
   crds:
     create: false
   nameOverride: alloy
