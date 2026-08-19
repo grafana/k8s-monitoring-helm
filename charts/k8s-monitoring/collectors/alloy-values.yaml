@@ -28,6 +28,24 @@ extraConfig: ""
 # @section -- General
 includeDestinations: []
 
+# Deploy an additional Kubernetes Service that points at this collector's Pods, giving applications and SDKs a
+# predictable, stable endpoint regardless of the collector's workload type (DaemonSet, Deployment, or StatefulSet). The
+# Service exposes the Alloy listen port along with any ports opened by presets such as `otel-receiver`. It inherits the
+# collector's `service` settings (type, annotations, and so on).
+extraService:
+  # -- Deploy an additional Kubernetes Service that points at this collector's Pods.
+  # @section -- Extra Service
+  enabled: false
+
+  # -- The suffix used to build the Service name, which is rendered as `<release name>-<name>`. Ignored when `fullname`
+  # is set.
+  # @section -- Extra Service
+  name: alloy
+
+  # -- The exact name for the Service. When set, this value is used verbatim instead of `<release name>-<name>`.
+  # @section -- Extra Service
+  fullname: ""
+
 # Remote configuration from a remote config server.
 remoteConfig:
   # -- Enable fetching configuration from a remote config server.

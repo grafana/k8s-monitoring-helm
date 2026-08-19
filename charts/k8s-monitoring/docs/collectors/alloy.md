@@ -47,6 +47,14 @@ Settings for each primary Alloy instance come from several potential sources, in
 | liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. Requires stability level to be set to "experimental". |
 | presets | list | `[]` | The list of Alloy configuration presets, which sets common Alloy configurations. Multiple presets can be set, with the latter ones overwriting former ones. See https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/docs/collectors/presets/ for the list of available presets. |
 
+### Extra Service
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| extraService.enabled | bool | `false` | Deploy an additional Kubernetes Service that points at this collector's Pods. |
+| extraService.fullname | string | `""` | The exact name for the Service. When set, this value is used verbatim instead of `<release name>-<name>`. |
+| extraService.name | string | `"alloy"` | The suffix used to build the Service name, which is rendered as `<release name>-<name>`. Ignored when `fullname` is set. |
+
 ### Logging
 
 | Key | Type | Default | Description |
