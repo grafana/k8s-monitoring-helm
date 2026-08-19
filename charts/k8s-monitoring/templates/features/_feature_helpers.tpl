@@ -16,6 +16,7 @@
 - podLogsViaOpenTelemetry
 - podLogsViaKubernetesApi
 - podLogsObjects
+- lokiLogsReceiver
 - profilesReceiver
 - profiling
 - prometheusOperatorObjects

@@ -1,0 +1,68 @@
+// Feature: Loki Logs Receiver
+declare "loki_logs_receiver" {
+  argument "logs_destinations" {
+    comment = "Must be a list of log destinations where received logs should be forwarded to"
+  }
+
+  loki.source.api "default" {
+    http {
+      listen_address = "0.0.0.0"
+      listen_port = 3500
+    }
+    use_incoming_timestamp = false
+
+    forward_to = [loki.relabel.default.receiver]
+  } // loki.source.api "default"
+
+  loki.relabel "default" {
+    // Add a static label to all received logs so they can be differentiated downstream
+    rule {
+      target_label = "source"
+      replacement = "loki-logs-receiver"
+    }
+
+    forward_to = argument.logs_destinations.value
+  } // loki.relabel "default"
+} // declare "loki_logs_receiver"
+loki_logs_receiver "feature" {
+  logs_destinations = [
+    loki.write.loki.receiver,
+  ]
+}
+
+
+
+
+
+// Destination: loki (loki)
+otelcol.exporter.loki "loki" {
+  forward_to = [loki.write.loki.receiver]
+} // otelcol.exporter.loki "loki"
+
+loki.write "loki" {
+  endpoint {
+    url = "http://loki.loki.svc:3100/loki/api/v1/push"
+    retry_on_http_429 = true
+    tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+      password = remote.kubernetes.secret.loki.data["password"]
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+  external_labels = {
+    "cluster" = "loki-logs-receiver-cluster",
+    "k8s_cluster_name" = "loki-logs-receiver-cluster",
+  }
+} // loki.write "loki"
+
+remote.kubernetes.secret "loki" {
+  name      = "loki-k8smon-k8s-monitoring"
+  namespace = "default"
+} // remote.kubernetes.secret "loki"
+

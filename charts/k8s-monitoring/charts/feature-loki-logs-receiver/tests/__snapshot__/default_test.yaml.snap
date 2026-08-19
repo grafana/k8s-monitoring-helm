@@ -1,0 +1,18 @@
+should render the default configuration:
+  1: |
+    |-
+      declare "loki_logs_receiver" {
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where received logs should be forwarded to"
+        }
+
+        loki.source.api "default" {
+          http {
+            listen_address = "0.0.0.0"
+            listen_port = 3500
+          }
+          use_incoming_timestamp = false
+
+          forward_to = argument.logs_destinations.value
+        } // loki.source.api "default"
+      } // declare "loki_logs_receiver"
