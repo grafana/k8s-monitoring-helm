@@ -424,6 +424,7 @@ details:
 |  | podLogsViaOpenTelemetry(feature-pod-logs-via-opentelemetry) | 1.0.0 |
 |  | profilesReceiver(feature-profiles-receiver) | 1.0.0 |
 |  | profiling(feature-profiling) | 1.0.0 |
+|  | prometheusMetricsReceiver(feature-prometheus-metrics-receiver) | 1.0.0 |
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
 |  | windowsEventLogs(feature-windows-event-logs) | 1.0.0 |
 |  | telemetryServices(telemetry-services) | 1.0.0 |
@@ -646,6 +647,15 @@ details:
 | profiling.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | profiling.destinations | list | `[]` | The destinations where profiles will be sent. If empty, all profiles-capable destinations will be used. |
 | profiling.enabled | bool | `false` | Enable gathering profiles from applications. |
+
+### Features - Prometheus Metrics Receiver
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| prometheusMetricsReceiver | object | Disabled | Prometheus Metrics Receiver enables receiving Prometheus metrics from applications via remote write. Requires a destination that supports metrics. To see the valid options, please see the [Prometheus Metrics Receiver feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-prometheus-metrics-receiver). |
+| prometheusMetricsReceiver.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
+| prometheusMetricsReceiver.destinations | list | `[]` | The destinations where metrics will be sent. If empty, all metrics-capable destinations will be used. |
+| prometheusMetricsReceiver.enabled | bool | `false` | Enable receiving Prometheus metrics from applications. |
 
 ### Features - Prometheus Operator Objects
 

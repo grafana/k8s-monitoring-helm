@@ -1,0 +1,23 @@
+---
+cluster:
+  name: prometheus-metrics-receiver
+
+destinations:
+  prometheus:
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+
+prometheusMetricsReceiver:
+  enabled: true
+  collector: alloy-receiver
+  metricProcessingRules: |
+    // Stamp every received metric with a label identifying that it arrived via the
+    // remote write receiver. Any prometheus.relabel rule block is valid here.
+    rule {
+      target_label = "source"
+      replacement = "prometheus-remote-write"
+    }
+
+collectors:
+  alloy-receiver:
+    presets: [deployment]
