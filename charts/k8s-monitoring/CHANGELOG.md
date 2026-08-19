@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Add the `lokiLogsReceiver` feature, which opens a Loki API receiver so applications can push Loki-formatted logs to the in-cluster Alloy, which then forwards them to any logs-capable destination. (#2179) (@petewall)
 *   Route integration instances to different collectors by setting collector on each instance. (#2616) (@TylerHelmuth)
 *   Route the Profiling sub-features to different collectors by setting collector on each sub-feature. (#2949) (@TylerHelmuth)
 *   Fix the Prometheus destination so the cluster label honors `cluster.nameFrom`. (#2963) (@TylerHelmuth)

@@ -1,0 +1,32 @@
+should render the correct configuration:
+  1: |
+    |-
+      declare "loki_logs_receiver" {
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where received logs should be forwarded to"
+        }
+
+        loki.source.api "default" {
+          http {
+            listen_address = "0.0.0.0"
+            listen_port = 3500
+          }
+          use_incoming_timestamp = false
+          labels = {
+            source = "loki-logs-receiver",
+          }
+
+          forward_to = [loki.relabel.default.receiver]
+        } // loki.source.api "default"
+
+        loki.relabel "default" {
+          // Keep only log entries from the "prod" environment
+          rule {
+            source_labels = ["env"]
+            regex        = "prod"
+            action       = "keep"
+          }
+
+          forward_to = argument.logs_destinations.value
+        } // loki.relabel "default"
+      } // declare "loki_logs_receiver"
