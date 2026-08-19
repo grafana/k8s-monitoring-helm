@@ -42,11 +42,13 @@
 {{- if eq (include "features.selfReporting.enabled" .) "true" }}
   {{- $collectorName := include "features.selfReporting.chooseCollector" . | trim }}
   {{- $collectorValues := (include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml) }}
-  {{- $configMapName := printf "%s-release-info" (include "helper.fullname" .) }}
-  {{- $extraMounts := deepCopy (dig "alloy" "mounts" "extra" list $collectorValues) }}
-  {{- $extraMounts = append $extraMounts (dict "name" "release-info" "mountPath" "/etc/release-info" "readOnly" true) }}
-  {{- $extraVolumes := deepCopy (dig "controller" "volumes" "extra" list $collectorValues) }}
-  {{- $extraVolumes = append $extraVolumes (dict "name" "release-info" "configMap" (dict "name" $configMapName)) }}
+  {{- $stabilityLevel := dig "alloy" "stabilityLevel" "generally-available" $collectorValues }}
+  {{- if ne $stabilityLevel "experimental" }}
+    {{- $configMapName := printf "%s-release-info" (include "helper.fullname" .) }}
+    {{- $extraMounts := deepCopy (dig "alloy" "mounts" "extra" list $collectorValues) }}
+    {{- $extraMounts = append $extraMounts (dict "name" "release-info" "mountPath" "/etc/release-info" "readOnly" true) }}
+    {{- $extraVolumes := deepCopy (dig "controller" "volumes" "extra" list $collectorValues) }}
+    {{- $extraVolumes = append $extraVolumes (dict "name" "release-info" "configMap" (dict "name" $configMapName)) }}
 collectors:
   {{ $collectorName }}:
     alloy:
@@ -55,12 +57,19 @@ collectors:
     controller:
       volumes:
         extra: {{ $extraVolumes | toYaml | nindent 10 }}
+  {{- end }}
 {{- end }}
 {{- end }}
+
 {{- define "features.selfReporting.validate" }}{{ end }}
+
 {{- define "features.selfReporting.include" }}
 {{- if eq (include "features.selfReporting.enabled" .) "true" }}
-{{- $destinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "prometheus" "filter" $.Values.selfReporting.destinations) | fromYamlArray -}}
+  {{- $destinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "prometheus" "filter" $.Values.selfReporting.destinations) | fromYamlArray -}}
+  {{- $collectorName := include "features.selfReporting.chooseCollector" . | trim }}
+  {{- $collectorValues := (include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml) }}
+  {{- $stabilityLevel := dig "alloy" "stabilityLevel" "generally-available" $collectorValues }}
+  {{- if ne $stabilityLevel "experimental" }}
 
 // Self Reporting
 prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
@@ -104,6 +113,26 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
     {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "selfReporting" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
   ]
 } // prometheus.relabel "kubernetes_monitoring_telemetry"
+  {{- else }}
+
+// Self Reporting
+prometheus.exporter.static "kubernetes_monitoring_telemetry" {
+  text = `{{ include "features.selfReporting.metrics" . | nindent 0 }}
+  `
+} // prometheus.exporter.static "kubernetes_monitoring_telemetry"
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = prometheus.exporter.static.kubernetes_monitoring_telemetry.targets
+  scrape_interval = {{ .Values.selfReporting.scrapeInterval | default .Values.global.scrapeInterval | quote}}
+  clustering {
+    enabled = true
+  }
+  forward_to = [
+    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "selfReporting" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
+  ]
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
+  {{- end }}
 {{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "selfReporting" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") }}
 {{- end }}
 {{- end }}
