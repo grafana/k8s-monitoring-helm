@@ -81,6 +81,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | ebpf.annotationSelectors | object | `{}` | Select pods to profile based on pod annotations. Example: `color: "green"` will select pods with the annotation `color="green"`. Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or `color="green"`. |
 | ebpf.annotations.enable | string | `"profiles.grafana.com/cpu.ebpf.enabled"` | The annotation action for enabling or disabling collecting of profiles with eBPF. |
+| ebpf.collector | string | `""` | The collector to which this profiling type is assigned. When empty, the feature-level `profiling.collector` is used. |
 | ebpf.demangle | string | `"none"` | C++ demangle mode. Available options are: none, simplified, templates, full |
 | ebpf.dotnetEnabled | bool | `true` | A flag to enable or disable .NET profiling. |
 | ebpf.enabled | bool | `false` | Gather profiles using eBPF |
@@ -109,6 +110,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | java.annotationSelectors | object | `{}` | Select pods to profile based on pod annotations. Example: `color: "green"` will select pods with the annotation `color="green"`. Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or `color="green"`. |
 | java.annotations.enable | string | `"enabled"` | The annotation action for enabling or disabling of Java profile collection. |
+| java.collector | string | `""` | The collector to which this profiling type is assigned. When empty, the feature-level `profiling.collector` is used. |
 | java.enabled | bool | `false` | Gather profiles by attaching async-profiler to the Java runtime. |
 | java.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
 | java.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Java profile sources. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
@@ -134,6 +136,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | pprof.annotations.portNumber | string | `"port"` | The annotation action for choosing the port number for scraping profiles of a given type. |
 | pprof.annotations.scheme | string | `"scheme"` | The annotation action for choosing the scheme for scraping profiles of a given type. |
 | pprof.bearerTokenFile | string | `"/var/run/secrets/kubernetes.io/serviceaccount/token"` | The bearer token file to use when scraping profiles. |
+| pprof.collector | string | `""` | The collector to which this profiling type is assigned. When empty, the feature-level `profiling.collector` is used. |
 | pprof.enabled | bool | `false` | Gather profiles by scraping pprof HTTP endpoints |
 | pprof.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
 | pprof.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
