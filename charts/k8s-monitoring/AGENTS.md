@@ -89,6 +89,7 @@ From the repository root, prefix paths with `charts/k8s-monitoring/`.
 | `feature-loki-logs-receiver` | `lokiLogsReceiver` |
 | `feature-profiling` | `profiling` |
 | `feature-profiles-receiver` | `profilesReceiver` |
+| `feature-prometheus-metrics-receiver` | `prometheusMetricsReceiver` |
 | `feature-prometheus-operator-objects` | `prometheusOperatorObjects` |
 
 Each feature follows a consistent structure:
@@ -126,6 +127,7 @@ charts/feature-{name}/
 -   `feature-pod-logs-via-opentelemetry` - Kubernetes Observability feature for gathering Pod logs.
 -   `feature-profiles-receiver` - Kubernetes Observability feature for receiving profiles.
 -   `feature-profiling` - Gathers profiles from eBPF, Java, and pprof sources.
+-   `feature-prometheus-metrics-receiver` - Kubernetes Observability feature for receiving Prometheus metrics.
 -   `feature-prometheus-operator-objects` - Gathers metrics using Prometheus Operator Objects
 -   `feature-windows-event-logs` - Kubernetes Observability feature for gathering Windows event logs.
 -   `telemetry-services` - Additional Deployments to generate observability telemetry data

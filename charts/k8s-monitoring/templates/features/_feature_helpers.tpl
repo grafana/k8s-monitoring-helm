@@ -18,6 +18,7 @@
 - podLogsObjects
 - lokiLogsReceiver
 - profilesReceiver
+- prometheusMetricsReceiver
 - profiling
 - prometheusOperatorObjects
 - selfReporting

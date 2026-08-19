@@ -2,6 +2,7 @@
 
 ## 4.5.0
 
+*   Add the `prometheusMetricsReceiver` feature, which opens a receiver so applications can push Prometheus-formatted metrics to the in-cluster Alloy, which then forwards them to any metrics-capable destination. (#2179) (@petewall)
 *   Add the `lokiLogsReceiver` feature, which opens a Loki API receiver so applications can push Loki-formatted logs to the in-cluster Alloy, which then forwards them to any logs-capable destination. (#2179) (@petewall)
 
 ## 4.4.1
