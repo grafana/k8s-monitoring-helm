@@ -16,28 +16,7 @@ tests:
       - matchSnapshot:
           path: data["module.alloy"]
 
-  - it: should scrape the EKS Control Plane resource metrics endpoint when eks-proxy and resourceMetrics are enabled
-    set:
-      testing: {enabled: true}
-      kubeScheduler:
-        enabled: true
-        discoveryMode: eks-proxy
-        resourceMetrics: true
-      kube-state-metrics:
-        enabled: false
-    asserts:
-      - isKind:
-          of: ConfigMap
-      - matchRegex:
-          path: data["module.alloy"]
-          pattern: '/apis/metrics\.eks\.amazonaws\.com/v1/ksh/container/metrics'
-      - matchRegex:
-          path: data["module.alloy"]
-          pattern: '/apis/metrics\.eks\.amazonaws\.com/v1/ksh/container/resourcemetrics'
-      - matchSnapshot:
-          path: data["module.alloy"]
-
-  - it: should not scrape the EKS Control Plane resource metrics endpoint by default
+  - it: should scrape the EKS Control Plane metrics and resource metrics endpoints when discoveryMode is eks-proxy
     set:
       testing: {enabled: true}
       kubeScheduler:
@@ -51,7 +30,7 @@ tests:
       - matchRegex:
           path: data["module.alloy"]
           pattern: '/apis/metrics\.eks\.amazonaws\.com/v1/ksh/container/metrics'
-      - notMatchRegex:
+      - matchRegex:
           path: data["module.alloy"]
           pattern: '/apis/metrics\.eks\.amazonaws\.com/v1/ksh/container/resourcemetrics'
       - matchSnapshot:
@@ -81,6 +60,9 @@ tests:
       - matchRegex:
           path: data["module.alloy"]
           pattern: '/apis/metrics\.eks\.amazonaws\.com/v1/ksh/container/metrics'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '/apis/metrics\.eks\.amazonaws\.com/v1/ksh/container/resourcemetrics'
       - matchRegex:
           path: data["module.alloy"]
           pattern: '/apis/metrics\.eks\.amazonaws\.com/v1/kcm/container/metrics'
