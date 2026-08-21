@@ -86,6 +86,7 @@ This defines the options for defining a destination for logs that use the Loki p
 | minBackoffPeriod | string | `"500ms"` | The minimum backoff period for the Loki destination. |
 | name | string | `""` | The name for this Loki destination. |
 | noProxy | string | `""` | Comma-separated list of IP addresses, CIDR notations, and domain names to exclude from proxying. |
+| overwriteClusterLabel | bool | `false` | If the cluster labels are already set, should this destination overwrite them? |
 | proxyConnectHeader | object | `{}` | Specifies headers to send to proxies during CONNECT requests. |
 | proxyFromEnvironment | bool | `false` | Use the proxy URL indicated by environment variables. |
 | proxyURL | string | `""` | HTTP proxy to send requests through. |

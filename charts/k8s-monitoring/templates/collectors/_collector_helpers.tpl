@@ -51,7 +51,7 @@
 {{- $newList | toYaml -}}
 {{- end }}
 
-{{/* Inputs: collectorValues (collector values), featureName (feature name), portNumber, portName, portProtocol */}}
+{{/* Inputs: collectorName (string), collectorValues (object, collector values), featureName (feature name), portNumber, portName, portProtocol */}}
 {{- define "collectors.requireExtraPort" }}
 {{- if eq (include "collectors.hasExtraPort" .) "false" }}
   {{- $msg := list "" }}
