@@ -3,10 +3,13 @@
 {{- define "destinations.pyroscope.alloy" }}
 {{- with .destination }}
 pyroscope.relabel {{ include "helper.alloy_name" $.destinationName | quote }} {
+{{- $overwriteClusterLabel := .overwriteClusterLabel }}
 {{- range $label := .clusterLabels }}
   rule {
+{{- if not $overwriteClusterLabel }}
     source_labels = [{{ include "escape_label" $label | quote }}]
     regex         = "^$"
+{{- end }}
     target_label  = {{ include "escape_label" $label | quote }}
     replacement   = {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }}
   }

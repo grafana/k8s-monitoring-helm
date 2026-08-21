@@ -5,9 +5,18 @@
 otelcol.exporter.loki {{ include "helper.alloy_name" $.destinationName | quote }} {
   forward_to = [{{ include "destinations.loki.alloy.loki.logs.target" (dict "destination" . "destinationName" $.destinationName) }}]
 } // otelcol.exporter.loki "{{ include "helper.alloy_name" $.destinationName }}"
-{{- if .logProcessingStages }}
+{{- if or (and .clusterLabels .overwriteClusterLabel) .logProcessingStages }}
 
 loki.process {{ include "helper.alloy_name" $.destinationName | quote }} {
+{{- if .clusterLabels }}
+  stage.static_labels {
+    values = {
+{{- range $label := .clusterLabels }}
+      {{ include "escape_label" $label | quote }} = {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }},
+{{- end }}
+    }
+  }
+{{- end }}
 {{ .logProcessingStages | indent 2 }}
   forward_to = [loki.write.{{ include "helper.alloy_name" $.destinationName }}.receiver]
 } // loki.process "{{ include "helper.alloy_name" $.destinationName }}"
@@ -153,6 +162,7 @@ loki.write {{ include "helper.alloy_name" $.destinationName | quote }} {
     max_backoff_period = {{ .maxBackoffPeriod | quote }}
     max_backoff_retries = {{ .maxBackoffRetries | quote }}
   }
+{{- if or (and .clusterLabels (not .overwriteClusterLabel)) .extraLabels .extraLabelsFrom }}
   external_labels = {
 {{- range $label := .clusterLabels }}
     {{ include "escape_label" $label | quote }} = {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }},
@@ -168,6 +178,7 @@ loki.write {{ include "helper.alloy_name" $.destinationName | quote }} {
   {{- end }}
 {{- end }}
   }
+{{- end }}
 {{- if .writeAheadLog.enabled }}
   wal {
     enabled = true
@@ -205,7 +216,7 @@ loki.write {{ include "helper.alloy_name" $.destinationName | quote }} {
 {{- end -}}
 
 {{- define "destinations.loki.alloy.loki.logs.target" }}
-{{- if .destination.logProcessingStages -}}
+{{- if (or .destination.logProcessingStages (and .destination.clusterLabels .destination.overwriteClusterLabel)) -}}
 loki.process.{{ include "helper.alloy_name" .destinationName }}.receiver
 {{- else -}}
 loki.write.{{ include "helper.alloy_name" .destinationName }}.receiver

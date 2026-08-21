@@ -1405,14 +1405,10 @@ data:
     // Destination: pyroscope (pyroscope)
     pyroscope.relabel "pyroscope" {
       rule {
-        source_labels = ["cluster"]
-        regex         = "^$"
         target_label  = "cluster"
         replacement   = "exclude-by-namespace-cluster"
       }
       rule {
-        source_labels = ["k8s_cluster_name"]
-        regex         = "^$"
         target_label  = "k8s_cluster_name"
         replacement   = "exclude-by-namespace-cluster"
       }
@@ -2664,8 +2660,8 @@ data:
       trace_statements {
         context = "resource"
         statements = [
-          `set(attributes["cluster"], "exclude-by-namespace-cluster") where attributes["cluster"] == nil`,
-          `set(attributes["k8s.cluster.name"], "exclude-by-namespace-cluster") where attributes["k8s.cluster.name"] == nil`,
+          `set(attributes["cluster"], "exclude-by-namespace-cluster")`,
+          `set(attributes["k8s.cluster.name"], "exclude-by-namespace-cluster")`,
           `delete_key(attributes, "process.pid")`,
           `delete_key(attributes, "process.parent_pid")`,
           `delete_key(attributes, "process.executable.path")`,

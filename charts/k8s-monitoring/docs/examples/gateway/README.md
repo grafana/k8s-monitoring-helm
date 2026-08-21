@@ -39,6 +39,7 @@ destinations:
   tempo:
     type: otlp
     url: tempo.tempo.svc:4317
+    overwriteClusterLabel: false
     tls:
       insecure: true
       insecureSkipVerify: true
@@ -50,6 +51,7 @@ destinations:
   pyroscope:
     type: pyroscope
     url: http://pyroscope.pyroscope.svc:4040
+    overwriteClusterLabel: false
     extraLabels:
       gateway: "check"
 

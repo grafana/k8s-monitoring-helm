@@ -15,6 +15,24 @@
 {{/* Inputs: . (root object),  destination (string, name of destination), destinationName (name of this destination) */}}
 {{- define "destinations.otlp.alloy" }}
 {{- with .destination }}
+{{- $clusterLabelOTTL := list }}
+{{- $overwriteClusterLabel := .overwriteClusterLabel }}
+{{- range $label := .clusterLabels }}
+  {{- if $overwriteClusterLabel }}
+    {{- if $.Values.cluster.nameFrom }}
+      {{- $clusterLabelOTTL = append $clusterLabelOTTL (printf "string.format(`set(attributes[%%q], %%q)`, %s, %s)," ($label | quote) ($.Values.cluster.nameFrom)) }}
+    {{- else }}
+      {{- $clusterLabelOTTL = append $clusterLabelOTTL (printf "`set(attributes[%s], %s)`," ($label | quote) ($.Values.cluster.name | quote)) }}
+    {{- end }}
+  {{- else }}
+    {{- if $.Values.cluster.nameFrom }}
+      {{- $clusterLabelOTTL = append $clusterLabelOTTL (printf "string.format(`set(attributes[%%q], %%q) where attributes[%%q] == nil`, %s, %s, %s)," ($label | quote) ($.Values.cluster.nameFrom) ($label | quote)) }}
+    {{- else }}
+      {{- $clusterLabelOTTL = append $clusterLabelOTTL (printf "`set(attributes[%s], %s) where attributes[%s] == nil`," ($label | quote) ($.Values.cluster.name | quote) ($label | quote)) }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
 {{- if eq (include "destinations.otlp.supports_metrics" .) "true" }}
 otelcol.receiver.prometheus {{ include "helper.alloy_name" $.destinationName | quote }} {
   output {
@@ -111,14 +129,7 @@ otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | q
 {{- $resourceAttributesToRemove := include "destinations.otlp.resourceAttributes.removeList" (dict "destination" . "root" $) | fromYamlArray }}
   metric_statements {
     context = "resource"
-    statements = [
-{{- range $label := .clusterLabels }}
-{{- if $.Values.cluster.nameFrom }}
-      string.format(`set(attributes[%q], %q) where attributes[{{ $label | quote }}] == nil`, {{ $label | quote }}, {{ $.Values.cluster.nameFrom }}),
-{{- else }}
-      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }}) where attributes[{{ $label | quote }}] == nil`,
-{{- end }}
-{{- end }}
+    statements = [{{ (join "\n" $clusterLabelOTTL) | nindent 6 }}
 {{- range $key, $value := .extraResourceAttributes }}
       `set(attributes[{{ $key | quote }}], {{ $value | quote }})`,
 {{- end }}
@@ -158,14 +169,7 @@ otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | q
 
   metric_statements {
     context = "datapoint"
-    statements = [
-{{- range $label := .clusterLabels }}
-{{- if $.Values.cluster.nameFrom }}
-      string.format(`set(attributes[%q], %q) where attributes[{{ $label | quote }}] == nil`, {{ $label | quote }}, {{ $.Values.cluster.nameFrom }}),
-{{- else }}
-      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }}) where attributes[{{ $label | quote }}] == nil`,
-{{- end }}
-{{- end }}
+    statements = [{{ (join "\n" $clusterLabelOTTL) | nindent 6 }}
 {{- range $datapointAttribute, $resourceAttribute := .processors.transform.metrics.datapointToResource }}
   {{- if $resourceAttribute }}
 {{- if or (eq $resourceAttribute "service.name") (eq $resourceAttribute "service.namespace") }}
@@ -191,14 +195,7 @@ otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | q
 {{- $resourceAttributesToRemove := include "destinations.otlp.resourceAttributes.removeList" (dict "destination" . "root" $) | fromYamlArray }}
   log_statements {
     context = "resource"
-    statements = [
-{{- range $label := .clusterLabels }}
-{{- if $.Values.cluster.nameFrom }}
-      string.format(`set(attributes[%q], %q) where attributes[{{ $label | quote }}] == nil`, {{ $label | quote }}, {{ $.Values.cluster.nameFrom }}),
-{{- else }}
-      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }}) where attributes[{{ $label | quote }}] == nil`,
-{{- end }}
-{{- end }}
+    statements = [{{ (join "\n" $clusterLabelOTTL) | nindent 6 }}
 {{- range $key, $value := .extraResourceAttributes }}
       `set(attributes[{{ $key | quote }}], {{ $value | quote }})`,
 {{- end }}
@@ -260,14 +257,7 @@ otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | q
 
   trace_statements {
     context = "resource"
-    statements = [
-{{- range $label := .clusterLabels }}
-{{- if $.Values.cluster.nameFrom }}
-      string.format(`set(attributes[%q], %q) where attributes[{{ $label | quote }}] == nil`, {{ $label | quote }}, {{ $.Values.cluster.nameFrom }}),
-{{- else }}
-      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }}) where attributes[{{ $label | quote }}] == nil`,
-{{- end }}
-{{- end }}
+    statements = [{{ (join "\n" $clusterLabelOTTL) | nindent 6 }}
 {{- range $key, $value := .extraResourceAttributes }}
       `set(attributes[{{ $key | quote }}], {{ $value | quote }})`,
 {{- end }}

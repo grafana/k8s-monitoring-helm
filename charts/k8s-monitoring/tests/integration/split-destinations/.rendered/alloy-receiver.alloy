@@ -285,8 +285,8 @@ otelcol.processor.transform "alltraces" {
   trace_statements {
     context = "resource"
     statements = [
-      `set(attributes["cluster"], "split-destinations-cluster") where attributes["cluster"] == nil`,
-      `set(attributes["k8s.cluster.name"], "split-destinations-cluster") where attributes["k8s.cluster.name"] == nil`,
+      `set(attributes["cluster"], "split-destinations-cluster")`,
+      `set(attributes["k8s.cluster.name"], "split-destinations-cluster")`,
       `delete_key(attributes, "process.pid")`,
       `delete_key(attributes, "process.parent_pid")`,
       `delete_key(attributes, "process.executable.path")`,
@@ -347,6 +347,12 @@ otelcol.exporter.loki "productionlogs" {
 } // otelcol.exporter.loki "productionlogs"
 
 loki.process "productionlogs" {
+  stage.static_labels {
+    values = {
+      "cluster" = "split-destinations-cluster",
+      "k8s_cluster_name" = "split-destinations-cluster",
+    }
+  }
   stage.match {
     selector = "{namespace!=\"production\"}"
     action   = "drop"
@@ -452,8 +458,8 @@ otelcol.processor.transform "productiontraces" {
   trace_statements {
     context = "resource"
     statements = [
-      `set(attributes["cluster"], "split-destinations-cluster") where attributes["cluster"] == nil`,
-      `set(attributes["k8s.cluster.name"], "split-destinations-cluster") where attributes["k8s.cluster.name"] == nil`,
+      `set(attributes["cluster"], "split-destinations-cluster")`,
+      `set(attributes["k8s.cluster.name"], "split-destinations-cluster")`,
       `delete_key(attributes, "process.pid")`,
       `delete_key(attributes, "process.parent_pid")`,
       `delete_key(attributes, "process.executable.path")`,

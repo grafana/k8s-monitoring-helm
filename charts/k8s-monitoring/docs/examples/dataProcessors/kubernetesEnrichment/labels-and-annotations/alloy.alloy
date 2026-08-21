@@ -1198,14 +1198,10 @@ prometheus.remote_write "prometheus" {
 // Destination: pyroscope (pyroscope)
 pyroscope.relabel "pyroscope" {
   rule {
-    source_labels = ["cluster"]
-    regex         = "^$"
     target_label  = "cluster"
     replacement   = "kubernetes-enrichment"
   }
   rule {
-    source_labels = ["k8s_cluster_name"]
-    regex         = "^$"
     target_label  = "k8s_cluster_name"
     replacement   = "kubernetes-enrichment"
   }
@@ -1239,8 +1235,8 @@ otelcol.processor.transform "tempo" {
   trace_statements {
     context = "resource"
     statements = [
-      `set(attributes["cluster"], "kubernetes-enrichment") where attributes["cluster"] == nil`,
-      `set(attributes["k8s.cluster.name"], "kubernetes-enrichment") where attributes["k8s.cluster.name"] == nil`,
+      `set(attributes["cluster"], "kubernetes-enrichment")`,
+      `set(attributes["k8s.cluster.name"], "kubernetes-enrichment")`,
       `delete_key(attributes, "process.pid")`,
       `delete_key(attributes, "process.parent_pid")`,
       `delete_key(attributes, "process.executable.path")`,
