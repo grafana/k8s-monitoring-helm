@@ -73,6 +73,11 @@ tests:
             # Control plane metrics via the EKS Control Plane Metrics API (clusterMetrics discoveryMode: eks-proxy)
             - query: scheduler_pending_pods{cluster="$clusterName", job="kube-scheduler"}
               type: promql
+            # Resource metrics from the separate .../ksh/container/resourcemetrics endpoint (#2977)
+            - query: kube_pod_resource_request{cluster="$clusterName", job="kube-scheduler"}
+              type: promql
+            - query: kube_pod_resource_limit{cluster="$clusterName", job="kube-scheduler"}
+              type: promql
             - query: workqueue_adds_total{cluster="$clusterName", job="kube-controller-manager"}
               type: promql
 
