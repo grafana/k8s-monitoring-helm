@@ -164,6 +164,145 @@ tests:
           path: data["config.alloy"]
           pattern: otelcol.receiver.loki.otlp.receiver
 
+  - it: injects the OTLP resource labels when OTLP is the only destination
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        otlp:
+          type: otlp
+          url: http://otlp.otlp.svc:4317
+          logs: {enabled: true}
+      clusterEvents:
+        enabled: true
+      collectors: {alloy-singleton: {}}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '"resources\.k8s\.object\.kind" = "kind"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '"resources\.k8s\.object\.name" = "name"'
+
+  - it: injects the OTLP resource labels when OTLP is the only selected destination
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.loki.svc:3100/api/push
+        otlp:
+          type: otlp
+          url: http://otlp.otlp.svc:4317
+          logs: {enabled: true}
+      clusterEvents:
+        enabled: true
+        destinations: [otlp]
+      collectors: {alloy-singleton: {}}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '"resources\.k8s\.object\.kind" = "kind"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '"resources\.k8s\.object\.name" = "name"'
+
+  - it: does not inject the OTLP resource labels for a Loki destination
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.loki.svc:3100/api/push
+      clusterEvents:
+        enabled: true
+      collectors: {alloy-singleton: {}}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: resources\.k8s\.object
+
+  - it: does not inject the OTLP resource labels when Loki and OTLP destinations are both used
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.loki.svc:3100/api/push
+        otlp:
+          type: otlp
+          url: http://otlp.otlp.svc:4317
+          logs: {enabled: true}
+      clusterEvents:
+        enabled: true
+        destinations: [loki, otlp]
+      collectors: {alloy-singleton: {}}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: resources\.k8s\.object
+
+  - it: does not inject the OTLP resource labels when autoConfigureOTLPLabels is false
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        otlp:
+          type: otlp
+          url: http://otlp.otlp.svc:4317
+          logs: {enabled: true}
+      clusterEvents:
+        enabled: true
+        autoConfigureOTLPLabels: false
+      collectors: {alloy-singleton: {}}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: resources\.k8s\.object
+
+  - it: lets user-specified labels take precedence over the injected OTLP labels
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        otlp:
+          type: otlp
+          url: http://otlp.otlp.svc:4317
+          logs: {enabled: true}
+      clusterEvents:
+        enabled: true
+        labels:
+          resources.k8s.object.kind: custom-kind
+      collectors: {alloy-singleton: {}}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '"resources\.k8s\.object\.kind" = "custom-kind"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '"resources\.k8s\.object\.name" = "name"'
+
   - it: requires clustering on the assigned collector when clustering is enabled
     template: validations.yaml
     set:
