@@ -159,6 +159,13 @@ otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | q
   metric_statements {
     context = "datapoint"
     statements = [
+{{- range $label := .clusterLabels }}
+{{- if $.Values.cluster.nameFrom }}
+      string.format(`set(attributes[%q], %q) where attributes[{{ $label | quote }}] == nil`, {{ $label | quote }}, {{ $.Values.cluster.nameFrom }}),
+{{- else }}
+      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }}) where attributes[{{ $label | quote }}] == nil`,
+{{- end }}
+{{- end }}
 {{- range $datapointAttribute, $resourceAttribute := .processors.transform.metrics.datapointToResource }}
   {{- if $resourceAttribute }}
 {{- if or (eq $resourceAttribute "service.name") (eq $resourceAttribute "service.namespace") }}
