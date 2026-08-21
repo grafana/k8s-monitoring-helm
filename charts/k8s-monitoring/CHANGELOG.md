@@ -9,6 +9,7 @@
 *   Fix the Prometheus destination so the cluster label honors `cluster.nameFrom`. (#2963) (@TylerHelmuth)
 *   Cluster Metrics: when `kubeScheduler.discoveryMode` is `eks-proxy`, collect the EKS Control Plane resource metrics (`kube_pod_resource_request` and `kube_pod_resource_limit`). (#2977)
 *   When collector is experimental, use the new `prometheus.exporter.static` for selfReporting. (#2923) (@petewall)
+*   Destinations now have the option to overwrite the cluster labels. Pyroscope and OTLP are enabled by default, maintaining existing behavior. (#2985) (@petewall)
 
 ## 4.4.0
 

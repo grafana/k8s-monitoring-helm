@@ -13,14 +13,158 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
+# Source: k8s-monitoring/templates/destination_secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "loki-k8smon-k8s-monitoring"
+  namespace: "default"
+type: Opaque
+data:
+  tenantId: "MQ=="
+  username: "bG9raQ=="
+  password: "bG9raXBhc3N3b3Jk"
+---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: k8smon-alloy-receiver
+  name: k8smon-alloygateway
   namespace: default
 data:
   config.alloy: |
+    // Feature: Application Observability
+    declare "application_observability" {
+      argument "metrics_destinations" {
+        comment = "Must be a list of metrics destinations where collected metrics should be forwarded to"
+      }
+    
+      argument "logs_destinations" {
+        comment = "Must be a list of log destinations where collected logs should be forwarded to"
+      }
+    
+      argument "traces_destinations" {
+        comment = "Must be a list of trace destinations where collected trace should be forwarded to"
+      }
+    
+      // OTLP Receiver
+      otelcol.receiver.otlp "receiver" {
+        grpc {
+          endpoint = "0.0.0.0:4317"
+          include_metadata = false
+          max_recv_msg_size = "4MiB"
+          read_buffer_size = "512KiB"
+          write_buffer_size = "32KiB"
+        }
+        debug_metrics {
+          disable_high_cardinality_metrics = true
+        }
+        output {
+          traces = [otelcol.processor.resourcedetection.default.input]
+        }
+      } // otelcol.receiver.otlp "receiver"
+    
+      // Resource Detection Processor
+      otelcol.processor.resourcedetection "default" {
+        detectors = ["env","system"]
+        override = true
+    
+        system {
+          hostname_sources = ["os"]
+        }
+    
+        output {
+          traces = [otelcol.processor.k8sattributes.default.input]
+        }
+      }
+    
+      // K8s Attributes Processor
+      otelcol.processor.k8sattributes "default" {
+        passthrough = false
+        extract {
+          metadata = ["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time"]
+        }
+        pod_association {
+          source {
+            from = "resource_attribute"
+            name = "k8s.pod.ip"
+          }
+        }
+        pod_association {
+          source {
+            from = "resource_attribute"
+            name = "k8s.pod.uid"
+          }
+        }
+        pod_association {
+          source {
+            from = "connection"
+          }
+        }
+    
+        output {
+          traces = [otelcol.processor.transform.default.input]
+        }
+      }
+    
+      // Transform Processor
+      otelcol.processor.transform "default" {
+        error_mode = "ignore"
+        trace_statements {
+          context = "span"
+          statements = [
+           "set_semconv_span_name(\"1.37.0\", \"original_span_name\")",
+          ]
+        }
+    
+        output {
+          traces = [otelcol.processor.batch.default.input]
+        }
+      }
+    
+      // Batch Processor
+      otelcol.processor.batch "default" {
+        send_batch_size = 8192
+        send_batch_max_size = 0
+        timeout = "2s"
+    
+        output {
+          traces = argument.traces_destinations.value
+        }
+      }
+    } // declare "application_observability"
+    application_observability "feature" {
+      metrics_destinations = [
+        otelcol.exporter.prometheus.prometheus.input,
+      ]
+      logs_destinations = [
+        otelcol.exporter.loki.loki.input,
+      ]
+      traces_destinations = [
+        otelcol.processor.attributes.tempo.input,
+      ]
+    }
+    // Feature: Loki Logs Receiver
+    declare "loki_logs_receiver" {
+      argument "logs_destinations" {
+        comment = "Must be a list of log destinations where received logs should be forwarded to"
+      }
+    
+      loki.source.api "default" {
+        http {
+          listen_address = "0.0.0.0"
+          listen_port = 3500
+        }
+        use_incoming_timestamp = false
+    
+        forward_to = argument.logs_destinations.value
+      } // loki.source.api "default"
+    } // declare "loki_logs_receiver"
+    loki_logs_receiver "feature" {
+      logs_destinations = [
+        loki.write.loki.receiver,
+      ]
+    }
     // Feature: Profiles Receiver
     declare "profiles_receiver" {
       argument "profiles_destinations" {
@@ -33,42 +177,176 @@ data:
           listen_port = "4040"
         }
     
-        forward_to = [pyroscope.relabel.default.receiver]
-      } // pyroscope.receive_http "default"
-    
-      pyroscope.relabel "default" {
-        rule {
-          target_label = "color"
-          replacement = "blue"
-        }
-    
         forward_to = argument.profiles_destinations.value
-      } // pyroscope.relabel "default"
+      } // pyroscope.receive_http "default"
     } // declare "profiles_receiver"
     profiles_receiver "feature" {
       profiles_destinations = [
-        pyroscope.relabel.pyro.receiver,
+        pyroscope.relabel.pyroscope.receiver,
       ]
     }
+    // Feature: Prometheus Metrics Receiver
+    declare "prometheus_metrics_receiver" {
+      argument "metrics_destinations" {
+        comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+      }
     
+      prometheus.receive_http "default" {
+        http {
+          listen_address = "0.0.0.0"
+          listen_port = "9090"
+        }
     
+        forward_to = argument.metrics_destinations.value
+      } // prometheus.receive_http "default"
+    } // declare "prometheus_metrics_receiver"
+    prometheus_metrics_receiver "feature" {
+      metrics_destinations = [
+        prometheus.remote_write.prometheus.receiver,
+      ]
+    }
+    // Self Reporting
+    prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
+      set_collectors = ["textfile"]
+      textfile {
+        directory = "/etc/release-info"
+      }
+    } // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
     
-    
-    
-    // Destination: pyro (pyroscope)
-    pyroscope.relabel "pyro" {
+    discovery.relabel "kubernetes_monitoring_telemetry" {
+      targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
       rule {
+        target_label = "instance"
+        action = "replace"
+        replacement = "k8smon"
+      }
+      rule {
+        target_label = "job"
+        action = "replace"
+        replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+      }
+    } // discovery.relabel "kubernetes_monitoring_telemetry"
+    
+    prometheus.scrape "kubernetes_monitoring_telemetry" {
+      job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+      targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+      scrape_interval = "60s"
+      clustering {
+        enabled = true
+      }
+      forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+    } // prometheus.scrape "kubernetes_monitoring_telemetry"
+    
+    prometheus.relabel "kubernetes_monitoring_telemetry" {
+      rule {
+        source_labels = ["__name__"]
+        regex = "grafana_kubernetes_monitoring_.*"
+        action = "keep"
+      }
+      forward_to = [
+        prometheus.remote_write.prometheus.receiver,
+      ]
+    } // prometheus.relabel "kubernetes_monitoring_telemetry"
+    
+    
+    
+    
+    
+    // Destination: loki (loki)
+    otelcol.exporter.loki "loki" {
+      forward_to = [loki.write.loki.receiver]
+    } // otelcol.exporter.loki "loki"
+    
+    loki.write "loki" {
+      endpoint {
+        url = "http://loki.loki.svc:3100/loki/api/v1/push"
+        retry_on_http_429 = true
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+          password = remote.kubernetes.secret.loki.data["password"]
+        }
+        tls_config {
+          insecure_skip_verify = false
+        }
+        min_backoff_period = "500ms"
+        max_backoff_period = "5m"
+        max_backoff_retries = "10"
+      }
+      external_labels = {
+        "cluster" = "gateway",
+        "k8s_cluster_name" = "gateway",
+        gateway = "check",
+      }
+    } // loki.write "loki"
+    
+    remote.kubernetes.secret "loki" {
+      name      = "loki-k8smon-k8s-monitoring"
+      namespace = "default"
+    } // remote.kubernetes.secret "loki"
+    
+    
+    // Destination: prometheus (prometheus)
+    otelcol.exporter.prometheus "prometheus" {
+      add_metric_suffixes = true
+      resource_to_telemetry_conversion = false
+      keep_identifying_resource_attributes = true
+      forward_to = [prometheus.remote_write.prometheus.receiver]
+    } // otelcol.exporter.prometheus "prometheus"
+    
+    prometheus.remote_write "prometheus" {
+      endpoint {
+        url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
+        headers = {
+        }
+        tls_config {
+          insecure_skip_verify = false
+        }
+        send_native_histograms = false
+    
+        queue_config {
+          capacity = 10000
+          min_shards = 1
+          max_shards = 50
+          max_samples_per_send = 2000
+          batch_send_deadline = "5s"
+          min_backoff = "30ms"
+          max_backoff = "5s"
+          retry_on_http_429 = true
+          sample_age_limit = "0s"
+        }
+      }
+    
+      wal {
+        truncate_frequency = "2h"
+        min_keepalive_time = "5m"
+        max_keepalive_time = "8h"
+      }
+      external_labels = {
+        "cluster" = "gateway",
+        "k8s_cluster_name" = "gateway",
+        gateway = "check",
+      }
+    } // prometheus.remote_write "prometheus"
+    
+    // Destination: pyroscope (pyroscope)
+    pyroscope.relabel "pyroscope" {
+      rule {
+        source_labels = ["cluster"]
+        regex         = "^$"
         target_label  = "cluster"
-        replacement   = "profiles-receiver-feature-test"
+        replacement   = "gateway"
       }
       rule {
+        source_labels = ["k8s_cluster_name"]
+        regex         = "^$"
         target_label  = "k8s_cluster_name"
-        replacement   = "profiles-receiver-feature-test"
+        replacement   = "gateway"
       }
-      forward_to = [pyroscope.write.pyro.receiver]
-    } // pyroscope.relabel "pyro"
+      forward_to = [pyroscope.write.pyroscope.receiver]
+    } // pyroscope.relabel "pyroscope"
     
-    pyroscope.write "pyro" {
+    pyroscope.write "pyroscope" {
       endpoint {
         url = "http://pyroscope.pyroscope.svc:4040"
         headers = {
@@ -80,7 +358,103 @@ data:
         max_backoff_period = "5m"
         max_backoff_retries = "10"
       }
-    } // pyroscope.write "pyro"
+      external_labels = {
+        gateway = "check",
+      }
+    } // pyroscope.write "pyroscope"
+    
+    // Destination: tempo (otlp)
+    otelcol.processor.attributes "tempo" {
+      output {
+        traces = [otelcol.processor.transform.tempo.input]
+      }
+    } // otelcol.processor.attributes "tempo"
+    
+    otelcol.processor.transform "tempo" {
+      error_mode = "ignore"
+    
+      trace_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "gateway") where attributes["cluster"] == nil`,
+          `set(attributes["k8s.cluster.name"], "gateway") where attributes["k8s.cluster.name"] == nil`,
+          `set(attributes["gateway"], "check")`,
+          `delete_key(attributes, "process.pid")`,
+          `delete_key(attributes, "process.parent_pid")`,
+          `delete_key(attributes, "process.executable.path")`,
+          `delete_key(attributes, "process.command_line")`,
+          `delete_key(attributes, "process.command_args")`,
+          `delete_key(attributes, "process.owner")`,
+          `delete_key(attributes, "process.runtime.version")`,
+          `delete_key(attributes, "process.runtime.description")`,
+          `delete_key(attributes, "host.ip")`,
+          `delete_key(attributes, "host.mac")`,
+          `delete_key(attributes, "k8s.pod.start_time")`,
+          `delete_key(attributes, "k8s.pod.uid")`,
+          `delete_key(attributes, "container.image.id")`,
+          `delete_key(attributes, "container.image.repo_digests")`,
+          `delete_key(attributes, "os.description")`,
+          `delete_key(attributes, "os.build_id")`,
+        ]
+      }
+    
+      output {
+        traces = [otelcol.processor.batch.tempo.input]
+      }
+    } // otelcol.processor.transform "tempo"
+    
+    otelcol.processor.batch "tempo" {
+      timeout = "2s"
+      send_batch_size = 8192
+      send_batch_max_size = 0
+    
+      output {
+        traces = [otelcol.exporter.otlp.tempo.input]
+      }
+    } // otelcol.processor.batch "tempo"
+    otelcol.exporter.otlp "tempo" {
+      client {
+        endpoint = "tempo.tempo.svc:4317"
+        tls {
+          insecure = true
+          insecure_skip_verify = true
+        }
+      }
+    
+      retry_on_failure {
+        enabled = true
+        initial_interval = "5s"
+        max_interval = "30s"
+        max_elapsed_time = "5m"
+      }
+    
+      sending_queue {
+        enabled = true
+      }
+    } // otelcol.exporter.otlp "tempo"
+---
+# Source: k8s-monitoring/templates/release-info.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-k8s-monitoring-release-info
+  namespace: default
+data:
+  cluster: "gateway"
+  self-reporting-metric.prom: |+
+    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_build_info gauge
+    grafana_kubernetes_monitoring_build_info{version="4.4.0", namespace="default"} 1
+    # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_feature_info gauge
+    grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlpgrpc", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="lokiLogsReceiver", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="profilesReceiver", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="prometheusMetricsReceiver", version="1.0.0"} 1
+    # HELP grafana_kubernetes_monitoring_collector_info A metric to report the collectors of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_collector_info gauge
+    grafana_kubernetes_monitoring_collector_info{kind="deployment", name="alloyGateway", presets="deployment", replicas="1", type="alloy"} 1
+    # EOF
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -279,6 +653,47 @@ spec:
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
 ---
+# Source: k8s-monitoring/templates/receiver-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+  labels:
+    
+    helm.sh/chart: k8s-monitoring-4.4.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: networking
+spec:
+  type: ClusterIP
+  selector:
+    
+    app.kubernetes.io/name: alloygateway
+    app.kubernetes.io/instance: k8smon-alloygateway
+  internalTrafficPolicy: Cluster
+  ports:
+    - name: http-metrics
+      port: 12345
+      targetPort: 12345
+      protocol: "TCP"
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+      appProtocol: grpc
+    - name: loki-logs
+      port: 3500
+      targetPort: 3500
+      protocol: TCP
+    - name: profiles
+      port: 4040
+      targetPort: 4040
+      protocol: TCP
+    - name: metrics
+      port: 9090
+      targetPort: 9090
+      protocol: TCP
+---
 # Source: k8s-monitoring/charts/alloy-operator/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -354,7 +769,7 @@ spec:
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
-  name: k8smon-alloy-receiver
+  name: k8smon-alloygateway
   namespace: default
   annotations:
     helm.sdk.operatorframework.io/uninstall-wait: "true"
@@ -363,10 +778,28 @@ spec:
     configMap:
       create: false
     extraPorts:
+    - appProtocol: grpc
+      name: otlp-grpc
+      port: 4317
+      protocol: TCP
+      targetPort: 4317
+    - name: loki-logs
+      port: 3500
+      protocol: TCP
+      targetPort: 3500
     - name: profiles
       port: 4040
       protocol: TCP
       targetPort: 4040
+    - name: metrics
+      port: 9090
+      protocol: TCP
+      targetPort: 9090
+    mounts:
+      extra:
+      - mountPath: /etc/release-info
+        name: release-info
+        readOnly: true
     resources: {}
     securityContext:
       allowPrivilegeEscalation: false
@@ -397,45 +830,14 @@ spec:
       k8s.grafana.com/logs.job: integrations/alloy
     replicas: 1
     type: deployment
+    volumes:
+      extra:
+      - configMap:
+          name: k8smon-k8s-monitoring-release-info
+        name: release-info
   crds:
     create: false
-  nameOverride: alloy-receiver
----
-# Source: k8s-monitoring/templates/extra-objects.yaml
-apiVersion: collectors.grafana.com/v1alpha1
-kind: Alloy
-metadata:
-  name: profile-source
-spec:
-  alloy:
-    configMap:
-      content: |
-        discovery.kubernetes "alloy" {
-          role = "pod"
-          selectors {
-            field = "metadata.name=profile-source-alloy-0"
-            role = "pod"
-          }
-        }
-
-        pyroscope.scrape "alloy" {
-          targets = discovery.kubernetes.alloy.targets
-          forward_to = [pyroscope.write.chart.receiver]
-        }
-
-        pyroscope.write "chart" {
-          endpoint {
-            url = "http://k8smon-alloy-receiver.default.svc:4040"
-          }
-        }
-    securityContext:
-      allowPrivilegeEscalation: true
-      privileged: true
-      runAsGroup: 0
-      runAsUser: 0
-  controller:
-    hostPID: true
-    type: statefulset
+  nameOverride: alloygateway
 ---
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
 apiVersion: v1
@@ -617,9 +1019,9 @@ spec:
             - /bin/bash
             - -ce
             - |
-              echo "Deleting Alloy instance: alloy/k8smon-alloy-receiver..."
-              kubectl delete alloy/k8smon-alloy-receiver --ignore-not-found=true --wait
-              kubectl wait --for=delete alloy/k8smon-alloy-receiver --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-receiver or it may not exist."
+              echo "Deleting Alloy instance: alloy/k8smon-alloygateway..."
+              kubectl delete alloy/k8smon-alloygateway --ignore-not-found=true --wait
+              kubectl wait --for=delete alloy/k8smon-alloygateway --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloygateway or it may not exist."
 
               kubectl patch \
                 --namespace=default \

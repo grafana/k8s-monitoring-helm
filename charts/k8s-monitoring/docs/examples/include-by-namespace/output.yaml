@@ -2487,7 +2487,7 @@ data:
     } // declare "profiling"
     profiling "feature" {
       profiles_destinations = [
-        pyroscope.write.pyroscope.receiver,
+        pyroscope.relabel.pyroscope.receiver,
       ]
     }
     
@@ -2496,6 +2496,18 @@ data:
     
     
     // Destination: pyroscope (pyroscope)
+    pyroscope.relabel "pyroscope" {
+      rule {
+        target_label  = "cluster"
+        replacement   = "include-by-namespace-test"
+      }
+      rule {
+        target_label  = "k8s_cluster_name"
+        replacement   = "include-by-namespace-test"
+      }
+      forward_to = [pyroscope.write.pyroscope.receiver]
+    } // pyroscope.relabel "pyroscope"
+    
     pyroscope.write "pyroscope" {
       endpoint {
         url = "http://pyroscope.pyroscope.svc:4040"
@@ -2507,11 +2519,6 @@ data:
         min_backoff_period = "500ms"
         max_backoff_period = "5m"
         max_backoff_retries = "10"
-      }
-    
-      external_labels = {
-        "cluster" = "include-by-namespace-test",
-        "k8s_cluster_name" = "include-by-namespace-test",
       }
     } // pyroscope.write "pyroscope"
 ---

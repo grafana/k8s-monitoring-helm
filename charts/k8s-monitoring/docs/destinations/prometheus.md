@@ -100,6 +100,7 @@ This defines the options for defining a destination for metrics that use the Pro
 | metricProcessingRules | string | `""` | Rule blocks to apply to all metrics. Uses the [write_relabel_config block](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.remote_write/#write_relabel_config-block) of the prometheus.remote_write component. Format: write_relabel_config {   source_labels = ["..."]   action = "..."   ... } |
 | name | string | `""` | The name for this Prometheus destination. |
 | noProxy | string | `""` | Comma-separated list of IP addresses, CIDR notations, and domain names to exclude from proxying. |
+| overwriteClusterLabel | bool | `false` | If the cluster labels are already set, should this destination overwrite them? |
 | protobufMessage | string | `""` | The protobuf message format to use for remote write. Must be `prometheus.WriteRequest` or experimental `io.prometheus.write.v2.Request`. |
 | proxyConnectHeader | object | `{}` | Specifies headers to send to proxies during CONNECT requests. |
 | proxyFromEnvironment | bool | `false` | Use the proxy URL indicated by environment variables. |

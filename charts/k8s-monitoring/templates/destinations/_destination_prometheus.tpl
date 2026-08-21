@@ -259,6 +259,14 @@ prometheus.remote_write {{ include "helper.alloy_name" $.destinationName | quote
 {{- if .metricProcessingRules }}
 {{ .metricProcessingRules | indent 4 }}
 {{- end }}
+{{- if and .clusterLabels .overwriteClusterLabel }}
+{{- range $label := .clusterLabels }}
+    write_relabel_config {
+      target_label = {{ include "escape_label" $label | quote }}
+      replacement  = {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }}
+    }
+{{- end }}
+{{- end }}
   }
 
   wal {
@@ -266,7 +274,7 @@ prometheus.remote_write {{ include "helper.alloy_name" $.destinationName | quote
     min_keepalive_time = {{ .writeAheadLog.minKeepaliveTime | quote }}
     max_keepalive_time = {{ .writeAheadLog.maxKeepaliveTime | quote }}
   }
-{{- if or .clusterLabels .extraLabels .extraLabelsFrom }}
+{{- if or (and .clusterLabels (not .overwriteClusterLabel)) .extraLabels .extraLabelsFrom }}
   external_labels = {
   {{- range $label := .clusterLabels }}
     {{ include "escape_label" $label | quote }} = {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }},

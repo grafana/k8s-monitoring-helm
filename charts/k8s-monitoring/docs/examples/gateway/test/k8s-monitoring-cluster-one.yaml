@@ -1,0 +1,105 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cluster-one
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: grafana
+  namespace: cluster-one
+spec:
+  interval: 1m
+  url: https://grafana.github.io/helm-charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: k8smon-one
+  namespace: cluster-one
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: k8s-monitoring
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: cluster-one
+      interval: 1m
+  values:
+    cluster:
+      name: cluster-one
+    destinations:
+      metricsGateway:
+        type: prometheus
+        url: http://gateway.default.svc.cluster.local:9090/api/v1/metrics/write
+      logsGateway:
+        type: loki
+        url: http://gateway.default.svc.cluster.local:3500/loki/api/v1/push
+      tracesGateway:
+        type: otlp
+        url: gateway.default.svc.cluster.local:4317
+        protocol: grpc
+        metrics: {enabled: false}
+        logs: {enabled: false}
+        traces: {enabled: true}
+        tls:
+          insecure: true
+      profilesGateway:
+        type: pyroscope
+        url: http://gateway.default.svc.cluster.local:4040
+    clusterMetrics:
+      enabled: true
+    hostMetrics:
+      enabled: true
+      linuxHosts:
+        enabled: true
+        source: alloy
+    clusterEvents:
+      enabled: true
+    podLogsViaLoki:
+      enabled: true
+      namespaces: [cluster-one]
+    telemetryServices:
+      kube-state-metrics:
+        deploy: true
+    collectors:
+      alloy:
+        includeDestinations: [metricsGateway, logsGateway, tracesGateway, profilesGateway]
+        presets: [clustered, filesystem-log-reader, linux-host-monitor, daemonset]
+        extraConfig: |
+          // Generate traces
+          tracing {
+            sampling_fraction = 0.1
+            send_traceparent = true
+            write_to = [otelcol.processor.attributes.tracesgateway.input]
+          }
+
+          // Generate profiles
+          pyroscope.scrape "local" {
+            targets = [{"__address__" = "localhost:12345", "service_name"="alloy", "service_namespace"="cluster-one"}]
+            profiling_config {
+              profile.block {
+                enabled = false
+              }
+              profile.goroutine {
+                enabled = false
+              }
+              profile.memory {
+                enabled = false
+              }
+              profile.mutex {
+                enabled = false
+              }
+              profile.process_cpu {
+                enabled = true
+              }
+            }
+            forward_to = [pyroscope.write.profilesgateway.receiver]
+          }
+    # Don't create an Alloy Operator, but let the main one create the Alloy instances
+    # This is only because we're using a single cluster to demonstrate the gateway pattern, rather than discrete clusters.
+    alloy-operator:
+      deploy: false
