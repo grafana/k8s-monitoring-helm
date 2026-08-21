@@ -3,6 +3,14 @@
 <!-- textlint-disable terminology -->
 ## Values
 
+### General Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| collector | string | `""` | The collector to assign this instance to. When empty, the feature-level `integrations.collector` is used. |
+| jobLabel | string | `"integrations/etcd"` | The value of the job label for scraped metrics and logs |
+| name | string | `""` | Name for this etcd instance. |
+
 ### Discovery Settings
 
 | Key | Type | Default | Description |
@@ -12,13 +20,6 @@
 | labelSelectors | object | `{}` | Discover etcd instances based on label selectors. At least one is required. |
 | metrics.port | int | `2381` | The etcd metrics port number to scrape metrics from. Defined on the etcd pod with: `--listen-metrics-urls=http://127.0.0.1:2381` |
 | namespaces | list | `[]` | Namespaces to look for etcd instances. Will automatically look for etcd instances in all namespaces unless specified here |
-
-### General Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| jobLabel | string | `"integrations/etcd"` | The value of the job label for scraped metrics and logs |
-| name | string | `""` | Name for this etcd instance. |
 
 ### Metric Processing Settings
 

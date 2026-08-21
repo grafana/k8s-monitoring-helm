@@ -1,0 +1,41 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: prometheus-metrics-receiver
+
+subject:
+  releaseName: k8smon
+  path: ../../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  # A standalone Alloy instance that scrapes its own metrics and pushes them to the
+  # receiver via Prometheus remote write.
+  - file: dependencies/metrics-source.yaml
+  - preset: prometheus
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: prometheus-metrics-receiver
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+          queries:
+            # Metrics pushed to the receiver arrive at the destination with the
+            # source="prometheus-remote-write" label added by the metric processing rule.
+            - query: alloy_build_info{cluster="$CLUSTER", source="prometheus-remote-write"}
+              type: promql

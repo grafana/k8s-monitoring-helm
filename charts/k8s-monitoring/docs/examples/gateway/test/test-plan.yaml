@@ -1,0 +1,102 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: gateway
+
+subject:
+  releaseName: k8smon
+  path: ../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - url: https://raw.githubusercontent.com/grafana/alloy-operator/refs/heads/main/charts/alloy-crd/crds/collectors.grafana.com_alloy.yaml
+    sleepAfter: 10
+  - file: k8s-monitoring-cluster-one.yaml
+  - file: k8s-monitoring-cluster-two.yaml
+  - preset: prometheus
+  - preset: loki
+  - preset: tempo
+  - preset: pyroscope
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+            - name: Loki
+              type: loki
+              url: http://loki.loki.svc:3100
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+            - name: Tempo
+              type: tempo
+              url: http://tempo.tempo.svc:3200
+            - name: Pyroscope
+              type: grafana-pyroscope-datasource
+              url: http://pyroscope.pyroscope.svc:4040
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: kubernetes-enrichment
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+            TEMPO_URL: http://tempo.tempo.svc:3200/api/search
+            PROFILECLI_URL: http://pyroscope.pyroscope.svc:4040
+
+          queries:
+            # Metrics come from cluster one...
+            - query: kube_node_info{cluster="cluster-one", gateway="check"}
+              type: promql
+            # ... and all metrics from cluster one goes through the gateway
+            - query: count({cluster="cluster-one", gateway=""}) or vector(0)
+              type: promql
+              expect:
+                value: 0
+
+            # Metrics come from cluster two...
+            - query: kube_node_info{cluster="cluster-two", gateway="check"}
+              type: promql
+            # ... and all metrics from cluster two goes through the gateway
+            - query: count({cluster="cluster-two", gateway=""}) or vector(0)
+              type: promql
+              expect:
+                value: 0
+
+            # Logs come from cluster two
+            - query: count_over_time({cluster="cluster-one", gateway="check"}[1h])
+              type: logql
+            # Logs come from cluster two
+            - query: count_over_time({cluster="cluster-two", gateway="check"}[1h])
+              type: logql
+
+            # Traces come from cluster one
+            - query: '{.k8s.cluster.name="cluster-one" && .gateway="check"}'
+              type: traceql
+            # Traces come from cluster two
+            - query: '{.k8s.cluster.name="cluster-two" && .gateway="check"}'
+              type: traceql
+
+            # Profiles come from cluster one
+            - query: '{cluster="cluster-one", gateway="check"}'
+              type: pyroql
+            # Profiles come from cluster two
+            - query: '{cluster="cluster-two", gateway="check"}'
+              type: pyroql

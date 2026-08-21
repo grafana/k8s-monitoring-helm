@@ -1103,7 +1103,7 @@ data:
     } // declare "profiling"
     profiling "feature" {
       profiles_destinations = [
-        pyroscope.write.pyro.receiver,
+        pyroscope.relabel.pyro.receiver,
       ]
     }
     
@@ -1112,6 +1112,18 @@ data:
     
     
     // Destination: pyro (pyroscope)
+    pyroscope.relabel "pyro" {
+      rule {
+        target_label  = "cluster"
+        replacement   = "profiling-feature-test"
+      }
+      rule {
+        target_label  = "k8s_cluster_name"
+        replacement   = "profiling-feature-test"
+      }
+      forward_to = [pyroscope.write.pyro.receiver]
+    } // pyroscope.relabel "pyro"
+    
     pyroscope.write "pyro" {
       endpoint {
         url = "http://pyroscope.pyroscope.svc:4040"
@@ -1123,11 +1135,6 @@ data:
         min_backoff_period = "500ms"
         max_backoff_period = "5m"
         max_backoff_retries = "10"
-      }
-    
-      external_labels = {
-        "cluster" = "profiling-feature-test",
-        "k8s_cluster_name" = "profiling-feature-test",
       }
     } // pyroscope.write "pyro"
 ---
@@ -1573,7 +1580,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-4.4.0
+    helm.sh/chart: k8s-monitoring-4.5.0
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -1626,7 +1633,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-4.4.0
+    helm.sh/chart: k8s-monitoring-4.5.0
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded

@@ -1,0 +1,57 @@
+---
+# A standalone Grafana Alloy instance that scrapes its own internal metrics and pushes
+# them to the k8s-monitoring receiver using Prometheus remote write. This stands in for a
+# real application that remote-writes metrics into the cluster.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: metrics-source
+  namespace: default
+data:
+  config.alloy: |
+    prometheus.exporter.self "alloy" { }
+
+    prometheus.scrape "alloy" {
+      targets = prometheus.exporter.self.alloy.targets
+      forward_to = [prometheus.remote_write.receiver.receiver]
+    }
+
+    prometheus.remote_write "receiver" {
+      endpoint {
+        url = "http://k8smon-alloy-receiver.default.svc:9090/api/v1/metrics/write"
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metrics-source
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metrics-source
+  template:
+    metadata:
+      labels:
+        app: metrics-source
+    spec:
+      containers:
+        - name: alloy
+          image: grafana/alloy:v1.18.1
+          args:
+            - run
+            - /etc/alloy/config.alloy
+            - --storage.path=/tmp/alloy
+            - --server.http.listen-addr=0.0.0.0:12345
+          ports:
+            - containerPort: 12345
+              name: http
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alloy
+      volumes:
+        - name: config
+          configMap:
+            name: metrics-source

@@ -1,0 +1,22 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Loki Logs Receiver - Relabeling rules
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should render the correct configuration
+    set:
+      testing: {enabled: true}
+      labels:
+        source: loki-logs-receiver
+      logProcessingRules: |
+        // Keep only log entries from the "prod" environment
+        rule {
+          source_labels = ["env"]
+          regex        = "prod"
+          action       = "keep"
+        }
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

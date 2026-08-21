@@ -600,47 +600,35 @@ data:
       ]
     }
     // Self Reporting
-    prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
-      set_collectors = ["textfile"]
-      textfile {
-        directory = "/etc/release-info"
-      }
-    } // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
+    prometheus.exporter.static "kubernetes_monitoring_telemetry" {
+      text = `
     
-    discovery.relabel "kubernetes_monitoring_telemetry" {
-      targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
-      rule {
-        target_label = "instance"
-        action = "replace"
-        replacement = "k8smon"
-      }
-      rule {
-        target_label = "job"
-        action = "replace"
-        replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-      }
-    } // discovery.relabel "kubernetes_monitoring_telemetry"
+    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_build_info gauge
+    grafana_kubernetes_monitoring_build_info{version="4.5.0", namespace="default"} 1
+    # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_feature_info gauge
+    grafana_kubernetes_monitoring_feature_info{feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="linuxHosts", source="node-exporter", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="windowsHosts", source="windows-exporter", version="1.0.0"} 1
+    # HELP grafana_kubernetes_monitoring_collector_info A metric to report the collectors of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_collector_info gauge
+    grafana_kubernetes_monitoring_collector_info{kind="statefulset", name="alloy-metrics", presets="clustered,statefulset", replicas="1", type="alloy"} 1
+    # EOF
+      `
+    } // prometheus.exporter.static "kubernetes_monitoring_telemetry"
     
     prometheus.scrape "kubernetes_monitoring_telemetry" {
       job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-      targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+      targets    = prometheus.exporter.static.kubernetes_monitoring_telemetry.targets
       scrape_interval = "60s"
       clustering {
         enabled = true
       }
-      forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-    } // prometheus.scrape "kubernetes_monitoring_telemetry"
-    
-    prometheus.relabel "kubernetes_monitoring_telemetry" {
-      rule {
-        source_labels = ["__name__"]
-        regex = "grafana_kubernetes_monitoring_.*"
-        action = "keep"
-      }
       forward_to = [
         prometheus.relabel.metric_store.receiver,
       ]
-    } // prometheus.relabel "kubernetes_monitoring_telemetry"
+    } // prometheus.scrape "kubernetes_monitoring_telemetry"
     
     
     
@@ -747,7 +735,7 @@ data:
   self-reporting-metric.prom: |+
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="4.4.0", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="4.5.0", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics", version="1.0.0"} 1
@@ -1626,11 +1614,6 @@ spec:
       name: alloy-metrics
     configMap:
       create: false
-    mounts:
-      extra:
-      - mountPath: /etc/release-info
-        name: release-info
-        readOnly: true
     resources: {}
     securityContext:
       allowPrivilegeEscalation: false
@@ -1662,11 +1645,6 @@ spec:
       k8s.grafana.com/logs.job: integrations/alloy
     replicas: 1
     type: statefulset
-    volumes:
-      extra:
-      - configMap:
-          name: k8smon-k8s-monitoring-release-info
-        name: release-info
   crds:
     create: false
   nameOverride: alloy-metrics
@@ -1770,7 +1748,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-4.4.0
+    helm.sh/chart: k8s-monitoring-4.5.0
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -1823,7 +1801,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-4.4.0
+    helm.sh/chart: k8s-monitoring-4.5.0
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded

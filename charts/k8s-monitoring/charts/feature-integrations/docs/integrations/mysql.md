@@ -86,6 +86,14 @@ integrations:
 
 ## Values
 
+### General Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| collector | string | `""` | The collector to assign this instance to. When empty, the feature-level `integrations.collector` is used. |
+| jobLabel | string | `"integration/mysql"` | The value of the job label for scraped metrics and logs |
+| name | string | `""` | Name for this MySQL instance. |
+
 ### Database Observability
 
 | Key | Type | Default | Description |
@@ -169,13 +177,6 @@ integrations:
 | exporter.collectors.perfSchemaEventsStatements.limit | number | `250` | Limit the number of events statements digests, in descending order by last_seen. |
 | exporter.collectors.perfSchemaEventsStatements.textLimit | number | `120` (`0` when databaseObservability is enabled) | Maximum length of the normalized statement text. |
 | exporter.collectors.perfSchemaEventsStatements.timeLimit | number | `86400` | Limit how old, in seconds, the last_seen events statements can be. |
-
-### General Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| jobLabel | string | `"integration/mysql"` | The value of the job label for scraped metrics and logs |
-| name | string | `""` | Name for this MySQL instance. |
 
 ### Logs Settings
 
