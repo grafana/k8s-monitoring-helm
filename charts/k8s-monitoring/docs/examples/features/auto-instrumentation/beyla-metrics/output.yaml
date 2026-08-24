@@ -20,10 +20,10 @@ metadata:
   name: k8smon-beyla
   namespace: default
   labels:
-    helm.sh/chart: beyla-1.16.10
+    helm.sh/chart: beyla-1.16.11
     app.kubernetes.io/name: beyla
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "3.25.0"
+    app.kubernetes.io/version: "3.32.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: rbac
@@ -194,10 +194,10 @@ metadata:
   name: k8smon-beyla
   namespace: default
   labels:
-    helm.sh/chart: beyla-1.16.10
+    helm.sh/chart: beyla-1.16.11
     app.kubernetes.io/name: beyla
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "3.25.0"
+    app.kubernetes.io/version: "3.32.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: config
@@ -322,10 +322,10 @@ kind: ClusterRole
 metadata:
   name: k8smon-beyla
   labels:
-    helm.sh/chart: beyla-1.16.10
+    helm.sh/chart: beyla-1.16.11
     app.kubernetes.io/name: beyla
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "3.25.0"
+    app.kubernetes.io/version: "3.32.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: rbac
@@ -383,10 +383,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-beyla
   labels:
-    helm.sh/chart: beyla-1.16.10
+    helm.sh/chart: beyla-1.16.11
     app.kubernetes.io/name: beyla
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "3.25.0"
+    app.kubernetes.io/version: "3.32.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: rbac
@@ -499,10 +499,10 @@ metadata:
   name: beyla-k8s-cache
   namespace: default
   labels:
-    helm.sh/chart: beyla-1.16.10
+    helm.sh/chart: beyla-1.16.11
     app.kubernetes.io/name: beyla-k8s-cache
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "3.25.0"
+    app.kubernetes.io/version: "3.32.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: networking
@@ -522,10 +522,10 @@ metadata:
   name: k8smon-beyla
   namespace: default
   labels:
-    helm.sh/chart: beyla-1.16.10
+    helm.sh/chart: beyla-1.16.11
     app.kubernetes.io/name: beyla
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "3.25.0"
+    app.kubernetes.io/version: "3.32.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: workload
@@ -544,10 +544,10 @@ spec:
         k8s.grafana.com/job: default/beyla
         k8s.grafana.com/logs.job: integrations/beyla
       labels:
-        helm.sh/chart: beyla-1.16.10
+        helm.sh/chart: beyla-1.16.11
         app.kubernetes.io/name: beyla
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "3.25.0"
+        app.kubernetes.io/version: "3.32.0"
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/part-of: beyla
         app.kubernetes.io/component: workload
@@ -558,7 +558,7 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: beyla
-          image: docker.io/grafana/beyla:3.25.0
+          image: docker.io/grafana/beyla:3.32.0
           imagePullPolicy: IfNotPresent
           securityContext:
             privileged: true
@@ -576,6 +576,8 @@ spec:
               name: beyla-config
             - mountPath: /sys/fs/cgroup
               name: cgroup
+            - mountPath: /sys/kernel/tracing
+              name: tracefs
       nodeSelector:
         kubernetes.io/os: linux
       tolerations:
@@ -588,6 +590,9 @@ spec:
         - name: cgroup
           hostPath:
             path: /sys/fs/cgroup
+        - name: tracefs
+          hostPath:
+            path: /sys/kernel/tracing
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/deployment.yaml
 apiVersion: apps/v1
@@ -667,10 +672,10 @@ metadata:
   name: beyla-k8s-cache
   namespace: default
   labels:
-    helm.sh/chart: beyla-1.16.10
+    helm.sh/chart: beyla-1.16.11
     app.kubernetes.io/name: beyla-k8s-cache
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "3.25.0"
+    app.kubernetes.io/version: "3.32.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: workload
@@ -682,17 +687,17 @@ spec:
   template:
     metadata:
       labels:
-        helm.sh/chart: beyla-1.16.10
+        helm.sh/chart: beyla-1.16.11
         app.kubernetes.io/name: beyla-k8s-cache
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "3.25.0"
+        app.kubernetes.io/version: "3.32.0"
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/part-of: beyla
     spec:
       serviceAccountName: k8smon-beyla
       containers:
         - name: beyla-cache
-          image: docker.io/grafana/beyla-k8s-cache:3.25.0
+          image: docker.io/grafana/beyla-k8s-cache:3.32.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 50055
