@@ -3,7 +3,6 @@
 set -uo pipefail
 
 CLUSTER="${1:?usage: teardown.sh <cluster-name>}"
-SCRIPTS="$(cd "$(dirname "$0")" && pwd)"
 
 if ! command -v gcx >/dev/null 2>&1; then
   echo "teardown: gcx not found; skipping Fleet Management cleanup" >&2
@@ -17,11 +16,11 @@ gcx instrumentation clusters remove "${CLUSTER}" --yes >&2 \
   || echo "teardown: 'clusters remove ${CLUSTER}' failed (continuing)" >&2
 
 # Family 3 (application observability): gcx clusters remove does NOT remove the
-# app-instrumentation pipelines, so disable them explicitly for tiers that enabled
-# it (standard/maximum set IHUB_APP_NAMESPACE). Uses curl — see set-app-observability.sh.
+# app-instrumentation pipelines, so drop the namespace entry explicitly for tiers
+# that enabled it (standard/maximum set IHUB_APP_NAMESPACE). Requires gcx >= 1.1.1.
 if [ -n "${IHUB_APP_NAMESPACE:-}" ]; then
   echo "Disabling application observability for namespace=${IHUB_APP_NAMESPACE}..." >&2
-  "${SCRIPTS}/set-app-observability.sh" "${CLUSTER}" "${IHUB_APP_NAMESPACE}" false \
+  gcx instrumentation clusters apps remove "${CLUSTER}" "${IHUB_APP_NAMESPACE}" --yes >&2 \
     || echo "teardown: disabling app observability failed (continuing)" >&2
 fi
 
