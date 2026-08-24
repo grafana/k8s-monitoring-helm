@@ -1,0 +1,57 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Host Metrics - Windows hosts scheme and bearer token
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should render scheme and bearer_token_file when set on the windows-exporter source
+    set:
+      testing:
+        enabled: true
+        telemetryServices: {windows-exporter: {deploy: true}}
+      windowsHosts:
+        enabled: true
+        scheme: https
+        bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'prometheus\.scrape "windows_exporter" \{[\s\S]*scheme = "https"[\s\S]*?\} // prometheus\.scrape "windows_exporter"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'prometheus\.scrape "windows_exporter" \{[\s\S]*bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"[\s\S]*?\} // prometheus\.scrape "windows_exporter"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'prometheus\.scrape "windows_exporter" \{[\s\S]*tls_config \{\s*insecure_skip_verify = true\s*\}[\s\S]*?\} // prometheus\.scrape "windows_exporter"'
+
+  - it: should default scheme to http and omit bearer_token_file when unset
+    set:
+      testing:
+        enabled: true
+        telemetryServices: {windows-exporter: {deploy: true}}
+      windowsHosts:
+        enabled: true
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'prometheus\.scrape "windows_exporter" \{[\s\S]*scheme = "http"[\s\S]*?\} // prometheus\.scrape "windows_exporter"'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: bearer_token_file
+
+  - it: should not render scheme or bearer_token_file when source is alloy
+    set:
+      testing: {enabled: true}
+      windowsHosts:
+        enabled: true
+        source: alloy
+        scheme: https
+        bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    asserts:
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: scheme = "https"
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: bearer_token_file

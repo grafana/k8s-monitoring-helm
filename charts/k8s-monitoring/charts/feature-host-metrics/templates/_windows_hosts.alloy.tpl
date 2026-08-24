@@ -37,6 +37,14 @@ prometheus.scrape "windows_exporter" {
   scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
   convert_classic_histograms_to_nhcb = {{ .Values.global.convertClassicHistogramsToNhcb }}
 {{- if ne $source "alloy" }}
+  scheme = {{ .Values.windowsHosts.scheme | quote }}
+  {{- if .Values.windowsHosts.bearerTokenFile }}
+  bearer_token_file = {{ .Values.windowsHosts.bearerTokenFile | quote }}
+  {{- end }}
+  tls_config {
+    insecure_skip_verify = true
+  }
+
   clustering {
     enabled = true
   }
