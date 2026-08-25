@@ -8,9 +8,11 @@ name: ihub-standard
 # the survey + k8s-monitoring instrumentation pipelines; the deployment collector
 # receives the otel-receiver pipeline. See the plan for context.
 #
-# cluster.name is fixed (not random): provisioning + expected-component derivation
-# happen in `make all` before the kind cluster exists, so the name must be known
-# up front. Teardown (make teardown) removes the per-cluster FM pipelines.
+# cluster.name gets a random suffix (cluster.appendRandomNumber) so multiple runs
+# can execute concurrently without colliding in Fleet Management. The Makefile and
+# helm-test share that suffix through a gitignored `.random` file, so provisioning
+# (make all, before the kind cluster exists) and the install agree on the name.
+# Teardown (make teardown) removes the per-cluster FM pipelines.
 
 subject:
   releaseName: grafana-cloud
@@ -23,6 +25,7 @@ subject:
 cluster:
   type: kind
   name: ihub-e2e-standard
+  appendRandomNumber: true
 
 dependencies:
   - preset: test-parameters
