@@ -982,7 +982,7 @@ data:
       forward_to = [pyroscope.relabel.static_label_pyroscope_gate_profiles_pyroscope.receiver]
     }
     pyroscope.relabel "static_label_pyroscope_gate_profiles_pyroscope" {
-      forward_to = [pyroscope.write.pyroscope.receiver]
+      forward_to = [pyroscope.relabel.pyroscope.receiver]
       rule {
         source_labels = ["selected_destinations"]
         regex         = "(^|.*,)pyroscope(,.*|$)"
@@ -1074,6 +1074,18 @@ data:
     } // prometheus.remote_write "prometheus"
     
     // Destination: pyroscope (pyroscope)
+    pyroscope.relabel "pyroscope" {
+      rule {
+        target_label  = "cluster"
+        replacement   = "static-label"
+      }
+      rule {
+        target_label  = "k8s_cluster_name"
+        replacement   = "static-label"
+      }
+      forward_to = [pyroscope.write.pyroscope.receiver]
+    } // pyroscope.relabel "pyroscope"
+    
     pyroscope.write "pyroscope" {
       endpoint {
         url = "http://pyroscope.pyroscope.svc:4040"
@@ -1085,11 +1097,6 @@ data:
         min_backoff_period = "500ms"
         max_backoff_period = "5m"
         max_backoff_retries = "10"
-      }
-    
-      external_labels = {
-        "cluster" = "static-label",
-        "k8s_cluster_name" = "static-label",
       }
     } // pyroscope.write "pyroscope"
     
@@ -1173,7 +1180,7 @@ data:
   self-reporting-metric.prom: |+
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="4.4.1", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="4.5.0", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="annotationAutodiscovery", version="1.0.0"} 1
@@ -1719,7 +1726,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-4.4.1
+    helm.sh/chart: k8s-monitoring-4.5.0
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -1772,7 +1779,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-4.4.1
+    helm.sh/chart: k8s-monitoring-4.5.0
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded

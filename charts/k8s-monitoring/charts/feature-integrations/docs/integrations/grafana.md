@@ -4,6 +4,14 @@ This integration captures the metrics and logs to understand the health and perf
 
 ## Values
 
+### General Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| collector | string | `""` | The collector to assign this instance to. When empty, the feature-level `integrations.collector` is used. |
+| jobLabel | string | `"integrations/grafana"` | The value of the job label for scraped metrics and logs |
+| name | string | `""` | Name for this Grafana instance. |
+
 ### Discovery Settings
 
 | Key | Type | Default | Description |
@@ -13,13 +21,6 @@ This integration captures the metrics and logs to understand the health and perf
 | labelSelectors | object | `{"app.kubernetes.io/name":"grafana"}` | Discover Grafana instances based on label selectors. |
 | metrics.portName | string | `"grafana"` | Name of the port to scrape metrics from. |
 | namespaces | list | `[]` | The namespaces to look for Grafana instances in. Will automatically look for Grafana instances in all namespaces unless specified here |
-
-### General Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| jobLabel | string | `"integrations/grafana"` | The value of the job label for scraped metrics and logs |
-| name | string | `""` | Name for this Grafana instance. |
 
 ### Logs Settings
 

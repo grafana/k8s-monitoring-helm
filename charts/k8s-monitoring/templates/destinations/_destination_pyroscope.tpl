@@ -2,6 +2,21 @@
 {{/* Inputs: . (root object),  destination (string, name of destination), destinationName (name of this destination) */}}
 {{- define "destinations.pyroscope.alloy" }}
 {{- with .destination }}
+pyroscope.relabel {{ include "helper.alloy_name" $.destinationName | quote }} {
+{{- $overwriteClusterLabel := .overwriteClusterLabel }}
+{{- range $label := .clusterLabels }}
+  rule {
+{{- if not $overwriteClusterLabel }}
+    source_labels = [{{ include "escape_label" $label | quote }}]
+    regex         = "^$"
+{{- end }}
+    target_label  = {{ include "escape_label" $label | quote }}
+    replacement   = {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }}
+  }
+{{- end }}
+  forward_to = [pyroscope.write.{{ include "helper.alloy_name" $.destinationName }}.receiver]
+} // pyroscope.relabel "{{ include "helper.alloy_name" $.destinationName }}"
+
 pyroscope.write {{ include "helper.alloy_name" $.destinationName | quote }} {
   endpoint {
 {{- if .urlFrom }} 
@@ -129,10 +144,8 @@ pyroscope.write {{ include "helper.alloy_name" $.destinationName | quote }} {
     max_backoff_retries = {{ .maxBackoffRetries | quote }}
   }
 
+{{- if or .extraLabels .extraLabelsFrom }}
   external_labels = {
-{{- range $label := .clusterLabels }}
-    {{ include "escape_label" $label | quote }} = {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }},
-{{- end }}
   {{- range $key, $value := .extraLabels }}
     {{ $key }} = {{ $value | quote }},
   {{- end }}
@@ -140,6 +153,7 @@ pyroscope.write {{ include "helper.alloy_name" $.destinationName | quote }} {
     {{ $key }} = {{ $value }},
   {{- end }}
   }
+{{- end }}
 } // pyroscope.write "{{ include "helper.alloy_name" $.destinationName }}"
 {{- end }}
 {{- end }}
@@ -159,7 +173,7 @@ pyroscope.write {{ include "helper.alloy_name" $.destinationName | quote }} {
 - tls.key
 {{- end -}}
 
-{{- define "destinations.pyroscope.alloy.pyroscope.profiles.target" }}pyroscope.write.{{ include "helper.alloy_name" $.destinationName }}.receiver{{ end -}}
+{{- define "destinations.pyroscope.alloy.pyroscope.profiles.target" }}pyroscope.relabel.{{ include "helper.alloy_name" $.destinationName }}.receiver{{ end -}}
 
 {{- define "destinations.pyroscope.supports_metrics" }}false{{ end -}}
 {{- define "destinations.pyroscope.supports_logs" }}false{{ end -}}

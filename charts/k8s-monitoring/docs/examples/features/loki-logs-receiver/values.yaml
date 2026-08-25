@@ -1,0 +1,27 @@
+---
+cluster:
+  name: loki-logs-receiver-cluster
+
+destinations:
+  loki:
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+
+lokiLogsReceiver:
+  enabled: true
+  collector: alloy-receiver
+  logProcessingRules: |
+    // Add a static label to all received logs so they can be differentiated downstream
+    rule {
+      target_label = "source"
+      replacement = "loki-logs-receiver"
+    }
+
+collectors:
+  alloy-receiver:
+    presets: [deployment]

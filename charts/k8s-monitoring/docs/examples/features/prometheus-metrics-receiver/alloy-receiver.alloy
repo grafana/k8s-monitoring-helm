@@ -1,0 +1,120 @@
+// Feature: Prometheus Metrics Receiver
+declare "prometheus_metrics_receiver" {
+  argument "metrics_destinations" {
+    comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+  }
+
+  prometheus.receive_http "default" {
+    http {
+      listen_address = "0.0.0.0"
+      listen_port = "9090"
+    }
+
+    forward_to = [prometheus.relabel.default.receiver]
+  } // prometheus.receive_http "default"
+
+  prometheus.relabel "default" {
+    // Stamp every received metric with a label identifying that it arrived via the
+    // remote write receiver. Any prometheus.relabel rule block is valid here.
+    rule {
+      target_label = "source"
+      replacement = "prometheus-remote-write"
+    }
+
+    forward_to = argument.metrics_destinations.value
+  } // prometheus.relabel "default"
+} // declare "prometheus_metrics_receiver"
+prometheus_metrics_receiver "feature" {
+  metrics_destinations = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+}
+// Self Reporting
+prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
+  set_collectors = ["textfile"]
+  textfile {
+    directory = "/etc/release-info"
+  }
+} // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
+
+discovery.relabel "kubernetes_monitoring_telemetry" {
+  targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
+  rule {
+    target_label = "instance"
+    action = "replace"
+    replacement = "k8smon"
+  }
+  rule {
+    target_label = "job"
+    action = "replace"
+    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  }
+} // discovery.relabel "kubernetes_monitoring_telemetry"
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+  scrape_interval = "60s"
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
+
+prometheus.relabel "kubernetes_monitoring_telemetry" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "grafana_kubernetes_monitoring_.*"
+    action = "keep"
+  }
+  forward_to = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+} // prometheus.relabel "kubernetes_monitoring_telemetry"
+
+
+
+
+
+// Destination: prometheus (prometheus)
+otelcol.exporter.prometheus "prometheus" {
+  add_metric_suffixes = true
+  resource_to_telemetry_conversion = false
+  keep_identifying_resource_attributes = true
+  forward_to = [prometheus.remote_write.prometheus.receiver]
+} // otelcol.exporter.prometheus "prometheus"
+
+prometheus.remote_write "prometheus" {
+  endpoint {
+    url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
+    headers = {
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    send_native_histograms = false
+
+    queue_config {
+      capacity = 10000
+      min_shards = 1
+      max_shards = 50
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "30ms"
+      max_backoff = "5s"
+      retry_on_http_429 = true
+      sample_age_limit = "0s"
+    }
+  }
+
+  wal {
+    truncate_frequency = "2h"
+    min_keepalive_time = "5m"
+    max_keepalive_time = "8h"
+  }
+  external_labels = {
+    "cluster" = "prometheus-metrics-receiver",
+    "k8s_cluster_name" = "prometheus-metrics-receiver",
+  }
+} // prometheus.remote_write "prometheus"
+

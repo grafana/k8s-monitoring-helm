@@ -51,7 +51,7 @@
 {{- $newList | toYaml -}}
 {{- end }}
 
-{{/* Inputs: collectorValues (collector values), featureName (feature name), portNumber, portName, portProtocol */}}
+{{/* Inputs: collectorName (string), collectorValues (object, collector values), featureName (feature name), portNumber, portName, portProtocol */}}
 {{- define "collectors.requireExtraPort" }}
 {{- if eq (include "collectors.hasExtraPort" .) "false" }}
   {{- $msg := list "" }}
@@ -267,6 +267,33 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{- end }}
 {{- $collectorName }}
 {{- end }}
+
+{{- define "collectors.getCollectorForIntegrationInstance" -}}
+{{- $instanceCollector := dig "collector" "" .instance -}}
+{{- if $instanceCollector -}}
+{{- $instanceCollector -}}
+{{- else -}}
+{{- include "collectors.getCollectorForFeature" (dict "Values" .Values "Files" .Files "Subcharts" .Subcharts "featureKey" "integrations") | trim -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "collectors.getCollectorsForFeature" -}}
+{{- $collectors := list -}}
+{{- if eq .featureKey "integrations" -}}
+{{- $collectors = include "collectors.integrations.assignedCollectors" . | fromYamlArray -}}
+{{- else if eq .featureKey "profiling" -}}
+{{- $collectors = include "collectors.profiling.assignedCollectors" . | fromYamlArray -}}
+{{- end -}}
+{{- if not $collectors -}}
+{{- $collectorName := include "collectors.getCollectorForFeature" . | trim -}}
+{{- if $collectorName -}}
+{{- $collectors = list $collectorName -}}
+{{- end -}}
+{{- end -}}
+{{- range $collectorName := $collectors }}
+- {{ $collectorName }}
+{{- end -}}
+{{- end -}}
 
 {{ define "collectors.getAllPresets" }}
   {{- range $presetFile, $_ := $.Files.Glob "collectors/presets/*.yaml" }}

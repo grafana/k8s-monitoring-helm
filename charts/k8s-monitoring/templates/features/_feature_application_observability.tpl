@@ -122,25 +122,25 @@ application_observability "feature" {
   {{- $collectorValues := (include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml) }}
   {{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}
   {{- if $.Values.applicationObservability.receivers.otlp.grpc.enabled }}
-    {{- include "collectors.requireExtraPort" (dict "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.otlp.grpc.port "portName" "otlp-grpc" "portProtocol" "TCP") }}
+    {{- include "collectors.requireExtraPort" (dict "collectorName" $collectorName "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.otlp.grpc.port "portName" "otlp-grpc" "portProtocol" "TCP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.otlp.http.enabled }}
-    {{- include "collectors.requireExtraPort" (dict "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.otlp.http.port "portName" "otlp-http" "portProtocol" "TCP") }}
+    {{- include "collectors.requireExtraPort" (dict "collectorName" $collectorName "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.otlp.http.port "portName" "otlp-http" "portProtocol" "TCP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.zipkin.enabled }}
-    {{- include "collectors.requireExtraPort" (dict "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.zipkin.port "portName" "zipkin" "portProtocol" "TCP") }}
+    {{- include "collectors.requireExtraPort" (dict "collectorName" $collectorName "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.zipkin.port "portName" "zipkin" "portProtocol" "TCP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.grpc.enabled }}
-    {{- include "collectors.requireExtraPort" (dict "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.grpc.port "portName" "jaeger-grpc" "portProtocol" "TCP") }}
+    {{- include "collectors.requireExtraPort" (dict "collectorName" $collectorName "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.grpc.port "portName" "jaeger-grpc" "portProtocol" "TCP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftBinary.enabled }}
-    {{- include "collectors.requireExtraPort" (dict "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port "portName" "jaeger-binary" "portProtocol" "UDP") }}
+    {{- include "collectors.requireExtraPort" (dict "collectorName" $collectorName "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port "portName" "jaeger-binary" "portProtocol" "UDP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftCompact.enabled }}
-    {{- include "collectors.requireExtraPort" (dict "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port "portName" "jaeger-compact" "portProtocol" "UDP") }}
+    {{- include "collectors.requireExtraPort" (dict "collectorName" $collectorName "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port "portName" "jaeger-compact" "portProtocol" "UDP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftHttp.enabled }}
-    {{- include "collectors.requireExtraPort" (dict "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port "portName" "jaeger-http" "portProtocol" "TCP") }}
+    {{- include "collectors.requireExtraPort" (dict "collectorName" $collectorName "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port "portName" "jaeger-http" "portProtocol" "TCP") }}
   {{- end -}}
   {{- include "feature.applicationObservability.validate" (dict "Values" $.Values.applicationObservability) }}
   {{- end -}}

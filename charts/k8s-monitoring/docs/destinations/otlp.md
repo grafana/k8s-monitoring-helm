@@ -81,6 +81,7 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | logs.path | string | `""` | A custom path to append to the URL when sending logs. Only used when `protocol` is `http`. Overrides the default `/v1/logs` path. For example, set `path: v2/log/otlp` to send logs to `<url>/v2/log/otlp`. |
 | metrics.path | string | `""` | A custom path to append to the URL when sending metrics. Only used when `protocol` is `http`. Overrides the default `/v1/metrics` path. For example, set `path: v2/metric/otlp` to send metrics to `<url>/v2/metric/otlp`. |
 | name | string | `""` | The name for this OTLP destination. |
+| overwriteClusterLabel | bool | `true` | If the cluster labels are already set, should this destination overwrite them? This is set to true for backwards compatibility. It will be set to false in a future version. |
 | protocol | string | `"grpc"` | The protocol for the OTLP destination. Options are "grpc" (default), "http". |
 | protocolValidation | bool | `true` | Validate that the protocol matches known OTLP destinations, like Grafana Cloud's OTLP Gateway or Tempo endpoints. |
 | proxyURL | string | `""` | HTTP proxy to send requests through, only when using the `http` protocol. |

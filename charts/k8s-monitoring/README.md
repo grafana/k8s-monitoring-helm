@@ -5,7 +5,7 @@
 
 # k8s-monitoring
 
-![Version: 4.4.1](https://img.shields.io/badge/Version-4.4.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.4.1](https://img.shields.io/badge/AppVersion-4.4.1-informational?style=flat-square)
+![Version: 4.5.0](https://img.shields.io/badge/Version-4.5.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.5.0](https://img.shields.io/badge/AppVersion-4.5.0-informational?style=flat-square)
 Capture all telemetry data from your Kubernetes cluster.
 
 > **Upgrading?** Breaking changes and migration steps for each major version are documented in
@@ -188,6 +188,7 @@ details:
 |  | hostMetrics(feature-host-metrics) | 1.0.0 |
 |  | integrations(feature-integrations) | 1.0.0 |
 |  | kubernetesManifests(feature-kubernetes-manifests) | 1.0.0 |
+|  | lokiLogsReceiver(feature-loki-logs-receiver) | 1.0.0 |
 |  | nodeLogs(feature-node-logs) | 1.0.0 |
 |  | podLogsObjects(feature-pod-logs-objects) | 1.0.0 |
 |  | podLogsViaKubernetesApi(feature-pod-logs-via-kubernetes-api) | 1.0.0 |
@@ -195,6 +196,7 @@ details:
 |  | podLogsViaOpenTelemetry(feature-pod-logs-via-opentelemetry) | 1.0.0 |
 |  | profilesReceiver(feature-profiles-receiver) | 1.0.0 |
 |  | profiling(feature-profiling) | 1.0.0 |
+|  | prometheusMetricsReceiver(feature-prometheus-metrics-receiver) | 1.0.0 |
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
 |  | windowsEventLogs(feature-windows-event-logs) | 1.0.0 |
 |  | telemetryServices(telemetry-services) | 1.0.0 |
@@ -346,6 +348,15 @@ details:
 | kubernetesManifests.destinations | list | `[]` | The destinations where Kubernetes manifest logs will be sent. If empty, all logs-capable destinations will be used. |
 | kubernetesManifests.enabled | bool | `false` | Enable collecting Kubernetes manifest files and modifications. |
 
+### Features - Loki Logs Receiver
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| lokiLogsReceiver | object | Disabled | Loki Logs Receiver enables receiving logs over the Loki API from applications. Requires a destination that supports logs. To see the valid options, please see the [Loki Logs Receiver feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-loki-logs-receiver). |
+| lokiLogsReceiver.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
+| lokiLogsReceiver.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
+| lokiLogsReceiver.enabled | bool | `false` | Enable receiving logs over the Loki API. |
+
 ### Features - Node Logs
 
 | Key | Type | Default | Description |
@@ -408,6 +419,15 @@ details:
 | profiling.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | profiling.destinations | list | `[]` | The destinations where profiles will be sent. If empty, all profiles-capable destinations will be used. |
 | profiling.enabled | bool | `false` | Enable gathering profiles from applications. |
+
+### Features - Prometheus Metrics Receiver
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| prometheusMetricsReceiver | object | Disabled | Prometheus Metrics Receiver enables receiving Prometheus metrics from applications via remote write. Requires a destination that supports metrics. To see the valid options, please see the [Prometheus Metrics Receiver feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-prometheus-metrics-receiver). |
+| prometheusMetricsReceiver.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
+| prometheusMetricsReceiver.destinations | list | `[]` | The destinations where metrics will be sent. If empty, all metrics-capable destinations will be used. |
+| prometheusMetricsReceiver.enabled | bool | `false` | Enable receiving Prometheus metrics from applications. |
 
 ### Features - Prometheus Operator Objects
 

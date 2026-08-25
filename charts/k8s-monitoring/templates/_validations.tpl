@@ -16,7 +16,7 @@
     {{- if $collectorName }}
       {{- include "collectors.validate.exists" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey )}}
       {{- $valuesWithFeatureModification := (include (printf "features.%s.collector.values" $featureKey) $ | fromYaml) }}
-      {{- $updatedValues = merge $.Values $valuesWithFeatureModification }}
+      {{- $updatedValues = mergeOverwrite $.Values $valuesWithFeatureModification }}
     {{- end }}
   {{- end }}
   {{- $updatedValues = merge $.Values (include "collectors.remoteConfig.collector.values" (dict "Values" $updatedValues "Files" $.Files "Release" $.Release "Chart" $.Chart) | fromYaml) }}

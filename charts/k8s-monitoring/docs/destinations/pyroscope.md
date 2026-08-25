@@ -82,6 +82,7 @@ This defines the options for defining a destination for profiles that use the Py
 | minBackoffPeriod | string | `"500ms"` | The minimum backoff period for the Pyroscope destination. |
 | name | string | `""` | The name for this Pyroscope destination. |
 | noProxy | string | `""` | Comma-separated list of IP addresses, CIDR notations, and domain names to exclude from proxying. |
+| overwriteClusterLabel | bool | `true` | If the cluster labels are already set, should this destination overwrite them? This is set to true for backwards compatibility. It will be set to false in a future version. |
 | proxyConnectHeader | object | `{}` | Specifies headers to send to proxies during CONNECT requests. |
 | proxyFromEnvironment | bool | `false` | Use the proxy URL indicated by environment variables. |
 | proxyURL | string | `""` | HTTP proxy to send requests through. |
