@@ -5,7 +5,9 @@
 # does), and derive the expected Alloy components FM holds (for the in-cluster
 # comparison). `make teardown` removes the per-cluster FM pipelines and is meant
 # to run in an always() CI step. Helpers are bash scripts under ../scripts.
-CLUSTER := $(shell yq eval '.cluster.name' test-plan.yaml)
+# Append a random suffix, written to .random here and reused by helm-test's getClusterName,
+# so provision/teardown and the cluster it creates share one name.
+CLUSTER := $(shell yq eval '.cluster.name' test-plan.yaml)-$(shell [ -f .random ] || shuf -i 100000-999999 -n 1 > .random; cat .random)
 SCRIPTS := ../scripts
 
 export IHUB_APP_NAMESPACE := default
@@ -69,3 +71,4 @@ teardown-direnv:
 	direnv allow .
 	direnv exec . $(MAKE) teardown
 	kind delete cluster --name $(CLUSTER)
+	rm -f .random
