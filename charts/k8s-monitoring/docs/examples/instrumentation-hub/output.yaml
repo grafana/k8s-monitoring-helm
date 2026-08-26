@@ -135,40 +135,80 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: k8smon-alloy
+  name: k8smon-alloy-daemonset
   namespace: default
 data:
   config.alloy: |
-    remote.kubernetes.secret "alloy_remote_cfg" {
+    remote.kubernetes.secret "alloy_daemonset_remote_cfg" {
       name      = "grafana-cloud-credentials"
       namespace = "default"
-    } // remote.kubernetes.secret "alloy_remote_cfg"
+    } // remote.kubernetes.secret "alloy_daemonset_remote_cfg"
     
     remotecfg {
-      id = string.format("k8smon-%s-%s-%s-%s", "instrumentation-hub-test-cluster", "default", "alloy", sys.env("K8S_NODE_NAME"))
+      id = string.format("k8smon-%s-%s-%s-%s", "instrumentation-hub-test-cluster", "default", "alloy-daemonset", sys.env("K8S_NODE_NAME"))
       url = "https://fleet-management-prod-008.grafana.net"
       basic_auth {
-        username = convert.nonsensitive(remote.kubernetes.secret.alloy_remote_cfg.data["GRAFANA_CLOUD_FLEET_MGMT_USER"])
-        password = remote.kubernetes.secret.alloy_remote_cfg.data["GRAFANA_CLOUD_FLEET_MGMT_TOKEN"]
+        username = convert.nonsensitive(remote.kubernetes.secret.alloy_daemonset_remote_cfg.data["GRAFANA_CLOUD_FLEET_MGMT_USER"])
+        password = remote.kubernetes.secret.alloy_daemonset_remote_cfg.data["GRAFANA_CLOUD_FLEET_MGMT_TOKEN"]
       }
       tls_config {
         insecure_skip_verify = false
-        ca_pem = convert.nonsensitive(remote.kubernetes.secret.alloy_remote_cfg.data["ca"])
-        cert_pem = convert.nonsensitive(remote.kubernetes.secret.alloy_remote_cfg.data["cert"])
-        key_pem = remote.kubernetes.secret.alloy_remote_cfg.data["key"]
+        ca_pem = convert.nonsensitive(remote.kubernetes.secret.alloy_daemonset_remote_cfg.data["ca"])
+        cert_pem = convert.nonsensitive(remote.kubernetes.secret.alloy_daemonset_remote_cfg.data["cert"])
+        key_pem = remote.kubernetes.secret.alloy_daemonset_remote_cfg.data["key"]
       }
       poll_frequency = "30s"
       attributes = {
         "cluster" = "instrumentation-hub-test-cluster",
         "namespace" = "default",
         "platform" = "kubernetes",
-        "presets" = "root,host-network,host-storage,host-cgroup,host-tracefs,clustered,service-discovery,filesystem-log-reader,daemonset",
+        "presets" = "xlarge,root,host-network,host-storage,host-cgroup,host-tracefs,clustered,service-discovery,filesystem-log-reader,daemonset",
         "release" = "k8smon",
         "service-discovery" = "true",
         "source" = "k8s-monitoring",
         "sourceVersion" = "4.5.0",
-        "workloadName" = "alloy",
+        "workloadName" = "alloy-daemonset",
         "workloadType" = "daemonset",
+      }
+    }
+---
+# Source: k8s-monitoring/templates/alloy-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-alloy-deployment
+  namespace: default
+data:
+  config.alloy: |
+    remote.kubernetes.secret "alloy_deployment_remote_cfg" {
+      name      = "grafana-cloud-credentials"
+      namespace = "default"
+    } // remote.kubernetes.secret "alloy_deployment_remote_cfg"
+    
+    remotecfg {
+      id = string.format("k8smon-%s-%s-%s", "instrumentation-hub-test-cluster", "default", constants.hostname)
+      url = "https://fleet-management-prod-008.grafana.net"
+      basic_auth {
+        username = convert.nonsensitive(remote.kubernetes.secret.alloy_deployment_remote_cfg.data["GRAFANA_CLOUD_FLEET_MGMT_USER"])
+        password = remote.kubernetes.secret.alloy_deployment_remote_cfg.data["GRAFANA_CLOUD_FLEET_MGMT_TOKEN"]
+      }
+      tls_config {
+        insecure_skip_verify = false
+        ca_pem = convert.nonsensitive(remote.kubernetes.secret.alloy_deployment_remote_cfg.data["ca"])
+        cert_pem = convert.nonsensitive(remote.kubernetes.secret.alloy_deployment_remote_cfg.data["cert"])
+        key_pem = remote.kubernetes.secret.alloy_deployment_remote_cfg.data["key"]
+      }
+      poll_frequency = "30s"
+      attributes = {
+        "cluster" = "instrumentation-hub-test-cluster",
+        "namespace" = "default",
+        "platform" = "kubernetes",
+        "presets" = "xlarge,clustered,otel-receiver,deployment",
+        "release" = "k8smon",
+        "source" = "k8s-monitoring",
+        "sourceVersion" = "4.5.0",
+        "workloadName" = "alloy-deployment",
+        "workloadType" = "deployment",
       }
     }
 ---
@@ -740,7 +780,23 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: k8smon-alloy-sdk-injector
+  name: k8smon-alloy-daemonset-sdk-injector
+  namespace: default
+  labels:
+    helm.sh/chart: k8s-monitoring-4.5.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: rbac
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "create", "update"]
+---
+# Source: k8s-monitoring/templates/sdk-injector-rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: k8smon-alloy-deployment-sdk-injector
   namespace: default
   labels:
     helm.sh/chart: k8s-monitoring-4.5.0
@@ -843,7 +899,7 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: k8smon-alloy-sdk-injector
+  name: k8smon-alloy-daemonset-sdk-injector
   namespace: default
   labels:
     helm.sh/chart: k8s-monitoring-4.5.0
@@ -853,10 +909,30 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: k8smon-alloy-sdk-injector
+  name: k8smon-alloy-daemonset-sdk-injector
 subjects:
   - kind: ServiceAccount
-    name: k8smon-alloy
+    name: k8smon-alloy-daemonset
+    namespace: default
+---
+# Source: k8s-monitoring/templates/sdk-injector-rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: k8smon-alloy-deployment-sdk-injector
+  namespace: default
+  labels:
+    helm.sh/chart: k8s-monitoring-4.5.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: rbac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: k8smon-alloy-deployment-sdk-injector
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-alloy-deployment
     namespace: default
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/service.yaml
@@ -986,6 +1062,40 @@ spec:
     app.kubernetes.io/name: k8s-injection-controller
     app.kubernetes.io/instance: k8smon
     control-plane: controller-manager
+---
+# Source: k8s-monitoring/templates/receiver-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-otel-receiver
+  labels:
+    
+    helm.sh/chart: k8s-monitoring-4.5.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: networking
+spec:
+  type: ClusterIP
+  selector:
+    
+    app.kubernetes.io/name: alloy-deployment
+    app.kubernetes.io/instance: k8smon-alloy-deployment
+  internalTrafficPolicy: Cluster
+  ports:
+    - name: http-metrics
+      port: 12345
+      targetPort: 12345
+      protocol: "TCP"
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+      appProtocol: grpc
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+      protocol: TCP
+      appProtocol: http
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/node-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -1392,7 +1502,7 @@ spec:
             - name: WATCH_NAMESPACE
               value: "default"
             - name: ALLOWED_CONFIGMAP_WRITERS
-              value: "system:serviceaccount:$(POD_NAMESPACE):k8smon-alloy"
+              value: "system:serviceaccount:$(POD_NAMESPACE):k8smon-alloy-daemonset,system:serviceaccount:$(POD_NAMESPACE):k8smon-alloy-deployment"
           ports:
             - name: health
               containerPort: 8081
@@ -1554,7 +1664,7 @@ webhooks:
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
-  name: k8smon-alloy
+  name: k8smon-alloy-daemonset
   namespace: default
   annotations:
     helm.sdk.operatorframework.io/uninstall-wait: "true"
@@ -1562,7 +1672,7 @@ spec:
   alloy:
     clustering:
       enabled: true
-      name: alloy
+      name: alloy-daemonset
     configMap:
       create: false
     extraEnv:
@@ -1592,7 +1702,13 @@ spec:
       - mountPath: /sys/kernel/tracing
         name: tracefs
       varlog: true
-    resources: {}
+    resources:
+      limits:
+        cpu: 4000m
+        memory: 4Gi
+      requests:
+        cpu: 1000m
+        memory: 2Gi
     securityContext:
       allowPrivilegeEscalation: true
       capabilities:
@@ -1620,6 +1736,22 @@ spec:
         type: RuntimeDefault
     storagePath: /var/lib/alloy
   controller:
+    autoscaling:
+      vertical:
+        enabled: true
+        resourcePolicy:
+          containerPolicies:
+          - containerName: alloy
+            controlledResources:
+            - cpu
+            - memory
+            controlledValues: RequestsAndLimits
+            maxAllowed:
+              cpu: 4
+              memory: 8Gi
+            minAllowed:
+              cpu: 1
+              memory: 2Gi
     dnsPolicy: ClusterFirstWithHostNet
     hostNetwork: true
     hostPID: true
@@ -1647,7 +1779,96 @@ spec:
         name: tracefs
   crds:
     create: false
-  nameOverride: alloy
+  nameOverride: alloy-daemonset
+---
+# Source: k8s-monitoring/templates/alloy.yaml
+apiVersion: collectors.grafana.com/v1alpha1
+kind: Alloy
+metadata:
+  name: k8smon-alloy-deployment
+  namespace: default
+  annotations:
+    helm.sdk.operatorframework.io/uninstall-wait: "true"
+spec:
+  alloy:
+    clustering:
+      enabled: true
+      name: alloy-deployment
+    configMap:
+      create: false
+    extraEnv:
+    - name: NAMESPACE
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.namespace
+    - name: POD_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.name
+    - name: CLUSTER_NAME
+      value: instrumentation-hub-test-cluster
+    - name: GCLOUD_RW_API_KEY
+      valueFrom:
+        secretKeyRef:
+          key: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
+          name: grafana-cloud-credentials
+    extraPorts:
+    - appProtocol: grpc
+      name: otlp-grpc
+      port: 4317
+      protocol: TCP
+      targetPort: 4317
+    - appProtocol: http
+      name: otlp-http
+      port: 4318
+      protocol: TCP
+      targetPort: 4318
+    resources:
+      limits:
+        cpu: 4000m
+        memory: 4Gi
+      requests:
+        cpu: 1000m
+        memory: 2Gi
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        add:
+        - CHOWN
+        - DAC_OVERRIDE
+        - FOWNER
+        - FSETID
+        - KILL
+        - SETGID
+        - SETUID
+        - SETPCAP
+        - NET_BIND_SERVICE
+        - NET_RAW
+        - SYS_CHROOT
+        - MKNOD
+        - AUDIT_WRITE
+        - SETFCAP
+        drop:
+        - ALL
+      seccompProfile:
+        type: RuntimeDefault
+  controller:
+    autoscaling:
+      horizontal:
+        enabled: true
+        maxReplicas: 5
+        minReplicas: 1
+        targetCPUUtilizationPercentage: 75
+        targetMemoryUtilizationPercentage: 80
+    nodeSelector:
+      kubernetes.io/os: linux
+    podAnnotations:
+      k8s.grafana.com/logs.job: integrations/alloy
+    replicas: 1
+    type: deployment
+  crds:
+    create: false
+  nameOverride: alloy-deployment
 ---
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
 apiVersion: v1
@@ -1829,9 +2050,13 @@ spec:
             - /bin/bash
             - -ce
             - |
-              echo "Deleting Alloy instance: alloy/k8smon-alloy..."
-              kubectl delete alloy/k8smon-alloy --ignore-not-found=true --wait
-              kubectl wait --for=delete alloy/k8smon-alloy --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy or it may not exist."
+              echo "Deleting Alloy instance: alloy/k8smon-alloy-daemonset..."
+              kubectl delete alloy/k8smon-alloy-daemonset --ignore-not-found=true --wait
+              kubectl wait --for=delete alloy/k8smon-alloy-daemonset --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-daemonset or it may not exist."
+
+              echo "Deleting Alloy instance: alloy/k8smon-alloy-deployment..."
+              kubectl delete alloy/k8smon-alloy-deployment --ignore-not-found=true --wait
+              kubectl wait --for=delete alloy/k8smon-alloy-deployment --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-deployment or it may not exist."
 
               kubectl patch \
                 --namespace=default \
