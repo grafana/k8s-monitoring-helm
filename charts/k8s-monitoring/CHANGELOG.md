@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Update Alloy Operator to 0.7.1 (@petewall)
+
 ## 4.5.0
 
 *   Add the `prometheusMetricsReceiver` feature, which opens a receiver so applications can push Prometheus-formatted metrics to the in-cluster Alloy, which then forwards them to any metrics-capable destination. (#2179) (@petewall)
