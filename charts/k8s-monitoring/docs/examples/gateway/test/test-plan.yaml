@@ -49,6 +49,10 @@ dependencies:
 
 tests:
   - type: query-test
+    # helm test defaults to a 5m timeout, which caps the retry budget below; raise it to match initialDelay + attempts*delay.
+    args:
+      - --timeout
+      - 12m
     values:
       # Profiles are the slow signal: delta CPU profiles fill a scrape window then cross two Alloy hops before landing, so allow a longer warm-up and retry budget.
       initialDelay: 60
