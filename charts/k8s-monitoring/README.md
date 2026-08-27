@@ -200,7 +200,7 @@ details:
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
 |  | windowsEventLogs(feature-windows-event-logs) | 1.0.0 |
 |  | telemetryServices(telemetry-services) | 1.0.0 |
-| https://grafana.github.io/helm-charts | alloy-operator | 0.6.3 |
+| https://grafana.github.io/helm-charts | alloy-operator | 0.7.1 |
 <!-- markdownlint-enable no-bare-urls -->
 
 <!--alex disable host-hostess-->
