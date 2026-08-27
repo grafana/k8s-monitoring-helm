@@ -12,26 +12,30 @@ subject:
     nodeLogs:
       journal:
         path: /run/log/journal
-    alloy-logs:
-      alloy:
-        mounts:
-          extra:
-            - name: runlog
-              mountPath: /run/log
-      controller:
-        volumes:
-          extra:
-            - name: runlog
-              hostPath:
-                path: /run/log
-                type: Directory
+    collectors:
+      alloy-logs:
+        alloy:
+          mounts:
+            extra:
+              - name: runlog
+                mountPath: /run/log
+        controller:
+          volumes:
+            extra:
+              - name: runlog
+                hostPath:
+                  path: /run/log
+                  type: Directory
 
 cluster:
   type: minikube
-  driver: qemu
+  # Use the docker driver so this runs on GitHub-hosted runners (and Macs without
+  # qemu/socket_vmnet). minikube's kicbase image runs systemd/journald.
+  driver: docker
   args:
-    - --memory=8192
-    - --cpus=4
+    # Use the containerd runtime so containerd.service logs land in journald; the
+    # docker driver otherwise defaults to the docker runtime (no containerd.service).
+    - --container-runtime=containerd
 
 dependencies:
   - preset: loki
