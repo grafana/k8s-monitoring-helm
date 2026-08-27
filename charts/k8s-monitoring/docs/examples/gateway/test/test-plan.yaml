@@ -50,6 +50,10 @@ dependencies:
 tests:
   - type: query-test
     values:
+      # Profiles are the slow signal: delta CPU profiles fill a scrape window then cross two Alloy hops before landing, so allow a longer warm-up and retry budget.
+      initialDelay: 60
+      attempts: 20
+      delay: 30
       tests:
         - env:
             CLUSTER: kubernetes-enrichment
