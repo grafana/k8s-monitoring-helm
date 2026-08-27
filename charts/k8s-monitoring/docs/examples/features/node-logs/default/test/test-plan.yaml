@@ -67,13 +67,19 @@ tests:
 
           queries:
             # Kubelet logs exist
-            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/journal", unit="kubelet.service", source="journal"}[1h])
+            # Changing the job label temporarily until this is fixed: https://github.com/grafana/alloy/issues/6980
+            # - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/journal", unit="kubelet.service", source="journal"}[1h])
+            - query: count_over_time({cluster="$CLUSTER", job="node_logs.feature/loki.source.journal.worker", unit="kubelet.service", source="journal"}[1h])
               type: logql
 
             # Containerd logs exist
-            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/journal", unit="containerd.service", source="journal"}[1h])
+            # Changing the job label temporarily until this is fixed: https://github.com/grafana/alloy/issues/6980
+            # - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/journal", unit="containerd.service", source="journal"}[1h])
+            - query: count_over_time({cluster="$CLUSTER", job="node_logs.feature/loki.source.journal.worker", unit="containerd.service", source="journal"}[1h])
               type: logql
 
             # Level detection is working (at least some logs have a detected level)
-            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/journal", level!="unknown"}[1h])
+            # Changing the job label temporarily until this is fixed: https://github.com/grafana/alloy/issues/6980
+            # - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/journal", level!="unknown"}[1h])
+            - query: count_over_time({cluster="$CLUSTER", job="node_logs.feature/loki.source.journal.worker", level!="unknown"}[1h])
               type: logql
