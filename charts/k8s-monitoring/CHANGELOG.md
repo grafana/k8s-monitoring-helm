@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 4.5.1
 
 *   Update Alloy Operator to 0.7.1 (@petewall)
 
