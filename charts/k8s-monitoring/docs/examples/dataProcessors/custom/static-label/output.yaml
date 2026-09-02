@@ -658,29 +658,6 @@ data:
         replacement  = "prometheus"
       }
     }
-    // Processor: static-label (custom) — metrics/prometheus
-    prometheus.relabel "static_label_metrics" {
-      rule {
-        target_label = "region"
-        replacement  = "central"
-      }
-      forward_to = [prometheus.relabel.static_label_out_metrics_prometheus.receiver]
-    }
-    prometheus.relabel "static_label_out_metrics_prometheus" {
-      forward_to = [prometheus.relabel.static_label_prometheus_gate_metrics_prometheus.receiver]
-    }
-    prometheus.relabel "static_label_prometheus_gate_metrics_prometheus" {
-      forward_to = [prometheus.remote_write.prometheus.receiver]
-      rule {
-        source_labels = ["selected_destinations"]
-        regex         = "(^|.*,)prometheus(,.*|$)"
-        action        = "keep"
-      }
-      rule {
-        action = "labeldrop"
-        regex  = "selected_destinations"
-      }
-    }
     // Self Reporting
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
@@ -723,6 +700,29 @@ data:
         prometheus.remote_write.prometheus.receiver,
       ]
     } // prometheus.relabel "kubernetes_monitoring_telemetry"
+    // Processor: static-label (custom) — metrics/prometheus
+    prometheus.relabel "static_label_metrics" {
+      rule {
+        target_label = "region"
+        replacement  = "central"
+      }
+      forward_to = [prometheus.relabel.static_label_out_metrics_prometheus.receiver]
+    }
+    prometheus.relabel "static_label_out_metrics_prometheus" {
+      forward_to = [prometheus.relabel.static_label_prometheus_gate_metrics_prometheus.receiver]
+    }
+    prometheus.relabel "static_label_prometheus_gate_metrics_prometheus" {
+      forward_to = [prometheus.remote_write.prometheus.receiver]
+      rule {
+        source_labels = ["selected_destinations"]
+        regex         = "(^|.*,)prometheus(,.*|$)"
+        action        = "keep"
+      }
+      rule {
+        action = "labeldrop"
+        regex  = "selected_destinations"
+      }
+    }
     
     
     
@@ -901,48 +901,6 @@ data:
         traces = [otelcol.processor.transform.static_label_traces.input]
       }
     }
-    // Processor: static-label (custom) — traces/otlp
-    otelcol.processor.transform "static_label_traces" {
-      error_mode = "ignore"
-      trace_statements {
-        context = "resource"
-        statements = [
-          "set(attributes[\"region\"], \"central\")",
-        ]
-      }
-      output {
-        traces = [otelcol.processor.batch.static_label_out_traces_otlp.input]
-      }
-    }
-    otelcol.processor.batch "static_label_out_traces_otlp" {
-      output {
-        traces = [otelcol.processor.filter.static_label_tempo_gate_traces_otlp.input]
-      }
-    }
-    otelcol.processor.filter "static_label_tempo_gate_traces_otlp" {
-      error_mode = "ignore"
-      trace_conditions {
-        context    = "resource"
-        conditions = [
-          "not IsMatch(attributes[\"selected_destinations\"], \"(^|.*,)tempo(,.*|$)\")",
-        ]
-      }
-      output {
-        traces = [otelcol.processor.transform.static_label_tempo_gate_traces_otlp_strip.input]
-      }
-    }
-    otelcol.processor.transform "static_label_tempo_gate_traces_otlp_strip" {
-      error_mode = "ignore"
-      trace_statements {
-        context = "resource"
-        statements = [
-          "delete_key(attributes, \"selected_destinations\")",
-        ]
-      }
-      output {
-        traces = [otelcol.processor.attributes.tempo.input]
-      }
-    }
     // Feature: Profiles Receiver
     declare "profiles_receiver" {
       argument "profiles_destinations" {
@@ -991,6 +949,48 @@ data:
       rule {
         action = "labeldrop"
         regex  = "selected_destinations"
+      }
+    }
+    // Processor: static-label (custom) — traces/otlp
+    otelcol.processor.transform "static_label_traces" {
+      error_mode = "ignore"
+      trace_statements {
+        context = "resource"
+        statements = [
+          "set(attributes[\"region\"], \"central\")",
+        ]
+      }
+      output {
+        traces = [otelcol.processor.batch.static_label_out_traces_otlp.input]
+      }
+    }
+    otelcol.processor.batch "static_label_out_traces_otlp" {
+      output {
+        traces = [otelcol.processor.filter.static_label_tempo_gate_traces_otlp.input]
+      }
+    }
+    otelcol.processor.filter "static_label_tempo_gate_traces_otlp" {
+      error_mode = "ignore"
+      trace_conditions {
+        context    = "resource"
+        conditions = [
+          "not IsMatch(attributes[\"selected_destinations\"], \"(^|.*,)tempo(,.*|$)\")",
+        ]
+      }
+      output {
+        traces = [otelcol.processor.transform.static_label_tempo_gate_traces_otlp_strip.input]
+      }
+    }
+    otelcol.processor.transform "static_label_tempo_gate_traces_otlp_strip" {
+      error_mode = "ignore"
+      trace_statements {
+        context = "resource"
+        statements = [
+          "delete_key(attributes, \"selected_destinations\")",
+        ]
+      }
+      output {
+        traces = [otelcol.processor.attributes.tempo.input]
       }
     }
     

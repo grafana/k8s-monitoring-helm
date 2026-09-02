@@ -311,7 +311,7 @@
          only feature actually using the router sends logs. The router itself has no way to know
          which signals a feature will actually forward through it -- only the forwarding seam
          does. See destinations.router.assertCanCarry below, invoked from
-         pipeline.alloy.targets.forFeature (templates/dataProcessors/_config.alloy.tpl) once per
+         dataProcessors.pipeline.targets.forFeature (templates/dataProcessors/_config.alloy.tpl) once per
          (feature, type, ecosystem) a feature actually emits, which is where "signal actually
          sent" and "router capability" can be checked together without guessing. */}}
 
@@ -329,7 +329,7 @@
 
 {{/* Precise, false-positive-free replacement for the old R10 inference: asserts that a router
      destination can actually deliver ONE signal a feature is ACTUALLY forwarding to it. Invoked
-     from pipeline.alloy.targets.forFeature (templates/dataProcessors/_config.alloy.tpl) once per
+     from dataProcessors.pipeline.targets.forFeature (templates/dataProcessors/_config.alloy.tpl) once per
      (feature, type, ecosystem) tuple the feature emits, and only when a router destination is
      among that tuple's resolved destinationNames -- this is the only place in the chart where a
      feature's real per-destination signal is known, so it is the only place this check can be
@@ -344,7 +344,7 @@
      labelRules/ottlStatements only emit a rule for a route when the route covers that signal),
      so its destinations' capability for `.type` is not this check's concern.
 
-     Inputs: root (full Values, i.e. `.root` from pipeline.alloy.targets.forFeature),
+     Inputs: root (full Values, i.e. `.root` from dataProcessors.pipeline.targets.forFeature),
      featureKey (string), routerName (string, a destinations key already confirmed to be
      type: router by the caller), type (metrics|logs|traces|profiles). */}}
 {{- define "destinations.router.assertCanCarry" }}

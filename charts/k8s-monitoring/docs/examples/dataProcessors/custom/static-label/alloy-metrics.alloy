@@ -346,29 +346,6 @@ prometheus.relabel "annotationautodiscovery_stamp_metrics_prometheus" {
     replacement  = "prometheus"
   }
 }
-// Processor: static-label (custom) — metrics/prometheus
-prometheus.relabel "static_label_metrics" {
-  rule {
-    target_label = "region"
-    replacement  = "central"
-  }
-  forward_to = [prometheus.relabel.static_label_out_metrics_prometheus.receiver]
-}
-prometheus.relabel "static_label_out_metrics_prometheus" {
-  forward_to = [prometheus.relabel.static_label_prometheus_gate_metrics_prometheus.receiver]
-}
-prometheus.relabel "static_label_prometheus_gate_metrics_prometheus" {
-  forward_to = [prometheus.remote_write.prometheus.receiver]
-  rule {
-    source_labels = ["selected_destinations"]
-    regex         = "(^|.*,)prometheus(,.*|$)"
-    action        = "keep"
-  }
-  rule {
-    action = "labeldrop"
-    regex  = "selected_destinations"
-  }
-}
 // Self Reporting
 prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   set_collectors = ["textfile"]
@@ -411,6 +388,29 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
     prometheus.remote_write.prometheus.receiver,
   ]
 } // prometheus.relabel "kubernetes_monitoring_telemetry"
+// Processor: static-label (custom) — metrics/prometheus
+prometheus.relabel "static_label_metrics" {
+  rule {
+    target_label = "region"
+    replacement  = "central"
+  }
+  forward_to = [prometheus.relabel.static_label_out_metrics_prometheus.receiver]
+}
+prometheus.relabel "static_label_out_metrics_prometheus" {
+  forward_to = [prometheus.relabel.static_label_prometheus_gate_metrics_prometheus.receiver]
+}
+prometheus.relabel "static_label_prometheus_gate_metrics_prometheus" {
+  forward_to = [prometheus.remote_write.prometheus.receiver]
+  rule {
+    source_labels = ["selected_destinations"]
+    regex         = "(^|.*,)prometheus(,.*|$)"
+    action        = "keep"
+  }
+  rule {
+    action = "labeldrop"
+    regex  = "selected_destinations"
+  }
+}
 
 
 

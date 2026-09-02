@@ -95,7 +95,7 @@ discovery.relabel {{ $name | quote }} {
        Inputs: processor, processorName */}}
 {{- define "dataProcessors.ec2Enrichment.alloy.enrichMetrics" }}
 {{- $p := include "helper.alloy_name" .processorName }}
-{{- $outputSink := include "pipeline.alloy.outputSink.ref" (dict "processor" .processorName "type" "metrics" "ecosystem" "prometheus") }}
+{{- $outputSink := include "dataProcessors.pipeline.outputSink.ref" (dict "processor" .processorName "type" "metrics" "ecosystem" "prometheus") }}
 {{- $discoveryRef := include "dataProcessors.ec2Enrichment.alloy.discovery.ref" (dict "processorName" .processorName) }}
 prometheus.enrich "{{ $p }}_in_metrics_prometheus" {
   targets = {{ $discoveryRef }}
@@ -116,7 +116,7 @@ prometheus.enrich "{{ $p }}_in_metrics_prometheus" {
        Inputs: processor, processorName */}}
 {{- define "dataProcessors.ec2Enrichment.alloy.enrichLogs" }}
 {{- $p := include "helper.alloy_name" .processorName }}
-{{- $outputSink := include "pipeline.alloy.outputSink.ref" (dict "processor" .processorName "type" "logs" "ecosystem" "loki") }}
+{{- $outputSink := include "dataProcessors.pipeline.outputSink.ref" (dict "processor" .processorName "type" "logs" "ecosystem" "loki") }}
 {{- $discoveryRef := include "dataProcessors.ec2Enrichment.alloy.discovery.ref" (dict "processorName" .processorName) }}
 loki.enrich "{{ $p }}_in_logs_loki" {
   targets = {{ $discoveryRef }}
@@ -136,7 +136,7 @@ loki.enrich "{{ $p }}_in_logs_loki" {
        Inputs: processor, processorName */}}
 {{- define "dataProcessors.ec2Enrichment.alloy.enrichProfiles" }}
 {{- $p := include "helper.alloy_name" .processorName }}
-{{- $outputSink := include "pipeline.alloy.outputSink.ref" (dict "processor" .processorName "type" "profiles" "ecosystem" "pyroscope") }}
+{{- $outputSink := include "dataProcessors.pipeline.outputSink.ref" (dict "processor" .processorName "type" "profiles" "ecosystem" "pyroscope") }}
 {{- $discoveryRef := include "dataProcessors.ec2Enrichment.alloy.discovery.ref" (dict "processorName" .processorName) }}
 pyroscope.enrich "{{ $p }}_in_profiles_pyroscope" {
   targets = {{ $discoveryRef }}
