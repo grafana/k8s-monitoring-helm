@@ -11,7 +11,7 @@
          bridges and per-destination gates are owned by the orchestrator.
 
      Inputs: root (.), featureKey (string), destinationNames ([]string), type, ecosystem. */}}
-{{- define "pipeline.alloy.targets.forFeature" -}}
+{{- define "dataProcessors.pipeline.targets.forFeature" -}}
 {{- $root := .root -}}
 {{- $featureKey := .featureKey -}}
 {{- $destinationNames := .destinationNames -}}
@@ -21,7 +21,7 @@
 {{- $chosenDataProcessors := dig "dataProcessors" list (default dict (get $root.Values $featureKey)) }}
 {{- /* Resolve the chain for THIS (type, ecosystem). Only route through a stamper when at
        least one chosen processor actually supports this tuple; otherwise the stamper ref
-       would be emitted here but never rendered by feature.render.forFeature (which branches
+       would be emitted here but never rendered by dataProcessors.pipeline.render.forFeature (which branches
        on the same resolved chain), leaving a dangling Alloy reference. */}}
 {{- $chain := include "dataProcessors.get" (dict "dataProcessors" $dp "chosen" $chosenDataProcessors "type" $type "ecosystem" $ecosystem) | fromYamlArray -}}
 {{- /* Precise router-capability check (replaces the old router-side R10 inference, see
@@ -39,29 +39,112 @@
 {{- if empty $chain -}}
 {{- include "destinations.alloy.targets" (dict "destinations" $root.Values.destinations "destinationNames" $destinationNames "type" $type "ecosystem" $ecosystem) -}}
 {{- else }}
-{{ include "pipeline.alloy.stamper.ref" (dict "feature" $featureKey "type" $type "ecosystem" $ecosystem) }},
+{{ include "dataProcessors.pipeline.stamper.ref" (dict "feature" $featureKey "type" $type "ecosystem" $ecosystem) }},
 {{- end -}}
 {{- end }}
 
-{{/* Convenience wrapper used by feature templates. Renders the chart-owned boundary
-     components (stamper, processor config slices, output sinks, destination gates) for a
-     feature's (type, ecosystem). No-op when the feature has no applicable processors.
+{{/* Convenience wrapper used by feature templates. Emits the feature's per-feature stamper (which
+     the feature's module forwards into) and records the feature's resolved processor chain into a
+     per-collector accumulator. The shared chain body (processor config slices, output sinks,
+     destination gates) is NOT rendered here — it is rendered exactly once per collector by
+     dataProcessors.pipeline.collectorChains.flush. No-op when the feature has no applicable processors.
+
+     Recording the chain instead of rendering its body here is what prevents duplicate block
+     declarations when two features on the same collector share a processor: the slice/sink/gate
+     component names are keyed by (processor, type, ecosystem), not by feature, so rendering them
+     once per feature would collide (issue #3014).
 
      Inputs: root (.), featureKey (string), destinationNames ([]string), type, ecosystem. */}}
-{{- define "pipeline.alloy.feature.render.forFeature" -}}
+{{- define "dataProcessors.pipeline.render.forFeature" -}}
 {{- $dp := default dict .root.Values.dataProcessors -}}
 {{- $chosenDataProcessors := dig "dataProcessors" list (default dict (get .root.Values .featureKey)) }}
 {{- $chain := include "dataProcessors.get" (dict "dataProcessors" $dp "chosen" $chosenDataProcessors "type" .type "ecosystem" .ecosystem) | fromYamlArray -}}
-{{- include "pipeline.alloy.feature.render" (dict "destinations" .root.Values.destinations "destinationNames" .destinationNames "dataProcessors" $dp "processorNames" $chain "feature" .featureKey "type" .type "ecosystem" .ecosystem) -}}
+{{- if not (empty $chain) -}}
+{{- /* Per-feature stamper: emitted inline so each feature's module forwards into its own stamper,
+       which stamps that feature's selected_destinations and forwards into the shared chain. */}}
+{{- include "dataProcessors.pipeline.stamper.forFeature" (dict "destinationNames" .destinationNames "dataProcessors" $dp "processorNames" $chain "feature" .featureKey "type" .type "ecosystem" .ecosystem) -}}
+{{- /* Record the chain for once-per-collector rendering, unioning destinations across the features
+       on this collector that use it. */}}
+{{- include "dataProcessors.pipeline.collectorChains.record" (dict "root" .root "collectorName" .root.collectorName "featureKey" .featureKey "destinationNames" .destinationNames "processorNames" $chain "type" .type "ecosystem" .ecosystem) -}}
+{{- end -}}
+{{- end }}
+
+{{/* Records a feature's resolved chain into the per-collector accumulator stashed on .Values. Entries
+     are keyed by (collector, chain, type, ecosystem); destinationNames are unioned across every
+     feature that resolves the same key so the single shared chain body carries a gate for each
+     destination any contributing feature selected. Populated by dataProcessors.pipeline.render.forFeature
+     as the orchestrator walks the features of a collector; drained by dataProcessors.pipeline.collectorChains.flush.
+
+     A processor's slice/sink components are keyed by (processor, type, ecosystem), so a processor
+     can only be shared across features on a collector when they resolve the SAME chain — otherwise
+     its single set of components would need two different wirings. Such a conflict is detected here
+     and fails with an actionable message rather than emitting a config Alloy rejects as
+     "block ... already declared".
+
+     Inputs: root (.), collectorName, featureKey, destinationNames ([]string), processorNames ([]string), type, ecosystem. */}}
+{{- define "dataProcessors.pipeline.collectorChains.record" -}}
+{{- $acc := .root.Values.__dataProcessorChains -}}
+{{- if not $acc -}}
+{{- $acc = dict -}}
+{{- $_ := set .root.Values "__dataProcessorChains" $acc -}}
+{{- end -}}
+{{- $chainStr := join "|" .processorNames -}}
+{{- $key := printf "%s:::%s:::%s:::%s" .collectorName $chainStr .type .ecosystem -}}
+{{- /* Conflict guard: the same processor may not appear in two different chains on one collector
+       (same type/ecosystem), since its shared components can't carry two wirings. */}}
+{{- $owners := .root.Values.__dataProcessorChainOwners -}}
+{{- if not $owners -}}
+{{- $owners = dict -}}
+{{- $_ := set .root.Values "__dataProcessorChainOwners" $owners -}}
+{{- end -}}
+{{- range $procName := .processorNames -}}
+{{- $ownerKey := printf "%s:::%s:::%s:::%s" $.collectorName $procName $.type $.ecosystem -}}
+{{- if hasKey $owners $ownerKey -}}
+{{- $owner := get $owners $ownerKey -}}
+{{- if ne $owner.chain $chainStr -}}
+{{- $msg := list "" (printf "The data processor %q is used in two different processor chains on collector %q:" $procName $.collectorName) -}}
+{{- $msg = append $msg (printf "  - feature %q uses chain [%s]" $owner.feature (join ", " (splitList "|" $owner.chain))) -}}
+{{- $msg = append $msg (printf "  - feature %q uses chain [%s]" $.featureKey (join ", " $.processorNames)) -}}
+{{- $msg = append $msg "A processor's components are shared per collector, so features that share a processor must use the same chain." -}}
+{{- $msg = append $msg "Give these features identical dataProcessors lists, or define separate processors for each." -}}
+{{- fail (join "\n" $msg) -}}
+{{- end -}}
+{{- else -}}
+{{- $_ := set $owners $ownerKey (dict "chain" $chainStr "feature" $.featureKey) -}}
+{{- end -}}
+{{- end -}}
+{{- if hasKey $acc $key -}}
+{{- $entry := get $acc $key -}}
+{{- $_ := set $entry "destinationNames" (concat $entry.destinationNames .destinationNames | uniq) -}}
+{{- else -}}
+{{- $_ := set $acc $key (dict "collectorName" .collectorName "processorNames" .processorNames "type" .type "ecosystem" .ecosystem "destinationNames" (.destinationNames | uniq)) -}}
+{{- end -}}
+{{- end }}
+
+{{/* Renders every chain body accumulated for a collector, exactly once each. Called once per collector
+     by the orchestrator after the feature modules are assembled and BEFORE
+     dataProcessors.alloy.collectorComponents (which gates shared discovery on the config already
+     referencing it, so the chain body slices must exist by then). Entries are matched by collectorName
+     and emitted in a stable key order for deterministic output.
+
+     Inputs: root (.), collectorName. */}}
+{{- define "dataProcessors.pipeline.collectorChains.flush" -}}
+{{- $acc := default dict .root.Values.__dataProcessorChains -}}
+{{- range $key := (keys $acc | sortAlpha) }}
+{{- $entry := get $acc $key }}
+{{- if eq $entry.collectorName $.collectorName }}
+{{- include "dataProcessors.pipeline.chain.render" (dict "destinations" $.root.Values.destinations "destinationNames" ($entry.destinationNames | uniq | sortAlpha) "dataProcessors" $.root.Values.dataProcessors "processorNames" $entry.processorNames "type" $entry.type "ecosystem" $entry.ecosystem) }}
+{{- end }}
+{{- end }}
 {{- end }}
 
 {{/* Stable Alloy component reference for a feature's selected_destinations stamper.
-     Used by both pipeline.alloy.targets.forFeature (to emit the ref) and the orchestrator (to render
+     Used by both dataProcessors.pipeline.targets.forFeature (to emit the ref) and the orchestrator (to render
      the component under that exact name). Component type is chosen per ecosystem so it can
      attach the routing label/attribute in the data's native form.
 
      Inputs: feature (string), type (string), ecosystem (string). */}}
-{{- define "pipeline.alloy.stamper.ref" -}}
+{{- define "dataProcessors.pipeline.stamper.ref" -}}
 {{- $name := printf "%s_stamp_%s_%s" (include "helper.alloy_name" .feature) .type .ecosystem -}}
 {{- if eq .ecosystem "prometheus" -}}prometheus.relabel.{{ $name }}.receiver
 {{- else if eq .ecosystem "loki" -}}loki.process.{{ $name }}.receiver
@@ -72,7 +155,7 @@
 
 {{/* Maps a telemetry type to the OTTL statements block name used by otelcol.processor.transform.
      Inputs: type (string). */}}
-{{- define "pipeline.alloy.otlp.statementsBlock" -}}
+{{- define "dataProcessors.pipeline.otlp.statementsBlock" -}}
 {{- if eq . "metrics" -}}metric_statements
 {{- else if eq . "logs" -}}log_statements
 {{- else if eq . "traces" -}}trace_statements
@@ -84,7 +167,7 @@
      listing the destinations the feature would have selected on its own, and forwards into
      the first processor in the chain.
 
-     Component type per ecosystem mirrors pipeline.alloy.stamper.ref so the ref and the rendered
+     Component type per ecosystem mirrors dataProcessors.pipeline.stamper.ref so the ref and the rendered
      component always match.
 
      Inputs:
@@ -93,7 +176,7 @@
        ecosystem (string)          — prometheus | otlp | loki | pyroscope
        destinationNames ([]string) — destinations to stamp into selected_destinations
        nextInput (string)          — Alloy ref of the first processor in the chain */}}
-{{- define "pipeline.alloy.stamper.render" }}
+{{- define "dataProcessors.pipeline.stamper.render" }}
 {{- $name := printf "%s_stamp_%s_%s" (include "helper.alloy_name" .feature) .type .ecosystem -}}
 {{- $destList := join "," .destinationNames }}
 {{- if eq .ecosystem "prometheus" }}
@@ -114,7 +197,7 @@ loki.process {{ $name | quote }} {
   }
 }
 {{- else if eq .ecosystem "otlp" }}
-{{- $block := include "pipeline.alloy.otlp.statementsBlock" .type }}
+{{- $block := include "dataProcessors.pipeline.otlp.statementsBlock" .type }}
 otelcol.processor.transform {{ $name | quote }} {
   error_mode = "ignore"
   {{ $block }} {
@@ -144,7 +227,7 @@ pyroscope.relabel {{ $name | quote }} {
      processor's input or to per-destination gates.
 
      Inputs: processor (string), type (string), ecosystem (string). */}}
-{{- define "pipeline.alloy.outputSink.ref" -}}
+{{- define "dataProcessors.pipeline.outputSink.ref" -}}
 {{- $name := printf "%s_out_%s_%s" (include "helper.alloy_name" .processor) .type .ecosystem -}}
 {{- if eq .ecosystem "prometheus" -}}prometheus.relabel.{{ $name }}.receiver
 {{- else if eq .ecosystem "loki" -}}loki.process.{{ $name }}.receiver
@@ -163,7 +246,7 @@ pyroscope.relabel {{ $name | quote }} {
        type (string)
        ecosystem (string)
        nextTargets ([]string) — list of Alloy refs the sink forwards to */}}
-{{- define "pipeline.alloy.outputSink.render" }}
+{{- define "dataProcessors.pipeline.outputSink.render" }}
 {{- $name := printf "%s_out_%s_%s" (include "helper.alloy_name" .processor) .type .ecosystem }}
 {{- $targets := join ", " .nextTargets }}
 {{- if eq .ecosystem "prometheus" }}
@@ -192,7 +275,7 @@ pyroscope.relabel {{ $name | quote }} {
      `selected_destinations` label/attribute doesn't contain this destination.
 
      Inputs: processor (string), destination (string), type (string), ecosystem (string). */}}
-{{- define "pipeline.alloy.gate.ref" -}}
+{{- define "dataProcessors.pipeline.gate.ref" -}}
 {{- $name := printf "%s_%s_gate_%s_%s" (include "helper.alloy_name" .processor) (include "helper.alloy_name" .destination) .type .ecosystem -}}
 {{- if eq .ecosystem "prometheus" -}}prometheus.relabel.{{ $name }}.receiver
 {{- else if eq .ecosystem "loki" -}}loki.relabel.{{ $name }}.receiver
@@ -211,7 +294,7 @@ pyroscope.relabel {{ $name | quote }} {
        type (string)
        ecosystem (string)
        destinationTarget (string) — final destination component ref */}}
-{{- define "pipeline.alloy.gate.render" }}
+{{- define "dataProcessors.pipeline.gate.render" }}
 {{- $name := printf "%s_%s_gate_%s_%s" (include "helper.alloy_name" .processor) (include "helper.alloy_name" .destination) .type .ecosystem }}
 {{- $keepRegex := printf "(^|.*,)%s(,.*|$)" .destination }}
 {{- if eq .ecosystem "prometheus" }}
@@ -243,7 +326,7 @@ loki.relabel {{ $name | quote }} {
 }
 {{- else if eq .ecosystem "otlp" }}
 {{- $dropExpr := printf `not IsMatch(attributes["selected_destinations"], "%s")` $keepRegex }}
-{{- $block := include "pipeline.alloy.otlp.statementsBlock" .type }}
+{{- $block := include "dataProcessors.pipeline.otlp.statementsBlock" .type }}
 otelcol.processor.filter {{ $name | quote }} {
   error_mode = "ignore"
   {{- if eq .type "metrics" }}
@@ -300,35 +383,50 @@ pyroscope.relabel {{ $name | quote }} {
 {{- end }}
 {{- end }}
 
-{{/* Renders, for ONE (feature, type, ecosystem) tuple, all chart-owned boundary components:
-     - stamper (forwards from feature module into the chain)
+{{/* Renders ONLY the per-feature stamper: the feature's module forwards into this component, which
+     stamps the feature's selected_destinations and forwards into the first processor of the shared
+     chain. Kept per-feature (its name is keyed by feature); the chain body it feeds is shared once
+     per collector by dataProcessors.pipeline.chain.render.
+
+     Inputs:
+       destinationNames ([]string)
+       dataProcessors (map)          — .Values.dataProcessors
+       processorNames ([]string)     — feature's chain, already filtered to those supporting
+                                       (type, ecosystem). Must be non-empty.
+       feature (string)
+       type (string)
+       ecosystem (string) */}}
+{{- define "dataProcessors.pipeline.stamper.forFeature" }}
+{{- $chain := .processorNames }}
+{{- $firstName := index $chain 0 }}
+{{- $firstProc := get .dataProcessors $firstName }}
+{{- $firstInput := include (printf "dataProcessors.%s.alloy.%s.%s.input" $firstProc.type .ecosystem .type) (dict "processor" $firstProc "processorName" $firstName) }}
+{{- include "dataProcessors.pipeline.stamper.render" (dict "feature" .feature "type" .type "ecosystem" .ecosystem "destinationNames" .destinationNames "nextInput" $firstInput) }}
+{{- end }}
+
+{{/* Renders, for ONE (chain, type, ecosystem) on a collector, the shared chart-owned components:
      - each processor's user-config slice for this (type, ecosystem)
      - per-position output sinks (one per processor in the chain)
      - per-destination gates (after the terminal processor)
 
-     Slices are emitted per (feature, type, ecosystem), so a processor used by features on
-     different collectors only renders the pipelines each collector actually needs.
+     None of these are keyed by feature, so this body is rendered exactly once per collector per
+     unique chain (see dataProcessors.pipeline.collectorChains.flush) with the UNION of destinations across
+     the features that use the chain. The per-feature stampers (dataProcessors.pipeline.stamper.forFeature)
+     forward into the first processor's input, so multiple features share this single body.
 
      Inputs:
        destinations (map)            — .Values.destinations
-       destinationNames ([]string)
-       processors (map)              — .Values.dataProcessors
-       processorNames ([]string)     — feature's chain, already filtered to those supporting
-                                       (type, ecosystem). Empty = no-op.
-       feature (string)
+       destinationNames ([]string)   — union across features using this chain on the collector
+       dataProcessors (map)          — .Values.dataProcessors
+       processorNames ([]string)     — chain, already filtered to those supporting (type, ecosystem).
+                                       Empty = no-op.
        type (string)
        ecosystem (string) */}}
-{{- define "pipeline.alloy.feature.render" }}
+{{- define "dataProcessors.pipeline.chain.render" }}
 {{- if not (empty .processorNames) }}
 {{- $chain := .processorNames }}
 {{- $chainLen := len $chain }}
-{{- $firstName := index $chain 0 }}
-{{- $firstProc := get .dataProcessors $firstName }}
-{{- $firstInput := include (printf "dataProcessors.%s.alloy.%s.%s.input" $firstProc.type .ecosystem .type) (dict "processor" $firstProc "processorName" $firstName) }}
-{{- /* 1. Stamper: from feature module into the first processor */}}
-{{- include "pipeline.alloy.stamper.render" (dict "feature" .feature "type" .type "ecosystem" .ecosystem "destinationNames" .destinationNames "nextInput" $firstInput) }}
-
-{{- /* 2. For each processor in the chain emit (a) its user-config slice for this
+{{- /* For each processor in the chain emit (a) its user-config slice for this
        (type, ecosystem) and (b) the output sink. The sink forwards to the next
        processor's input or (if terminal) to per-destination gate receivers. */}}
 {{- range $idx, $procName := $chain }}
@@ -344,11 +442,11 @@ pyroscope.relabel {{ $name | quote }} {
     {{- $nextTargets = append $nextTargets $nextInput }}
   {{- else }}
     {{- range $destName := $.destinationNames }}
-      {{- $gateRef := include "pipeline.alloy.gate.ref" (dict "processor" $procName "destination" $destName "type" $.type "ecosystem" $.ecosystem) }}
+      {{- $gateRef := include "dataProcessors.pipeline.gate.ref" (dict "processor" $procName "destination" $destName "type" $.type "ecosystem" $.ecosystem) }}
       {{- $nextTargets = append $nextTargets $gateRef }}
     {{- end }}
   {{- end }}
-  {{- include "pipeline.alloy.outputSink.render" (dict "processor" $procName "type" $.type "ecosystem" $.ecosystem "nextTargets" $nextTargets) }}
+  {{- include "dataProcessors.pipeline.outputSink.render" (dict "processor" $procName "type" $.type "ecosystem" $.ecosystem "nextTargets" $nextTargets) }}
 {{- end }}
 
 {{- /* 3. Destination gates: one per (terminal processor, destination). */}}
@@ -357,7 +455,7 @@ pyroscope.relabel {{ $name | quote }} {
   {{- if hasKey $.destinations $destName }}
     {{- $destination := get $.destinations $destName }}
     {{- $destTarget := include (printf "destinations.%s.alloy.%s.%s.target" $destination.type $.ecosystem $.type) (dict "destination" $destination "destinationName" $destName) | trim }}
-    {{- include "pipeline.alloy.gate.render" (dict "processor" $terminal "destination" $destName "type" $.type "ecosystem" $.ecosystem "destinationTarget" $destTarget) }}
+    {{- include "dataProcessors.pipeline.gate.render" (dict "processor" $terminal "destination" $destName "type" $.type "ecosystem" $.ecosystem "destinationTarget" $destTarget) }}
   {{- end }}
 {{- end }}
 {{- end }}

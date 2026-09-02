@@ -7,10 +7,10 @@
 {{- include "feature.lokiLogsReceiver.module" (dict "Values" $.Values.lokiLogsReceiver "Files" $.Subcharts.lokiLogsReceiver.Files) }}
 loki_logs_receiver "feature" {
   logs_destinations = [
-    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "lokiLogsReceiver" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
+    {{ include "dataProcessors.pipeline.targets.forFeature" (dict "root" $ "featureKey" "lokiLogsReceiver" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
   ]
 }
-{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "lokiLogsReceiver" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") }}
+{{- include "dataProcessors.pipeline.render.forFeature" (dict "root" $ "featureKey" "lokiLogsReceiver" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") }}
 {{- end -}}
 {{- end -}}
 

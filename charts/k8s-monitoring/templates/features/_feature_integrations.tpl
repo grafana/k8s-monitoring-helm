@@ -65,21 +65,21 @@
 {{- include (printf "integrations.%s.module.metrics" $integrationType) $values | indent 0 }}
 {{ include "helper.alloy_name" $integrationType }}_integration "integration" {
   metrics_destinations = [
-    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "integrations" "destinationNames" $metricsDestinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
+    {{ include "dataProcessors.pipeline.targets.forFeature" (dict "root" $ "featureKey" "integrations" "destinationNames" $metricsDestinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
   ]
 {{- if has $integrationType $logOutputIntegrations }}
   logs_destinations = [
-    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "integrations" "destinationNames" $logsDestinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
+    {{ include "dataProcessors.pipeline.targets.forFeature" (dict "root" $ "featureKey" "integrations" "destinationNames" $logsDestinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
   ]
 {{- end }}
 }
 {{- end }}
 {{- /* Emit the chart-owned pipeline boundary components once for the feature (not per integration), so the shared stamper/sinks/gates aren't duplicated. */}}
 {{- if $metricIntegrations }}
-{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "integrations" "destinationNames" $metricsDestinations "type" "metrics" "ecosystem" "prometheus") }}
+{{- include "dataProcessors.pipeline.render.forFeature" (dict "root" $ "featureKey" "integrations" "destinationNames" $metricsDestinations "type" "metrics" "ecosystem" "prometheus") }}
 {{- end }}
 {{- if $logOutputIntegrations }}
-{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "integrations" "destinationNames" $logsDestinations "type" "logs" "ecosystem" "loki") }}
+{{- include "dataProcessors.pipeline.render.forFeature" (dict "root" $ "featureKey" "integrations" "destinationNames" $logsDestinations "type" "logs" "ecosystem" "loki") }}
 {{- end }}
 {{- end }}
 

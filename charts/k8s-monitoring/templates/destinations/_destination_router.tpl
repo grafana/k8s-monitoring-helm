@@ -129,12 +129,12 @@ otelcol.processor.transform {{ printf "%s_metrics_otlp" $alloyName | quote }} {
     ]
   }
   output {
-    metrics = [{{ range $d := $metricsDownstream }}{{ include "pipeline.alloy.gate.ref" (dict "processor" $routerName "destination" $d "type" "metrics" "ecosystem" "otlp") }}, {{ end }}]
+    metrics = [{{ range $d := $metricsDownstream }}{{ include "dataProcessors.pipeline.gate.ref" (dict "processor" $routerName "destination" $d "type" "metrics" "ecosystem" "otlp") }}, {{ end }}]
   }
 } // otelcol.processor.transform "{{ $alloyName }}_metrics_otlp"
 {{- range $d := $metricsDownstream }}
 {{- $info := get $downstreamInfo $d }}
-{{ include "pipeline.alloy.gate.render" (dict "processor" $routerName "destination" $d "type" "metrics" "ecosystem" "otlp" "destinationTarget" (include (printf "destinations.%s.alloy.otlp.metrics.target" $info.type) (dict "destination" $info.values "destinationName" $d) | trim)) }}
+{{ include "dataProcessors.pipeline.gate.render" (dict "processor" $routerName "destination" $d "type" "metrics" "ecosystem" "otlp" "destinationTarget" (include (printf "destinations.%s.alloy.otlp.metrics.target" $info.type) (dict "destination" $info.values "destinationName" $d) | trim)) }}
 {{- end }}
 
 {{- /* ---------------- logs/otlp ---------------- */}}
@@ -150,12 +150,12 @@ otelcol.processor.transform {{ printf "%s_logs_otlp" $alloyName | quote }} {
     ]
   }
   output {
-    logs = [{{ range $d := $logsDownstream }}{{ include "pipeline.alloy.gate.ref" (dict "processor" $routerName "destination" $d "type" "logs" "ecosystem" "otlp") }}, {{ end }}]
+    logs = [{{ range $d := $logsDownstream }}{{ include "dataProcessors.pipeline.gate.ref" (dict "processor" $routerName "destination" $d "type" "logs" "ecosystem" "otlp") }}, {{ end }}]
   }
 } // otelcol.processor.transform "{{ $alloyName }}_logs_otlp"
 {{- range $d := $logsDownstream }}
 {{- $info := get $downstreamInfo $d }}
-{{ include "pipeline.alloy.gate.render" (dict "processor" $routerName "destination" $d "type" "logs" "ecosystem" "otlp" "destinationTarget" (include (printf "destinations.%s.alloy.otlp.logs.target" $info.type) (dict "destination" $info.values "destinationName" $d) | trim)) }}
+{{ include "dataProcessors.pipeline.gate.render" (dict "processor" $routerName "destination" $d "type" "logs" "ecosystem" "otlp" "destinationTarget" (include (printf "destinations.%s.alloy.otlp.logs.target" $info.type) (dict "destination" $info.values "destinationName" $d) | trim)) }}
 {{- end }}
 
 {{- /* ---------------- traces/otlp ---------------- */}}
@@ -171,12 +171,12 @@ otelcol.processor.transform {{ printf "%s_traces_otlp" $alloyName | quote }} {
     ]
   }
   output {
-    traces = [{{ range $d := $tracesDownstream }}{{ include "pipeline.alloy.gate.ref" (dict "processor" $routerName "destination" $d "type" "traces" "ecosystem" "otlp") }}, {{ end }}]
+    traces = [{{ range $d := $tracesDownstream }}{{ include "dataProcessors.pipeline.gate.ref" (dict "processor" $routerName "destination" $d "type" "traces" "ecosystem" "otlp") }}, {{ end }}]
   }
 } // otelcol.processor.transform "{{ $alloyName }}_traces_otlp"
 {{- range $d := $tracesDownstream }}
 {{- $info := get $downstreamInfo $d }}
-{{ include "pipeline.alloy.gate.render" (dict "processor" $routerName "destination" $d "type" "traces" "ecosystem" "otlp" "destinationTarget" (include (printf "destinations.%s.alloy.otlp.traces.target" $info.type) (dict "destination" $info.values "destinationName" $d) | trim)) }}
+{{ include "dataProcessors.pipeline.gate.render" (dict "processor" $routerName "destination" $d "type" "traces" "ecosystem" "otlp" "destinationTarget" (include (printf "destinations.%s.alloy.otlp.traces.target" $info.type) (dict "destination" $info.values "destinationName" $d) | trim)) }}
 {{- end }}
 
 {{- else if eq $ecosystem "prometheus" }}
@@ -186,11 +186,11 @@ otelcol.processor.transform {{ printf "%s_traces_otlp" $alloyName | quote }} {
 // based on the route match conditions, and fan out to one gate per downstream destination.
 prometheus.relabel {{ printf "%s_metrics_prometheus" $alloyName | quote }} {
 {{ include "destinations.router.labelRules" (dict "routes" $routes "defaultDestinations" $defaultDestinations "signal" "metrics" "downstreamInfo" $downstreamInfo) | indent 2 }}
-  forward_to = [{{ range $d := $metricsDownstream }}{{ include "pipeline.alloy.gate.ref" (dict "processor" $routerName "destination" $d "type" "metrics" "ecosystem" "prometheus") }}, {{ end }}]
+  forward_to = [{{ range $d := $metricsDownstream }}{{ include "dataProcessors.pipeline.gate.ref" (dict "processor" $routerName "destination" $d "type" "metrics" "ecosystem" "prometheus") }}, {{ end }}]
 } // prometheus.relabel "{{ $alloyName }}_metrics_prometheus"
 {{- range $d := $metricsDownstream }}
 {{- $info := get $downstreamInfo $d }}
-{{ include "pipeline.alloy.gate.render" (dict "processor" $routerName "destination" $d "type" "metrics" "ecosystem" "prometheus" "destinationTarget" (include (printf "destinations.%s.alloy.prometheus.metrics.target" $info.type) (dict "destination" $info.values "destinationName" $d) | trim)) }}
+{{ include "dataProcessors.pipeline.gate.render" (dict "processor" $routerName "destination" $d "type" "metrics" "ecosystem" "prometheus" "destinationTarget" (include (printf "destinations.%s.alloy.prometheus.metrics.target" $info.type) (dict "destination" $info.values "destinationName" $d) | trim)) }}
 {{- end }}
 
 {{- else if eq $ecosystem "loki" }}
@@ -200,11 +200,11 @@ prometheus.relabel {{ printf "%s_metrics_prometheus" $alloyName | quote }} {
 // based on the route match conditions, and fan out to one gate per downstream destination.
 loki.relabel {{ printf "%s_logs_loki" $alloyName | quote }} {
 {{ include "destinations.router.labelRules" (dict "routes" $routes "defaultDestinations" $defaultDestinations "signal" "logs" "downstreamInfo" $downstreamInfo) | indent 2 }}
-  forward_to = [{{ range $d := $logsDownstream }}{{ include "pipeline.alloy.gate.ref" (dict "processor" $routerName "destination" $d "type" "logs" "ecosystem" "loki") }}, {{ end }}]
+  forward_to = [{{ range $d := $logsDownstream }}{{ include "dataProcessors.pipeline.gate.ref" (dict "processor" $routerName "destination" $d "type" "logs" "ecosystem" "loki") }}, {{ end }}]
 } // loki.relabel "{{ $alloyName }}_logs_loki"
 {{- range $d := $logsDownstream }}
 {{- $info := get $downstreamInfo $d }}
-{{ include "pipeline.alloy.gate.render" (dict "processor" $routerName "destination" $d "type" "logs" "ecosystem" "loki" "destinationTarget" (include (printf "destinations.%s.alloy.loki.logs.target" $info.type) (dict "destination" $info.values "destinationName" $d) | trim)) }}
+{{ include "dataProcessors.pipeline.gate.render" (dict "processor" $routerName "destination" $d "type" "logs" "ecosystem" "loki" "destinationTarget" (include (printf "destinations.%s.alloy.loki.logs.target" $info.type) (dict "destination" $info.values "destinationName" $d) | trim)) }}
 {{- end }}
 
 {{- else if eq $ecosystem "pyroscope" }}
@@ -214,11 +214,11 @@ loki.relabel {{ printf "%s_logs_loki" $alloyName | quote }} {
 // based on the route match conditions, and fan out to one gate per downstream destination.
 pyroscope.relabel {{ printf "%s_profiles_pyroscope" $alloyName | quote }} {
 {{ include "destinations.router.labelRules" (dict "routes" $routes "defaultDestinations" $defaultDestinations "signal" "profiles" "downstreamInfo" $downstreamInfo) | indent 2 }}
-  forward_to = [{{ range $d := $profilesDownstream }}{{ include "pipeline.alloy.gate.ref" (dict "processor" $routerName "destination" $d "type" "profiles" "ecosystem" "pyroscope") }}, {{ end }}]
+  forward_to = [{{ range $d := $profilesDownstream }}{{ include "dataProcessors.pipeline.gate.ref" (dict "processor" $routerName "destination" $d "type" "profiles" "ecosystem" "pyroscope") }}, {{ end }}]
 } // pyroscope.relabel "{{ $alloyName }}_profiles_pyroscope"
 {{- range $d := $profilesDownstream }}
 {{- $info := get $downstreamInfo $d }}
-{{ include "pipeline.alloy.gate.render" (dict "processor" $routerName "destination" $d "type" "profiles" "ecosystem" "pyroscope" "destinationTarget" (include (printf "destinations.%s.alloy.pyroscope.profiles.target" $info.type) (dict "destination" $info.values "destinationName" $d) | trim)) }}
+{{ include "dataProcessors.pipeline.gate.render" (dict "processor" $routerName "destination" $d "type" "profiles" "ecosystem" "pyroscope" "destinationTarget" (include (printf "destinations.%s.alloy.pyroscope.profiles.target" $info.type) (dict "destination" $info.values "destinationName" $d) | trim)) }}
 {{- end }}
 
 {{- end }}

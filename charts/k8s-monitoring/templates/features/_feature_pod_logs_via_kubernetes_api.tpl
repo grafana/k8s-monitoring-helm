@@ -8,10 +8,10 @@
 {{- include "feature.podLogsViaKubernetesApi.module" (dict "Values" .Values.podLogsViaKubernetesApi "Files" $.Subcharts.podLogsViaKubernetesApi.Files "Template" $.Template) }}
 pod_logs_via_kubernetes_api "feature" {
   logs_destinations = [
-    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "podLogsViaKubernetesApi" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
+    {{ include "dataProcessors.pipeline.targets.forFeature" (dict "root" $ "featureKey" "podLogsViaKubernetesApi" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
   ]
 }
-{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "podLogsViaKubernetesApi" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") }}
+{{- include "dataProcessors.pipeline.render.forFeature" (dict "root" $ "featureKey" "podLogsViaKubernetesApi" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") }}
 {{- end -}}
 {{- end -}}
 

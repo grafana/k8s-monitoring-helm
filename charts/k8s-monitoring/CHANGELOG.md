@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Fix issue with duplicate configuration block declarations when the same data processor is used by more than one feature on the same collector. (#3014) (@petewall)
+
 ## 4.5.1
 
 *   Fix incorrect `job` label for nodeLogs feature. (@petewall)

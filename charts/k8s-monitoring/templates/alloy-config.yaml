@@ -1,3 +1,4 @@
+{{- /* Track which required replaceComponent entries match, so we can error on ones that never do. */}}
 {{- $replacementsUsed := dict }}
 {{- range $replacement := .Values.replaceComponent }}
   {{- if not $replacement.optional }}
@@ -5,9 +6,12 @@
     {{- $_ := set $replacementsUsed $key false }}
   {{- end }}
 {{- end }}
+{{- /* Render one Alloy config ConfigMap per enabled collector. */}}
 {{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
+{{- /* Seed the collector's destination list with any explicitly included destinations. */}}
 {{- $destinationNames := (get $.Values.collectors $collectorName).includeDestinations | default list }}
 {{- $collectorContext := dict "Values" $.Values "Chart" $.Chart "Files" $.Files "Release" $.Release "Subcharts" $.Subcharts "Template" $.Template "Capabilities" $.Capabilities "collectorName" $collectorName }}
+{{- /* Add the destinations required by each feature assigned to this collector. */}}
 {{- range $featureKey := include "features.list" $ | fromYamlArray }}
   {{- $featureCollectorNames := include "collectors.getCollectorsForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) | fromYamlArray }}
   {{- if has $collectorName $featureCollectorNames }}
@@ -45,6 +49,7 @@
 {{- $values := dict "Values" $.Values "Chart" $.Chart "Files" $.Files "Release" $.Release "Subcharts" $.Subcharts "Template" $.Template "Capabilities" $.Capabilities "collectorName" $collectorName }}
 {{- $collectorValues := include "collector.alloy.values" $values | fromYaml }}
 {{- $alloyConfig := "" }}
+{{- /* Build the collector's config by concatenating the config from each of its assigned features. */}}
 {{- range $featureKey := include "features.list" . | fromYamlArray }}
   {{- $featureCollectorNames := include "collectors.getCollectorsForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) | fromYamlArray }}
   {{- if has $collectorName $featureCollectorNames }}
@@ -54,17 +59,26 @@
     {{- end }}
   {{- end }}
 {{- end }}
+{{- /* Append each shared data-processor pipeline once per collector, before collectorComponents needs to see it (issue #3014). */}}
+{{- $dataProcessorChains := include "dataProcessors.pipeline.collectorChains.flush" (dict "root" $ "collectorName" $collectorName) | trim }}
+{{- if $dataProcessorChains }}
+  {{- $alloyConfig = cat $alloyConfig ($dataProcessorChains | nindent 0) }}
+{{- end }}
+{{- /* Append components shared across a processor's pipelines (like Kubernetes discovery), once per collector. */}}
 {{- $dataProcessorSharedComponents := include "dataProcessors.alloy.collectorComponents" (dict "Values" $.Values "config" $alloyConfig) | trim }}
 {{- if $dataProcessorSharedComponents }}
   {{- $alloyConfig = cat $alloyConfig ($dataProcessorSharedComponents | nindent 0) }}
 {{- end }}
+{{- /* Append the collector's logging, live debugging, remote config, and extra config blocks. */}}
 {{- $alloyConfig = cat $alloyConfig (include "collectors.logging.alloy" $collectorValues | trim | nindent 0) }}
 {{- $alloyConfig = cat $alloyConfig (include "collectors.liveDebugging.alloy" $collectorValues | trim | nindent 0) }}
 {{- $alloyConfig = cat $alloyConfig (include "collectors.remoteConfig.alloy" $values | trim | nindent 0) }}
 {{- $alloyConfig = cat $alloyConfig (include "collectors.extraConfig.alloy" $values | trim | nindent 0) }}
+{{- /* Append the write rules and component bodies for the collector's destinations. */}}
 {{- $alloyConfig = cat $alloyConfig (include "destinations.alloy.rules" (deepCopy $ | merge (dict "collectorName" $collectorName)) | trim | nindent 0) }}
 {{- $alloyConfig = cat $alloyConfig (include "destinations.alloy.config" (deepCopy $ | merge (dict "destinationNames" ($destinationNames | uniq | sortAlpha))) | trim | nindent 0) }}
 
+{{- /* Apply any component replacements and record which ones matched. */}}
 {{- range $replacement := $.Values.replaceComponent }}
   {{- $before := $alloyConfig }}
   {{- $alloyConfig = include "replaceComponent.apply" (dict "config" $alloyConfig "replacement" $replacement) }}
@@ -79,6 +93,7 @@
 
 {{/* Ensure the collector's stability level is high enough for the components in the rendered config */}}
 {{- include "collectors.validate.stabilityLevel" (dict "collectorName" $collectorName "config" $alloyConfig "collectorValues" $collectorValues "Files" $.Files) }}
+{{- /* Emit the assembled config as this collector's ConfigMap. */}}
 ---
 apiVersion: v1
 kind: ConfigMap

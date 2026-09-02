@@ -110,7 +110,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
     action = "keep"
   }
   forward_to = [
-    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "selfReporting" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
+    {{ include "dataProcessors.pipeline.targets.forFeature" (dict "root" $ "featureKey" "selfReporting" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
   ]
 } // prometheus.relabel "kubernetes_monitoring_telemetry"
   {{- else }}
@@ -129,11 +129,11 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
     enabled = true
   }
   forward_to = [
-    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "selfReporting" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
+    {{ include "dataProcessors.pipeline.targets.forFeature" (dict "root" $ "featureKey" "selfReporting" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
   ]
 } // prometheus.scrape "kubernetes_monitoring_telemetry"
   {{- end }}
-{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "selfReporting" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") }}
+{{- include "dataProcessors.pipeline.render.forFeature" (dict "root" $ "featureKey" "selfReporting" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") }}
 {{- end }}
 {{- end }}
 
