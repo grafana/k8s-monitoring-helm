@@ -155,7 +155,7 @@ discovery.relabel {{ $name | quote }} {
 {{- $podAnnotations := default dict (dig "podAnnotations" dict .processor) }}
 {{- $hasNamespaceEnrichment := or (not (empty $namespaceLabels)) (not (empty $namespaceAnnotations)) }}
 {{- $hasPodEnrichment := or (not (empty $podLabels)) (not (empty $podAnnotations)) }}
-{{- $outputSink := include "pipeline.alloy.outputSink.ref" (dict "processor" .processorName "type" .type "ecosystem" .ecosystem) }}
+{{- $outputSink := include "dataProcessors.pipeline.outputSink.ref" (dict "processor" .processorName "type" .type "ecosystem" .ecosystem) }}
 {{- $discoveryRef := include "dataProcessors.kubernetesEnrichment.alloy.discovery.ref" (dict "processorName" .processorName) }}
 {{ .relabelComponent }} "{{ $p }}_in_{{ $suffix }}" {
 {{- if $hasPodEnrichment }}
@@ -214,7 +214,7 @@ discovery.relabel {{ $name | quote }} {
        Inputs: processor, processorName, type (metrics | logs | traces) */}}
 {{- define "dataProcessors.kubernetesEnrichment.alloy.otlpPipeline" }}
 {{- $p := include "helper.alloy_name" .processorName }}
-{{- $outputSink := include "pipeline.alloy.outputSink.ref" (dict "processor" .processorName "type" .type "ecosystem" "otlp") }}
+{{- $outputSink := include "dataProcessors.pipeline.outputSink.ref" (dict "processor" .processorName "type" .type "ecosystem" "otlp") }}
 otelcol.processor.k8sattributes "{{ $p }}_in_{{ .type }}_otlp" {
   extract {
     metadata = []

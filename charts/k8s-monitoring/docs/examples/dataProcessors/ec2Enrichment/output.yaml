@@ -262,30 +262,6 @@ data:
         replacement  = "localPrometheus"
       }
     }
-    // Processor: ec2-tags (ec2Enrichment) — metrics/prometheus
-    prometheus.enrich "ec2_tags_in_metrics_prometheus" {
-      targets = discovery.relabel.ec2_tags_instances.output
-      target_to_metric_match = {
-        "__meta_ec2_private_dns_name" = "node",
-      }
-      labels_to_copy = ["team"]
-      forward_to = [prometheus.relabel.ec2_tags_out_metrics_prometheus.receiver]
-    } // prometheus.enrich "ec2_tags_in_metrics_prometheus"
-    prometheus.relabel "ec2_tags_out_metrics_prometheus" {
-      forward_to = [prometheus.relabel.ec2_tags_localprometheus_gate_metrics_prometheus.receiver]
-    }
-    prometheus.relabel "ec2_tags_localprometheus_gate_metrics_prometheus" {
-      forward_to = [prometheus.remote_write.localprometheus.receiver]
-      rule {
-        source_labels = ["selected_destinations"]
-        regex         = "(^|.*,)localPrometheus(,.*|$)"
-        action        = "keep"
-      }
-      rule {
-        action = "labeldrop"
-        regex  = "selected_destinations"
-      }
-    }
     // Feature: Host Metrics - Windows Hosts
     declare "windows_host_metrics" {
       argument "metrics_destinations" {
@@ -563,30 +539,6 @@ data:
         }
       }
     }
-    // Processor: ec2-tags (ec2Enrichment) — logs/loki
-    loki.enrich "ec2_tags_in_logs_loki" {
-      targets = discovery.relabel.ec2_tags_instances.output
-      target_match_label = "__meta_ec2_private_dns_name"
-      logs_match_label = "node"
-      labels_to_copy = ["team"]
-      forward_to = [loki.process.ec2_tags_out_logs_loki.receiver]
-    } // loki.enrich "ec2_tags_in_logs_loki"
-    loki.process "ec2_tags_out_logs_loki" {
-      forward_to = [loki.relabel.ec2_tags_localloki_gate_logs_loki.receiver]
-    }
-    loki.relabel "ec2_tags_localloki_gate_logs_loki" {
-      forward_to = [loki.write.localloki.receiver]
-      rule {
-        source_labels = ["selected_destinations"]
-        regex         = "(^|.*,)localLoki(,.*|$)"
-        action        = "keep"
-      }
-      rule {
-        action = "labeldrop"
-        regex  = "selected_destinations"
-      }
-      max_cache_size = 100
-    }
     // Feature: Pod Logs (Loki)
     declare "pod_logs_via_loki" {
       argument "logs_destinations" {
@@ -817,6 +769,54 @@ data:
         prometheus.remote_write.localprometheus.receiver,
       ]
     } // prometheus.scrape "kubernetes_monitoring_telemetry"
+    // Processor: ec2-tags (ec2Enrichment) — logs/loki
+    loki.enrich "ec2_tags_in_logs_loki" {
+      targets = discovery.relabel.ec2_tags_instances.output
+      target_match_label = "__meta_ec2_private_dns_name"
+      logs_match_label = "node"
+      labels_to_copy = ["team"]
+      forward_to = [loki.process.ec2_tags_out_logs_loki.receiver]
+    } // loki.enrich "ec2_tags_in_logs_loki"
+    loki.process "ec2_tags_out_logs_loki" {
+      forward_to = [loki.relabel.ec2_tags_localloki_gate_logs_loki.receiver]
+    }
+    loki.relabel "ec2_tags_localloki_gate_logs_loki" {
+      forward_to = [loki.write.localloki.receiver]
+      rule {
+        source_labels = ["selected_destinations"]
+        regex         = "(^|.*,)localLoki(,.*|$)"
+        action        = "keep"
+      }
+      rule {
+        action = "labeldrop"
+        regex  = "selected_destinations"
+      }
+      max_cache_size = 100
+    }
+    // Processor: ec2-tags (ec2Enrichment) — metrics/prometheus
+    prometheus.enrich "ec2_tags_in_metrics_prometheus" {
+      targets = discovery.relabel.ec2_tags_instances.output
+      target_to_metric_match = {
+        "__meta_ec2_private_dns_name" = "node",
+      }
+      labels_to_copy = ["team"]
+      forward_to = [prometheus.relabel.ec2_tags_out_metrics_prometheus.receiver]
+    } // prometheus.enrich "ec2_tags_in_metrics_prometheus"
+    prometheus.relabel "ec2_tags_out_metrics_prometheus" {
+      forward_to = [prometheus.relabel.ec2_tags_localprometheus_gate_metrics_prometheus.receiver]
+    }
+    prometheus.relabel "ec2_tags_localprometheus_gate_metrics_prometheus" {
+      forward_to = [prometheus.remote_write.localprometheus.receiver]
+      rule {
+        source_labels = ["selected_destinations"]
+        regex         = "(^|.*,)localPrometheus(,.*|$)"
+        action        = "keep"
+      }
+      rule {
+        action = "labeldrop"
+        regex  = "selected_destinations"
+      }
+    }
     // Processor: ec2-tags (ec2Enrichment) — shared EC2 instance discovery
     discovery.ec2 "ec2_tags_instances" {
       region = "ap-northeast-2"

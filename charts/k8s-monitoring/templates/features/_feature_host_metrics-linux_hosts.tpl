@@ -7,11 +7,11 @@
 {{- include "feature.hostMetrics.linuxHosts.module" (dict "Values" $.Values.hostMetrics "Files" $.Subcharts.hostMetrics.Files "Release" $.Release "telemetryServices" $.Values.telemetryServices) }}
 linux_host_metrics "feature" {
   metrics_destinations = [
-    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "hostMetrics" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
+    {{ include "dataProcessors.pipeline.targets.forFeature" (dict "root" $ "featureKey" "hostMetrics" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
   ]
 }
 {{- if eq (include "features.hostMetrics.pipelineOwner" $) "linuxHosts" }}
-{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "hostMetrics" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") }}
+{{- include "dataProcessors.pipeline.render.forFeature" (dict "root" $ "featureKey" "hostMetrics" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") }}
 {{- end }}
 {{- end -}}
 {{- end -}}

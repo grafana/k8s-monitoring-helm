@@ -121,48 +121,6 @@ otelcol.processor.transform "applicationobservability_stamp_traces_otlp" {
     traces = [otelcol.processor.transform.static_label_traces.input]
   }
 }
-// Processor: static-label (custom) — traces/otlp
-otelcol.processor.transform "static_label_traces" {
-  error_mode = "ignore"
-  trace_statements {
-    context = "resource"
-    statements = [
-      "set(attributes[\"region\"], \"central\")",
-    ]
-  }
-  output {
-    traces = [otelcol.processor.batch.static_label_out_traces_otlp.input]
-  }
-}
-otelcol.processor.batch "static_label_out_traces_otlp" {
-  output {
-    traces = [otelcol.processor.filter.static_label_tempo_gate_traces_otlp.input]
-  }
-}
-otelcol.processor.filter "static_label_tempo_gate_traces_otlp" {
-  error_mode = "ignore"
-  trace_conditions {
-    context    = "resource"
-    conditions = [
-      "not IsMatch(attributes[\"selected_destinations\"], \"(^|.*,)tempo(,.*|$)\")",
-    ]
-  }
-  output {
-    traces = [otelcol.processor.transform.static_label_tempo_gate_traces_otlp_strip.input]
-  }
-}
-otelcol.processor.transform "static_label_tempo_gate_traces_otlp_strip" {
-  error_mode = "ignore"
-  trace_statements {
-    context = "resource"
-    statements = [
-      "delete_key(attributes, \"selected_destinations\")",
-    ]
-  }
-  output {
-    traces = [otelcol.processor.attributes.tempo.input]
-  }
-}
 // Feature: Profiles Receiver
 declare "profiles_receiver" {
   argument "profiles_destinations" {
@@ -211,6 +169,48 @@ pyroscope.relabel "static_label_pyroscope_gate_profiles_pyroscope" {
   rule {
     action = "labeldrop"
     regex  = "selected_destinations"
+  }
+}
+// Processor: static-label (custom) — traces/otlp
+otelcol.processor.transform "static_label_traces" {
+  error_mode = "ignore"
+  trace_statements {
+    context = "resource"
+    statements = [
+      "set(attributes[\"region\"], \"central\")",
+    ]
+  }
+  output {
+    traces = [otelcol.processor.batch.static_label_out_traces_otlp.input]
+  }
+}
+otelcol.processor.batch "static_label_out_traces_otlp" {
+  output {
+    traces = [otelcol.processor.filter.static_label_tempo_gate_traces_otlp.input]
+  }
+}
+otelcol.processor.filter "static_label_tempo_gate_traces_otlp" {
+  error_mode = "ignore"
+  trace_conditions {
+    context    = "resource"
+    conditions = [
+      "not IsMatch(attributes[\"selected_destinations\"], \"(^|.*,)tempo(,.*|$)\")",
+    ]
+  }
+  output {
+    traces = [otelcol.processor.transform.static_label_tempo_gate_traces_otlp_strip.input]
+  }
+}
+otelcol.processor.transform "static_label_tempo_gate_traces_otlp_strip" {
+  error_mode = "ignore"
+  trace_statements {
+    context = "resource"
+    statements = [
+      "delete_key(attributes, \"selected_destinations\")",
+    ]
+  }
+  output {
+    traces = [otelcol.processor.attributes.tempo.input]
   }
 }
 

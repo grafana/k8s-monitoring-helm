@@ -52,10 +52,10 @@
 {{- include "feature.profiling.module" (dict "Values" $profilingValues "Files" $.Subcharts.profiling.Files) }}
 profiling "feature" {
   profiles_destinations = [
-    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "profiling" "destinationNames" $destinations "type" "profiles" "ecosystem" "pyroscope") | indent 4 | trim }}
+    {{ include "dataProcessors.pipeline.targets.forFeature" (dict "root" $ "featureKey" "profiling" "destinationNames" $destinations "type" "profiles" "ecosystem" "pyroscope") | indent 4 | trim }}
   ]
 }
-{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "profiling" "destinationNames" $destinations "type" "profiles" "ecosystem" "pyroscope") }}
+{{- include "dataProcessors.pipeline.render.forFeature" (dict "root" $ "featureKey" "profiling" "destinationNames" $destinations "type" "profiles" "ecosystem" "pyroscope") }}
 {{- end -}}
 {{- end -}}
 

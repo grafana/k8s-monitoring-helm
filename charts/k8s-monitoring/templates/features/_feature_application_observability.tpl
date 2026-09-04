@@ -10,18 +10,18 @@
 {{- include "feature.applicationObservability.module" (dict "Values" $.Values.applicationObservability "Files" $.Subcharts.applicationObservability.Files) }}
 application_observability "feature" {
   metrics_destinations = [
-    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "applicationObservability" "destinationNames" $metricsDestinations "type" "metrics" "ecosystem" "otlp") | indent 4 | trim }}
+    {{ include "dataProcessors.pipeline.targets.forFeature" (dict "root" $ "featureKey" "applicationObservability" "destinationNames" $metricsDestinations "type" "metrics" "ecosystem" "otlp") | indent 4 | trim }}
   ]
   logs_destinations = [
-    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "applicationObservability" "destinationNames" $logsDestinations "type" "logs" "ecosystem" "otlp") | indent 4 | trim }}
+    {{ include "dataProcessors.pipeline.targets.forFeature" (dict "root" $ "featureKey" "applicationObservability" "destinationNames" $logsDestinations "type" "logs" "ecosystem" "otlp") | indent 4 | trim }}
   ]
   traces_destinations = [
-    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "applicationObservability" "destinationNames" $tracesDestinations "type" "traces" "ecosystem" "otlp") | indent 4 | trim }}
+    {{ include "dataProcessors.pipeline.targets.forFeature" (dict "root" $ "featureKey" "applicationObservability" "destinationNames" $tracesDestinations "type" "traces" "ecosystem" "otlp") | indent 4 | trim }}
   ]
 }
-{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "applicationObservability" "destinationNames" $metricsDestinations "type" "metrics" "ecosystem" "otlp") }}
-{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "applicationObservability" "destinationNames" $logsDestinations "type" "logs" "ecosystem" "otlp") }}
-{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "applicationObservability" "destinationNames" $tracesDestinations "type" "traces" "ecosystem" "otlp") }}
+{{- include "dataProcessors.pipeline.render.forFeature" (dict "root" $ "featureKey" "applicationObservability" "destinationNames" $metricsDestinations "type" "metrics" "ecosystem" "otlp") }}
+{{- include "dataProcessors.pipeline.render.forFeature" (dict "root" $ "featureKey" "applicationObservability" "destinationNames" $logsDestinations "type" "logs" "ecosystem" "otlp") }}
+{{- include "dataProcessors.pipeline.render.forFeature" (dict "root" $ "featureKey" "applicationObservability" "destinationNames" $tracesDestinations "type" "traces" "ecosystem" "otlp") }}
 {{- end -}}
 {{- end -}}
 

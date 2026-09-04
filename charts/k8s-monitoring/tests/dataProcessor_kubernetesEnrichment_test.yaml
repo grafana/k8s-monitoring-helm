@@ -404,3 +404,162 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: 'The processor "k8s-enrich" requires Alloy to use the experimental stability level when enriching metrics'
+
+  # Regression test for #3014: when two features on the same collector share a processor, the shared
+  # chain body (slices, output sink, gates, pod discovery) must render exactly once, while each
+  # feature keeps its own stamper. Duplicate block declarations made Alloy fail to load the config.
+  - it: renders a shared processor chain body once when two features on one collector share a processor
+    template: alloy-config.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.example.com/api/v1/write
+      dataProcessors:
+        setTenantId:
+          type: kubernetesEnrichment
+          namespaceLabels: {team: team}
+      clusterMetrics:
+        enabled: true
+        collector: alloy-metrics
+        dataProcessors: [setTenantId]
+      annotationAutodiscovery:
+        enabled: true
+        collector: alloy-metrics
+        dataProcessors: [setTenantId]
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+          alloy: {stabilityLevel: experimental}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      # Each feature keeps its own stamper (stampers are keyed by feature).
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.relabel "clustermetrics_stamp_metrics_prometheus"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.relabel "annotationautodiscovery_stamp_metrics_prometheus"'
+      # The shared chain body (input, enrich, output sink, gate) and pod discovery each appear once.
+      # `\{` anchors to the opening declaration (the closing `} // ...` comment repeats the name).
+      # The (?s) double-declaration pattern must NOT match — that would mean a duplicate block.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.enrich "settenantid_ns_metrics_prometheus" \{'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: '(?s)prometheus\.enrich "settenantid_ns_metrics_prometheus" \{.*prometheus\.enrich "settenantid_ns_metrics_prometheus" \{'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: '(?s)prometheus\.relabel "settenantid_in_metrics_prometheus" \{.*prometheus\.relabel "settenantid_in_metrics_prometheus" \{'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: '(?s)prometheus\.relabel "settenantid_out_metrics_prometheus" \{.*prometheus\.relabel "settenantid_out_metrics_prometheus" \{'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: '(?s)prometheus\.relabel "settenantid_prometheus_gate_metrics_prometheus" \{.*prometheus\.relabel "settenantid_prometheus_gate_metrics_prometheus" \{'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: '(?s)discovery\.kubernetes "settenantid_pods" \{.*discovery\.kubernetes "settenantid_pods" \{'
+      # Stampers forward into the single shared processor input.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'forward_to = \[prometheus\.relabel\.settenantid_in_metrics_prometheus\.receiver\]'
+
+  # Companion to #3014: two features sharing a processor but sending to different destinations. The
+  # single shared chain body must carry a gate for EACH destination (the union), while each feature's
+  # stamper stamps only its own destination into selected_destinations.
+  - it: unions destinations across features that share a processor on one collector
+    template: alloy-config.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        proma:
+          type: prometheus
+          url: http://proma.example.com/api/v1/write
+        promb:
+          type: prometheus
+          url: http://promb.example.com/api/v1/write
+      dataProcessors:
+        setTenantId:
+          type: kubernetesEnrichment
+          namespaceLabels: {team: team}
+      clusterMetrics:
+        enabled: true
+        collector: alloy-metrics
+        destinations: [proma]
+        dataProcessors: [setTenantId]
+      annotationAutodiscovery:
+        enabled: true
+        collector: alloy-metrics
+        destinations: [promb]
+        dataProcessors: [setTenantId]
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+          alloy: {stabilityLevel: experimental}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      # The shared enrich block still renders exactly once.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.enrich "settenantid_ns_metrics_prometheus" \{'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: '(?s)prometheus\.enrich "settenantid_ns_metrics_prometheus" \{.*prometheus\.enrich "settenantid_ns_metrics_prometheus" \{'
+      # A gate is emitted for BOTH destinations (the union), off the single shared terminal processor.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.relabel "settenantid_proma_gate_metrics_prometheus" \{'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.relabel "settenantid_promb_gate_metrics_prometheus" \{'
+      # Each feature's stamper stamps only its own destination into selected_destinations.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '(?s)prometheus\.relabel "clustermetrics_stamp_metrics_prometheus" \{.*replacement  = "proma"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: '(?s)prometheus\.relabel "annotationautodiscovery_stamp_metrics_prometheus" \{.*replacement  = "promb"'
+
+  # A processor's components are shared per collector, so two features on one collector cannot use the
+  # same processor in different chains — that would require its shared components to carry two wirings.
+  # This must fail fast with a clear message rather than emit a config Alloy rejects.
+  - it: fails when two features on one collector use a processor in different chains
+    template: alloy-config.yaml
+    set:
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.example.com/api/v1/write
+      dataProcessors:
+        procA: {type: kubernetesEnrichment, namespaceLabels: {a: a}}
+        procB: {type: kubernetesEnrichment, namespaceLabels: {b: b}}
+      clusterMetrics:
+        enabled: true
+        collector: alloy-metrics
+        dataProcessors: [procA]
+      annotationAutodiscovery:
+        enabled: true
+        collector: alloy-metrics
+        dataProcessors: [procA, procB]
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+          alloy: {stabilityLevel: experimental}
+    asserts:
+      - failedTemplate:
+          errorPattern: 'The data processor "procA" is used in two different processor chains on collector "alloy-metrics"'

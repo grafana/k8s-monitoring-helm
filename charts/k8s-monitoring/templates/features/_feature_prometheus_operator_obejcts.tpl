@@ -7,10 +7,10 @@
 {{- include "feature.prometheusOperatorObjects.module" (dict "Values" $.Values.prometheusOperatorObjects "Files" $.Subcharts.prometheusOperatorObjects.Files) }}
 prometheus_operator_objects "feature" {
   metrics_destinations = [
-    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "prometheusOperatorObjects" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
+    {{ include "dataProcessors.pipeline.targets.forFeature" (dict "root" $ "featureKey" "prometheusOperatorObjects" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
   ]
 }
-{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "prometheusOperatorObjects" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") }}
+{{- include "dataProcessors.pipeline.render.forFeature" (dict "root" $ "featureKey" "prometheusOperatorObjects" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") }}
 {{- end -}}
 {{- end -}}
 

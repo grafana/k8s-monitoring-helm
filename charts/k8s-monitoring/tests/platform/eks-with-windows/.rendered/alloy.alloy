@@ -554,30 +554,6 @@ prometheus.relabel "clustermetrics_stamp_metrics_prometheus" {
     replacement  = "grafana-cloud-metrics"
   }
 }
-// Processor: ec2-tags (ec2Enrichment) — metrics/prometheus
-prometheus.enrich "ec2_tags_in_metrics_prometheus" {
-  targets = discovery.relabel.ec2_tags_instances.output
-  target_to_metric_match = {
-    "__meta_ec2_private_dns_name" = "node",
-  }
-  labels_to_copy = ["team"]
-  forward_to = [prometheus.relabel.ec2_tags_out_metrics_prometheus.receiver]
-} // prometheus.enrich "ec2_tags_in_metrics_prometheus"
-prometheus.relabel "ec2_tags_out_metrics_prometheus" {
-  forward_to = [prometheus.relabel.ec2_tags_grafana_cloud_metrics_gate_metrics_prometheus.receiver]
-}
-prometheus.relabel "ec2_tags_grafana_cloud_metrics_gate_metrics_prometheus" {
-  forward_to = [prometheus.remote_write.grafana_cloud_metrics.receiver]
-  rule {
-    source_labels = ["selected_destinations"]
-    regex         = "(^|.*,)grafana-cloud-metrics(,.*|$)"
-    action        = "keep"
-  }
-  rule {
-    action = "labeldrop"
-    regex  = "selected_destinations"
-  }
-}
 // Feature: Cluster Events
 declare "cluster_events" {
   argument "logs_destinations" {
@@ -1821,6 +1797,30 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
     prometheus.remote_write.grafana_cloud_metrics.receiver,
   ]
 } // prometheus.scrape "kubernetes_monitoring_telemetry"
+// Processor: ec2-tags (ec2Enrichment) — metrics/prometheus
+prometheus.enrich "ec2_tags_in_metrics_prometheus" {
+  targets = discovery.relabel.ec2_tags_instances.output
+  target_to_metric_match = {
+    "__meta_ec2_private_dns_name" = "node",
+  }
+  labels_to_copy = ["team"]
+  forward_to = [prometheus.relabel.ec2_tags_out_metrics_prometheus.receiver]
+} // prometheus.enrich "ec2_tags_in_metrics_prometheus"
+prometheus.relabel "ec2_tags_out_metrics_prometheus" {
+  forward_to = [prometheus.relabel.ec2_tags_grafana_cloud_metrics_gate_metrics_prometheus.receiver]
+}
+prometheus.relabel "ec2_tags_grafana_cloud_metrics_gate_metrics_prometheus" {
+  forward_to = [prometheus.remote_write.grafana_cloud_metrics.receiver]
+  rule {
+    source_labels = ["selected_destinations"]
+    regex         = "(^|.*,)grafana-cloud-metrics(,.*|$)"
+    action        = "keep"
+  }
+  rule {
+    action = "labeldrop"
+    regex  = "selected_destinations"
+  }
+}
 // Processor: ec2-tags (ec2Enrichment) — shared EC2 instance discovery
 discovery.ec2 "ec2_tags_instances" {
   region = "ap-northeast-2"
