@@ -3,7 +3,7 @@
 ## 4.5.1
 
 *   Fix incorrect `job` label for nodeLogs feature. (@petewall)
-*   Update Alloy Operator to 0.7.1 (@petewall)
+*   Update Alloy Operator to 0.7.1, kube-state-metrics to 8.4.2, OpenCost to 2.5.30, and Node Exporter to 4.56.3 (@petewall)
 
 ## 4.5.0
 
