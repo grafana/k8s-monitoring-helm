@@ -2,6 +2,7 @@
 
 ## 4.5.1
 
+*   Fix incorrect `job` label for nodeLogs feature. (@petewall)
 *   Update Alloy Operator to 0.7.1 (@petewall)
 
 ## 4.5.0
