@@ -8,10 +8,10 @@
 {{- include "feature.nodeLogs.module" (dict "Values" .Values.nodeLogs "Files" $.Subcharts.nodeLogs.Files "Template" $.Template) }}
 node_logs "feature" {
   logs_destinations = [
-    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "nodeLogs" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
+    {{ include "dataProcessors.pipeline.targets.forFeature" (dict "root" $ "featureKey" "nodeLogs" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
   ]
 }
-{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "nodeLogs" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") }}
+{{- include "dataProcessors.pipeline.render.forFeature" (dict "root" $ "featureKey" "nodeLogs" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") }}
 {{- end -}}
 {{- end -}}
 

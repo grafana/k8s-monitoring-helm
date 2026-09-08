@@ -121,91 +121,6 @@ otelcol.processor.transform "applicationobservability_stamp_metrics_otlp" {
     metrics = [otelcol.processor.k8sattributes.k8s_metadata_in_metrics_otlp.input]
   }
 }
-// Processor: k8s-metadata (kubernetesEnrichment) — metrics/otlp
-otelcol.processor.k8sattributes "k8s_metadata_in_metrics_otlp" {
-  extract {
-    metadata = []
-    label {
-      from = "pod"
-      key = "color"
-      tag_name = "color"
-    }
-    annotation {
-      from = "pod"
-      key = "example.com/owner"
-      tag_name = "owner"
-    }
-    label {
-      from = "namespace"
-      key = "team"
-      tag_name = "team"
-    }
-    annotation {
-      from = "namespace"
-      key = "cost-center"
-      tag_name = "cost-center"
-    }
-  }
-  pod_association {
-    source {
-      from = "resource_attribute"
-      name = "k8s.pod.name"
-    }
-    source {
-      from = "resource_attribute"
-      name = "k8s.namespace.name"
-    }
-  }
-  pod_association {
-    source {
-      from = "resource_attribute"
-      name = "k8s.pod.ip"
-    }
-  }
-  pod_association {
-    source {
-      from = "resource_attribute"
-      name = "k8s.pod.uid"
-    }
-  }
-  pod_association {
-    source {
-      from = "connection"
-    }
-  }
-  output {
-    metrics = [otelcol.processor.batch.k8s_metadata_out_metrics_otlp.input]
-  }
-} // otelcol.processor.k8sattributes "k8s_metadata_in_metrics_otlp"
-otelcol.processor.batch "k8s_metadata_out_metrics_otlp" {
-  output {
-    metrics = [otelcol.processor.filter.k8s_metadata_prometheus_gate_metrics_otlp.input]
-  }
-}
-otelcol.processor.filter "k8s_metadata_prometheus_gate_metrics_otlp" {
-  error_mode = "ignore"
-  metric_conditions {
-    context    = "resource"
-    conditions = [
-      "not IsMatch(attributes[\"selected_destinations\"], \"(^|.*,)prometheus(,.*|$)\")",
-    ]
-  }
-  output {
-    metrics = [otelcol.processor.transform.k8s_metadata_prometheus_gate_metrics_otlp_strip.input]
-  }
-}
-otelcol.processor.transform "k8s_metadata_prometheus_gate_metrics_otlp_strip" {
-  error_mode = "ignore"
-  metric_statements {
-    context = "resource"
-    statements = [
-      "delete_key(attributes, \"selected_destinations\")",
-    ]
-  }
-  output {
-    metrics = [otelcol.exporter.prometheus.prometheus.input]
-  }
-}
 otelcol.processor.transform "applicationobservability_stamp_logs_otlp" {
   error_mode = "ignore"
   log_statements {
@@ -218,91 +133,6 @@ otelcol.processor.transform "applicationobservability_stamp_logs_otlp" {
     logs = [otelcol.processor.k8sattributes.k8s_metadata_in_logs_otlp.input]
   }
 }
-// Processor: k8s-metadata (kubernetesEnrichment) — logs/otlp
-otelcol.processor.k8sattributes "k8s_metadata_in_logs_otlp" {
-  extract {
-    metadata = []
-    label {
-      from = "pod"
-      key = "color"
-      tag_name = "color"
-    }
-    annotation {
-      from = "pod"
-      key = "example.com/owner"
-      tag_name = "owner"
-    }
-    label {
-      from = "namespace"
-      key = "team"
-      tag_name = "team"
-    }
-    annotation {
-      from = "namespace"
-      key = "cost-center"
-      tag_name = "cost-center"
-    }
-  }
-  pod_association {
-    source {
-      from = "resource_attribute"
-      name = "k8s.pod.name"
-    }
-    source {
-      from = "resource_attribute"
-      name = "k8s.namespace.name"
-    }
-  }
-  pod_association {
-    source {
-      from = "resource_attribute"
-      name = "k8s.pod.ip"
-    }
-  }
-  pod_association {
-    source {
-      from = "resource_attribute"
-      name = "k8s.pod.uid"
-    }
-  }
-  pod_association {
-    source {
-      from = "connection"
-    }
-  }
-  output {
-    logs = [otelcol.processor.batch.k8s_metadata_out_logs_otlp.input]
-  }
-} // otelcol.processor.k8sattributes "k8s_metadata_in_logs_otlp"
-otelcol.processor.batch "k8s_metadata_out_logs_otlp" {
-  output {
-    logs = [otelcol.processor.filter.k8s_metadata_loki_gate_logs_otlp.input]
-  }
-}
-otelcol.processor.filter "k8s_metadata_loki_gate_logs_otlp" {
-  error_mode = "ignore"
-  log_conditions {
-    context    = "resource"
-    conditions = [
-      "not IsMatch(attributes[\"selected_destinations\"], \"(^|.*,)loki(,.*|$)\")",
-    ]
-  }
-  output {
-    logs = [otelcol.processor.transform.k8s_metadata_loki_gate_logs_otlp_strip.input]
-  }
-}
-otelcol.processor.transform "k8s_metadata_loki_gate_logs_otlp_strip" {
-  error_mode = "ignore"
-  log_statements {
-    context = "resource"
-    statements = [
-      "delete_key(attributes, \"selected_destinations\")",
-    ]
-  }
-  output {
-    logs = [otelcol.exporter.loki.loki.input]
-  }
-}
 otelcol.processor.transform "applicationobservability_stamp_traces_otlp" {
   error_mode = "ignore"
   trace_statements {
@@ -313,91 +143,6 @@ otelcol.processor.transform "applicationobservability_stamp_traces_otlp" {
   }
   output {
     traces = [otelcol.processor.k8sattributes.k8s_metadata_in_traces_otlp.input]
-  }
-}
-// Processor: k8s-metadata (kubernetesEnrichment) — traces/otlp
-otelcol.processor.k8sattributes "k8s_metadata_in_traces_otlp" {
-  extract {
-    metadata = []
-    label {
-      from = "pod"
-      key = "color"
-      tag_name = "color"
-    }
-    annotation {
-      from = "pod"
-      key = "example.com/owner"
-      tag_name = "owner"
-    }
-    label {
-      from = "namespace"
-      key = "team"
-      tag_name = "team"
-    }
-    annotation {
-      from = "namespace"
-      key = "cost-center"
-      tag_name = "cost-center"
-    }
-  }
-  pod_association {
-    source {
-      from = "resource_attribute"
-      name = "k8s.pod.name"
-    }
-    source {
-      from = "resource_attribute"
-      name = "k8s.namespace.name"
-    }
-  }
-  pod_association {
-    source {
-      from = "resource_attribute"
-      name = "k8s.pod.ip"
-    }
-  }
-  pod_association {
-    source {
-      from = "resource_attribute"
-      name = "k8s.pod.uid"
-    }
-  }
-  pod_association {
-    source {
-      from = "connection"
-    }
-  }
-  output {
-    traces = [otelcol.processor.batch.k8s_metadata_out_traces_otlp.input]
-  }
-} // otelcol.processor.k8sattributes "k8s_metadata_in_traces_otlp"
-otelcol.processor.batch "k8s_metadata_out_traces_otlp" {
-  output {
-    traces = [otelcol.processor.filter.k8s_metadata_tempo_gate_traces_otlp.input]
-  }
-}
-otelcol.processor.filter "k8s_metadata_tempo_gate_traces_otlp" {
-  error_mode = "ignore"
-  trace_conditions {
-    context    = "resource"
-    conditions = [
-      "not IsMatch(attributes[\"selected_destinations\"], \"(^|.*,)tempo(,.*|$)\")",
-    ]
-  }
-  output {
-    traces = [otelcol.processor.transform.k8s_metadata_tempo_gate_traces_otlp_strip.input]
-  }
-}
-otelcol.processor.transform "k8s_metadata_tempo_gate_traces_otlp_strip" {
-  error_mode = "ignore"
-  trace_statements {
-    context = "resource"
-    statements = [
-      "delete_key(attributes, \"selected_destinations\")",
-    ]
-  }
-  output {
-    traces = [otelcol.processor.attributes.tempo.input]
   }
 }
 // Feature: Cluster Metrics
@@ -685,50 +430,6 @@ prometheus.relabel "clustermetrics_stamp_metrics_prometheus" {
     replacement  = "prometheus"
   }
 }
-// Processor: k8s-metadata (kubernetesEnrichment) — metrics/prometheus
-prometheus.relabel "k8s_metadata_in_metrics_prometheus" {
-  rule {
-    source_labels = ["namespace", "pod"]
-    regex = "(.+;.+)"
-    target_label = "__meta_kubernetes_namespace_pod"
-  }
-  forward_to = [prometheus.enrich.k8s_metadata_ns_metrics_prometheus.receiver]
-} // prometheus.relabel "k8s_metadata_in_metrics_prometheus"
-prometheus.enrich "k8s_metadata_ns_metrics_prometheus" {
-  targets = discovery.relabel.k8s_metadata_pods.output
-  target_match_label = "__meta_kubernetes_namespace"
-  metrics_match_label = "namespace"
-  labels_to_copy = ["team","cost_center"]
-  forward_to = [prometheus.enrich.k8s_metadata_pod_metrics_prometheus.receiver]
-} // prometheus.enrich "k8s_metadata_ns_metrics_prometheus"
-prometheus.enrich "k8s_metadata_pod_metrics_prometheus" {
-  targets = discovery.relabel.k8s_metadata_pods.output
-  target_match_label = "__meta_kubernetes_namespace_pod"
-  labels_to_copy = ["color","owner"]
-  forward_to = [prometheus.relabel.k8s_metadata_cleanup_metrics_prometheus.receiver]
-} // prometheus.enrich "k8s_metadata_pod_metrics_prometheus"
-prometheus.relabel "k8s_metadata_cleanup_metrics_prometheus" {
-  rule {
-    action = "labeldrop"
-    regex = "__meta_kubernetes_namespace_pod"
-  }
-  forward_to = [prometheus.relabel.k8s_metadata_out_metrics_prometheus.receiver]
-} // prometheus.relabel "k8s_metadata_cleanup_metrics_prometheus"
-prometheus.relabel "k8s_metadata_out_metrics_prometheus" {
-  forward_to = [prometheus.relabel.k8s_metadata_prometheus_gate_metrics_prometheus.receiver]
-}
-prometheus.relabel "k8s_metadata_prometheus_gate_metrics_prometheus" {
-  forward_to = [prometheus.remote_write.prometheus.receiver]
-  rule {
-    source_labels = ["selected_destinations"]
-    regex         = "(^|.*,)prometheus(,.*|$)"
-    action        = "keep"
-  }
-  rule {
-    action = "labeldrop"
-    regex  = "selected_destinations"
-  }
-}
 // Feature: Pod Logs (Loki)
 declare "pod_logs_via_loki" {
   argument "logs_destinations" {
@@ -935,6 +636,64 @@ loki.process "podlogsvialoki_stamp_logs_loki" {
     }
   }
 }
+// Feature: Profiles Receiver
+declare "profiles_receiver" {
+  argument "profiles_destinations" {
+    comment = "Must be a list of profile destinations where collected profiles should be forwarded to"
+  }
+
+  pyroscope.receive_http "default" {
+    http {
+      listen_address = "0.0.0.0"
+      listen_port = "4040"
+    }
+
+    forward_to = argument.profiles_destinations.value
+  } // pyroscope.receive_http "default"
+} // declare "profiles_receiver"
+profiles_receiver "feature" {
+  profiles_destinations = [
+    pyroscope.relabel.profilesreceiver_stamp_profiles_pyroscope.receiver,
+  ]
+}
+pyroscope.relabel "profilesreceiver_stamp_profiles_pyroscope" {
+  forward_to = [pyroscope.relabel.k8s_metadata_in_profiles_pyroscope.receiver]
+  rule {
+    target_label = "selected_destinations"
+    replacement  = "pyroscope"
+  }
+}
+// Self Reporting
+prometheus.exporter.static "kubernetes_monitoring_telemetry" {
+  text = `
+
+# HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
+# TYPE grafana_kubernetes_monitoring_build_info gauge
+grafana_kubernetes_monitoring_build_info{version="4.5.1", namespace="default"} 1
+# HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
+# TYPE grafana_kubernetes_monitoring_feature_info gauge
+grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlpgrpc", version="1.0.0"} 1
+grafana_kubernetes_monitoring_feature_info{feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics", version="1.0.0"} 1
+grafana_kubernetes_monitoring_feature_info{feature="podLogsViaLoki", version="1.0.0"} 1
+grafana_kubernetes_monitoring_feature_info{feature="profilesReceiver", version="1.0.0"} 1
+# HELP grafana_kubernetes_monitoring_collector_info A metric to report the collectors of the Kubernetes Monitoring Helm chart
+# TYPE grafana_kubernetes_monitoring_collector_info gauge
+grafana_kubernetes_monitoring_collector_info{kind="daemonset", name="alloy", presets="clustered,filesystem-log-reader,daemonset", type="alloy"} 1
+# EOF
+  `
+} // prometheus.exporter.static "kubernetes_monitoring_telemetry"
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = prometheus.exporter.static.kubernetes_monitoring_telemetry.targets
+  scrape_interval = "60s"
+  clustering {
+    enabled = true
+  }
+  forward_to = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
 // Processor: k8s-metadata (kubernetesEnrichment) — logs/loki
 loki.relabel "k8s_metadata_in_logs_loki" {
   rule {
@@ -982,31 +741,218 @@ loki.relabel "k8s_metadata_loki_gate_logs_loki" {
   }
   max_cache_size = 100
 }
-// Feature: Profiles Receiver
-declare "profiles_receiver" {
-  argument "profiles_destinations" {
-    comment = "Must be a list of profile destinations where collected profiles should be forwarded to"
-  }
-
-  pyroscope.receive_http "default" {
-    http {
-      listen_address = "0.0.0.0"
-      listen_port = "4040"
+// Processor: k8s-metadata (kubernetesEnrichment) — logs/otlp
+otelcol.processor.k8sattributes "k8s_metadata_in_logs_otlp" {
+  extract {
+    metadata = []
+    label {
+      from = "pod"
+      key = "color"
+      tag_name = "color"
     }
-
-    forward_to = argument.profiles_destinations.value
-  } // pyroscope.receive_http "default"
-} // declare "profiles_receiver"
-profiles_receiver "feature" {
-  profiles_destinations = [
-    pyroscope.relabel.profilesreceiver_stamp_profiles_pyroscope.receiver,
-  ]
+    annotation {
+      from = "pod"
+      key = "example.com/owner"
+      tag_name = "owner"
+    }
+    label {
+      from = "namespace"
+      key = "team"
+      tag_name = "team"
+    }
+    annotation {
+      from = "namespace"
+      key = "cost-center"
+      tag_name = "cost-center"
+    }
+  }
+  pod_association {
+    source {
+      from = "resource_attribute"
+      name = "k8s.pod.name"
+    }
+    source {
+      from = "resource_attribute"
+      name = "k8s.namespace.name"
+    }
+  }
+  pod_association {
+    source {
+      from = "resource_attribute"
+      name = "k8s.pod.ip"
+    }
+  }
+  pod_association {
+    source {
+      from = "resource_attribute"
+      name = "k8s.pod.uid"
+    }
+  }
+  pod_association {
+    source {
+      from = "connection"
+    }
+  }
+  output {
+    logs = [otelcol.processor.batch.k8s_metadata_out_logs_otlp.input]
+  }
+} // otelcol.processor.k8sattributes "k8s_metadata_in_logs_otlp"
+otelcol.processor.batch "k8s_metadata_out_logs_otlp" {
+  output {
+    logs = [otelcol.processor.filter.k8s_metadata_loki_gate_logs_otlp.input]
+  }
 }
-pyroscope.relabel "profilesreceiver_stamp_profiles_pyroscope" {
-  forward_to = [pyroscope.relabel.k8s_metadata_in_profiles_pyroscope.receiver]
+otelcol.processor.filter "k8s_metadata_loki_gate_logs_otlp" {
+  error_mode = "ignore"
+  log_conditions {
+    context    = "resource"
+    conditions = [
+      "not IsMatch(attributes[\"selected_destinations\"], \"(^|.*,)loki(,.*|$)\")",
+    ]
+  }
+  output {
+    logs = [otelcol.processor.transform.k8s_metadata_loki_gate_logs_otlp_strip.input]
+  }
+}
+otelcol.processor.transform "k8s_metadata_loki_gate_logs_otlp_strip" {
+  error_mode = "ignore"
+  log_statements {
+    context = "resource"
+    statements = [
+      "delete_key(attributes, \"selected_destinations\")",
+    ]
+  }
+  output {
+    logs = [otelcol.exporter.loki.loki.input]
+  }
+}
+// Processor: k8s-metadata (kubernetesEnrichment) — metrics/otlp
+otelcol.processor.k8sattributes "k8s_metadata_in_metrics_otlp" {
+  extract {
+    metadata = []
+    label {
+      from = "pod"
+      key = "color"
+      tag_name = "color"
+    }
+    annotation {
+      from = "pod"
+      key = "example.com/owner"
+      tag_name = "owner"
+    }
+    label {
+      from = "namespace"
+      key = "team"
+      tag_name = "team"
+    }
+    annotation {
+      from = "namespace"
+      key = "cost-center"
+      tag_name = "cost-center"
+    }
+  }
+  pod_association {
+    source {
+      from = "resource_attribute"
+      name = "k8s.pod.name"
+    }
+    source {
+      from = "resource_attribute"
+      name = "k8s.namespace.name"
+    }
+  }
+  pod_association {
+    source {
+      from = "resource_attribute"
+      name = "k8s.pod.ip"
+    }
+  }
+  pod_association {
+    source {
+      from = "resource_attribute"
+      name = "k8s.pod.uid"
+    }
+  }
+  pod_association {
+    source {
+      from = "connection"
+    }
+  }
+  output {
+    metrics = [otelcol.processor.batch.k8s_metadata_out_metrics_otlp.input]
+  }
+} // otelcol.processor.k8sattributes "k8s_metadata_in_metrics_otlp"
+otelcol.processor.batch "k8s_metadata_out_metrics_otlp" {
+  output {
+    metrics = [otelcol.processor.filter.k8s_metadata_prometheus_gate_metrics_otlp.input]
+  }
+}
+otelcol.processor.filter "k8s_metadata_prometheus_gate_metrics_otlp" {
+  error_mode = "ignore"
+  metric_conditions {
+    context    = "resource"
+    conditions = [
+      "not IsMatch(attributes[\"selected_destinations\"], \"(^|.*,)prometheus(,.*|$)\")",
+    ]
+  }
+  output {
+    metrics = [otelcol.processor.transform.k8s_metadata_prometheus_gate_metrics_otlp_strip.input]
+  }
+}
+otelcol.processor.transform "k8s_metadata_prometheus_gate_metrics_otlp_strip" {
+  error_mode = "ignore"
+  metric_statements {
+    context = "resource"
+    statements = [
+      "delete_key(attributes, \"selected_destinations\")",
+    ]
+  }
+  output {
+    metrics = [otelcol.exporter.prometheus.prometheus.input]
+  }
+}
+// Processor: k8s-metadata (kubernetesEnrichment) — metrics/prometheus
+prometheus.relabel "k8s_metadata_in_metrics_prometheus" {
   rule {
-    target_label = "selected_destinations"
-    replacement  = "pyroscope"
+    source_labels = ["namespace", "pod"]
+    regex = "(.+;.+)"
+    target_label = "__meta_kubernetes_namespace_pod"
+  }
+  forward_to = [prometheus.enrich.k8s_metadata_ns_metrics_prometheus.receiver]
+} // prometheus.relabel "k8s_metadata_in_metrics_prometheus"
+prometheus.enrich "k8s_metadata_ns_metrics_prometheus" {
+  targets = discovery.relabel.k8s_metadata_pods.output
+  target_match_label = "__meta_kubernetes_namespace"
+  metrics_match_label = "namespace"
+  labels_to_copy = ["team","cost_center"]
+  forward_to = [prometheus.enrich.k8s_metadata_pod_metrics_prometheus.receiver]
+} // prometheus.enrich "k8s_metadata_ns_metrics_prometheus"
+prometheus.enrich "k8s_metadata_pod_metrics_prometheus" {
+  targets = discovery.relabel.k8s_metadata_pods.output
+  target_match_label = "__meta_kubernetes_namespace_pod"
+  labels_to_copy = ["color","owner"]
+  forward_to = [prometheus.relabel.k8s_metadata_cleanup_metrics_prometheus.receiver]
+} // prometheus.enrich "k8s_metadata_pod_metrics_prometheus"
+prometheus.relabel "k8s_metadata_cleanup_metrics_prometheus" {
+  rule {
+    action = "labeldrop"
+    regex = "__meta_kubernetes_namespace_pod"
+  }
+  forward_to = [prometheus.relabel.k8s_metadata_out_metrics_prometheus.receiver]
+} // prometheus.relabel "k8s_metadata_cleanup_metrics_prometheus"
+prometheus.relabel "k8s_metadata_out_metrics_prometheus" {
+  forward_to = [prometheus.relabel.k8s_metadata_prometheus_gate_metrics_prometheus.receiver]
+}
+prometheus.relabel "k8s_metadata_prometheus_gate_metrics_prometheus" {
+  forward_to = [prometheus.remote_write.prometheus.receiver]
+  rule {
+    source_labels = ["selected_destinations"]
+    regex         = "(^|.*,)prometheus(,.*|$)"
+    action        = "keep"
+  }
+  rule {
+    action = "labeldrop"
+    regex  = "selected_destinations"
   }
 }
 // Processor: k8s-metadata (kubernetesEnrichment) — profiles/pyroscope
@@ -1053,37 +999,91 @@ pyroscope.relabel "k8s_metadata_pyroscope_gate_profiles_pyroscope" {
     regex  = "selected_destinations"
   }
 }
-// Self Reporting
-prometheus.exporter.static "kubernetes_monitoring_telemetry" {
-  text = `
-
-# HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
-# TYPE grafana_kubernetes_monitoring_build_info gauge
-grafana_kubernetes_monitoring_build_info{version="4.5.1", namespace="default"} 1
-# HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
-# TYPE grafana_kubernetes_monitoring_feature_info gauge
-grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlpgrpc", version="1.0.0"} 1
-grafana_kubernetes_monitoring_feature_info{feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics", version="1.0.0"} 1
-grafana_kubernetes_monitoring_feature_info{feature="podLogsViaLoki", version="1.0.0"} 1
-grafana_kubernetes_monitoring_feature_info{feature="profilesReceiver", version="1.0.0"} 1
-# HELP grafana_kubernetes_monitoring_collector_info A metric to report the collectors of the Kubernetes Monitoring Helm chart
-# TYPE grafana_kubernetes_monitoring_collector_info gauge
-grafana_kubernetes_monitoring_collector_info{kind="daemonset", name="alloy", presets="clustered,filesystem-log-reader,daemonset", type="alloy"} 1
-# EOF
-  `
-} // prometheus.exporter.static "kubernetes_monitoring_telemetry"
-
-prometheus.scrape "kubernetes_monitoring_telemetry" {
-  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-  targets    = prometheus.exporter.static.kubernetes_monitoring_telemetry.targets
-  scrape_interval = "60s"
-  clustering {
-    enabled = true
+// Processor: k8s-metadata (kubernetesEnrichment) — traces/otlp
+otelcol.processor.k8sattributes "k8s_metadata_in_traces_otlp" {
+  extract {
+    metadata = []
+    label {
+      from = "pod"
+      key = "color"
+      tag_name = "color"
+    }
+    annotation {
+      from = "pod"
+      key = "example.com/owner"
+      tag_name = "owner"
+    }
+    label {
+      from = "namespace"
+      key = "team"
+      tag_name = "team"
+    }
+    annotation {
+      from = "namespace"
+      key = "cost-center"
+      tag_name = "cost-center"
+    }
   }
-  forward_to = [
-    prometheus.remote_write.prometheus.receiver,
-  ]
-} // prometheus.scrape "kubernetes_monitoring_telemetry"
+  pod_association {
+    source {
+      from = "resource_attribute"
+      name = "k8s.pod.name"
+    }
+    source {
+      from = "resource_attribute"
+      name = "k8s.namespace.name"
+    }
+  }
+  pod_association {
+    source {
+      from = "resource_attribute"
+      name = "k8s.pod.ip"
+    }
+  }
+  pod_association {
+    source {
+      from = "resource_attribute"
+      name = "k8s.pod.uid"
+    }
+  }
+  pod_association {
+    source {
+      from = "connection"
+    }
+  }
+  output {
+    traces = [otelcol.processor.batch.k8s_metadata_out_traces_otlp.input]
+  }
+} // otelcol.processor.k8sattributes "k8s_metadata_in_traces_otlp"
+otelcol.processor.batch "k8s_metadata_out_traces_otlp" {
+  output {
+    traces = [otelcol.processor.filter.k8s_metadata_tempo_gate_traces_otlp.input]
+  }
+}
+otelcol.processor.filter "k8s_metadata_tempo_gate_traces_otlp" {
+  error_mode = "ignore"
+  trace_conditions {
+    context    = "resource"
+    conditions = [
+      "not IsMatch(attributes[\"selected_destinations\"], \"(^|.*,)tempo(,.*|$)\")",
+    ]
+  }
+  output {
+    traces = [otelcol.processor.transform.k8s_metadata_tempo_gate_traces_otlp_strip.input]
+  }
+}
+otelcol.processor.transform "k8s_metadata_tempo_gate_traces_otlp_strip" {
+  error_mode = "ignore"
+  trace_statements {
+    context = "resource"
+    statements = [
+      "delete_key(attributes, \"selected_destinations\")",
+    ]
+  }
+  output {
+    traces = [otelcol.processor.attributes.tempo.input]
+  }
+}
 // Processor: k8s-metadata (kubernetesEnrichment) — shared pod discovery
 discovery.kubernetes "k8s_metadata_pods" {
   role = "pod"

@@ -7,10 +7,10 @@
 {{- include "feature.prometheusMetricsReceiver.module" (dict "Values" $.Values.prometheusMetricsReceiver "Files" $.Subcharts.prometheusMetricsReceiver.Files) }}
 prometheus_metrics_receiver "feature" {
   metrics_destinations = [
-    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "prometheusMetricsReceiver" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
+    {{ include "dataProcessors.pipeline.targets.forFeature" (dict "root" $ "featureKey" "prometheusMetricsReceiver" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
   ]
 }
-{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "prometheusMetricsReceiver" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") }}
+{{- include "dataProcessors.pipeline.render.forFeature" (dict "root" $ "featureKey" "prometheusMetricsReceiver" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") }}
 {{- end -}}
 {{- end -}}
 

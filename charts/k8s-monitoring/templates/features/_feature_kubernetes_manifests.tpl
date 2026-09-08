@@ -7,10 +7,10 @@
 {{- include "feature.kubernetesManifests.module" (dict "Values" $.Values.kubernetesManifests "Files" $.Subcharts.kubernetesManifests.Files "Release" $.Release "telemetryServices" $.Values.telemetryServices) }}
 kubernetes_manifests "feature" {
   logs_destinations = [
-    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "kubernetesManifests" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
+    {{ include "dataProcessors.pipeline.targets.forFeature" (dict "root" $ "featureKey" "kubernetesManifests" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
   ]
 }
-{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "kubernetesManifests" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") }}
+{{- include "dataProcessors.pipeline.render.forFeature" (dict "root" $ "featureKey" "kubernetesManifests" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") }}
 {{- end -}}
 {{- end -}}
 

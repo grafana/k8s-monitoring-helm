@@ -7,10 +7,10 @@
 {{- include "feature.costMetrics.module" (dict "Values" $.Values.costMetrics "Files" $.Subcharts.clusterMetrics.Files "Release" $.Release "telemetryServices" $.Values.telemetryServices) }}
 cost_metrics "feature" {
   metrics_destinations = [
-    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "costMetrics" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
+    {{ include "dataProcessors.pipeline.targets.forFeature" (dict "root" $ "featureKey" "costMetrics" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
   ]
 }
-{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "costMetrics" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") }}
+{{- include "dataProcessors.pipeline.render.forFeature" (dict "root" $ "featureKey" "costMetrics" "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") }}
 {{- end -}}
 {{- end -}}
 

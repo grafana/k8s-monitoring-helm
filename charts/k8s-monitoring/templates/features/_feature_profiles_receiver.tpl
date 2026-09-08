@@ -7,10 +7,10 @@
 {{- include "feature.profilesReceiver.module" (dict "Values" $.Values.profilesReceiver "Files" $.Subcharts.profilesReceiver.Files) }}
 profiles_receiver "feature" {
   profiles_destinations = [
-    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "profilesReceiver" "destinationNames" $destinations "type" "profiles" "ecosystem" "pyroscope") | indent 4 | trim }}
+    {{ include "dataProcessors.pipeline.targets.forFeature" (dict "root" $ "featureKey" "profilesReceiver" "destinationNames" $destinations "type" "profiles" "ecosystem" "pyroscope") | indent 4 | trim }}
   ]
 }
-{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "profilesReceiver" "destinationNames" $destinations "type" "profiles" "ecosystem" "pyroscope") }}
+{{- include "dataProcessors.pipeline.render.forFeature" (dict "root" $ "featureKey" "profilesReceiver" "destinationNames" $destinations "type" "profiles" "ecosystem" "pyroscope") }}
 {{- end -}}
 {{- end -}}
 

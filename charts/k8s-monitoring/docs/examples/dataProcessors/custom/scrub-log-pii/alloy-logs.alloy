@@ -208,30 +208,6 @@ loki.process "podlogsvialoki_stamp_logs_loki" {
     }
   }
 }
-// Processor: scrub-pii (custom) — logs/loki
-loki.process "scrub_pii_loki" {
-  stage.replace {
-    expression = "([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,})"
-    replace    = "[REDACTED-EMAIL]"
-  }
-  forward_to = [loki.process.scrub_pii_out_logs_loki.receiver]
-}
-loki.process "scrub_pii_out_logs_loki" {
-  forward_to = [loki.relabel.scrub_pii_loki_gate_logs_loki.receiver]
-}
-loki.relabel "scrub_pii_loki_gate_logs_loki" {
-  forward_to = [loki.write.loki.receiver]
-  rule {
-    source_labels = ["selected_destinations"]
-    regex         = "(^|.*,)loki(,.*|$)"
-    action        = "keep"
-  }
-  rule {
-    action = "labeldrop"
-    regex  = "selected_destinations"
-  }
-  max_cache_size = 100
-}
 // Feature: Pod Logs (OpenTelemetry)
 declare "pod_logs_via_opentelemetry" {
   argument "logs_destinations" {
@@ -366,6 +342,30 @@ otelcol.processor.transform "podlogsviaopentelemetry_stamp_logs_otlp" {
   output {
     logs = [otelcol.processor.transform.scrub_pii_otlp.input]
   }
+}
+// Processor: scrub-pii (custom) — logs/loki
+loki.process "scrub_pii_loki" {
+  stage.replace {
+    expression = "([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,})"
+    replace    = "[REDACTED-EMAIL]"
+  }
+  forward_to = [loki.process.scrub_pii_out_logs_loki.receiver]
+}
+loki.process "scrub_pii_out_logs_loki" {
+  forward_to = [loki.relabel.scrub_pii_loki_gate_logs_loki.receiver]
+}
+loki.relabel "scrub_pii_loki_gate_logs_loki" {
+  forward_to = [loki.write.loki.receiver]
+  rule {
+    source_labels = ["selected_destinations"]
+    regex         = "(^|.*,)loki(,.*|$)"
+    action        = "keep"
+  }
+  rule {
+    action = "labeldrop"
+    regex  = "selected_destinations"
+  }
+  max_cache_size = 100
 }
 // Processor: scrub-pii (custom) — logs/otlp
 otelcol.processor.transform "scrub_pii_otlp" {

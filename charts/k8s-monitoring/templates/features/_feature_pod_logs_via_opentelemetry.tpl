@@ -8,10 +8,10 @@
 {{- include "feature.podLogsViaOpenTelemetry.module" (dict "Values" .Values.podLogsViaOpenTelemetry "Files" $.Subcharts.podLogsViaOpenTelemetry.Files) }}
 pod_logs_via_opentelemetry "feature" {
   logs_destinations = [
-    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "podLogsViaOpenTelemetry" "destinationNames" $destinations "type" "logs" "ecosystem" "otlp") | indent 4 | trim }}
+    {{ include "dataProcessors.pipeline.targets.forFeature" (dict "root" $ "featureKey" "podLogsViaOpenTelemetry" "destinationNames" $destinations "type" "logs" "ecosystem" "otlp") | indent 4 | trim }}
   ]
 }
-{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "podLogsViaOpenTelemetry" "destinationNames" $destinations "type" "logs" "ecosystem" "otlp") }}
+{{- include "dataProcessors.pipeline.render.forFeature" (dict "root" $ "featureKey" "podLogsViaOpenTelemetry" "destinationNames" $destinations "type" "logs" "ecosystem" "otlp") }}
 {{- end -}}
 {{- end -}}
 

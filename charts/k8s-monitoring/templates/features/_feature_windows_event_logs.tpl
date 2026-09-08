@@ -8,10 +8,10 @@
 {{- include "feature.windowsEventLogs.module" (dict "Values" .Values.windowsEventLogs "Files" $.Subcharts.windowsEventLogs.Files "Template" $.Template) }}
 windows_event_logs "feature" {
   logs_destinations = [
-    {{ include "pipeline.alloy.targets.forFeature" (dict "root" $ "featureKey" "windowsEventLogs" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
+    {{ include "dataProcessors.pipeline.targets.forFeature" (dict "root" $ "featureKey" "windowsEventLogs" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
   ]
 }
-{{- include "pipeline.alloy.feature.render.forFeature" (dict "root" $ "featureKey" "windowsEventLogs" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") }}
+{{- include "dataProcessors.pipeline.render.forFeature" (dict "root" $ "featureKey" "windowsEventLogs" "destinationNames" $destinations "type" "logs" "ecosystem" "loki") }}
 {{- end -}}
 {{- end -}}
 
