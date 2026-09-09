@@ -19,7 +19,7 @@ toggle is needed.
 
 The `test/kind-cluster-config.yaml` uses a **dual-stack** cluster with IPv6 as the *primary* family. Pods get an IPv6
 address first (so the control plane targets are discovered and scraped over IPv6, which is what this example validates),
-while IPv4 remains available as a secondary family.
+while IPv4 is still available as a secondary family.
 
 That IPv4 secondary matters for practical reasons: a **single-stack IPv6** cluster cannot reach IPv4-only endpoints,
 such as image registries or Helm chart repositories hosted on GitHub Pages, which publish no `AAAA` record, without a
