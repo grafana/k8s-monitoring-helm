@@ -1,0 +1,57 @@
+# Kubernetes with IPv6
+
+This example runs the chart on an IPv6 cluster. It enables the control plane metrics sources (Kube
+Proxy, Kube Controller Manager, Kube Scheduler, API Server, and CoreDNS), which are discovered
+using the pods' IPv6 addresses.
+
+## No chart changes are required
+
+The chart works on IPv6 and dual-stack clusters without any special configuration. Service
+discovery, metrics, and logs all handle IPv6 addresses. In particular, the control plane and etcd
+scrape targets are built by relabeling the discovered pod IP into a scrape address, and the chart
+automatically wraps IPv6 addresses in brackets (for example `[fd00::1]:10249`) so the resulting
+address is valid. On a dual-stack cluster the pod's primary IP family is used, so no toggle is
+needed.
+
+## Cluster-side requirement
+
+The one thing to get right is a cluster concern, not a chart setting: the control plane components
+must expose their metrics on an IPv6 bind address, otherwise there is nothing to scrape. The
+`test/kind-cluster-config.yaml` in this example shows how to do that for a `kind` cluster:
+
+```yaml
+controllerManager:
+  extraArgs:
+    bind-address: "::"
+scheduler:
+  extraArgs:
+    bind-address: "::"
+---
+kind: KubeProxyConfiguration
+metricsBindAddress: "[::]:10249"
+```
+
+The equivalent settings apply to any distribution — bind the control plane metrics endpoints to
+`::` (all IPv6 interfaces) instead of the IPv4 defaults.
+
+## Single-stack IPv6 vs. dual-stack
+
+The `test/kind-cluster-config.yaml` uses a **dual-stack** cluster with IPv6 as the *primary*
+family. Pods get an IPv6 address first (so the control plane targets are discovered and scraped
+over IPv6, which is what this example validates), while IPv4 remains available as a secondary
+family.
+
+That IPv4 secondary matters for practical reasons: a **single-stack IPv6** cluster cannot reach
+IPv4-only endpoints — such as image registries or Helm chart repositories hosted on GitHub Pages,
+which publish no `AAAA` record — without a NAT64/DNS64 gateway. Symptoms include Flux failing to
+fetch a Helm repository index, or image pulls timing out. Keeping IPv4 as a secondary family avoids
+that entirely. If you genuinely need single-stack IPv6, set `ipFamily: ipv6` and provide NAT64/DNS64
+for outbound connectivity.
+
+## Running the cluster locally
+
+A `kind` cluster with IPv6 requires IPv6 to be enabled on the Docker daemon. On Docker Desktop,
+enable it under **Settings → Resources → Network → Enable IPv6**. On a Linux daemon, set
+`"ipv6": true`, a `"fixed-cidr-v6"` range, and `"ip6tables": true` in `/etc/docker/daemon.json`.
+Because that setup is not available on the default CI runners, the automated test in `test/` is
+marked manual-only.

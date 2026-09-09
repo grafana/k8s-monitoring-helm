@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Fix control-plane (Kube Proxy, Kube Controller Manager, Kube Scheduler) and etcd integration scraping on IPv6/dual-stack clusters by using bracket notation for IPv6 pod addresses. (#2999) (@petewall)
+
 ## 4.5.1
 
 *   Fix issue with duplicate configuration block declarations when the same data processor is used by more than one feature on the same collector. (#3014) (@petewall)
