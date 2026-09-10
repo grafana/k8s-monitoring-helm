@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Fix the alloy-singleton `self-reporting-metric.prom` file missing its trailing newline, which caused Alloy's textfile collector to fail parsing it (`unexpected end of input stream`). Backport of #2486. (#2930) (@petewall)
 *   Fix control-plane (Kube Proxy, Kube Controller Manager, Kube Scheduler) and etcd integration scraping on IPv6/dual-stack clusters by using bracket notation for IPv6 pod addresses. (#2999) (@petewall)
 *   Update Alloy Operator to 0.7.1, Beyla to 1.16.11, kube-state-metrics to 8.4.2, Prometheus Operator CRDs to 32.0.0, OpenCost to 2.5.30, and Node Exporter to 4.56.3 (@petewall)
 
