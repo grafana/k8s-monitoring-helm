@@ -1,0 +1,36 @@
+---
+# Dual-stack cluster with IPv6 as the primary family. Pods — including the host-networked control
+# plane components — get an IPv6 primary address, so the control plane scrape targets are discovered
+# with IPv6 pod IPs. That exercises the bracketed `[fd00::1]:10249` relabeling this example is meant
+# to validate.
+#
+# IPv4 is kept as the secondary family so the cluster can still reach IPv4-only endpoints (image
+# registries, and chart repositories such as GitHub Pages). A single-stack IPv6 cluster cannot do
+# that without a NAT64/DNS64 gateway, which is why this test uses dual-stack.
+#
+# The control plane components are told to bind their metrics endpoints to all IPv6 interfaces so
+# they are reachable from the Alloy collector over IPv6.
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+networking:
+  ipFamily: dual
+  # IPv6 listed first makes it the primary family.
+  podSubnet: "fd00:10:244::/56,10.244.0.0/16"
+  serviceSubnet: "fd00:10:96::/112,10.96.0.0/16"
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: ClusterConfiguration
+        controllerManager:
+          extraArgs:
+            bind-address: "::"
+            secure-port: "10257"
+        scheduler:
+          extraArgs:
+            bind-address: "::"
+            secure-port: "10259"
+      - |
+        kind: KubeProxyConfiguration
+        metricsBindAddress: "[::]:10249"
+  - role: worker

@@ -1,0 +1,22 @@
+---
+cluster:
+  name: ipv6-example
+
+destinations:
+  prometheus:
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+
+clusterMetrics:
+  enabled: true
+  collector: alloy-metrics
+  controlPlane:
+    enabled: true
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
