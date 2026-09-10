@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Update Alloy Operator to 0.7.1, Beyla to 1.16.11, kube-state-metrics to 8.4.2, Prometheus Operator CRDs to 32.0.0, OpenCost to 2.5.30, and Node Exporter to 4.56.3 (@petewall)
+
 ## 3.8.12
 
 *   Fix chart schemas where the only valid type was `null`. (#2926) (@petewall)
