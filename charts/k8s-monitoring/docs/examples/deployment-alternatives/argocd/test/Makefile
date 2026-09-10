@@ -4,7 +4,7 @@ clean: ;
 .PHONY: all
 all: ../k8s-monitoring-application.yaml
 
-BRANCH_NAME ?= $(shell git rev-parse --abbrev-ref HEAD)
+BRANCH_NAME ?= $(or $(GITHUB_HEAD_REF),$(GITHUB_REF_NAME),$(shell git rev-parse --abbrev-ref HEAD))
 
 # Declare the target as phony to ensure it always runs
 .PHONY: ../k8s-monitoring-application.yaml
