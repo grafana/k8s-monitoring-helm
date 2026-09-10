@@ -42,6 +42,11 @@ deploys the supporting components to make it happen.
     backend. The same configuration can fan out to multiple destinations at once, and switching backends is a
     configuration change rather than a re-architecture.
 
+-   **Collection only, no bundled database.** Unlike all-in-one charts such as kube-prometheus-stack, this chart does
+    not deploy a storage backend, Grafana, or Alertmanager. It focuses solely on collecting and shipping telemetry to
+    the destination of your choice, which keeps it lightweight yet scalable enough for testing, development, and
+    production environments.
+
 -   **Batteries included, but not required.** Supplemental components such as kube-state-metrics, Node Exporter, Windows
     Exporter, and OpenCost are deployed and pre-wired when the relevant features are enabled.
 
