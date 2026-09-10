@@ -1,4 +1,4 @@
-# Kubernetes Monitoring Helm Charts
+# Kubernetes Monitoring Helm Chart
 
 <div align="center">
 
@@ -14,6 +14,46 @@
 ![GitHub License](https://img.shields.io/github/license/grafana/k8s-monitoring-helm)
 
 </div>
+
+## Why use this chart?
+
+There are many great Helm charts for individual pieces of the observability stack:
+[Grafana Alloy](https://github.com/grafana/alloy), the OpenTelemetry
+[Collector](https://github.com/open-telemetry/opentelemetry-helm-charts) and
+[Operator](https://github.com/open-telemetry/opentelemetry-helm-charts),
+[kube-prometheus-stack](https://github.com/prometheus-community/helm-charts),
+[kube-state-metrics](https://github.com/kubernetes/kube-state-metrics),
+[Node Exporter](https://github.com/prometheus/node_exporter), and more. Each is excellent at its job, but wiring them
+together into a complete, correct, and consistent monitoring solution can be a significant amount of work.
+
+This chart exists to do that wiring for you. Instead of assembling and maintaining a collection of separate charts, you
+describe *what* you want to monitor and *where* it should go, and the chart generates the collector configuration and
+deploys the supporting components to make it happen.
+
+-   **One chart for all telemetry signals.** Metrics, logs & events, traces and profiles are all covered by a single,
+    coordinated deployment rather than a patchwork of charts that have to be kept in sync.
+
+-   **Feature-oriented configuration, not collector plumbing.** The chart is organized into features that enable
+    telemetry gathering based on outcomes like node and cluster metrics, node and pod logs, application observability,
+    auto-instrumentation and more. The chart translates those choices into the underlying collector configuration, so
+    there is no need to hand-write and debug collector pipelines.
+
+-   **Pluggable destinations.** Send data to Grafana Cloud or to any Prometheus-, Loki-, OTLP-, or Pyroscope-compatible
+    backend. The same configuration can fan out to multiple destinations at once, and switching backends is a
+    configuration change rather than a re-architecture.
+
+-   **Batteries included, but not required.** Supplemental components such as kube-state-metrics, Node Exporter, Windows
+    Exporter, and OpenCost are deployed and pre-wired when the relevant features are enabled.
+
+-   **Opinionated, curated defaults.** Sensible scrape configs, relabeling, and metric tuning come out of the box to
+    keep cardinality and cost under control, while still allowing for overrides.
+
+-   **Validated and tested.** The generated configuration is validated at render time to catch mistakes early, and the
+    chart is exercised by extensive unit, integration, and platform test suites across Kubernetes distributions.
+
+If you only need one signal from one component, a single-purpose chart may be all you need. If you want a complete
+monitoring solution on Kubernetes that ties those components together and sends everything to the backend of your
+choice, this chart is built for that.
 
 ## Maintainers
 
