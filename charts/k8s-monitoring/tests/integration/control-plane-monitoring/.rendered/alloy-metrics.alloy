@@ -5,7 +5,7 @@ declare "cluster_metrics" {
   }
   discovery.kubernetes "nodes" {
     role = "node"
-  }
+  } // discovery.kubernetes "nodes"
 
   discovery.relabel "nodes" {
     targets = discovery.kubernetes.nodes.targets
@@ -18,13 +18,12 @@ declare "cluster_metrics" {
       replacement = "kubernetes"
       target_label = "source"
     }
-
-  }
+  } // discovery.relabel "nodes"
 
   // Kubelet
   discovery.relabel "kubelet" {
     targets = discovery.relabel.nodes.output
-  }
+  } // discovery.relabel "kubelet"
 
   prometheus.scrape "kubelet" {
     targets  = discovery.relabel.kubelet.output
@@ -49,7 +48,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = [prometheus.relabel.kubelet.receiver]
-  }
+  } // prometheus.scrape "kubelet"
 
   prometheus.relabel "kubelet" {
     max_cache_size = 100000
@@ -60,7 +59,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "kubelet"
 
   // Kubelet Resources
   discovery.relabel "kubelet_resources" {
@@ -69,7 +68,7 @@ declare "cluster_metrics" {
       replacement   = "/metrics/resource"
       target_label  = "__metrics_path__"
     }
-  }
+  } // discovery.relabel "kubelet_resources"
 
   prometheus.scrape "kubelet_resources" {
     targets = discovery.relabel.kubelet_resources.output
@@ -94,7 +93,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = [prometheus.relabel.kubelet_resources.receiver]
-  }
+  } // prometheus.scrape "kubelet_resources"
 
   prometheus.relabel "kubelet_resources" {
     max_cache_size = 100000
@@ -105,7 +104,52 @@ declare "cluster_metrics" {
     }
 
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "kubelet_resources"
+
+  // Kubelet Probes
+  discovery.relabel "kubelet_probes" {
+    targets = discovery.relabel.nodes.output
+    rule {
+      replacement   = "/metrics/probes"
+      target_label  = "__metrics_path__"
+    }
+  } // discovery.relabel "kubelet_probes"
+
+  prometheus.scrape "kubelet_probes" {
+    targets  = discovery.relabel.kubelet_probes.output
+    job_name = "integrations/kubernetes/probes"
+    scheme   = "https"
+    scrape_interval = "60s"
+    scrape_timeout = "10s"
+    scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+    scrape_classic_histograms = false
+    scrape_native_histograms = false
+    convert_classic_histograms_to_nhcb = false
+    bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+
+    tls_config {
+      ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+      insecure_skip_verify = true
+      server_name = "kubernetes"
+    }
+
+    clustering {
+      enabled = true
+    }
+
+    forward_to = [prometheus.relabel.kubelet_probes.receiver]
+  } // prometheus.scrape "kubelet_probes"
+
+  prometheus.relabel "kubelet_probes" {
+    max_cache_size = 100000
+    rule {
+      source_labels = ["__name__"]
+      regex = "up|scrape_samples_scraped|prober_.*|.*"
+      action = "keep"
+    }
+
+    forward_to = argument.metrics_destinations.value
+  } // prometheus.relabel "kubelet_probes"
 
   // cAdvisor
   discovery.relabel "cadvisor" {
@@ -114,7 +158,7 @@ declare "cluster_metrics" {
       replacement   = "/metrics/cadvisor"
       target_label  = "__metrics_path__"
     }
-  }
+  } // discovery.relabel "cadvisor"
 
   prometheus.scrape "cadvisor" {
     targets = discovery.relabel.cadvisor.output
@@ -139,7 +183,7 @@ declare "cluster_metrics" {
     }
 
     forward_to = [prometheus.relabel.cadvisor.receiver]
-  }
+  } // prometheus.scrape "cadvisor"
 
   prometheus.relabel "cadvisor" {
     max_cache_size = 100000
@@ -152,14 +196,14 @@ declare "cluster_metrics" {
     rule {
       source_labels = ["__name__","container"]
       separator = "@"
-      regex = "(container_cpu_.*|container_fs_.*|container_memory_.*)@"
+      regex = "(container_cpu_.*|container_fs_.*|container_memory_.*|container_pressure_.*)@"
       action = "drop"
     }
     // Drop empty image labels, addressing https://github.com/google/cadvisor/issues/2688
     rule {
       source_labels = ["__name__","image"]
       separator = "@"
-      regex = "(container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*)@"
+      regex = "(container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*|container_pressure_.*)@"
       action = "drop"
     }
     // Normalizing unimportant labels (not deleting to continue satisfying <label>!="" checks)
@@ -217,7 +261,7 @@ declare "cluster_metrics" {
       replacement = ""
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.relabel "cadvisor"
 
   discovery.kubernetes "apiserver" {
     role = "endpointslice"
@@ -230,7 +274,7 @@ declare "cluster_metrics" {
     namespaces {
       names = ["default"]
     }
-  }
+  } // discovery.kubernetes "apiserver"
 
   discovery.relabel "apiserver" {
     targets = discovery.kubernetes.apiserver.targets
@@ -255,7 +299,7 @@ declare "cluster_metrics" {
       replacement = "kubernetes"
       target_label = "source"
     }
-  }
+  } // discovery.relabel "apiserver"
 
   prometheus.scrape "apiserver" {
     targets = discovery.relabel.apiserver.output
@@ -279,7 +323,7 @@ declare "cluster_metrics" {
       enabled = true
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.scrape "apiserver"
 
   discovery.kubernetes "kube_controller_manager" {
     role = "pod"
@@ -290,7 +334,7 @@ declare "cluster_metrics" {
       role = "pod"
       label = "component=kube-controller-manager"
     }
-  }
+  } // discovery.kubernetes "kube_controller_manager"
 
   discovery.relabel "kube_controller_manager" {
     targets = discovery.kubernetes.kube_controller_manager.targets
@@ -306,7 +350,7 @@ declare "cluster_metrics" {
       replacement = "$1:10257"
       target_label = "__address__"
     }
-  }
+  } // discovery.relabel "kube_controller_manager"
 
   prometheus.scrape "kube_controller_manager" {
     targets           = discovery.relabel.kube_controller_manager.output
@@ -326,7 +370,7 @@ declare "cluster_metrics" {
       enabled = true
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.scrape "kube_controller_manager"
 
   // KubeDNS
   discovery.kubernetes "kube_dns" {
@@ -338,7 +382,7 @@ declare "cluster_metrics" {
       role = "endpointslice"
       label = "kubernetes.io/service-name=kube-dns"
     }
-  }
+  } // discovery.kubernetes "kube_dns"
 
   discovery.relabel "kube_dns" {
     targets = discovery.kubernetes.kube_dns.targets
@@ -422,7 +466,7 @@ declare "cluster_metrics" {
       replacement = "kubernetes"
       target_label = "source"
     }
-  }
+  } // discovery.relabel "kube_dns"
 
   prometheus.scrape "kube_dns" {
     targets = discovery.relabel.kube_dns.output
@@ -438,7 +482,7 @@ declare "cluster_metrics" {
       enabled = true
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.scrape "kube_dns"
 
   discovery.kubernetes "kube_proxy" {
     role = "pod"
@@ -449,7 +493,7 @@ declare "cluster_metrics" {
       role = "pod"
       label = "k8s-app=kube-proxy"
     }
-  }
+  } // discovery.kubernetes "kube_proxy"
 
   discovery.relabel "kube_proxy" {
     targets = discovery.kubernetes.kube_proxy.targets
@@ -465,7 +509,7 @@ declare "cluster_metrics" {
       replacement = "$1:10249"
       target_label = "__address__"
     }
-  }
+  } // discovery.relabel "kube_proxy"
 
   prometheus.scrape "kube_proxy" {
     targets           = discovery.relabel.kube_proxy.output
@@ -481,7 +525,7 @@ declare "cluster_metrics" {
       enabled = true
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.scrape "kube_proxy"
 
   discovery.kubernetes "kube_scheduler" {
     role = "pod"
@@ -492,7 +536,7 @@ declare "cluster_metrics" {
       role = "pod"
       label = "component=kube-scheduler"
     }
-  }
+  } // discovery.kubernetes "kube_scheduler"
 
   discovery.relabel "kube_scheduler" {
     targets = discovery.kubernetes.kube_scheduler.targets
@@ -508,7 +552,7 @@ declare "cluster_metrics" {
       replacement = "$1:10259"
       target_label = "__address__"
     }
-  }
+  } // discovery.relabel "kube_scheduler"
 
   prometheus.scrape "kube_scheduler" {
     targets           = discovery.relabel.kube_scheduler.output
@@ -528,28 +572,21 @@ declare "cluster_metrics" {
       enabled = true
     }
     forward_to = argument.metrics_destinations.value
-  }
+  } // prometheus.scrape "kube_scheduler"
   discovery.kubernetes "kube_state_metrics" {
     role = "endpoints"
 
     selectors {
       role = "endpoints"
-      label = "app.kubernetes.io/name=kube-state-metrics,release=k8smon"
+      label = "release=k8smon,app.kubernetes.io/name=kube-state-metrics"
     }
     namespaces {
       names = ["default"]
     }
-  }
+  } // discovery.kubernetes "kube_state_metrics"
 
   discovery.relabel "kube_state_metrics" {
     targets = discovery.kubernetes.kube_state_metrics.targets
-
-    // only keep targets with a matching port name
-    rule {
-      source_labels = ["__meta_kubernetes_pod_container_port_name"]
-      regex = "http"
-      action = "keep"
-    }
 
     rule {
       action = "replace"
@@ -557,7 +594,7 @@ declare "cluster_metrics" {
       target_label = "source"
     }
 
-  }
+  } // discovery.relabel "kube_state_metrics"
 
   prometheus.scrape "kube_state_metrics" {
     targets = discovery.relabel.kube_state_metrics.output
@@ -578,7 +615,7 @@ declare "cluster_metrics" {
       enabled = true
     }
     forward_to = [prometheus.relabel.kube_state_metrics.receiver]
-  }
+  } // prometheus.scrape "kube_state_metrics"
 
   prometheus.relabel "kube_state_metrics" {
     max_cache_size = 100000
@@ -588,20 +625,31 @@ declare "cluster_metrics" {
       action = "keep"
     }
     forward_to = argument.metrics_destinations.value
+  } // prometheus.relabel "kube_state_metrics"
+} // declare "cluster_metrics"
+cluster_metrics "feature" {
+  metrics_destinations = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+}
+// Feature: Host Metrics - Linux Hosts
+declare "linux_host_metrics" {
+  argument "metrics_destinations" {
+    comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
   }
 
-  // Node Exporter
+  // Linux hosts via Node Exporter
   discovery.kubernetes "node_exporter" {
     role = "pod"
-
     selectors {
       role = "pod"
-      label = "app.kubernetes.io/name=node-exporter,release=k8smon"
+      label = "release=k8smon,app.kubernetes.io/name=node-exporter"
     }
     namespaces {
       names = ["default"]
     }
-  }
+
+  } // discovery.kubernetes "node_exporter"
 
   discovery.relabel "node_exporter" {
     targets = discovery.kubernetes.node_exporter.targets
@@ -609,36 +657,31 @@ declare "cluster_metrics" {
     // keep only the specified metrics port name, and pods that are Running and ready
     rule {
       source_labels = [
-        "__meta_kubernetes_pod_container_port_name",
         "__meta_kubernetes_pod_container_init",
         "__meta_kubernetes_pod_phase",
         "__meta_kubernetes_pod_ready",
       ]
       separator = "@"
-      regex = "metrics@false@Running@true"
+      regex = "false@Running@true"
       action = "keep"
     }
 
     // Set the instance label to the node name
     rule {
       source_labels = ["__meta_kubernetes_pod_node_name"]
-      action = "replace"
       target_label = "instance"
     }
 
-    // set the namespace label
     rule {
       source_labels = ["__meta_kubernetes_namespace"]
       target_label  = "namespace"
     }
 
-    // set the pod label
     rule {
       source_labels = ["__meta_kubernetes_pod_name"]
       target_label  = "pod"
     }
 
-    // set the container label
     rule {
       source_labels = ["__meta_kubernetes_pod_container_name"]
       target_label  = "container"
@@ -660,9 +703,13 @@ declare "cluster_metrics" {
       target_label  = "workload"
     }
 
-    // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+    // Set the app label.
+    //
+    // Choose the first value found from the following ordered list:
+    // - pod.label[app.kubernetes.io/name]
+    // - pod.label[k8s-app]
+    // - pod.label[app]
     rule {
-      action = "replace"
       source_labels = [
         "__meta_kubernetes_pod_label_app_kubernetes_io_name",
         "__meta_kubernetes_pod_label_k8s_app",
@@ -674,9 +721,13 @@ declare "cluster_metrics" {
       target_label = "app"
     }
 
-    // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
+    // Set the component label.
+    //
+    // Choose the first value found from the following ordered list:
+    // - pod.label[app.kubernetes.io/component]
+    // - pod.label[k8s-component]
+    // - pod.label[component]
     rule {
-      action = "replace"
       source_labels = [
         "__meta_kubernetes_pod_label_app_kubernetes_io_component",
         "__meta_kubernetes_pod_label_k8s_component",
@@ -687,13 +738,12 @@ declare "cluster_metrics" {
       target_label = "component"
     }
 
-    // set a source label
     rule {
-      action = "replace"
-      replacement = "kubernetes"
       target_label = "source"
+      replacement = "kubernetes"
     }
-  }
+
+  } // discovery.relabel "node_exporter"
 
   prometheus.scrape "node_exporter" {
     targets = discovery.relabel.node_exporter.output
@@ -703,9 +753,8 @@ declare "cluster_metrics" {
     scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
     scrape_classic_histograms = false
     scrape_native_histograms = false
-    scheme = "http"
-    bearer_token_file = ""
     convert_classic_histograms_to_nhcb = false
+    scheme = "http"
     tls_config {
       insecure_skip_verify = true
     }
@@ -714,7 +763,7 @@ declare "cluster_metrics" {
       enabled = true
     }
     forward_to = [prometheus.relabel.node_exporter.receiver]
-  }
+  } // prometheus.scrape "node_exporter"
 
   prometheus.relabel "node_exporter" {
     max_cache_size = 100000
@@ -731,204 +780,14 @@ declare "cluster_metrics" {
       action = "drop"
     }
     forward_to = argument.metrics_destinations.value
-  }
-
-  // Windows Exporter
-  discovery.kubernetes "windows_exporter_pods" {
-    role = "pod"
-    selectors {
-      role = "pod"
-      label = "app.kubernetes.io/name=windows-exporter,release=k8smon"
-    }
-    namespaces {
-      names = ["default"]
-    }
-  }
-
-  discovery.relabel "windows_exporter" {
-    targets = discovery.kubernetes.windows_exporter_pods.targets
-
-    // keep only the specified metrics port name, and pods that are Running and ready
-    rule {
-      source_labels = [
-        "__meta_kubernetes_pod_container_port_name",
-        "__meta_kubernetes_pod_container_init",
-        "__meta_kubernetes_pod_phase",
-        "__meta_kubernetes_pod_ready",
-      ]
-      separator = "@"
-      regex = "metrics@false@Running@true"
-      action = "keep"
-    }
-
-    // Set the instance label to the node name
-    rule {
-      source_labels = ["__meta_kubernetes_pod_node_name"]
-      target_label = "instance"
-    }
-  }
-
-  prometheus.scrape "windows_exporter" {
-    targets  = discovery.relabel.windows_exporter.output
-    job_name   = "integrations/windows-exporter"
-    scrape_interval = "60s"
-    scrape_timeout = "10s"
-    scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
-    scrape_classic_histograms = false
-    scrape_native_histograms = false
-    convert_classic_histograms_to_nhcb = false
-    clustering {
-      enabled = true
-    }
-    forward_to = [prometheus.relabel.windows_exporter.receiver]
-  }
-
-  prometheus.relabel "windows_exporter" {
-    max_cache_size = 100000
-    rule {
-      source_labels = ["__name__"]
-      regex = "up|scrape_samples_scraped|windows_.*|node_cpu_seconds_total|node_filesystem_size_bytes|node_filesystem_avail_bytes|container_cpu_usage_seconds_total"
-      action = "keep"
-    }
-    forward_to = argument.metrics_destinations.value
-  }
-}
-cluster_metrics "feature" {
+  } // prometheus.relabel "node_exporter"
+} // declare "linux_host_metrics"
+linux_host_metrics "feature" {
   metrics_destinations = [
     prometheus.remote_write.prometheus.receiver,
   ]
 }
-declare "etcd_integration" {
-  argument "metrics_destinations" {
-    comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
-  }
 
-  discovery.kubernetes "k8s_controlplane_etcd" {
-    role = "pod"
-
-    selectors {
-      role = "pod"
-      label = "app.kubernetes.io/component=etcd"
-    }
-  }
-
-  discovery.relabel "k8s_controlplane_etcd" {
-    targets = discovery.kubernetes.k8s_controlplane_etcd.targets
-
-    // keep only the specified metrics port name, and pods that are Running and ready
-    rule {
-      source_labels = [
-        "__meta_kubernetes_pod_phase",
-        "__meta_kubernetes_pod_ready",
-      ]
-      separator = "@"
-      regex = "Running@true"
-      action = "keep"
-    }
-
-    // drop any init containers
-    rule {
-      source_labels = ["__meta_kubernetes_pod_container_init"]
-      regex = "true"
-      action = "drop"
-    }
-
-    // set the metrics port
-    rule {
-      source_labels = ["__meta_kubernetes_pod_ip"]
-      regex = "(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
-      replacement = "[$1]:2381" // IPv6
-      target_label = "__address__"
-    }
-    rule {
-      source_labels = ["__meta_kubernetes_pod_ip"]
-      regex = "((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exist
-      replacement = "$1:2381"
-      target_label = "__address__"
-    }
-
-    rule {
-      source_labels = ["__meta_kubernetes_namespace"]
-      target_label  = "namespace"
-    }
-    rule {
-      source_labels = ["__meta_kubernetes_pod_name"]
-      target_label  = "pod"
-    }
-    rule {
-      source_labels = ["__meta_kubernetes_pod_container_name"]
-      target_label  = "container"
-    }
-    rule {
-      source_labels = [
-        "__meta_kubernetes_pod_controller_kind",
-        "__meta_kubernetes_pod_controller_name",
-      ]
-      separator = "/"
-      target_label  = "workload"
-    }
-    rule {
-      source_labels = ["workload"]
-      regex = "(ReplicaSet/.+)-.+"
-      target_label  = "workload"
-    }
-
-    rule {
-      action = "replace"
-      source_labels = [
-        "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-        "__meta_kubernetes_pod_label_k8s_app",
-        "__meta_kubernetes_pod_label_app",
-      ]
-      separator = ";"
-      regex = "^(?:;*)?([^;]+).*$"
-      replacement = "$1"
-      target_label = "app"
-    }
-
-    rule {
-      action = "replace"
-      source_labels = [
-        "__meta_kubernetes_pod_label_app_kubernetes_io_component",
-        "__meta_kubernetes_pod_label_k8s_component",
-        "__meta_kubernetes_pod_label_component",
-      ]
-      regex = "^(?:;*)?([^;]+).*$"
-      replacement = "$1"
-      target_label = "component"
-    }
-
-    rule {
-      action = "replace"
-      replacement = "kubernetes"
-      target_label = "source"
-    }
-  }
-
-  prometheus.scrape "k8s_controlplane_etcd" {
-    targets = discovery.relabel.k8s_controlplane_etcd.output
-    job_name = "integrations/etcd"
-    scrape_interval = "60s"
-    scrape_timeout = "10s"
-    scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
-    scrape_classic_histograms = false
-    scrape_native_histograms = false
-    clustering {
-      enabled = true
-    }
-    forward_to = [prometheus.relabel.k8s_controlplane_etcd.receiver]
-  }
-
-  prometheus.relabel "k8s_controlplane_etcd" {
-    max_cache_size = 100000
-    forward_to = argument.metrics_destinations.value
-  }
-}
-etcd_integration "integration" {
-  metrics_destinations = [
-    prometheus.remote_write.prometheus.receiver,
-  ]
-}
 
 
 
@@ -937,13 +796,13 @@ etcd_integration "integration" {
 otelcol.exporter.prometheus "prometheus" {
   add_metric_suffixes = true
   resource_to_telemetry_conversion = false
-  keep_identifying_resource_attributes = false
+  keep_identifying_resource_attributes = true
   forward_to = [prometheus.remote_write.prometheus.receiver]
-}
+} // otelcol.exporter.prometheus "prometheus"
 
 prometheus.remote_write "prometheus" {
   endpoint {
-    url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+    url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
     headers = {
     }
     tls_config {
@@ -970,8 +829,8 @@ prometheus.remote_write "prometheus" {
     max_keepalive_time = "8h"
   }
   external_labels = {
-    "cluster" = "cluster-metrics-cluster",
-    "k8s_cluster_name" = "cluster-metrics-cluster",
+    "cluster" = "control-plane-monitoring-test",
+    "k8s_cluster_name" = "control-plane-monitoring-test",
   }
-}
+} // prometheus.remote_write "prometheus"
 

@@ -1,0 +1,49 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: ipv6
+
+subject:
+  releaseName: k8smon
+  path: ../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+  configFile: kind-cluster-config.yaml
+
+dependencies:
+  - preset: prometheus
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: ipv6-example
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+          queries:
+            # Self reporting metrics
+            - query: grafana_kubernetes_monitoring_build_info{cluster="$CLUSTER"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="clusterMetrics"}
+              type: promql
+
+            # Node count sanity check (control-plane + worker)
+            - query: count(kube_node_info{cluster="$CLUSTER", job="integrations/kubernetes/kube-state-metrics"})
+              type: promql
+              expect:
+                value: 2
+
+            # Control plane metrics. These only appear if the IPv6 pod addresses were bracketed
+            # correctly ([ipv6]:port); with the pre-fix relabeling the scrape fails and these are absent.
+            - query: kubeproxy_sync_proxy_rules_service_changes_total{cluster="$CLUSTER", job="integrations/kubernetes/kube-proxy"}
+              type: promql
+            - query: workqueue_adds_total{cluster="$CLUSTER", job="kube-controller-manager"}
+              type: promql
+            - query: scheduler_unschedulable_pods{cluster="$CLUSTER", job="kube-scheduler"}
+              type: promql
+            - query: apiserver_request_total{cluster="$CLUSTER", job="integrations/kubernetes/kube-apiserver"}
+              type: promql
+            - query: coredns_build_info{cluster="$CLUSTER", job="integrations/kubernetes/kube-dns"}
+              type: promql

@@ -42,6 +42,13 @@ can be restricted to a namespace:
           // set the metrics port
           rule {
             source_labels = ["__meta_kubernetes_pod_ip"]
+            regex = "(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
+            replacement = "[$1]:2381" // IPv6
+            target_label = "__address__"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_ip"]
+            regex = "((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exist
             replacement = "$1:2381"
             target_label = "__address__"
           }
@@ -164,6 +171,13 @@ should create the etcd config:
           // set the metrics port
           rule {
             source_labels = ["__meta_kubernetes_pod_ip"]
+            regex = "(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
+            replacement = "[$1]:2381" // IPv6
+            target_label = "__address__"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_ip"]
+            regex = "((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exist
             replacement = "$1:2381"
             target_label = "__address__"
           }

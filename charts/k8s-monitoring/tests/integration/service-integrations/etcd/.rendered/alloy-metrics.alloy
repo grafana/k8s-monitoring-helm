@@ -8,7 +8,10 @@ declare "etcd_integration" {
 
     selectors {
       role = "pod"
-      label = "app.kubernetes.io/component=etcd"
+      label = "component=etcd"
+    }
+    namespaces {
+      names = ["kube-system"]
     }
   }
 
@@ -126,16 +129,16 @@ declare "etcd_integration" {
 }
 etcd_integration "integration" {
   metrics_destinations = [
-    prometheus.remote_write.prometheus.receiver,
+    prometheus.remote_write.localprometheus.receiver,
   ]
 }
 // Self Reporting
 prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   set_collectors = ["textfile"]
   textfile {
-    directory = "/etc/alloy"
+    directory = "/etc/release-info"
   }
-}
+} // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
 
 discovery.relabel "kubernetes_monitoring_telemetry" {
   targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
@@ -149,7 +152,7 @@ discovery.relabel "kubernetes_monitoring_telemetry" {
     action = "replace"
     replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
   }
-}
+} // discovery.relabel "kubernetes_monitoring_telemetry"
 
 prometheus.scrape "kubernetes_monitoring_telemetry" {
   job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
@@ -159,7 +162,7 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
     enabled = true
   }
   forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-}
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
 
 prometheus.relabel "kubernetes_monitoring_telemetry" {
   rule {
@@ -168,24 +171,25 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
     action = "keep"
   }
   forward_to = [
-    prometheus.remote_write.prometheus.receiver,
+    prometheus.remote_write.localprometheus.receiver,
   ]
-}
+} // prometheus.relabel "kubernetes_monitoring_telemetry"
 
 
 
 
-// Destination: prometheus (prometheus)
-otelcol.exporter.prometheus "prometheus" {
+
+// Destination: localPrometheus (prometheus)
+otelcol.exporter.prometheus "localprometheus" {
   add_metric_suffixes = true
   resource_to_telemetry_conversion = false
-  keep_identifying_resource_attributes = false
-  forward_to = [prometheus.remote_write.prometheus.receiver]
-}
+  keep_identifying_resource_attributes = true
+  forward_to = [prometheus.remote_write.localprometheus.receiver]
+} // otelcol.exporter.prometheus "localprometheus"
 
-prometheus.remote_write "prometheus" {
+prometheus.remote_write "localprometheus" {
   endpoint {
-    url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+    url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
     headers = {
     }
     tls_config {
@@ -212,8 +216,8 @@ prometheus.remote_write "prometheus" {
     max_keepalive_time = "8h"
   }
   external_labels = {
-    "cluster" = "etcd-integration-cluster",
-    "k8s_cluster_name" = "etcd-integration-cluster",
+    "cluster" = "etcd-integration-test",
+    "k8s_cluster_name" = "etcd-integration-test",
   }
-}
+} // prometheus.remote_write "localprometheus"
 
