@@ -54,6 +54,21 @@ otelcol.receiver.otlp "receiver" {
     endpoint = "0.0.0.0:{{ .Values.receivers.otlp.http.port | int }}"
     include_metadata = {{ .Values.receivers.otlp.http.includeMetadata }}
     max_request_body_size = {{ .Values.receivers.otlp.http.maxRequestBodySize | quote }}
+    {{- if .Values.receivers.otlp.http.idleTimeout }}
+    idle_timeout = {{ .Values.receivers.otlp.http.idleTimeout | quote }}
+    {{- end }}
+    {{- if .Values.receivers.otlp.http.readTimeout }}
+    read_timeout = {{ .Values.receivers.otlp.http.readTimeout | quote }}
+    {{- end }}
+    {{- if .Values.receivers.otlp.http.readHeaderTimeout }}
+    read_header_timeout = {{ .Values.receivers.otlp.http.readHeaderTimeout | quote }}
+    {{- end }}
+    {{- if .Values.receivers.otlp.http.writeTimeout }}
+    write_timeout = {{ .Values.receivers.otlp.http.writeTimeout | quote }}
+    {{- end }}
+    {{- if ne (toString .Values.receivers.otlp.http.keepAlivesEnabled) "" }}
+    keep_alives_enabled = {{ .Values.receivers.otlp.http.keepAlivesEnabled }}
+    {{- end }}
   }
 {{- end }}
   debug_metrics {

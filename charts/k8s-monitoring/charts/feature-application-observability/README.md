@@ -250,9 +250,14 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | receivers.otlp.grpc.readBufferSize | string | `"512KiB"` | Size of the read buffer the gRPC server will use for reading from clients. |
 | receivers.otlp.grpc.writeBufferSize | string | `"32KiB"` | Size of the write buffer the gRPC server will use for writing to clients. |
 | receivers.otlp.http.enabled | bool | `false` | Accept application data over OTLP HTTP. |
+| receivers.otlp.http.idleTimeout | string | `""` | Maximum idle time before closing a keep-alive connection. Default is 1 minute. |
 | receivers.otlp.http.includeMetadata | bool | `false` | Propagate incoming connection metadata to downstream consumers. |
+| receivers.otlp.http.keepAlivesEnabled | string | `""` | Enable or disable HTTP keep-alives. Default is true. |
 | receivers.otlp.http.maxRequestBodySize | string | `"20MiB"` | Maximum request body size the server will allow. |
 | receivers.otlp.http.port | int | `4318` | The port to listen on for OTLP HTTP requests. |
+| receivers.otlp.http.readHeaderTimeout | string | `""` | Maximum time allowed to read request headers. Default is 1 minute. |
+| receivers.otlp.http.readTimeout | string | `""` | Maximum time allowed to read an HTTP request, including the body. Default is no timeout. |
+| receivers.otlp.http.writeTimeout | string | `""` | Maximum time allowed to write an HTTP response. Default is 30 seconds. |
 | receivers.otlp.includeDebugMetrics | bool | `false` | Whether to include high-cardinality debug metrics. |
 
 ### Receivers: Zipkin
