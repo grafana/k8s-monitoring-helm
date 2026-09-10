@@ -19,6 +19,13 @@ discovery.relabel "kube_controller_manager" {
   targets = discovery.kubernetes.kube_controller_manager.targets
   rule {
     source_labels = ["__meta_kubernetes_pod_ip"]
+    regex = "(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
+    replacement = "[$1]:{{ .Values.kubeControllerManager.port }}" // IPv6
+    target_label = "__address__"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_ip"]
+    regex = "((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exist
     replacement = "$1:{{ .Values.kubeControllerManager.port }}"
     target_label = "__address__"
   }

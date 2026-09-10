@@ -296,6 +296,13 @@ declare "cluster_metrics" {
     targets = discovery.kubernetes.kube_controller_manager.targets
     rule {
       source_labels = ["__meta_kubernetes_pod_ip"]
+      regex = "(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
+      replacement = "[$1]:10257" // IPv6
+      target_label = "__address__"
+    }
+    rule {
+      source_labels = ["__meta_kubernetes_pod_ip"]
+      regex = "((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exist
       replacement = "$1:10257"
       target_label = "__address__"
     }
@@ -448,6 +455,13 @@ declare "cluster_metrics" {
     targets = discovery.kubernetes.kube_proxy.targets
     rule {
       source_labels = ["__meta_kubernetes_pod_ip"]
+      regex = "(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
+      replacement = "[$1]:10249" // IPv6
+      target_label = "__address__"
+    }
+    rule {
+      source_labels = ["__meta_kubernetes_pod_ip"]
+      regex = "((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exist
       replacement = "$1:10249"
       target_label = "__address__"
     }
@@ -484,6 +498,13 @@ declare "cluster_metrics" {
     targets = discovery.kubernetes.kube_scheduler.targets
     rule {
       source_labels = ["__meta_kubernetes_pod_ip"]
+      regex = "(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
+      replacement = "[$1]:10259" // IPv6
+      target_label = "__address__"
+    }
+    rule {
+      source_labels = ["__meta_kubernetes_pod_ip"]
+      regex = "((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exist
       replacement = "$1:10259"
       target_label = "__address__"
     }
@@ -815,6 +836,13 @@ declare "etcd_integration" {
     // set the metrics port
     rule {
       source_labels = ["__meta_kubernetes_pod_ip"]
+      regex = "(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
+      replacement = "[$1]:2381" // IPv6
+      target_label = "__address__"
+    }
+    rule {
+      source_labels = ["__meta_kubernetes_pod_ip"]
+      regex = "((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exist
       replacement = "$1:2381"
       target_label = "__address__"
     }

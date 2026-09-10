@@ -19,6 +19,13 @@ discovery.relabel "kube_scheduler" {
   targets = discovery.kubernetes.kube_scheduler.targets
   rule {
     source_labels = ["__meta_kubernetes_pod_ip"]
+    regex = "(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
+    replacement = "[$1]:{{ .Values.kubeScheduler.port }}" // IPv6
+    target_label = "__address__"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_ip"]
+    regex = "((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exist
     replacement = "$1:{{ .Values.kubeScheduler.port }}"
     target_label = "__address__"
   }
