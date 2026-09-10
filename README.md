@@ -19,8 +19,8 @@
 
 There are many great Helm charts for individual pieces of the observability stack:
 [Grafana Alloy](https://github.com/grafana/alloy), the OpenTelemetry
-[Collector](https://github.com/open-telemetry/opentelemetry-helm-charts) and
-[Operator](https://github.com/open-telemetry/opentelemetry-helm-charts),
+[Collector](https://github.com/open-telemetry/opentelemetry-helm-charts/tree/main/charts/opentelemetry-collector) and
+[Operator](https://github.com/open-telemetry/opentelemetry-helm-charts/tree/main/charts/opentelemetry-operator),
 [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts),
 [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics),
 [Node Exporter](https://github.com/prometheus/node_exporter), and more. Each is excellent at its job, but wiring them
