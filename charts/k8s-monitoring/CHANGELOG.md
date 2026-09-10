@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 3.8.13
 
 *   Fix the alloy-singleton `self-reporting-metric.prom` file missing its trailing newline, which caused Alloy's textfile collector to fail parsing it (`unexpected end of input stream`). Backport of #2486. (#2930) (@petewall)
 *   Fix control-plane (Kube Proxy, Kube Controller Manager, Kube Scheduler) and etcd integration scraping on IPv6/dual-stack clusters by using bracket notation for IPv6 pod addresses. (#2999) (@petewall)
