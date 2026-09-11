@@ -7,6 +7,7 @@
 
 ## 4.5.1
 
+*   Add OTLP HTTP receiver timeout and keep-alive settings for the Application Observability feature. (#3029) (@nlamirault)
 *   Fix issue with duplicate configuration block declarations when the same data processor is used by more than one feature on the same collector. (#3014) (@petewall)
 *   Fix incorrect `job` label for nodeLogs feature. (@petewall)
 *   Update Alloy Operator to 0.7.1, kube-state-metrics to 8.4.2, OpenCost to 2.5.30, and Node Exporter to 4.56.3 (@petewall)
