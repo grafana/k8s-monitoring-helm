@@ -1,0 +1,24 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Application Observability - HTTP timeout settings
+templates:
+  - test/configmap.yaml
+tests:
+  - it: renders the OTLP HTTP server timeout and keep-alive settings
+    set:
+      testing: {enabled: true}
+      receivers:
+        otlp:
+          grpc:
+            enabled: false
+          http:
+            enabled: true
+            idleTimeout: 10m
+            readTimeout: 30s
+            readHeaderTimeout: 2m
+            writeTimeout: 1m
+            keepAlivesEnabled: false
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

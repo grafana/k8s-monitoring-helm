@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Add OTLP HTTP receiver timeout and keep-alive settings for the Application Observability feature. (#3029) (@nlamirault)
 *   Adds the native histogram scrape options to all Prometheus Operator object types (PodMonitors, Probes, ServiceMonitors) (@nlamirault)
 *   Fix control-plane (Kube Proxy, Kube Controller Manager, Kube Scheduler) and etcd integration scraping on IPv6/dual-stack clusters by using bracket notation for IPv6 pod addresses. (#2999) (@petewall)
 
