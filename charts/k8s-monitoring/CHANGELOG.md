@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 4.5.2
 
 *   Add OTLP HTTP receiver timeout and keep-alive settings for the Application Observability feature. (#3029) (@nlamirault)
 *   Adds the native histogram scrape options to all Prometheus Operator object types (PodMonitors, Probes, ServiceMonitors) (@nlamirault)
