@@ -191,6 +191,17 @@ database_observability.postgres {{ include "helper.alloy_name" .name | quote }} 
 
   {{- $enabledCollectors := list }}
   {{- $disabledCollectors := list }}
+  {{- if and .databaseObservability.collectors.logs.enabled .databaseObservability.logSource.type }}
+    {{- $enabledCollectors = append $enabledCollectors "logs" }}
+  logs {
+    enable_error_logs_processing = true
+  }
+  {{- end }}
+  {{- with .databaseObservability.healthCheck.collectInterval }}
+  health_check {
+    collect_interval = {{ . | quote }}
+  }
+  {{- end }}
   {{- if .databaseObservability.collectors.explainPlans.enabled }}
     {{- $enabledCollectors = append $enabledCollectors "explain_plans" }}
     {{- with .databaseObservability.collectors.explainPlans }}
@@ -221,6 +232,9 @@ database_observability.postgres {{ include "helper.alloy_name" .name | quote }} 
   query_samples {
     collect_interval = {{ .collectInterval | quote }}
     disable_query_redaction = {{ .disableQueryRedaction }}
+    {{- if not (kindIs "invalid" .enablePreClassifiedWaitEvents) }}
+    enable_pre_classified_wait_events = {{ .enablePreClassifiedWaitEvents }}
+    {{- end }}
     {{- if not (kindIs "invalid" .excludeCurrentUser) }}
     exclude_current_user = {{ .excludeCurrentUser }}
     {{- end }}
@@ -246,6 +260,76 @@ database_observability.postgres {{ include "helper.alloy_name" .name | quote }} 
 
   forward_to = [loki.relabel.{{ $dbRelabelName }}.receiver]
 }
+
+{{- if and .databaseObservability.collectors.logs.enabled .databaseObservability.logSource.type }}
+{{- with .databaseObservability.logSource }}
+{{- if eq .type "file" }}
+
+loki.source.file {{ $dbRelabelName | quote }} {
+  targets = [
+    {{- range .file.paths }}
+    {"__path__" = {{ . | quote }}},
+    {{- end }}
+  ]
+  file_match {
+    enabled = true
+  }
+  tail_from_end = {{ .file.tailFromEnd }}
+  forward_to = [database_observability.postgres.{{ $alloyName }}.logs_receiver]
+}
+{{- else if eq .type "cloudwatch" }}
+{{- with .cloudwatch }}
+
+otelcol.storage.file {{ $dbRelabelName | quote }} {}
+
+otelcol.receiver.awscloudwatch {{ $dbRelabelName | quote }} {
+  storage = otelcol.storage.file.{{ $dbRelabelName }}.handler
+  region = {{ .region | quote }}
+  {{- with .profile }}
+  profile = {{ . | quote }}
+  {{- end }}
+  {{- with .imdsEndpoint }}
+  imds_endpoint = {{ . | quote }}
+  {{- end }}
+  logs {
+    poll_interval = {{ .pollInterval | quote }}
+    max_events_per_request = {{ .maxEventsPerRequest | int }}
+    {{- with .initialLookback }}
+    initial_lookback = {{ . | quote }}
+    {{- end }}
+    {{- with .startFrom }}
+    start_from = {{ . | quote }}
+    {{- end }}
+    groups {
+      named {
+        group_name = {{ .groupName | quote }}
+      }
+    }
+  }
+  output {
+    logs = [otelcol.processor.attributes.{{ $dbRelabelName }}.input]
+  }
+}
+
+// Preserve the PostgreSQL text body for the positional log parser.
+otelcol.processor.attributes {{ $dbRelabelName | quote }} {
+  action {
+    key = "loki.format"
+    action = "upsert"
+    value = "raw"
+  }
+  output {
+    logs = [otelcol.exporter.loki.{{ $dbRelabelName }}.input]
+  }
+}
+
+otelcol.exporter.loki {{ $dbRelabelName | quote }} {
+  forward_to = [database_observability.postgres.{{ $alloyName }}.logs_receiver]
+}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
 
 loki.relabel {{ $dbRelabelName | quote }} {
   forward_to = argument.logs_destinations.value

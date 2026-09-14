@@ -326,3 +326,274 @@ tests:
                   - name: test-database
                     metrics:
                       enabled: true
+
+  - it: renders a file source inside the module and enables error processing
+    set:
+      testing:
+        enabled: true
+      postgresql:
+        instances:
+          - name: logs-db
+            exporter:
+              dataSource:
+                host: localhost
+                database: postgres
+            logs:
+              enabled: false
+            databaseObservability:
+              enabled: true
+              collectors:
+                logs:
+                  enabled: true
+              logSource:
+                type: file
+                file:
+                  paths:
+                    - /var/log/postgresql/*.log
+    asserts:
+      - template: test/configmap.yaml
+        matchRegex:
+          path: data["metrics.alloy"]
+          pattern: enable_collectors = \[.*"logs".*\]
+      - template: test/configmap.yaml
+        matchRegex:
+          path: data["metrics.alloy"]
+          pattern: enable_error_logs_processing = true
+      - template: test/configmap.yaml
+        matchRegex:
+          path: data["metrics.alloy"]
+          pattern: (?s)declare "postgresql_integration" \{\n(?:[ \t][^\n]*\n|\n)*  loki.source.file "database_observability_postgres_logs_db" \{.*forward_to = \[database_observability.postgres.logs_db.logs_receiver\].*\n\}
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
+  - it: renders CloudWatch and the Loki exporter inside the module without an ARN
+    set:
+      testing:
+        enabled: true
+      postgresql:
+        instances:
+          - name: logs-db
+            exporter:
+              dataSource:
+                host: localhost
+                database: postgres
+            logs:
+              enabled: false
+            databaseObservability:
+              enabled: true
+              collectors:
+                logs:
+                  enabled: true
+              logSource:
+                type: cloudwatch
+                file:
+                  paths:
+                    - /var/log/postgresql/*.log
+                cloudwatch:
+                  region: eu-west-1
+                  groupName: /aws/rds/instance/example-db/postgresql
+                  profile: monitoring
+                  imdsEndpoint: http://localhost:1338
+                  pollInterval: 30s
+                  initialLookback: 5m
+                  maxEventsPerRequest: 500
+                  startFrom: '2026-09-01T00:00:00Z'
+    asserts:
+      - template: test/configmap.yaml
+        matchRegex:
+          path: data["metrics.alloy"]
+          pattern: enable_collectors = \[.*"logs".*\]
+      - template: test/configmap.yaml
+        matchRegex:
+          path: data["metrics.alloy"]
+          pattern: (?s)declare "postgresql_integration" \{\n(?:[ \t][^\n]*\n|\n)*  otelcol.receiver.awscloudwatch "database_observability_postgres_logs_db" \{.*group_name = "/aws/rds/instance/example-db/postgresql".*logs = \[otelcol.exporter.loki.database_observability_postgres_logs_db.input\].*\n  otelcol.exporter.loki "database_observability_postgres_logs_db" \{.*forward_to = \[database_observability.postgres.logs_db.logs_receiver\].*\n\}
+      - template: test/configmap.yaml
+        matchRegex:
+          path: data["metrics.alloy"]
+          pattern: 'otelcol.processor.attributes[^}]*key = "loki.format"[^}]*value = "raw"'
+      - template: test/configmap.yaml
+        matchRegex:
+          path: data["metrics.alloy"]
+          pattern: 'storage = otelcol.storage.file.database_observability_postgres_logs_db.handler'
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
+  - it: does not render error processing without a source even when enabled
+    set:
+      testing:
+        enabled: true
+      postgresql:
+        instances:
+          - name: logs-db
+            exporter:
+              dataSource:
+                host: localhost
+                database: postgres
+            logs:
+              enabled: false
+            databaseObservability:
+              enabled: true
+              collectors:
+                logs:
+                  enabled: true
+              logSource:
+                type: ''
+                file:
+                  paths:
+                    - /var/log/postgresql/*.log
+    asserts:
+      - template: test/configmap.yaml
+        notMatchRegex:
+          path: data["metrics.alloy"]
+          pattern: enable_error_logs_processing|loki.source.file|otelcol.receiver.awscloudwatch|"logs"
+
+  - it: does not render a configured source when the logs collector is disabled
+    set:
+      testing:
+        enabled: true
+      postgresql:
+        instances:
+          - name: logs-db
+            exporter:
+              dataSource:
+                host: localhost
+                database: postgres
+            logs:
+              enabled: false
+            databaseObservability:
+              enabled: true
+              collectors:
+                logs:
+                  enabled: false
+              logSource:
+                type: file
+                file:
+                  paths:
+                    - /var/log/postgresql/*.log
+    asserts:
+      - template: test/configmap.yaml
+        notMatchRegex:
+          path: data["metrics.alloy"]
+          pattern: enable_error_logs_processing|loki.source.file|otelcol.receiver.awscloudwatch|"logs"
+
+  - it: renders optional wait event and health check settings
+    set:
+      testing:
+        enabled: true
+      postgresql:
+        instances:
+          - name: logs-db
+            exporter:
+              dataSource:
+                host: localhost
+                database: postgres
+            logs:
+              enabled: false
+            databaseObservability:
+              enabled: true
+              collectors:
+                logs:
+                  enabled: true
+                querySamples:
+                  enablePreClassifiedWaitEvents: true
+              logSource:
+                type: file
+                file:
+                  paths:
+                    - /var/log/postgresql/*.log
+              healthCheck:
+                collectInterval: 30m
+    asserts:
+      - template: test/configmap.yaml
+        matchRegex:
+          path: data["metrics.alloy"]
+          pattern: enable_pre_classified_wait_events = true
+      - template: test/configmap.yaml
+        matchRegex:
+          path: data["metrics.alloy"]
+          pattern: health_check \{\s+collect_interval = "30m"
+
+  - it: rejects a file source without paths
+    set:
+      testing:
+        enabled: true
+      postgresql:
+        instances:
+          - name: logs-db
+            exporter:
+              dataSource:
+                host: localhost
+                database: postgres
+            logs:
+              enabled: false
+            databaseObservability:
+              enabled: true
+              collectors:
+                logs:
+                  enabled: true
+              logSource:
+                type: file
+                file:
+                  paths: []
+    asserts:
+      - template: test/configmap.yaml
+        failedTemplate:
+          errorMessage: 'PostgreSQL instance "logs-db": set databaseObservability.logSource.file.paths to at least one readable PostgreSQL log path.'
+
+  - it: rejects a CloudWatch source without its required settings
+    set:
+      testing:
+        enabled: true
+      postgresql:
+        instances:
+          - name: logs-db
+            exporter:
+              dataSource:
+                host: localhost
+                database: postgres
+            logs:
+              enabled: false
+            databaseObservability:
+              enabled: true
+              collectors:
+                logs:
+                  enabled: true
+              logSource:
+                type: cloudwatch
+                file:
+                  paths:
+                    - /var/log/postgresql/*.log
+    asserts:
+      - template: test/configmap.yaml
+        failedTemplate:
+          errorMessage: 'PostgreSQL instance "logs-db": set databaseObservability.logSource.cloudwatch.region and groupName.'
+
+  - it: rejects an unsupported source type
+    set:
+      testing:
+        enabled: true
+      postgresql:
+        instances:
+          - name: logs-db
+            exporter:
+              dataSource:
+                host: localhost
+                database: postgres
+            logs:
+              enabled: false
+            databaseObservability:
+              enabled: true
+              collectors:
+                logs:
+                  enabled: true
+              logSource:
+                type: azure
+                file:
+                  paths:
+                    - /var/log/postgresql/*.log
+    asserts:
+      - template: test/configmap.yaml
+        failedTemplate:
+          errorMessage: 'PostgreSQL instance "logs-db": set databaseObservability.logSource.type to file or cloudwatch, or leave it empty to disable the source.'

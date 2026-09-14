@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Sync PostgreSQL Database Observability settings with Alloy 1.19: add opt-in file and CloudWatch error-log sources, pre-classified wait events, and health-check interval configuration. (#3037)
+
 ## 4.5.2
 
 *   Add OTLP HTTP receiver timeout and keep-alive settings for the Application Observability feature. (#3029) (@nlamirault)
