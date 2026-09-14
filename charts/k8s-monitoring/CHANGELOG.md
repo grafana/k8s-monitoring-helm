@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Add `kubelet_evictions` to the default Kubelet allow list so the `KubeNodeEviction` alert has the metric it needs. (@TylerHelmuth)
+
 ## 4.5.2
 
 *   Add OTLP HTTP receiver timeout and keep-alive settings for the Application Observability feature. (#3029) (@nlamirault)
