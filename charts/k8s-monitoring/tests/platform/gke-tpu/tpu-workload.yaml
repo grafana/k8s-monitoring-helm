@@ -1,0 +1,74 @@
+---
+# Requesting a single-host TPU v5e slice (tpu-v5-lite-podslice, 1x1 topology = 1 chip) is the
+# cheapest TPU configuration available on GKE. Scheduling this pod makes GKE Autopilot provision a
+# ct5lp-hightpu-1t TPU node on demand. Once the TPU node exists, the GKE-managed tpu-device-plugin
+# DaemonSet runs on it and exports node-level TPU metrics on port 2112, which the chart scrapes via
+# extraConfig.
+#
+# The workload runs a continuous JAX matrix-multiply loop on the TensorCore so the utilization
+# metrics are actually exercised: duty_cycle / tensorcore_utilization become non-zero and HBM
+# (memory_used) is allocated, instead of sitting idle at zero.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tpu-workload
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tpu-workload
+  template:
+    metadata:
+      labels:
+        app: tpu-workload
+    spec:
+      nodeSelector:
+        cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice
+        cloud.google.com/gke-tpu-topology: 1x1
+      tolerations:
+        - key: google.com/tpu
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: tpu-workload
+          image: python:3.11
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -euo pipefail
+              pip install --no-cache-dir "jax[tpu]" \
+                -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
+              cat <<'PY' > /tmp/tpu_stress.py
+              import jax
+              import jax.numpy as jnp
+
+              print("JAX devices:", jax.devices(), flush=True)
+
+              # bfloat16 matmuls keep the MXUs (TensorCore) busy. 8192x8192 comfortably fits the
+              # v5e chip's 16 GiB of HBM while allocating enough to move memory_used off zero.
+              n = 8192
+              key = jax.random.PRNGKey(0)
+              a = jax.random.normal(key, (n, n), dtype=jnp.bfloat16)
+              b = jax.random.normal(key, (n, n), dtype=jnp.bfloat16)
+
+              @jax.jit
+              def step(a, b):
+                  # Chain several matmuls per step to raise the duty cycle, rescaling so the
+                  # values stay bounded (well-conditioned) across iterations.
+                  for _ in range(20):
+                      a = jnp.matmul(a, b)
+                      a = a / (jnp.max(jnp.abs(a)) + jnp.bfloat16(1e-3))
+                  return a
+
+              while True:
+                  a = step(a, b).block_until_ready()
+              PY
+              python /tmp/tpu_stress.py
+          resources:
+            requests:
+              cpu: "2"
+              memory: 8Gi
+            limits:
+              google.com/tpu: 1
