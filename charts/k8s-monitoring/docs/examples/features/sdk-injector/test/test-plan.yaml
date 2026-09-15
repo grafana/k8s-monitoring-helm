@@ -1,0 +1,77 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: sdk-injector
+
+subject:
+  releaseName: k8smon
+  path: ../../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  # The application to be instrumented, plus a traffic generator so the injected SDK produces spans.
+  - file: dependencies/sample-app.yaml
+  - preset: prometheus
+  - preset: loki
+  - preset: tempo
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+            - name: Tempo
+              type: tempo
+              url: http://tempo.tempo.svc:3200
+
+tests:
+  # The full injection pipeline is deployed: the controller, Beyla, the RBAC that lets Beyla write injection
+  # ConfigMaps, and at least one injection-state ConfigMap that Beyla actually wrote.
+  - type: kubernetes-objects-test
+    values:
+      checks:
+        - name: k8smon-k8s-injection-controller
+          kind: Deployment
+          namespace: default
+          expect: {count: 1}
+        - name: k8smon-beyla
+          kind: DaemonSet
+          namespace: default
+          expect: {count: 1}
+        - name: k8smon-beyla-injector
+          kind: Role
+          namespace: default
+          expect: {count: 1}
+        # Beyla discovered the demo workload and wrote its per-node injection ConfigMap.
+        - kind: ConfigMap
+          namespace: default
+          labels:
+            app.kubernetes.io/managed-by: beyla
+            app.kubernetes.io/component: injector-state
+          expect: {count: 1}
+
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: sdk-injector-injection
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            TEMPO_URL: http://tempo.tempo.svc:3200/api/search
+          queries:
+            # The controller reports that it instrumented the demo workload (scraped via Annotation Autodiscovery).
+            - query: beyla_injection_pods{cluster="$CLUSTER", k8s_namespace_name="demo", k8s_workload_name="hello-node", status="instrumented"}
+              type: promql
+              expect:
+                value: 1
+                operator: ==
+
+            # The injected SDK actually produces telemetry: the demo app's traces arrive at the destination.
+            - query: '{resource.service.name="hello-node"}'
+              type: traceql

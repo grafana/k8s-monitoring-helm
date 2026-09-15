@@ -1,0 +1,77 @@
+---
+cluster:
+  name: sdk-injector-injection
+
+destinations:
+  localPrometheus:
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+  localLoki:
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+  localTempo:
+    type: otlp
+    url: tempo.tempo.svc:4317
+    tls:
+      insecure: true
+      insecureSkipVerify: true
+    metrics: {enabled: false}
+    logs: {enabled: false}
+    traces: {enabled: true}
+
+# Scrape the SDK Injector controller's metrics endpoint so we can observe injection results (e.g. the
+# beyla_injection_pods metric, which reports each workload the controller has instrumented).
+annotationAutodiscovery:
+  enabled: true
+  collector: alloy
+
+# The Application Observability feature opens an OTLP receiver. The SDKs injected into application Pods send their
+# telemetry here, and Beyla auto-wires the injected OTEL_EXPORTER_OTLP_ENDPOINT to this receiver.
+applicationObservability:
+  enabled: true
+  collector: alloy
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+
+# The auto-instrumentation feature deploys Grafana Beyla. In addition to its eBPF instrumentation, Beyla runs in SDK
+# Injector mode here: it discovers workloads and writes the injection ConfigMaps that the SDK Injector controller
+# consumes. `beyla.injector.enabled` grants Beyla the namespaced RBAC to write those ConfigMaps.
+autoInstrumentation:
+  enabled: true
+  collector: alloy
+  beyla:
+    injector:
+      enabled: true
+    config:
+      data:
+        injector:
+          # Instrument workloads in the `demo` namespace with the Grafana OpenTelemetry SDK distributions.
+          instrument:
+            - k8s_namespace: demo
+          image_version: "0.0.13"
+          # Delegate the actual Pod mutation to the SDK Injector controller deployed by telemetryServices.sdkInjector.
+          webhook:
+            external_deployment_name: default/k8smon-k8s-injection-controller
+
+telemetryServices:
+  # Deploy the SDK Injector (Grafana Kubernetes Injection Controller). Allow Beyla's service account to write the
+  # annotated injection ConfigMaps.
+  sdkInjector:
+    deploy: true
+    allowedConfigMapWriters: system:serviceaccount:$(POD_NAMESPACE):k8smon-beyla
+
+    metrics:
+      annotations:
+        k8s.grafana.com/scrape: "true"
+        k8s.grafana.com/metrics.portNumber: "8080"
+
+collectors:
+  alloy:
+    presets: [clustered, statefulset]
