@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Sync PostgreSQL Database Observability settings with Alloy 1.19: add opt-in file and CloudWatch error-log sources, pre-classified wait events, and health-check interval configuration. (#3037)
 *   Add `kubelet_evictions` to the default Kubelet allow list, and `kube_pod_status_ready`, `kube_poddisruptionbudget_status_current_healthy`, and `kube_poddisruptionbudget_status_desired_healthy` to the default Kube State Metrics allow list, so the provisioned alerting and recording rules have the metrics they need. (@TylerHelmuth)
 
 ## 4.5.2

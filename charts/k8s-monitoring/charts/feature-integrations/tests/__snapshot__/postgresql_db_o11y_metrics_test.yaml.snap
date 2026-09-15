@@ -312,6 +312,234 @@ keeps prometheus.relabel when metrics tuning is set under db o11y:
           forward_to = argument.metrics_destinations.value
         }
       }
+renders CloudWatch and the Loki exporter inside the module without an ARN:
+  1: |
+    |-
+      declare "postgresql_integration" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        prometheus.exporter.postgres "logs_db" {
+          data_source_names = [string.format("postgresql://%s:%d/postgres", "localhost", 5432)]
+          enabled_collectors = ["database","locks","replication","replication_slot","stat_bgwriter","stat_database","stat_progress_vacuum","stat_user_tables","statio_user_tables","wal"]
+          disable_default_metrics = false
+          disable_settings_metrics = false
+        }
+
+        database_observability.postgres "logs_db" {
+          targets = prometheus.exporter.postgres.logs_db.targets
+          data_source_name = string.format("postgresql://%s:%d/postgres", "localhost", 5432)
+          exclude_current_user = true
+          logs {
+            enable_error_logs_processing = true
+          }
+          explain_plans {
+            collect_interval = "1m"
+            per_collect_ratio = "1"
+          }
+          query_details {
+            collect_interval = "1m"
+          }
+          query_samples {
+            collect_interval = "15s"
+            disable_query_redaction = false
+          }
+          schema_details {
+            collect_interval = "1m"
+          }
+          enable_collectors = ["logs","explain_plans","query_details","query_samples","schema_details"]
+
+          forward_to = [loki.relabel.database_observability_postgres_logs_db.receiver]
+        }
+
+        otelcol.storage.file "database_observability_postgres_logs_db" {}
+
+        otelcol.receiver.awscloudwatch "database_observability_postgres_logs_db" {
+          storage = otelcol.storage.file.database_observability_postgres_logs_db.handler
+          region = "eu-west-1"
+          profile = "monitoring"
+          imds_endpoint = "http://localhost:1338"
+          logs {
+            poll_interval = "30s"
+            max_events_per_request = 500
+            initial_lookback = "5m"
+            start_from = "2026-09-01T00:00:00Z"
+            groups {
+              named {
+                group_name = "/aws/rds/instance/example-db/postgresql"
+              }
+            }
+          }
+          output {
+            logs = [otelcol.processor.attributes.database_observability_postgres_logs_db.input]
+          }
+        }
+
+        // Preserve the PostgreSQL text body for the positional log parser.
+        otelcol.processor.attributes "database_observability_postgres_logs_db" {
+          action {
+            key = "loki.format"
+            action = "upsert"
+            value = "raw"
+          }
+          output {
+            logs = [otelcol.exporter.loki.database_observability_postgres_logs_db.input]
+          }
+        }
+
+        otelcol.exporter.loki "database_observability_postgres_logs_db" {
+          forward_to = [database_observability.postgres.logs_db.logs_receiver]
+        }
+
+        loki.relabel "database_observability_postgres_logs_db" {
+          forward_to = argument.logs_destinations.value
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "logs-db"
+          }
+        }
+
+        discovery.relabel "database_observability_postgres_logs_db" {
+          targets = database_observability.postgres.logs_db.targets
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "logs-db"
+          }
+        }
+        prometheus.scrape "logs_db" {
+          targets = discovery.relabel.database_observability_postgres_logs_db.output
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = argument.metrics_destinations.value
+        }
+      }
+renders a file source inside the module and enables error processing:
+  1: |
+    |-
+      declare "postgresql_integration" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        prometheus.exporter.postgres "logs_db" {
+          data_source_names = [string.format("postgresql://%s:%d/postgres", "localhost", 5432)]
+          enabled_collectors = ["database","locks","replication","replication_slot","stat_bgwriter","stat_database","stat_progress_vacuum","stat_user_tables","statio_user_tables","wal"]
+          disable_default_metrics = false
+          disable_settings_metrics = false
+        }
+
+        database_observability.postgres "logs_db" {
+          targets = prometheus.exporter.postgres.logs_db.targets
+          data_source_name = string.format("postgresql://%s:%d/postgres", "localhost", 5432)
+          exclude_current_user = true
+          logs {
+            enable_error_logs_processing = true
+          }
+          explain_plans {
+            collect_interval = "1m"
+            per_collect_ratio = "1"
+          }
+          query_details {
+            collect_interval = "1m"
+          }
+          query_samples {
+            collect_interval = "15s"
+            disable_query_redaction = false
+          }
+          schema_details {
+            collect_interval = "1m"
+          }
+          enable_collectors = ["logs","explain_plans","query_details","query_samples","schema_details"]
+
+          forward_to = [loki.relabel.database_observability_postgres_logs_db.receiver]
+        }
+
+        loki.source.file "database_observability_postgres_logs_db" {
+          targets = [
+            {"__path__" = "/var/log/postgresql/*.log"},
+          ]
+          file_match {
+            enabled = true
+          }
+          tail_from_end = true
+          forward_to = [database_observability.postgres.logs_db.logs_receiver]
+        }
+
+        loki.relabel "database_observability_postgres_logs_db" {
+          forward_to = argument.logs_destinations.value
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "logs-db"
+          }
+        }
+
+        discovery.relabel "database_observability_postgres_logs_db" {
+          targets = database_observability.postgres.logs_db.targets
+          rule {
+            target_label = "job"
+            replacement = "integrations/db-o11y"
+          }
+          rule {
+            source_labels = ["instance"]
+            target_label = "dsn"
+          }
+          rule {
+            target_label = "instance"
+            replacement = "logs-db"
+          }
+        }
+        prometheus.scrape "logs_db" {
+          targets = discovery.relabel.database_observability_postgres_logs_db.output
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = argument.metrics_destinations.value
+        }
+      }
 renders gcp cloud_provider and disable_collectors:
   1: |
     |-

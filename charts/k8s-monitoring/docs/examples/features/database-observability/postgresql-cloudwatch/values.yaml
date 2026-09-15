@@ -1,0 +1,65 @@
+---
+cluster:
+  name: postgresql-error-logs
+
+destinations:
+  metrics:
+    type: prometheus
+    url: http://prometheus.monitoring.svc:9090/api/v1/write
+  logs:
+    type: loki
+    url: http://loki.monitoring.svc:3100/loki/api/v1/push
+
+integrations:
+  collector: alloy-singleton
+  postgresql:
+    instances:
+      - name: example-db
+        exporter:
+          dataSource:
+            host: example-db.example.eu-west-1.rds.amazonaws.com
+            database: postgres
+            auth:
+              usernameKey: username
+              passwordKey: password
+        secret:
+          create: false
+          name: postgresql-monitoring
+          namespace: monitoring
+        logs:
+          enabled: false
+        databaseObservability:
+          enabled: true
+          healthCheck:
+            collectInterval: 30m
+          collectors:
+            querySamples:
+              enablePreClassifiedWaitEvents: true
+            logs:
+              enabled: true
+          logSource:
+            type: cloudwatch
+            cloudwatch:
+              region: eu-west-1
+              groupName: /aws/rds/instance/example-db/postgresql
+              pollInterval: 1m
+
+collectors:
+  alloy-singleton:
+    presets: [singleton]
+    alloy:
+      stabilityLevel: experimental
+      storagePath: /var/lib/alloy
+      mounts:
+        extra:
+          - name: checkpoints
+            mountPath: /var/lib/alloy
+    controller:
+      volumes:
+        extra:
+          - name: checkpoints
+            persistentVolumeClaim:
+              claimName: postgresql-cloudwatch-checkpoints
+    serviceAccount:
+      create: false
+      name: postgresql-cloudwatch

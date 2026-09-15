@@ -1,0 +1,11 @@
+# PostgreSQL error logs from files
+
+Mount an existing PostgreSQL log volume read-only into a singleton collector. The volume must support access from
+the database and the collector, and the collector needs permission to read its files.
+
+Create the `postgresql-monitoring` Secret in the `monitoring` namespace with `username` and `password` keys.
+Configure PostgreSQL with `log_line_prefix = '%m:%r:%u@%d:[%p]:%l:%e:%s:%v:%x:%c:%q%a:'` and
+`log_min_error_statement = ERROR`. Use a CGO-enabled Alloy 1.19 or newer build.
+
+See the [PostgreSQL integration](../../../../../charts/feature-integrations/docs/integrations/postgresql.md) for
+source settings and runtime prerequisites.
