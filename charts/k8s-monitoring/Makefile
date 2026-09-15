@@ -279,6 +279,10 @@ PLATFORM_TEST_VALUES_FILES := $(filter-out $(NON_RENDERED_PLATFORM_TEST_VALUES_F
 PLATFORM_TEST_OUTPUT_FILES := $(PLATFORM_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
 PLATFORM_TEST_ALLOY_FILES := $(call alloy_rendered_files,$(PLATFORM_TEST_VALUES_FILES),.alloy)
 
+# README generation is pure shell (no helm render), so it covers every platform test values.yaml, including the
+# non-rendered add-on tests that are excluded from PLATFORM_TEST_VALUES_FILES.
+PLATFORM_TEST_README_FILES := $(patsubst %/values.yaml,%/README.md,$(shell find tests/platform -name values.yaml))
+
 # Everything `helm template` reads while rendering the parent chart, so editing any of these re-renders the outputs.
 # Files pulled in with .Files.Get (the collector values, the extracted upstream alloy values, the collector presets, and
 # the OTLP resource-attributes remove-list) and the generated *.tpl files must be listed explicitly: the
@@ -325,7 +329,7 @@ HELM_TEMPLATE_DEPS := Chart.yaml Chart.lock values.yaml values.schema.json \
 	@echo '<!-- textlint-enable terminology -->' >> $@
 
 .PHONY: examples
-examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(INTEGRATION_TEST_ALLOY_FILES) $(PLATFORM_TEST_OUTPUT_FILES) $(PLATFORM_TEST_ALLOY_FILES)
+examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(INTEGRATION_TEST_ALLOY_FILES) $(PLATFORM_TEST_OUTPUT_FILES) $(PLATFORM_TEST_ALLOY_FILES) $(PLATFORM_TEST_README_FILES)
 
 # Verify that the comment on every Alloy config component's closing brace matches
 # the component that opened the block (e.g. `} // prometheus.relabel "foo"`).
@@ -368,7 +372,7 @@ clean: clean-examples
 
 .PHONY: clean-examples
 clean-examples:
-	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(INTEGRATION_TEST_ALLOY_FILES) $(PLATFORM_TEST_OUTPUT_FILES) $(PLATFORM_TEST_ALLOY_FILES)
+	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(INTEGRATION_TEST_ALLOY_FILES) $(PLATFORM_TEST_OUTPUT_FILES) $(PLATFORM_TEST_ALLOY_FILES) $(PLATFORM_TEST_README_FILES)
 
 .PHONY: build-features
 build-features:

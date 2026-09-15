@@ -1,0 +1,156 @@
+<!--
+(NOTE: Do not edit README.md directly. It is a generated file!)
+(      To make changes, please modify values.yaml or description.txt and run `make examples`)
+-->
+# Grafana Cloud: Kubernetes Monitoring
+
+This is an end-to-end feature test rather than a platform variation. It exercises the core Kubernetes Monitoring
+feature set against Grafana Cloud, sending data to Prometheus, Loki, and OTLP gateway destinations to confirm the chart
+works against a real Grafana Cloud stack.
+
+## Values
+
+<!-- textlint-disable terminology -->
+```yaml
+---
+cluster:
+  name: k8s-monitoring-gc-feature-test
+
+destinations:
+  grafana-cloud-metrics:
+    type: prometheus
+    url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push
+    remoteWriteProtocol: 2
+    auth:
+      type: basic
+      usernameKey: metricsUser
+      passwordKey: grafanaCloudAccessPolicyToken
+    secret:
+      create: false
+      name: grafana-cloud-credentials
+  grafana-cloud-logs:
+    type: loki
+    url: https://logs-prod-006.grafana.net/loki/api/v1/push
+    auth:
+      type: basic
+      usernameKey: logsUser
+      passwordKey: grafanaCloudAccessPolicyToken
+    secret:
+      create: false
+      name: grafana-cloud-credentials
+  grafana-cloud-otlp-endpoint:
+    type: otlp
+    url: https://otlp-gateway-prod-us-east-0.grafana.net./otlp
+    protocol: http
+    auth:
+      type: basic
+      usernameKey: otlpUser
+      passwordKey: grafanaCloudAccessPolicyToken
+    secret:
+      create: false
+      name: grafana-cloud-credentials
+    metrics: {enabled: true}
+    logs: {enabled: true}
+    traces: {enabled: true}
+    processors:
+      tailSampling:
+        enabled: true
+        policies:
+          - name: sample-15pct-traces
+            type: probabilistic
+            sampling_percentage: 15
+
+clusterMetrics:
+  enabled: true
+  collector: alloy-metrics
+
+costMetrics:
+  enabled: true
+  collector: alloy-metrics
+
+hostMetrics:
+  enabled: true
+  collector: alloy-metrics
+  energyMetrics:
+    enabled: true
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
+
+clusterEvents:
+  enabled: true
+  collector: alloy-singleton
+
+podLogsViaLoki:
+  enabled: true
+  collector: alloy-logs
+
+applicationObservability:
+  enabled: true
+  collector: alloy-receiver
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+
+autoInstrumentation:
+  enabled: true
+  collector: alloy-metrics
+
+integrations:
+  collector: alloy-metrics
+  alloy:
+    instances:
+      - name: alloy
+        labelSelectors:
+          app.kubernetes.io/name: [alloy-metrics, alloy-singleton, alloy-logs]
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    alloy:
+      stabilityLevel: experimental  # Required for Prometheus remote_write v2
+
+  alloy-singleton:
+    presets: [singleton]
+    alloy:
+      stabilityLevel: experimental  # Required for Prometheus remote_write v2
+
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+
+  alloy-receiver:
+    presets: [deployment]
+
+collectorCommon:
+  alloy:
+    liveDebugging:
+      enabled: true
+    controller:
+      podAnnotations:
+        source: k8s-monitoring-gc-feature-test
+
+telemetryServices:
+  kepler:
+    deploy: true
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
+  opencost:
+    deploy: true
+    metricsSource: grafana-cloud-metrics
+    opencost:
+      exporter:
+        defaultClusterId: k8s-monitoring-gc-feature-test
+      prometheus:
+        external:
+          url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom
+        existingSecretName: grafana-cloud-credentials
+        username_key: metricsUser
+        password_key: grafanaCloudAccessPolicyToken
+```
+<!-- textlint-enable terminology -->

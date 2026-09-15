@@ -1,0 +1,107 @@
+<!--
+(NOTE: Do not edit README.md directly. It is a generated file!)
+(      To make changes, please modify values.yaml or description.txt and run `make examples`)
+-->
+# Grafana Cloud: Database Observability
+
+This is a feature test rather than a platform variation. It verifies Database Observability for MySQL and PostgreSQL
+against Grafana Cloud: the chart deploys the database exporters, enables the database observability collectors, and
+ships both the database metrics and logs to the Grafana Cloud metrics and logs destinations.
+
+## Values
+
+<!-- textlint-disable terminology -->
+```yaml
+---
+cluster:
+  name: database-observability-gc-feature-test
+
+destinations:
+  grafana-cloud-metrics:
+    type: prometheus
+    url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push
+    remoteWriteProtocol: 2
+    auth:
+      type: basic
+      usernameKey: metricsUser
+      passwordKey: grafanaCloudAccessPolicyToken
+    secret:
+      create: false
+      name: grafana-cloud-credentials
+  grafana-cloud-logs:
+    type: loki
+    url: https://logs-prod-006.grafana.net/loki/api/v1/push
+    auth:
+      type: basic
+      usernameKey: logsUser
+      passwordKey: grafanaCloudAccessPolicyToken
+    secret:
+      create: false
+      name: grafana-cloud-credentials
+
+integrations:
+  collector: alloy-singleton
+  mysql:
+    instances:
+      - name: test-mysql-db
+        exporter:
+          collectors:
+            perfSchemaEventsStatements:
+              enabled: true
+          dataSource:
+            host: test-mysql-db.mysql.svc
+            auth:
+              usernameKey: mysql-username
+              passwordKey: mysql-root-password
+        databaseObservability:
+          enabled: true
+        secret:
+          create: false
+          name: test-mysql-db
+          namespace: mysql
+        logs:
+          enabled: true
+          labelSelectors:
+            app.kubernetes.io/instance: test-mysql-db
+
+  postgresql:
+    instances:
+      - name: test-pg-db
+        exporter:
+          dataSource:
+            host: test-postgresql-db.postgresql.svc
+            database: postgres
+            auth:
+              usernameKey: postgres-username
+              passwordKey: postgres-password
+            sslmode: disable
+          autoDiscovery:
+            enabled: true
+          collectors:
+            statStatements:
+              enabled: true
+        databaseObservability:
+          enabled: true
+        secret:
+          create: false
+          name: test-postgresql-db
+          namespace: postgresql
+        logs:
+          enabled: true
+          labelSelectors:
+            app.kubernetes.io/instance: test-pg-db
+
+podLogsViaLoki:
+  enabled: true
+  collector: alloy-logs
+
+collectors:
+  alloy-singleton:
+    presets: [singleton]
+    alloy:
+      stabilityLevel: experimental
+
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+```
+<!-- textlint-enable terminology -->

@@ -1,0 +1,65 @@
+<!--
+(NOTE: Do not edit README.md directly. It is a generated file!)
+(      To make changes, please modify values.yaml or description.txt and run `make examples`)
+-->
+# Grafana Cloud: Instrumentation Hub (standard tier)
+
+This is a feature test for the Grafana Cloud Instrumentation Hub rather than a platform variation. The "standard" tier
+splits work across two collectors: an Alloy DaemonSet carrying the survey and Kubernetes Monitoring instrumentation,
+and an Alloy Deployment carrying the OTLP receiver. Beyla and the SDK injector are enabled, and the collectors pull
+their configuration from Grafana Cloud Fleet Management.
+
+## Values
+
+<!-- textlint-disable terminology -->
+```yaml
+---
+# Instrumentation Hub "standard" tier: two collectors (alloy-daemonset carries the
+# survey + k8s-monitoring instrumentation families; alloy-deployment carries the
+# otel-receiver family). cluster.name is set from the toolbox clusterName at
+# install time (see test-plan set:).
+cluster:
+  name: ihub-e2e-standard
+
+collectorCommon:
+  alloy:
+    remoteConfig:
+      enabled: true
+      url: https://fleet-management-prod-008.grafana.net
+      auth:
+        type: basic
+        usernameKey: GRAFANA_CLOUD_FLEET_MGMT_USER
+        passwordKey: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
+      secret:
+        create: false
+        name: grafana-cloud-credentials
+
+collectors:
+  alloy-daemonset:
+    presets: [large, root, host-network, host-storage, host-cgroup, host-tracefs, clustered, service-discovery, filesystem-log-reader, daemonset]
+
+  alloy-deployment:
+    presets: [large, clustered, otel-receiver, deployment]
+    # Stable OTLP receiver Service (grafana-k8s-plugin#3250).
+    extraService:
+      enabled: true
+      name: otel-receiver
+
+telemetryServices:
+  node-exporter:
+    deploy: true
+
+  kube-state-metrics:
+    deploy: true
+
+  beyla:
+    deploy: true
+    k8sCache:
+      replicas: 1
+
+  sdkInjector:
+    deploy: true
+    # This must match the format: system:serviceaccount:$(POD_NAMESPACE):${ReleaseName}-${CollectorName}
+    allowedConfigMapWriters: system:serviceaccount:$(POD_NAMESPACE):grafana-cloud-alloy-daemonset,system:serviceaccount:$(POD_NAMESPACE):grafana-cloud-alloy-deployment
+```
+<!-- textlint-enable terminology -->
