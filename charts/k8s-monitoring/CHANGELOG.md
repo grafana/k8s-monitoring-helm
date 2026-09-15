@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Add `deployment.environment.name` to the default service graph metrics dimensions, alongside the deprecated `deployment.environment`, so service graph metrics carry the current OpenTelemetry environment attribute. (@mbaykara)
+
 ## 4.5.2
 
 *   Add OTLP HTTP receiver timeout and keep-alive settings for the Application Observability feature. (#3029) (@nlamirault)
