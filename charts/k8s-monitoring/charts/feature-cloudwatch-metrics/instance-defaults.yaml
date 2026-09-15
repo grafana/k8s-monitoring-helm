@@ -1,0 +1,148 @@
+# yamllint disable rule:line-length
+---
+# -- Name for this CloudWatch exporter instance. Used as the `instance` label on the scraped metrics and to name the
+# generated Alloy components, so it must be unique within the feature.
+# @section -- General Settings
+name: ""
+
+# -- The value of the job label for metrics scraped from this instance.
+# @section -- General Settings
+jobLabel: integrations/cloudwatch
+
+# -- Default AWS regions to query. Used by any job in this instance that does not set its own `regions`.
+# @section -- General Settings
+regions: []
+
+# -- The AWS region used when calling STS to retrieve account information.
+# @default -- The first entry in `regions`
+# @section -- General Settings
+stsRegion: ""
+
+# -- Disable the use of FIPS compatible endpoints. Set this to `false` only when running in a region that requires
+# FIPS endpoints.
+# @section -- General Settings
+fipsDisabled: true
+
+# -- Output metric labels in snake case instead of camel case.
+# @section -- General Settings
+labelsSnakeCase: false
+
+# -- Tags to export as labels on all metrics of a given service. Format: `<namespace>: [<tag>, ...]`.
+# For example, `{"AWS/EC2": ["Owner", "Environment"]}`.
+# @section -- General Settings
+discoveryExportedTags: {}
+
+# -- IAM roles to assume, used by any job in this instance that does not set its own `roles`. Leave empty to use the
+# credentials Alloy already has, which is the normal setup when using IRSA or EKS Pod Identity. Listing more than one
+# role scrapes the same jobs once per role, which is how you gather metrics from several AWS accounts.
+# Each entry takes a `roleArn` and an optional `externalId`.
+# @section -- Authentication
+roles: []
+#  - roleArn: arn:aws:iam::123456789012:role/CloudWatchReadOnly
+#    externalId: ""
+
+# Gather CloudWatch metrics in the background rather than during the Prometheus scrape. This keeps scrapes fast and
+# decouples the CloudWatch API call rate from the scrape interval.
+decoupledScraping:
+  # -- Whether to gather CloudWatch metrics asynchronously.
+  # Note: the background poller runs in every replica of the assigned collector, so each replica makes its own
+  # CloudWatch API calls. Keep this feature on a single-replica collector to avoid multiplying API costs.
+  # @section -- Scrape Settings
+  enabled: false
+
+  # -- How frequently to gather CloudWatch metrics in the background.
+  # @section -- Scrape Settings
+  scrapeInterval: 5m
+
+# -- Jobs that discover resources by tag and gather the listed metrics for each one. This is the usual way to gather
+# metrics for a whole AWS service.
+# Each entry supports:
+# `type` (required, a CloudWatch service alias like `AWS/EC2` or `sqs`), `metrics` (required, see below), `regions`,
+# `roles`, `searchTags`, `customTags`, `dimensionNameRequirements`, `period`, `length`, `delay`, `nilToZero`,
+# `recentlyActiveOnly`, and `addCloudwatchTimestamp`.
+# @section -- Jobs
+discoveryJobs: []
+#  - type: AWS/SQS
+#    regions: [eu-central-1]
+#    searchTags:
+#      scrape: "true"
+#    metrics:
+#      - name: NumberOfMessagesSent
+#        statistics: [Sum, Average]
+#        period: 1m
+
+# -- Jobs that gather metrics for an explicit set of dimensions, without discovery. Use these when the resource has no
+# tags to search on, or for namespaces that CloudWatch discovery does not support.
+# Each entry supports:
+# `name` (required, becomes the `name` label on the metrics), `namespace` (required), `dimensions` (required),
+# `metrics` (required, see below), `regions`, `roles`, `customTags`, `period`, `length`, `delay`, and `nilToZero`.
+# The `name` is used as an Alloy block label, so it may only contain letters, digits, and underscores.
+# @section -- Jobs
+staticJobs: []
+#  - name: ec2-web
+#    namespace: AWS/EC2
+#    regions: [eu-central-1]
+#    dimensions:
+#      InstanceId: i-0123456789abcdef0
+#    metrics:
+#      - name: CPUUtilization
+#        statistics: [Average]
+
+# -- Jobs that gather metrics from a custom (non-AWS) CloudWatch namespace, discovering dimensions automatically.
+# Each entry supports:
+# `name` (required, becomes the `name` label on the metrics), `namespace` (required), `metrics` (required, see below),
+# `regions`, `roles`, `customTags`, `dimensionNameRequirements`, `period`, `length`, `delay`, `nilToZero`,
+# `recentlyActiveOnly`, and `addCloudwatchTimestamp`.
+# The `name` is used as an Alloy block label, so it may only contain letters, digits, and underscores.
+# @section -- Jobs
+customNamespaceJobs: []
+#  - name: my-app
+#    namespace: MyApplication
+#    regions: [eu-central-1]
+#    metrics:
+#      - name: RequestCount
+#        statistics: [Sum]
+
+# Settings for scraping and processing the metrics produced by this instance.
+#
+# Every job requires at least one entry in its `metrics` list. Each entry supports `name` (required),
+# `statistics` (required), `period`, `length`, `nilToZero`, and `addCloudwatchTimestamp`. When omitted, `period`,
+# `length`, `nilToZero`, and `addCloudwatchTimestamp` fall back to the value set on the job.
+metrics:
+  # -- How frequently to scrape metrics from the CloudWatch exporter. When `decoupledScraping` is disabled, every
+  # scrape triggers CloudWatch API calls, so a short interval here directly increases AWS costs.
+  # Overrides `global.scrapeInterval`.
+  # @default -- `60s`
+  # @section -- Scrape Settings
+  scrapeInterval: ""
+
+  # -- The timeout for scraping metrics from the CloudWatch exporter. CloudWatch queries can be slow, so this may need
+  # to be higher than for a typical exporter.
+  # Overrides `global.scrapeTimeout`.
+  # @default -- `10s`
+  # @section -- Scrape Settings
+  scrapeTimeout: ""
+
+  # -- (int) Sets the max_cache_size for the prometheus.relabel component for this instance.
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.maxCacheSize`.
+  # @default -- `100000`
+  # @section -- Metric Processing Settings
+  maxCacheSize:
+
+  # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+  tuning:
+    # -- Metrics to keep. Can use regular expressions.
+    # @section -- Metric Processing Settings
+    includeMetrics: []
+
+    # -- Metrics to drop. Can use regular expressions.
+    # @section -- Metric Processing Settings
+    excludeMetrics: []
+
+  # -- Rule blocks to be added to the prometheus.relabel component for this instance.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block))
+  # These relabeling rules are applied post-scrape against the metrics returned from the scraped target.
+  # @section -- Metric Processing Settings
+  extraMetricProcessingRules: ""

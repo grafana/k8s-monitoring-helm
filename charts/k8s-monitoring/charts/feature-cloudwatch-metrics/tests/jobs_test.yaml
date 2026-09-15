@@ -1,0 +1,152 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - CloudWatch Metrics - Jobs
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should support all of the discovery job options
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          discoveryJobs:
+            - type: AWS/EC2
+              regions: [eu-west-1, us-east-1]
+              searchTags:
+                scrape: "true"
+                team: platform
+              customTags:
+                source: k8s-monitoring
+              dimensionNameRequirements: [InstanceId]
+              period: 5m
+              length: 10m
+              delay: 1m
+              nilToZero: false
+              recentlyActiveOnly: true
+              addCloudwatchTimestamp: true
+              metrics:
+                - name: CPUUtilization
+                  statistics: [Average, Maximum]
+    asserts:
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should support all of the static job options
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          staticJobs:
+            - name: ec2_web
+              namespace: AWS/EC2
+              regions: [eu-west-1]
+              dimensions:
+                InstanceId: i-0123456789abcdef0
+              customTags:
+                source: k8s-monitoring
+              period: 5m
+              length: 10m
+              delay: 1m
+              nilToZero: true
+              metrics:
+                - name: CPUUtilization
+                  statistics: [Average]
+    asserts:
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should support all of the custom namespace job options
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          customNamespaceJobs:
+            - name: my_app
+              namespace: MyApplication
+              regions: [eu-west-1]
+              customTags:
+                source: k8s-monitoring
+              dimensionNameRequirements: [Endpoint]
+              period: 5m
+              length: 10m
+              delay: 1m
+              nilToZero: false
+              recentlyActiveOnly: true
+              addCloudwatchTimestamp: false
+              metrics:
+                - name: RequestCount
+                  statistics: [Sum]
+    asserts:
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should support all three job types in a single instance
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+          staticJobs:
+            - name: ec2_web
+              namespace: AWS/EC2
+              dimensions:
+                InstanceId: i-0123456789abcdef0
+              metrics:
+                - name: CPUUtilization
+                  statistics: [Average]
+          customNamespaceJobs:
+            - name: my_app
+              namespace: MyApplication
+              metrics:
+                - name: RequestCount
+                  statistics: [Sum]
+    asserts:
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should fall back to the instance regions when a job does not set its own
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1, eu-west-1]
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'regions = \["eu-central-1","eu-west-1"\]'
+
+  - it: should let a metric override the period and length set on the job
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          discoveryJobs:
+            - type: AWS/SQS
+              period: 5m
+              length: 10m
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+                  period: 1m
+                  length: 2m
+                  nilToZero: true
+                  addCloudwatchTimestamp: false
+                # This metric sets nothing, so it inherits the job's period and length.
+                - name: NumberOfMessagesReceived
+                  statistics: [Sum]
+    asserts:
+      - matchSnapshot:
+          path: data["module.alloy"]

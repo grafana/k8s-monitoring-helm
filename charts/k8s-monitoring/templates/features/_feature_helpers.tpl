@@ -2,6 +2,7 @@
 - annotationAutodiscovery
 - applicationObservability
 - autoInstrumentation
+- cloudwatchMetrics
 - clusterMetrics
 - clusterEvents
 - costMetrics

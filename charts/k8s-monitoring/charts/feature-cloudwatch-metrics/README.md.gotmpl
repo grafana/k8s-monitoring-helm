@@ -1,0 +1,82 @@
+<!--
+(NOTE: Do not edit README.md directly. It is a generated file!)
+(      To make changes, please modify README.md.gotmpl and run `helm-docs`)
+-->
+
+# Feature: CloudWatch Metrics
+
+{{ template "chart.deprecationWarning" . }}
+
+The CloudWatch Metrics feature gathers metrics from [AWS CloudWatch](https://aws.amazon.com/cloudwatch/) and delivers
+them to your metrics destinations alongside the rest of your Kubernetes telemetry.
+
+## Usage
+
+```yaml
+cloudwatchMetrics:
+  enabled: true
+  instances:
+    - name: production
+      regions: [eu-central-1]
+      discoveryJobs:
+        - type: AWS/SQS
+          searchTags:
+            scrape: "true"
+          metrics:
+            - name: NumberOfMessagesSent
+              statistics: [Sum]
+```
+
+Each entry in `instances` becomes its own exporter, so use separate instances to query different STS regions or to keep
+AWS accounts apart. See the [instance settings](./docs/instance.md) for everything available on an entry.
+
+## How it works
+
+For every instance, this feature generates a
+[`prometheus.exporter.cloudwatch`](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.cloudwatch/)
+component, a `prometheus.scrape` that gathers from it, and a `prometheus.relabel` that sets the `instance` and `job`
+labels and applies any metric tuning.
+
+The exporter queries the CloudWatch API rather than scraping anything in your cluster, so the collector it runs on needs
+no access to the monitored resources — only AWS credentials.
+
+### Authentication
+
+The exporter uses the credentials available to the collector Pod, which is the normal setup with
+[IRSA](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html) or
+[EKS Pod Identity](https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html). The role needs
+`cloudwatch:GetMetricData`, `cloudwatch:ListMetrics`, `tag:GetResources`, and the list or describe calls for the
+services being gathered.
+
+To gather from other accounts, set `roles` on an instance or on a single job to assume a role per account.
+
+### Cost
+
+Every CloudWatch API call the exporter makes is billed by AWS, so this feature defaults to the `alloy-singleton`
+collector: the exporter runs in every replica of its collector, and each replica would be billed for its own calls.
+
+The generated scrapes enable clustering so that a multi-replica collector shards the exporter targets rather than every
+replica gathering all of them. The chart will not render a configuration that would silently double your CloudWatch
+bill — it fails with instructions instead.
+
+## Testing
+
+This chart contains unit tests to verify the generated configuration. The hidden value `testing.enabled` will render
+the generated configuration into a ConfigMap object. While this ConfigMap is not used during regular operation, you can
+use it to show the outcome of a given values file.
+
+The unit tests use this ConfigMap to create an object with the configuration that can be asserted against. To run the
+tests, use `helm test`.
+
+Be sure perform actual integration testing in a live environment in the main [k8s-monitoring](../..) chart.
+
+<!-- textlint-disable terminology -->
+{{ template "chart.maintainersSection" . }}
+<!-- textlint-enable terminology -->
+<!-- markdownlint-disable no-bare-urls -->
+<!-- markdownlint-disable list-marker-space -->
+{{ template "chart.sourcesSection" . }}
+<!-- markdownlint-enable list-marker-space -->
+<!-- markdownlint-enable no-bare-urls -->
+{{ template "chart.requirementsSection" . }}
+{{ template "chart.valuesSection" . }}

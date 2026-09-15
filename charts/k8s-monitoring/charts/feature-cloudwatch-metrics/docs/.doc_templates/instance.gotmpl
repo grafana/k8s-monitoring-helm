@@ -1,0 +1,61 @@
+# CloudWatch Exporter Instance Settings
+
+These are the settings available on each entry in `cloudwatchMetrics.instances`. Every instance becomes its own
+[`prometheus.exporter.cloudwatch`](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.cloudwatch/)
+component, with its own scrape and metric processing.
+
+## Jobs
+
+An instance gathers nothing until it has at least one job. There are three kinds, and an instance can mix them:
+
+*   `discoveryJobs` finds resources by tag and gathers the listed metrics for each one. This is the usual choice for a
+    whole AWS service.
+*   `staticJobs` gathers metrics for an explicit set of dimensions, without discovery. Use it when the resource has no
+    tags to search on.
+*   `customNamespaceJobs` gathers metrics from a namespace that CloudWatch discovery does not cover, such as one your
+    own application publishes.
+
+Every job needs at least one `metrics` entry, and each metric needs a `name` and `statistics`:
+
+```yaml
+metrics:
+  - name: CPUUtilization
+    statistics: [Average, Maximum]
+```
+
+A metric may also set `period`, `length`, `nilToZero`, and `addCloudwatchTimestamp`. When it does not, those fall back
+to the value set on the job, which is usually what you want.
+
+Jobs inherit the instance's `regions` and `roles` unless they set their own.
+
+## Regions
+
+`regions` lists the AWS regions to query. `stsRegion` is the region used to call STS for account information, and
+defaults to the first entry in `regions`. Set it explicitly if every job sets its own regions.
+
+## Authentication
+
+By default no `role` is configured, so the exporter uses whatever credentials Alloy already has. That is the normal
+setup with [IRSA](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html) or
+[EKS Pod Identity](https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html).
+
+Set `roles` to assume one or more IAM roles instead. Listing more than one role gathers the same jobs once per role,
+which is how a single instance covers several AWS accounts:
+
+```yaml
+roles:
+  - roleArn: arn:aws:iam::111111111111:role/CloudWatchReadOnly
+  - roleArn: arn:aws:iam::222222222222:role/CloudWatchReadOnly
+    externalId: shared-secret
+```
+
+## Cost
+
+Every CloudWatch API call the exporter makes is billed by AWS. Two settings have a direct effect on that bill:
+
+*   `metrics.scrapeInterval` — with decoupled scraping disabled, every scrape triggers CloudWatch API calls.
+*   `decoupledScraping` — gathers metrics on a background timer instead, so the API call rate no longer follows the
+    scrape interval. Note that the background poller runs in every replica of the collector and is not sharded by
+    clustering, so keep this on a single-replica collector.
+
+{{ template "chart.valuesSection" . }}

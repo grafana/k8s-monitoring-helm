@@ -1,0 +1,13 @@
+# CloudWatch Metrics from several AWS accounts
+
+This example demonstrates how to gather AWS CloudWatch metrics from more than one AWS account, and how to run several
+exporter instances side by side.
+
+The first instance lists two `roles`, so every job in it is gathered once per role. The collector's own credentials only
+need permission to assume those roles.
+
+The second instance shows why you would use more than one instance: it calls STS in a different region, gathers a custom
+CloudWatch namespace, and applies its own metric tuning. It also enables `decoupledScraping`, which gathers metrics on a
+background timer so that the CloudWatch API call rate no longer follows the scrape interval. That background poller runs
+in every replica of the collector and is not sharded by clustering, so the feature must stay on a single-replica
+collector.

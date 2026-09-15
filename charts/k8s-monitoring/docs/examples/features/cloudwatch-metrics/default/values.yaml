@@ -1,0 +1,33 @@
+---
+cluster:
+  name: cloudwatch-metrics-cluster
+
+destinations:
+  prometheus:
+    type: prometheus
+    url: http://prometheus.prometheus.svc:9090/api/v1/write
+
+cloudwatchMetrics:
+  enabled: true
+  collector: alloy-singleton
+  instances:
+    - name: production
+      regions: [eu-central-1]
+      discoveryJobs:
+        - type: AWS/SQS
+          searchTags:
+            scrape: "true"
+          metrics:
+            - name: NumberOfMessagesSent
+              statistics: [Sum]
+            - name: ApproximateAgeOfOldestMessage
+              statistics: [Maximum]
+        - type: AWS/ELB
+          metrics:
+            - name: RequestCount
+              statistics: [Sum]
+              period: 1m
+
+collectors:
+  alloy-singleton:
+    presets: [singleton]

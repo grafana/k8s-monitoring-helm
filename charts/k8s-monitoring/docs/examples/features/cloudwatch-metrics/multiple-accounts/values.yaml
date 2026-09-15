@@ -1,0 +1,47 @@
+---
+cluster:
+  name: cloudwatch-metrics-cluster
+
+destinations:
+  prometheus:
+    type: prometheus
+    url: http://prometheus.prometheus.svc:9090/api/v1/write
+
+cloudwatchMetrics:
+  enabled: true
+  collector: alloy-singleton
+  instances:
+    # Gathers the same jobs from two AWS accounts by assuming a role in each one.
+    - name: all-accounts
+      regions: [eu-central-1, eu-west-1]
+      roles:
+        - roleArn: arn:aws:iam::111111111111:role/CloudWatchReadOnly
+        - roleArn: arn:aws:iam::222222222222:role/CloudWatchReadOnly
+          externalId: shared-secret
+      discoveryJobs:
+        - type: AWS/SQS
+          metrics:
+            - name: NumberOfMessagesSent
+              statistics: [Sum]
+
+    # A second instance keeps a different STS region, and its own metric tuning, separate from the first.
+    - name: us-audit
+      stsRegion: us-east-1
+      regions: [us-east-1]
+      # Gather in the background so that the CloudWatch API call rate does not follow the scrape interval.
+      decoupledScraping:
+        enabled: true
+        scrapeInterval: 15m
+      customNamespaceJobs:
+        - name: audit_pipeline
+          namespace: MyCompany/Audit
+          metrics:
+            - name: RecordsProcessed
+              statistics: [Sum]
+      metrics:
+        tuning:
+          excludeMetrics: [aws_mycompany_audit_recordsprocessed_average]
+
+collectors:
+  alloy-singleton:
+    presets: [singleton]

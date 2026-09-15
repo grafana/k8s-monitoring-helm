@@ -1,0 +1,42 @@
+# yamllint disable rule:line-length
+---
+# The fields in this global section are populated by the parent k8s-monitoring chart's global settings.
+# To change any of these values, set them at the top level of the parent chart's values.yaml under
+# `global:`, not here under `cloudwatchMetrics.global:`.
+global:
+  # -- Override the namespace for namespaced resources created by this chart.
+  # @section -- Global Settings
+  namespaceOverride: ""
+
+  # -- How frequently to scrape metrics.
+  # @section -- Global Settings
+  scrapeInterval: 60s
+
+  # -- The timeout for scraping metrics.
+  # @section -- Global Settings
+  scrapeTimeout: 10s
+
+  # -- The protocols to negotiate during a Prometheus metrics scrape, in order of preference.
+  # @section -- Global Settings
+  scrapeProtocols: ["OpenMetricsText1.0.0", "OpenMetricsText0.0.1", "PrometheusText0.0.4"]
+
+  # -- Whether to scrape a classic histogram that’s also exposed as a native histogram.
+  # @section -- Global Settings
+  scrapeClassicHistograms: false
+
+  # -- Whether to scrape native histograms.
+  # @section -- Global Settings
+  scrapeNativeHistograms: false
+
+  # -- Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # @section -- Global Settings
+  maxCacheSize: 100000
+
+# -- One entry per CloudWatch exporter to run. Each instance becomes its own
+# [prometheus.exporter.cloudwatch](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.cloudwatch/)
+# component with its own scrape and metric processing, so use separate instances to query different STS regions or to
+# keep AWS accounts apart.
+# See the [instance settings](./docs/instance.md) for the options available on each entry.
+# @section -- Instances
+instances: []

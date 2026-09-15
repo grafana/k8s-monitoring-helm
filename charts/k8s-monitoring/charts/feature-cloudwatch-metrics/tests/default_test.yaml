@@ -1,0 +1,144 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - CloudWatch Metrics - Default values
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should create a ConfigMap with no exporters when no instances are set
+    set:
+      testing: {enabled: true}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should create an exporter for a single instance
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          discoveryJobs:
+            - type: AWS/SQS
+              searchTags:
+                scrape: "true"
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should create a separate exporter for each instance
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+        - name: staging
+          regions: [us-east-1]
+          jobLabel: integrations/cloudwatch-staging
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should turn an instance name into a usable Alloy component name
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: Prod EU-West
+          regions: [eu-west-1]
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      # The component name is normalized, but the instance label keeps the name as it was given.
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'prometheus\.exporter\.cloudwatch "prod_eu_west"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'replacement = "Prod EU-West"'
+
+  - it: should default the STS region to the first region
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [ap-southeast-2, eu-central-1]
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'sts_region = "ap-southeast-2"'
+
+  - it: should allow the STS region to differ from the regions being queried
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          stsRegion: us-east-1
+          regions: [eu-central-1]
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'sts_region = "us-east-1"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'regions = \["eu-central-1"\]'
+
+  - it: should allow FIPS endpoints to be used
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [us-gov-west-1]
+          fipsDisabled: false
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'fips_disabled = false'
+
+  - it: should support snake case labels and exported tags
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          labelsSnakeCase: true
+          discoveryExportedTags:
+            AWS/EC2: [Owner, Environment]
+          discoveryJobs:
+            - type: AWS/EC2
+              metrics:
+                - name: CPUUtilization
+                  statistics: [Average]
+    asserts:
+      - matchSnapshot:
+          path: data["module.alloy"]

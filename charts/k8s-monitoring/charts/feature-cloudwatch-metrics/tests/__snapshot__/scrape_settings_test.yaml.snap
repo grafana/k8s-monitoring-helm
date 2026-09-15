@@ -1,0 +1,52 @@
+should enable decoupled scraping:
+  1: |
+    |-
+      declare "cloudwatch_metrics" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+
+        prometheus.exporter.cloudwatch "production" {
+          sts_region = "eu-central-1"
+          fips_disabled = true
+          decoupled_scraping {
+            enabled = true
+            scrape_interval = "5m"
+          }
+          discovery {
+            type = "AWS/SQS"
+            regions = ["eu-central-1"]
+            metric {
+              name = "NumberOfMessagesSent"
+              statistics = ["Sum"]
+            }
+          }
+        } // prometheus.exporter.cloudwatch "production"
+
+        prometheus.scrape "production" {
+          targets = prometheus.exporter.cloudwatch.production.targets
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = [prometheus.relabel.production.receiver]
+        } // prometheus.scrape "production"
+
+        prometheus.relabel "production" {
+          max_cache_size = 100000
+          rule {
+            target_label = "instance"
+            replacement = "production"
+          }
+          rule {
+            target_label = "job"
+            replacement = "integrations/cloudwatch"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.relabel "production"
+      } // declare "cloudwatch_metrics"
