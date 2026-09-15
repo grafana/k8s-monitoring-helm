@@ -6,17 +6,17 @@
 
 This example wires up the full zero-code SDK injection pipeline:
 
-1. `telemetryServices.sdkInjector` deploys the Grafana Kubernetes Injection Controller (a mutating admission webhook).
-2. The `autoInstrumentation` feature deploys Grafana Beyla in SDK Injector mode — it discovers the workloads to
-   instrument (here, everything in the `demo` namespace) and writes the injection ConfigMaps that the controller
-   consumes. `beyla.injector.enabled` grants Beyla the RBAC to write those ConfigMaps, and
-   `telemetryServices.sdkInjector.allowedConfigMapWriters` allows Beyla's service account to do so.
-3. When a matching Pod starts, the controller's webhook mutates it to mount the Grafana OpenTelemetry SDK (via an
-   `ImageVolumeSource` on Kubernetes 1.35+, or an init container on older clusters) and sets the `OTEL_*` environment
-   variables. No application code or container image changes are required. Beyla restarts already-running eligible
-   workloads for you.
-4. The injected SDK sends its telemetry to the Application Observability OTLP receiver, which forwards it to your
-   destinations.
+1.  `telemetryServices.sdkInjector` deploys the Grafana Kubernetes Injection Controller (a mutating admission webhook).
+2.  The `autoInstrumentation` feature deploys Grafana Beyla in SDK Injector mode — it discovers the workloads to
+    instrument (here, everything in the `demo` namespace) and writes the injection ConfigMaps that the controller
+     consumes. `beyla.injector.enabled` grants Beyla the RBAC to write those ConfigMaps, and
+    `telemetryServices.sdkInjector.allowedConfigMapWriters` allows Beyla's service account to do so.
+3.  When a matching Pod starts, the controller's webhook mutates it to mount the Grafana OpenTelemetry SDK (via an
+    `ImageVolumeSource` on Kubernetes 1.35+, or an init container on older clusters) and sets the `OTEL_*` environment
+    variables. No application code or container image changes are required. Beyla restarts already-running eligible
+    workloads for you.
+4.  The injected SDK sends its telemetry to the Application Observability OTLP receiver, which forwards it to your
+    destinations.
 
 The `annotationAutodiscovery` feature scrapes the controller's own metrics endpoint, so you can observe injection
 results — for example the `beyla_injection_pods` metric, which reports each workload the controller has instrumented.
@@ -93,8 +93,7 @@ telemetryServices:
   sdkInjector:
     deploy: true
     allowedConfigMapWriters: system:serviceaccount:$(POD_NAMESPACE):k8smon-beyla
-    # The controller advertises its metrics endpoint with prometheus.io annotations by default. Add this chart's
-    # native k8s.grafana.com/* annotations so Annotation Autodiscovery discovers and scrapes it on port 8080.
+
     metrics:
       annotations:
         k8s.grafana.com/scrape: "true"
