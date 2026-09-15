@@ -1,0 +1,87 @@
+<!--
+(NOTE: Do not edit README.md directly. It is a generated file!)
+(      To make changes, please modify values.yaml or description.txt and run `make examples`)
+-->
+# Grafana Cloud: Instrumentation Hub (scalable tier)
+
+This is a feature test for the Grafana Cloud Instrumentation Hub rather than a platform variation. The "scalable" tier
+uses the same two-collector topology as the standard tier, adding autoscaling: a Vertical Pod Autoscaler on the
+DaemonSet and a Horizontal Pod Autoscaler on the Deployment. The collectors pull their configuration from Grafana Cloud
+Fleet Management.
+
+## Values
+
+<!-- textlint-disable terminology -->
+```yaml
+---
+# Instrumentation Hub "scalable" tier: same two-collector topology as standard
+# plus autoscaling (VPA on the daemonset, HPA on the deployment). cluster.name is
+# set from the toolbox clusterName at install time (see test-plan set:).
+cluster:
+  name: ihub-e2e-maximum
+
+collectorCommon:
+  alloy:
+    remoteConfig:
+      enabled: true
+      url: https://fleet-management-prod-008.grafana.net
+      auth:
+        type: basic
+        usernameKey: GRAFANA_CLOUD_FLEET_MGMT_USER
+        passwordKey: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
+      secret:
+        create: false
+        name: grafana-cloud-credentials
+
+collectors:
+  alloy-daemonset:
+    presets: [xlarge, root, host-network, host-storage, host-cgroup, host-tracefs, clustered, service-discovery, filesystem-log-reader, daemonset]
+    controller:
+      autoscaling:
+        vertical:
+          enabled: true
+          resourcePolicy:
+            containerPolicies:
+              - containerName: alloy
+                controlledResources: [cpu, memory]
+                controlledValues: RequestsAndLimits
+                maxAllowed:
+                  cpu: 4
+                  memory: 8Gi
+                minAllowed:
+                  cpu: 1
+                  memory: 2Gi
+
+  alloy-deployment:
+    presets: [xlarge, clustered, otel-receiver, deployment]
+    # Stable OTLP receiver Service (grafana-k8s-plugin#3250).
+    extraService:
+      enabled: true
+      name: otel-receiver
+    controller:
+      autoscaling:
+        horizontal:
+          enabled: true
+          minReplicas: 1
+          maxReplicas: 5
+          targetCPUUtilizationPercentage: 75
+          targetMemoryUtilizationPercentage: 80
+
+telemetryServices:
+  node-exporter:
+    deploy: true
+
+  kube-state-metrics:
+    deploy: true
+
+  beyla:
+    deploy: true
+    k8sCache:
+      replicas: 1
+
+  sdkInjector:
+    deploy: true
+    # This must match the format: system:serviceaccount:$(POD_NAMESPACE):${ReleaseName}-${CollectorName}
+    allowedConfigMapWriters: system:serviceaccount:$(POD_NAMESPACE):grafana-cloud-alloy-daemonset,system:serviceaccount:$(POD_NAMESPACE):grafana-cloud-alloy-deployment
+```
+<!-- textlint-enable terminology -->

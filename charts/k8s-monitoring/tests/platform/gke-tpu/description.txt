@@ -1,0 +1,9 @@
+# GKE with TPUs
+
+On GKE nodes that have [TPUs](https://cloud.google.com/kubernetes-engine/docs/how-to/tpus), GKE runs a managed
+`tpu-device-plugin` DaemonSet in the `kube-system` namespace (labeled `k8s-app=tpu-device-plugin`) that exposes
+node-level TPU metrics on port 2112.
+
+The chart does not scrape this component automatically, so this test adds an `extraConfig` block that discovers the
+`tpu-device-plugin` pods and scrapes their TPU metrics — duty cycle, TensorCore utilization, memory usage and
+bandwidth, and so on — forwarding them to the metrics destination.
