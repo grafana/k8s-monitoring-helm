@@ -2,6 +2,7 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
+<!--alex disable host-hostess hostesses-hosts -->
 # EKS with Alloy on Windows nodes
 
 This cluster has both Linux and Windows nodes. Rather than deploying a separate Windows Exporter, Alloy runs as a
@@ -14,6 +15,7 @@ gathered via the Kubernetes API instead of from the node filesystem.
 The Windows collector uses the `windows`, `windows-host-process`, and `windows-scrapeable` presets. The last opens the
 host firewall so the Linux collector can scrape the Windows collector's metrics over the host network. This test also
 demonstrates enriching telemetry with EC2 instance tags, which requires Alloy's `experimental` stability level.
+<!--alex enable host-hostess hostesses-hosts -->
 
 ## Values
 

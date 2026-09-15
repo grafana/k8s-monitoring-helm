@@ -2,6 +2,7 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
+<!--alex disable host-hostess hostesses-hosts -->
 # Azure AKS
 
 In certain Azure AKS cluster configurations, pods running outside the `kube-system` namespace are blocked from reaching
@@ -12,6 +13,7 @@ kube-state-metrics, which uses it to build metrics about the objects in the clus
 
 This test applies that annotation to the collectors and to kube-state-metrics, and deploys both Node Exporter and
 Windows Exporter to gather host metrics from the Linux and Windows nodes in the cluster.
+<!--alex enable host-hostess hostesses-hosts -->
 
 ## Values
 

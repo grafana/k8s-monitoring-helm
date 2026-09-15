@@ -6,8 +6,8 @@
 
 Fully managed clusters like [GKE Autopilot](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview)
 need extra consideration because they restrict DaemonSets and node access. This prevents services like Node Exporter
-from working, so it is left disabled. Missing Node Exporter metrics is generally fine, because the health of the nodes
-is the cloud provider's responsibility, not the user's.
+from working, so this test does not deploy it. Missing Node Exporter metrics is generally fine, because the health of
+the nodes is the cloud provider's responsibility, not the user's.
 
 Autopilot also does not expose the Docker container directory on its nodes, so the log collector disables the
 `dockercontainers` mount.

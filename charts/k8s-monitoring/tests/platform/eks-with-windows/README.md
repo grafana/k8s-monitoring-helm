@@ -2,6 +2,7 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
+<!--alex disable host-hostess hostesses-hosts -->
 # EKS with Windows nodes
 
 This cluster runs both Linux and Windows nodes, with Node Exporter and Windows Exporter gathering host metrics from
@@ -13,6 +14,7 @@ the `eks-proxy` discovery mode. This requires Kubernetes 1.28+ and an extra RBAC
 
 Pod logs from the Windows nodes are gathered via the Kubernetes API, since a Windows Alloy pod cannot read host log
 files the way a Linux pod can.
+<!--alex enable host-hostess hostesses-hosts -->
 
 ## Values
 
