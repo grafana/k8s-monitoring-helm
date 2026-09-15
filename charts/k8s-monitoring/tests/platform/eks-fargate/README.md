@@ -5,9 +5,8 @@
 # EKS Fargate
 
 AWS EKS Fargate clusters have a fully managed control plane, which reduces the management burden on the user but adds
-restrictions around DaemonSets and node access. This prevents services like Node Exporter from working, and it changes
-how Pod logs must be gathered, since the usual approach deploys Alloy as a DaemonSet with HostPath mounts to read the
-log files off each node.
+restrictions around DaemonSets and node access. Fargate nodes cannot run host-level collectors such as Node Exporter, so
+the test keeps a non-Fargate node group for those collectors.
 
 This test gathers Pod logs from Fargate nodes via the
 [Kubernetes API](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.source.kubernetes/) instead, and
