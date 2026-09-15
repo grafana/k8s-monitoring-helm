@@ -1,0 +1,11 @@
+# CloudWatch Metrics
+
+This example demonstrates how to enable the CloudWatch Metrics feature to gather metrics from AWS CloudWatch and
+deliver them to a metrics destination.
+
+The exporter uses the AWS credentials available to the collector Pod, so the collector's ServiceAccount needs to be
+annotated for IRSA, or associated with an EKS Pod Identity. The role needs `cloudwatch:GetMetricData`,
+`cloudwatch:ListMetrics`, `tag:GetResources`, and the list or describe calls for the services being gathered.
+
+The feature is assigned to a singleton collector, because the exporter runs in every replica of its collector and each
+replica is billed for its own CloudWatch API calls.

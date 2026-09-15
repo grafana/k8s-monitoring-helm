@@ -1,0 +1,96 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - CloudWatch Metrics - Metric processing
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should allow setting the job label
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          jobLabel: aws/cloudwatch
+          regions: [eu-central-1]
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'target_label = "job"\s+replacement = "aws/cloudwatch"'
+
+  - it: should allow keeping only certain metrics
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          metrics:
+            tuning:
+              includeMetrics: [aws_sqs_.*]
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should allow dropping certain metrics
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          metrics:
+            tuning:
+              excludeMetrics: [aws_sqs_sent_message_size_.*]
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should allow setting the max cache size
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          metrics:
+            maxCacheSize: 42
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'max_cache_size = 42'
+
+  - it: should allow adding extra metric processing rules
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          metrics:
+            extraMetricProcessingRules: |-
+              rule {
+                source_labels = ["queue_name"]
+                target_label = "queue"
+              }
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - matchSnapshot:
+          path: data["module.alloy"]

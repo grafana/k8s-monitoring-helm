@@ -1,0 +1,100 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - CloudWatch Metrics - Scrape settings
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should enable decoupled scraping
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          decoupledScraping:
+            enabled: true
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should allow setting the decoupled scrape interval
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          decoupledScraping:
+            enabled: true
+            scrapeInterval: 15m
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'scrape_interval = "15m"'
+
+  - it: should allow setting the scrape interval and timeout per instance
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          metrics:
+            scrapeInterval: 5m
+            scrapeTimeout: 2m
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'scrape_interval = "5m"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'scrape_timeout = "2m"'
+
+  - it: should use the global scrape settings when the instance does not set them
+    set:
+      testing: {enabled: true}
+      global:
+        scrapeInterval: 120s
+        scrapeTimeout: 30s
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'scrape_interval = "120s"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'scrape_timeout = "30s"'
+
+  - it: should enable clustering on the scrape so that replicas do not duplicate CloudWatch API calls
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'clustering \{\s+enabled = true'

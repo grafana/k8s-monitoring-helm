@@ -1,0 +1,318 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Feature - CloudWatch Metrics - Validation
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should fail when an instance has no name
+    set:
+      testing: {enabled: true}
+      instances:
+        - regions: [eu-central-1]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The cloudwatchMetrics instance at position 1 has no name.
+            Every instance needs a name, which is used as the metrics' instance label:
+            cloudwatchMetrics:
+              instances:
+                - name: my-aws-account
+
+  - it: should fail when two instances resolve to the same name
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: prod-eu
+          regions: [eu-central-1]
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+        - name: prod_eu
+          regions: [eu-west-1]
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            More than one cloudwatchMetrics instance resolves to the name "prod_eu".
+            Instance names must be unique, and are compared with "-", " ", and "_" treated as equal.
+
+  - it: should fail when an instance has neither regions nor an stsRegion
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The cloudwatchMetrics instance "production" has neither regions nor an stsRegion.
+            The CloudWatch exporter needs a region to call STS in. Set the regions to query:
+            cloudwatchMetrics:
+              instances:
+                - name: production
+                  regions: [eu-central-1]
+            Or set stsRegion explicitly when each job sets its own regions.
+
+  - it: should fail when an instance has no jobs
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The cloudwatchMetrics instance "production" has no jobs.
+            Add at least one discoveryJobs, staticJobs, or customNamespaceJobs entry, otherwise the
+            exporter gathers nothing. For example:
+            cloudwatchMetrics:
+              instances:
+                - name: production
+                  regions: [eu-central-1]
+                  discoveryJobs:
+                    - type: AWS/SQS
+                      metrics:
+                        - name: NumberOfMessagesSent
+                          statistics: [Sum]
+
+  - it: should fail when a discovery job has no type
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          discoveryJobs:
+            - metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            A discoveryJobs entry in cloudwatchMetrics instance "production" has no type.
+            Set the CloudWatch service to discover, for example: type: AWS/EC2
+
+  - it: should fail when a job has no regions to query
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          stsRegion: eu-central-1
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            A discoveryJobs entry in cloudwatchMetrics instance "production" has no regions to query.
+            Set the regions on the job, or set instance-level regions used by every job:
+            cloudwatchMetrics:
+              instances:
+                - name: production
+                  regions: [eu-central-1]
+
+  - it: should fail when a job has no metrics
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          discoveryJobs:
+            - type: AWS/SQS
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            A discoveryJobs entry in cloudwatchMetrics instance "production" has no metrics.
+            The CloudWatch exporter requires at least one metric per job. For example:
+            metrics:
+              - name: CPUUtilization
+                statistics: [Average]
+
+  - it: should fail when a metric has no name
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - statistics: [Sum]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            A metric on a discoveryJobs entry in cloudwatchMetrics instance "production" is missing a name.
+
+  - it: should fail when a metric has no statistics
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The metric "NumberOfMessagesSent" on a discoveryJobs entry in cloudwatchMetrics instance "production" has no statistics.
+            Set the CloudWatch statistics to gather, for example: statistics: [Average, Maximum]
+
+  - it: should fail when a static job has no name
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          staticJobs:
+            - namespace: AWS/EC2
+              dimensions:
+                InstanceId: i-0123456789abcdef0
+              metrics:
+                - name: CPUUtilization
+                  statistics: [Average]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            A staticJobs entry in cloudwatchMetrics instance "production" has no name. The name becomes the metrics' name label.
+
+  - it: should fail when a static job name cannot be used as an Alloy block label
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          staticJobs:
+            - name: ec2-web
+              namespace: AWS/EC2
+              dimensions:
+                InstanceId: i-0123456789abcdef0
+              metrics:
+                - name: CPUUtilization
+                  statistics: [Average]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The staticJobs entry in cloudwatchMetrics instance "production" has the name "ec2-web", which Alloy cannot use.
+            This name becomes an Alloy block label, so it may only contain letters, digits, and
+            underscores, and may not start with a digit. It is also reported as the metrics' "name" label.
+            Try "ec2_web" instead.
+
+  - it: should fail when a static job has no namespace
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          staticJobs:
+            - name: ec2_web
+              dimensions:
+                InstanceId: i-0123456789abcdef0
+              metrics:
+                - name: CPUUtilization
+                  statistics: [Average]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The staticJobs entry "ec2_web" in cloudwatchMetrics instance "production" has no namespace.
+            Set the CloudWatch namespace to query, for example: namespace: AWS/EC2
+
+  - it: should fail when a static job has no dimensions
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          staticJobs:
+            - name: ec2_web
+              namespace: AWS/EC2
+              metrics:
+                - name: CPUUtilization
+                  statistics: [Average]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The staticJobs entry "ec2_web" in cloudwatchMetrics instance "production" has no dimensions.
+            A static job does not use discovery, so it needs the dimensions naming the resource:
+            dimensions:
+              InstanceId: i-0123456789abcdef0
+            To discover resources by tag instead, use discoveryJobs.
+
+  - it: should fail when a custom namespace job has no namespace
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          customNamespaceJobs:
+            - name: my_app
+              metrics:
+                - name: RequestCount
+                  statistics: [Sum]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The customNamespaceJobs entry "my_app" in cloudwatchMetrics instance "production" has no namespace.
+            Set the custom CloudWatch namespace to query, for example: namespace: MyApplication
+
+  - it: should fail when a custom namespace job name cannot be used as an Alloy block label
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          customNamespaceJobs:
+            - name: 1st-app
+              namespace: MyApplication
+              metrics:
+                - name: RequestCount
+                  statistics: [Sum]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The customNamespaceJobs entry in cloudwatchMetrics instance "production" has the name "1st-app", which Alloy cannot use.
+            This name becomes an Alloy block label, so it may only contain letters, digits, and
+            underscores, and may not start with a digit. It is also reported as the metrics' "name" label.
+            Try "1st_app" instead.
+
+  - it: should fail when an instance role has no roleArn
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          roles:
+            - externalId: some-external-id
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            A role on a discoveryJobs entry in cloudwatchMetrics instance "production" is missing a roleArn.
+
+  - it: should fail when a job role has no roleArn
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          discoveryJobs:
+            - type: AWS/SQS
+              roles:
+                - externalId: some-external-id
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            A role on a discoveryJobs entry in cloudwatchMetrics instance "production" is missing a roleArn.

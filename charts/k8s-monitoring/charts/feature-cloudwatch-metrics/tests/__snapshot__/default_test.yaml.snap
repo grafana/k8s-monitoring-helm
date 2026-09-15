@@ -1,0 +1,199 @@
+should create a ConfigMap with no exporters when no instances are set:
+  1: |
+    |-
+      declare "cloudwatch_metrics" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+      } // declare "cloudwatch_metrics"
+should create a separate exporter for each instance:
+  1: |
+    |-
+      declare "cloudwatch_metrics" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+
+        prometheus.exporter.cloudwatch "production" {
+          sts_region = "eu-central-1"
+          fips_disabled = true
+          discovery {
+            type = "AWS/SQS"
+            regions = ["eu-central-1"]
+            metric {
+              name = "NumberOfMessagesSent"
+              statistics = ["Sum"]
+            }
+          }
+        } // prometheus.exporter.cloudwatch "production"
+
+        prometheus.scrape "production" {
+          targets = prometheus.exporter.cloudwatch.production.targets
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = [prometheus.relabel.production.receiver]
+        } // prometheus.scrape "production"
+
+        prometheus.relabel "production" {
+          max_cache_size = 100000
+          rule {
+            target_label = "instance"
+            replacement = "production"
+          }
+          rule {
+            target_label = "job"
+            replacement = "integrations/cloudwatch"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.relabel "production"
+
+        prometheus.exporter.cloudwatch "staging" {
+          sts_region = "us-east-1"
+          fips_disabled = true
+          discovery {
+            type = "AWS/SQS"
+            regions = ["us-east-1"]
+            metric {
+              name = "NumberOfMessagesSent"
+              statistics = ["Sum"]
+            }
+          }
+        } // prometheus.exporter.cloudwatch "staging"
+
+        prometheus.scrape "staging" {
+          targets = prometheus.exporter.cloudwatch.staging.targets
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = [prometheus.relabel.staging.receiver]
+        } // prometheus.scrape "staging"
+
+        prometheus.relabel "staging" {
+          max_cache_size = 100000
+          rule {
+            target_label = "instance"
+            replacement = "staging"
+          }
+          rule {
+            target_label = "job"
+            replacement = "integrations/cloudwatch-staging"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.relabel "staging"
+      } // declare "cloudwatch_metrics"
+should create an exporter for a single instance:
+  1: |
+    |-
+      declare "cloudwatch_metrics" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+
+        prometheus.exporter.cloudwatch "production" {
+          sts_region = "eu-central-1"
+          fips_disabled = true
+          discovery {
+            type = "AWS/SQS"
+            regions = ["eu-central-1"]
+            search_tags = {
+              "scrape" = "true",
+            }
+            metric {
+              name = "NumberOfMessagesSent"
+              statistics = ["Sum"]
+            }
+          }
+        } // prometheus.exporter.cloudwatch "production"
+
+        prometheus.scrape "production" {
+          targets = prometheus.exporter.cloudwatch.production.targets
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = [prometheus.relabel.production.receiver]
+        } // prometheus.scrape "production"
+
+        prometheus.relabel "production" {
+          max_cache_size = 100000
+          rule {
+            target_label = "instance"
+            replacement = "production"
+          }
+          rule {
+            target_label = "job"
+            replacement = "integrations/cloudwatch"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.relabel "production"
+      } // declare "cloudwatch_metrics"
+should support snake case labels and exported tags:
+  1: |
+    |-
+      declare "cloudwatch_metrics" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+
+        prometheus.exporter.cloudwatch "production" {
+          sts_region = "eu-central-1"
+          fips_disabled = true
+          labels_snake_case = true
+          discovery_exported_tags = {
+            "AWS/EC2" = ["Owner","Environment"],
+          }
+          discovery {
+            type = "AWS/EC2"
+            regions = ["eu-central-1"]
+            metric {
+              name = "CPUUtilization"
+              statistics = ["Average"]
+            }
+          }
+        } // prometheus.exporter.cloudwatch "production"
+
+        prometheus.scrape "production" {
+          targets = prometheus.exporter.cloudwatch.production.targets
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = [prometheus.relabel.production.receiver]
+        } // prometheus.scrape "production"
+
+        prometheus.relabel "production" {
+          max_cache_size = 100000
+          rule {
+            target_label = "instance"
+            replacement = "production"
+          }
+          rule {
+            target_label = "job"
+            replacement = "integrations/cloudwatch"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.relabel "production"
+      } // declare "cloudwatch_metrics"

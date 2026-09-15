@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Add the `cloudwatchMetrics` feature, which gathers AWS CloudWatch metrics with `prometheus.exporter.cloudwatch` and forwards them to any metrics-capable destination. Supports multiple exporter instances, discovery, static, and custom namespace jobs, and cross-account gathering by assuming IAM roles.
+
 ## 4.5.2
 
 *   Add OTLP HTTP receiver timeout and keep-alive settings for the Application Observability feature. (#3029) (@nlamirault)
