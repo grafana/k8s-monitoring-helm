@@ -1,0 +1,32 @@
+<!--
+(NOTE: Do not edit README.md directly. It is a generated file!)
+(      To make changes, please modify values.yaml or description.txt and run `make examples`)
+-->
+# EKS Add-on
+
+This test installs the Kubernetes Monitoring Helm chart on AWS EKS through the managed
+[EKS add-on](https://docs.aws.amazon.com/eks/latest/userguide/eks-add-ons.html) (`grafana-labs_kubernetes-monitoring`)
+rather than deploying the chart directly with Helm. AWS renders and reconciles the chart on the user's behalf, so the
+configuration is supplied as add-on configuration values (`values.json`) passed to `aws eks create-addon` /
+`update-addon` instead of a Helm `values.yaml`.
+
+Because the add-on renders the chart inside the cluster, these values are not rendered locally (see the `.no-render`
+marker), and the test drives installation through `deploy.sh`.
+
+## Values
+
+<!-- textlint-disable terminology -->
+```yaml
+---
+cluster:
+  name: eks-addon
+
+externalServices:
+  prometheus:
+    externalLabels:
+      source: eks-addon
+  loki:
+    externalLabels:
+      source: eks-addon
+```
+<!-- textlint-enable terminology -->

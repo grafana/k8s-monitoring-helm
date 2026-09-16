@@ -1,0 +1,13 @@
+# OpenShift
+
+This test shows the modifications required to deploy to an
+[OpenShift](https://www.redhat.com/en/technologies/cloud-computing/openshift) cluster.
+
+OpenShift already runs its own kube-state-metrics and Node Exporter in the `openshift-monitoring` namespace, so the
+chart skips deploying its own and instead scrapes the existing components over HTTPS using the pod's service account
+bearer token. Setting `global.platform: openshift` also generates the SecurityContextConstraints objects that grant
+Alloy the permissions it needs.
+
+The Alloy pods cannot enable `readOnlyRootFilesystem` because they need to write to their storage path, so this test
+provisions a PersistentVolume for that path. The log-reading collector also runs with the `container_logreader_t`
+SELinux type so it is allowed to read the container log files.
