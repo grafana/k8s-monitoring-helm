@@ -1,0 +1,82 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: gke-tpu
+
+subject:
+  releaseName: k8smon
+  path: ../../..
+  valuesFile: values.yaml
+  set:
+    - key: "cluster.name"
+      valueFrom: clusterName
+
+cluster:
+  # GKE Autopilot provisions the TPU node on demand when the tpu-workload pod is scheduled. This is
+  # the only way to get a TPU with the toolbox's single `gcloud container clusters create` call: a
+  # Standard cluster needs a separate non-TPU node pool for kube-system pods (which the toolbox
+  # cannot add), whereas Autopilot manages that automatically.
+  type: gke-autopilot
+  zone: us-west1  # us-west1 offers TPU v5e (tpu-v5-lite-podslice)
+  args:
+    - --labels source=k8s-monitoring-helm-platform-test
+    # Org policy (compute.vmExternalIpAccess) forbids external node IPs -> private nodes.
+    # No public control-plane IP; reached via the IAM-gated DNS endpoint
+    # (requires CLOUDSDK_CONTAINER_USE_DNS_ENDPOINT=true in .envrc / CI).
+    # Autopilot is always VPC-native (no --enable-ip-alias) and create-auto needs
+    # --enable-master-authorized-networks set explicitly with --enable-private-endpoint.
+    - --enable-private-nodes
+    - --enable-private-endpoint
+    - --enable-master-authorized-networks
+    - --enable-dns-access
+  appendRandomNumber: true
+
+dependencies:
+  # Scheduling a single-host TPU v5e workload makes Autopilot provision the (cheapest) TPU node.
+  - file: tpu-workload.yaml
+  - preset: test-parameters
+    namespace: toolbox
+  - file: grafana-cloud-credentials.yaml
+
+tests:
+  # Confirm the TPU node was provisioned and the workload is running before checking for metrics.
+  - type: kubernetes-objects-test
+    values:
+      attempts: 60
+      checks:
+        - kind: Pod
+          namespace: default
+          labels:
+            app: tpu-workload
+
+  - type: query-test
+    values:
+      tests:
+        - env:
+            PROMETHEUS_URL: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/api/v1/query
+            LOKI_URL: https://logs-prod-006.grafana.net/loki/api/v1/query
+          envFrom:
+            - secretRef: {name: grafana-cloud-credentials}
+            - configMapRef: {name: test-parameters}
+          queries:
+            - query: grafana_kubernetes_monitoring_build_info{cluster="$clusterName", platform="gke"}
+              type: promql
+
+            # TPU metrics (scraped from the tpu-device-plugin via extraConfig)
+            - query: tensorcore_utilization{cluster="$clusterName", job="integrations/tpu"}
+              type: promql
+              expect:
+                value: 0
+                operator: "<"
+            - query: tensorcore_utilization_node{cluster="$clusterName", job="integrations/tpu"}
+              type: promql
+              expect:
+                value: 0
+                operator: "<"
+
+            # DPM check
+            - query: avg(count_over_time(scrape_samples_scraped{cluster="$clusterName"}[1m]))
+              type: promql
+              expect:
+                value: 1
+                operator: ==
