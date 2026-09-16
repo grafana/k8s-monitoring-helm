@@ -465,6 +465,25 @@ processors:
       timeout: 60s
 
   tailSampling:
+    loadBalancer:
+      # -- Which resolver the load balancer uses to route traces to the tail sampling Alloy instances. Options are:
+      #    - "kubernetes" (default), which opens a watch on the Kubernetes API server to track the pods.
+      #    - "dns", which periodically resolves the instances' headless Service DNS to the pod IPs.
+      #    - "static", which addresses each pod by its stable, ordinal hostname. The controller *must* be a StatefulSet.
+      # The "dns" and "static" resolvers avoid the Kubernetes API watch, which can overwhelm the API server on very
+      # large clusters. Both make the tail sampling Alloy Service headless so its DNS resolves to individual pods.
+      # @section -- Tail Sampling
+      resolver: kubernetes
+
+      # -- The timeout for the load balancer's backend resolution requests. Its meaning depends on the resolver:
+      #    - "kubernetes": how long the Kubernetes API server holds the watch open before closing it. The watch is
+      #      re-established after each timeout. Larger value means fewer reconnections and less load on the API server.
+      #    - "dns": the deadline for each periodic DNS lookup, after which that resolution attempt is abandoned and
+      #      retried on the next interval.
+      #    It is unused by the "static" resolver, which computes its backends ahead of time and makes no requests.
+      # @section -- Tail Sampling
+      timeout: 60s
+
     # -- Apply tail sampling policies to the traces before delivering them to this destination. This will create an
     # additional Alloy instance to handle the tail sampling, and traces sent to this destination will be automatically
     # forwarded, using a load balancer component, to the new sampling Alloy instance.
