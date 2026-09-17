@@ -18,8 +18,12 @@ HELM_UNITTEST_IMAGE_VERSION = 3.18.4-1.0.0
 HAS_HELM_UNITTEST := $(shell $(HELM) plugin list | grep unittest 2> /dev/null)
 
 .SECONDEXPANSION:
-README.md: values.yaml Chart.yaml $$(wildcard README.md.gotmpl)
+# The chart's own values only hold `global` and `instances`, so the generated values section is appended with the
+# instance settings from docs/instance.md. That keeps instance-defaults.yaml the only source for those tables.
+README.md: values.yaml Chart.yaml docs/instance.md $$(wildcard README.md.gotmpl)
 	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator:$(DOC_GENERATOR_IMAGE_VERSION) --chart /chart > $@
+	printf '\n### Instance Settings\n\nThese are the settings for each entry in `instances`. See the [instance settings](./docs/instance.md) for how the jobs,\nregions, and authentication settings fit together, and for the options on each job and metric.\n' >> $@
+	sed -n '/^## Values$$/,$$p' docs/instance.md | sed '1d;s/^### /#### /' >> $@
 
 # The settings for each entry in `instances` live in their own values file, so they get their own generated doc.
 docs/instance.md: instance-defaults.yaml $$(wildcard docs/.doc_templates/instance.gotmpl)
