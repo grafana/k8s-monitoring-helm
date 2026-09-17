@@ -1,0 +1,73 @@
+---
+cluster:
+  name: tail-sampling
+
+destinations:
+  # The Alloy self-monitoring metrics (including the load balancer's backend
+  # count) are scraped and written to Prometheus.
+  prometheus:
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+
+  # Traces are forwarded to Tempo. Enabling tailSampling deploys a dedicated
+  # Alloy instance (a StatefulSet, the "samplers") that applies the tail
+  # sampling policies before the traces are written to Tempo. Because a trace's
+  # spans may arrive at different receiver pods, the receiver uses a load
+  # balancing exporter to route every span of a given trace to the same sampler,
+  # so the sampling decision is made over the whole trace.
+  tempo:
+    type: otlp
+    url: http://tempo.tempo.svc:4317
+    tls:
+      insecure: true
+      insecureSkipVerify: true
+    metrics:
+      enabled: false
+    logs:
+      enabled: false
+    traces:
+      enabled: true
+    processors:
+      tailSampling:
+        enabled: true
+        loadBalancer:
+          resolver: dns  # <-- The key change from the default
+        policies:
+          # Keep every trace that contains an error.
+          - name: keep-errors
+            type: status_code
+            status_codes: [ERROR]
+          # Sample 15% of everything else.
+          - name: sample-15pct
+            type: probabilistic
+            sampling_percentage: 15
+        collector:
+          controller:
+            replicas: 3
+
+applicationObservability:
+  enabled: true
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+      http:
+        enabled: true
+  metrics: {enabled: false}
+  logs: {enabled: false}
+
+integrations:
+  alloy:
+    instances:
+      - name: alloy
+        labelSelectors:
+          app.kubernetes.io/name: alloy
+          app.kubernetes.io/instance: k8smon-alloy
+        metrics:
+          tuning:
+            includeMetrics:
+              - otelcol_loadbalancer_num_backends
+
+collectors:
+  alloy:
+    presets: [daemonset]
