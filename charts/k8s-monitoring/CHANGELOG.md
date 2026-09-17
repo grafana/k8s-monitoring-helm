@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Add the ability to set the resolver and timeout for `processors.tailSampling` in OTLP destinations, choosing how the load balancing exporter routes traces to the tail sampling Alloy instances. (#2998) (@ubxt)
 *   Add `kubelet_evictions` to the default Kubelet allow list, and `kube_pod_status_ready`, `kube_poddisruptionbudget_status_current_healthy`, and `kube_poddisruptionbudget_status_desired_healthy` to the default Kube State Metrics allow list, so the provisioned alerting and recording rules have the metrics they need. (@TylerHelmuth)
 
 ## 4.5.2
@@ -31,7 +32,6 @@
 *   Cluster Metrics: when `kubeScheduler.discoveryMode` is `eks-proxy`, collect the EKS Control Plane resource metrics (`kube_pod_resource_request` and `kube_pod_resource_limit`). (#2977)
 *   Host Metrics: honor `windowsHosts.scheme` and `windowsHosts.bearerTokenFile` when scraping an external Windows Exporter. (#2961) (@petewall)
 *   Update Beyla to 1.16.11 and kube-state-metrics to 8.4.0. (@petewall)
-*   Add the ability to set the resolver and timeout for `processors.tailSampling` in OTLP destinations, choosing how the load balancing exporter routes traces to the tail sampling Alloy instances. (#2998) (@ubxt)
 
 ## 4.4.0
 
