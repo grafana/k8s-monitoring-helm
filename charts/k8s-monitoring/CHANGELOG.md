@@ -3,6 +3,7 @@
 ## Unreleased
 
 *   Only set the cluster name in Beyla's config when using `.cluster.name`. Avoids the case of setting it to an empty string. (#3060) (@petewall)
+*   Pod Logs (via Loki and via Kubernetes API): stop indexing `service_instance_id` as a Loki stream label by default, since its value is unique per pod and unbounded over pod churn. It remains available as structured metadata. To restore the previous behavior, remove `service.instance.id` from `structuredMetadata`. (#3051)
 *   Add `kubelet_evictions` to the default Kubelet allow list, and `kube_pod_status_ready`, `kube_poddisruptionbudget_status_current_healthy`, and `kube_poddisruptionbudget_status_desired_healthy` to the default Kube State Metrics allow list, so the provisioned alerting and recording rules have the metrics they need. (@TylerHelmuth)
 *   Update kube-state-metrics to 8.5.0, OpenCost to 2.5.31, and Node Exporter to 4.57.0 (@petewall)
 

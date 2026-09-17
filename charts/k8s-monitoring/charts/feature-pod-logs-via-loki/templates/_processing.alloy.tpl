@@ -63,6 +63,20 @@ loki.process "pod_logs" {
   }
 {{- end }}
 
+{{- /* service_instance_id is unique per pod instance (namespace.pod.container), so keeping it
+  as an indexed label creates a brand-new Loki stream on every pod restart/rollout/Job run,
+  unbounded over time -- see https://github.com/grafana/k8s-monitoring-helm/issues/3051. It is
+  already captured above by the default structuredMetadata entry (queryable, not indexed), so
+  drop the indexed copy once captured. Use the same truthiness check as the structured_metadata
+  loop above (not hasKey): a falsy value (e.g. an explicit "") is skipped there too, so this
+  guard must match or the value would be dropped from both metadata and the label. Removing or
+  nulling the entry opts out of this drop entirely. */ -}}
+{{- if index .Values.structuredMetadata "service.instance.id" }}
+  stage.label_drop {
+    values = ["service_instance_id"]
+  }
+{{- end }}
+
 {{- if or .Values.staticLabels .Values.staticLabelsFrom }}
 
   stage.static_labels {
