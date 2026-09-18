@@ -172,6 +172,13 @@ lint-zizmor: ## Statically analyze GitHub Action workflows
 	fi
 
 
+##@ Cleanup
+MAX_AGE_HOURS ?= 6
+DRY_RUN ?= true
+.PHONY: cleanup-gcp
+cleanup-gcp: ## Delete stale GCP platform-test resources. Requires gcloud auth. DRY_RUN=true by default; set DRY_RUN=false to delete.
+	@MAX_AGE_HOURS="$(MAX_AGE_HOURS)" DRY_RUN="$(DRY_RUN)" ./scripts/cleanup-gcp-test-resources.py
+
 ##@ General
 
 # The help target prints out all targets with their descriptions organized
