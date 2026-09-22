@@ -42,6 +42,44 @@ tests:
               path: /metrics
               port: 9090
 
+  - it: omits cluster_name when the cluster name is set via cluster.nameFrom
+    set:
+      cluster: {nameFrom: sys.env("CLUSTER_NAME")}
+      autoInstrumentation: {enabled: true}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: data["beyla-config.yml"]
+          value: |-
+            attributes:
+              kubernetes:
+                enable: true
+            discovery:
+              exclude_instrument:
+              - exe_path: '{*alloy*,*otelcol*,*beyla*}'
+              instrument:
+              - k8s_namespace: '*'
+            filter:
+              network:
+                k8s_dst_owner_name:
+                  not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
+                k8s_src_owner_name:
+                  not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
+            internal_metrics:
+              prometheus:
+                path: /internal/metrics
+                port: 9090
+            prometheus_export:
+              features:
+              - application
+              - network
+              - application_service_graph
+              - application_span
+              - application_host
+              path: /metrics
+              port: 9090
+
   - it: keeps default discovery targets when user sets a partial discovery config
     set:
       cluster: {name: beyla-config-cluster}

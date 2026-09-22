@@ -12,7 +12,14 @@
 {{- else if hasKey $valuesMap "global" }}
   {{- $clusterName = (dig "global" "cluster" "name" "" $valuesMap) }}
 {{- end }}
-{{- $attributes := dict "kubernetes" (dict "enable" true "cluster_name" $clusterName) }}
+{{- /* Beyla config is plain YAML and cannot evaluate an Alloy expression like cluster.nameFrom, so cluster_name is
+       only set when a literal cluster name is available. Otherwise the attribute is omitted and the cluster label is
+       applied downstream by the destination. */}}
+{{- $kubernetesAttrs := dict "enable" true }}
+{{- if $clusterName }}
+  {{- $_ := set $kubernetesAttrs "cluster_name" $clusterName }}
+{{- end }}
+{{- $attributes := dict "kubernetes" $kubernetesAttrs }}
 {{- $targetPort := dig "service" "targetPort" (dig "config" "data" "prometheus_export" "port" 9090 $beylaMap) $beylaMap }}
 {{- $internalMetrics := dict "prometheus" (dict "port" $targetPort) }}
 {{- $prometheusExport := dict "port" $targetPort }}
