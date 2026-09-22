@@ -1,0 +1,183 @@
+should apply the instance roles to every job:
+  1: |
+    |-
+      declare "cloudwatch_metrics" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+
+        prometheus.exporter.cloudwatch "production" {
+          sts_region = "eu-central-1"
+          fips_disabled = true
+          discovery {
+            type = "AWS/SQS"
+            regions = ["eu-central-1"]
+            role {
+              role_arn = "arn:aws:iam::123456789012:role/CloudWatchReadOnly"
+            }
+            metric {
+              name = "NumberOfMessagesSent"
+              statistics = ["Sum"]
+            }
+          }
+          static "ec2_web" {
+            namespace = "AWS/EC2"
+            regions = ["eu-central-1"]
+            dimensions = {
+              "InstanceId" = "i-0123456789abcdef0",
+            }
+            role {
+              role_arn = "arn:aws:iam::123456789012:role/CloudWatchReadOnly"
+            }
+            metric {
+              name = "CPUUtilization"
+              statistics = ["Average"]
+            }
+          }
+          custom_namespace "my_app" {
+            namespace = "MyApplication"
+            regions = ["eu-central-1"]
+            role {
+              role_arn = "arn:aws:iam::123456789012:role/CloudWatchReadOnly"
+            }
+            metric {
+              name = "RequestCount"
+              statistics = ["Sum"]
+            }
+          }
+        } // prometheus.exporter.cloudwatch "production"
+
+        prometheus.scrape "production" {
+          targets = prometheus.exporter.cloudwatch.production.targets
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = [prometheus.relabel.production.receiver]
+        } // prometheus.scrape "production"
+
+        prometheus.relabel "production" {
+          max_cache_size = 100000
+          rule {
+            target_label = "instance"
+            replacement = "production"
+          }
+          rule {
+            target_label = "job"
+            replacement = "integrations/cloudwatch"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.relabel "production"
+      } // declare "cloudwatch_metrics"
+should gather from several accounts when multiple roles are listed:
+  1: |
+    |-
+      declare "cloudwatch_metrics" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+
+        prometheus.exporter.cloudwatch "all_accounts" {
+          sts_region = "eu-central-1"
+          fips_disabled = true
+          discovery {
+            type = "AWS/SQS"
+            regions = ["eu-central-1"]
+            role {
+              role_arn = "arn:aws:iam::111111111111:role/CloudWatchReadOnly"
+            }
+            role {
+              role_arn = "arn:aws:iam::222222222222:role/CloudWatchReadOnly"
+              external_id = "shared-secret"
+            }
+            metric {
+              name = "NumberOfMessagesSent"
+              statistics = ["Sum"]
+            }
+          }
+        } // prometheus.exporter.cloudwatch "all_accounts"
+
+        prometheus.scrape "all_accounts" {
+          targets = prometheus.exporter.cloudwatch.all_accounts.targets
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = [prometheus.relabel.all_accounts.receiver]
+        } // prometheus.scrape "all_accounts"
+
+        prometheus.relabel "all_accounts" {
+          max_cache_size = 100000
+          rule {
+            target_label = "instance"
+            replacement = "all-accounts"
+          }
+          rule {
+            target_label = "job"
+            replacement = "integrations/cloudwatch"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.relabel "all_accounts"
+      } // declare "cloudwatch_metrics"
+should let a job override the instance roles:
+  1: |
+    |-
+      declare "cloudwatch_metrics" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+
+        prometheus.exporter.cloudwatch "production" {
+          sts_region = "eu-central-1"
+          fips_disabled = true
+          discovery {
+            type = "AWS/SQS"
+            regions = ["eu-central-1"]
+            role {
+              role_arn = "arn:aws:iam::999999999999:role/OtherAccount"
+              external_id = "some-external-id"
+            }
+            metric {
+              name = "NumberOfMessagesSent"
+              statistics = ["Sum"]
+            }
+          }
+        } // prometheus.exporter.cloudwatch "production"
+
+        prometheus.scrape "production" {
+          targets = prometheus.exporter.cloudwatch.production.targets
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = [prometheus.relabel.production.receiver]
+        } // prometheus.scrape "production"
+
+        prometheus.relabel "production" {
+          max_cache_size = 100000
+          rule {
+            target_label = "instance"
+            replacement = "production"
+          }
+          rule {
+            target_label = "job"
+            replacement = "integrations/cloudwatch"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.relabel "production"
+      } // declare "cloudwatch_metrics"

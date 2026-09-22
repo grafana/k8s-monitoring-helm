@@ -182,6 +182,7 @@ details:
 |  | annotationAutodiscovery(feature-annotation-autodiscovery) | 1.0.0 |
 |  | applicationObservability(feature-application-observability) | 1.0.0 |
 |  | autoInstrumentation(feature-auto-instrumentation) | 1.0.0 |
+|  | cloudwatchMetrics(feature-cloudwatch-metrics) | 1.0.0 |
 |  | clusterEvents(feature-cluster-events) | 1.0.0 |
 |  | clusterMetrics(feature-cluster-metrics) | 1.0.0 |
 |  | costMetrics(feature-cost-metrics) | 1.0.0 |
@@ -248,6 +249,15 @@ details:
 | autoInstrumentation.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | autoInstrumentation.destinations | list | `[]` | The destinations where application data will be sent. If empty, all capable destinations will be used. |
 | autoInstrumentation.enabled | bool | `false` | Enable automatic instrumentation for applications. |
+
+### Features - CloudWatch Metrics
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| cloudwatchMetrics | object | Disabled | CloudWatch Metrics gathers metrics from the AWS CloudWatch API. Requires a destination that supports metrics. To see the valid options, please see the [CloudWatch Metrics feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cloudwatch-metrics). |
+| cloudwatchMetrics.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
+| cloudwatchMetrics.destinations | list | `[]` | The destinations where CloudWatch metrics will be sent. If empty, all metrics-capable destinations will be used. |
+| cloudwatchMetrics.enabled | bool | `false` | Enable gathering AWS CloudWatch metrics. |
 
 ### Cluster
 

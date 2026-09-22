@@ -1,0 +1,90 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - CloudWatch Metrics - Authentication
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should not emit any role blocks by default, so that Alloy's own credentials are used
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'role \{'
+
+  - it: should apply the instance roles to every job
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          roles:
+            - roleArn: arn:aws:iam::123456789012:role/CloudWatchReadOnly
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+          staticJobs:
+            - name: ec2_web
+              namespace: AWS/EC2
+              dimensions:
+                InstanceId: i-0123456789abcdef0
+              metrics:
+                - name: CPUUtilization
+                  statistics: [Average]
+          customNamespaceJobs:
+            - name: my_app
+              namespace: MyApplication
+              metrics:
+                - name: RequestCount
+                  statistics: [Sum]
+    asserts:
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should let a job override the instance roles
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: production
+          regions: [eu-central-1]
+          roles:
+            - roleArn: arn:aws:iam::123456789012:role/CloudWatchReadOnly
+          discoveryJobs:
+            - type: AWS/SQS
+              roles:
+                - roleArn: arn:aws:iam::999999999999:role/OtherAccount
+                  externalId: some-external-id
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should gather from several accounts when multiple roles are listed
+    set:
+      testing: {enabled: true}
+      instances:
+        - name: all-accounts
+          regions: [eu-central-1]
+          roles:
+            - roleArn: arn:aws:iam::111111111111:role/CloudWatchReadOnly
+            - roleArn: arn:aws:iam::222222222222:role/CloudWatchReadOnly
+              externalId: shared-secret
+          discoveryJobs:
+            - type: AWS/SQS
+              metrics:
+                - name: NumberOfMessagesSent
+                  statistics: [Sum]
+    asserts:
+      - matchSnapshot:
+          path: data["module.alloy"]
