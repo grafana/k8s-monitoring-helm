@@ -300,7 +300,62 @@ databaseObservability:
       # @section -- Database Observability - Cloud Provider
       connectionName: ""
 
+  # Health checks always run; this only customizes their interval.
+  healthCheck:
+    # -- Override the health check interval. Empty uses Alloy's default of 1h.
+    # @section -- Database Observability
+    collectInterval: ""
+
+  # Source of PostgreSQL server logs. This is separate from instance-level pod-log processing.
+  logSource:
+    # -- Source type: file or cloudwatch. Empty renders no source, even if the logs collector is enabled.
+    # @section -- Database Observability - Log Source
+    type: ""
+    file:
+      # -- PostgreSQL log paths or glob patterns inside the collector container. Mount the files and grant read access.
+      # @section -- Database Observability - Log Source
+      paths: []
+      # -- Read only new lines when no stored file position exists.
+      # @section -- Database Observability - Log Source
+      tailFromEnd: true
+    cloudwatch:
+      # -- AWS region containing the PostgreSQL log group. Required for the cloudwatch source.
+      # Set the collector alloy.stabilityLevel to experimental.
+      # @section -- Database Observability - Log Source
+      region: ""
+      # -- CloudWatch log group to read. For RDS, use `/aws/rds/instance/<db-instance-identifier>/postgresql`.
+      # RDS must export PostgreSQL logs to CloudWatch. An explicit group name does not require a cloudProvider ARN.
+      # @section -- Database Observability - Log Source
+      groupName: ""
+      # -- Optional AWS credential profile. Otherwise the receiver uses the AWS SDK default credential chain.
+      # On EKS, configure IRSA or Pod Identity on the collector ServiceAccount. Grant logs:FilterLogEvents,
+      # logs:GetLogEvents, logs:DescribeLogGroups and logs:DescribeLogStreams. The chart does not manage IAM.
+      # @section -- Database Observability - Log Source
+      profile: ""
+      # -- Optional EC2 instance metadata service endpoint.
+      # @section -- Database Observability - Log Source
+      imdsEndpoint: ""
+      # -- How frequently to poll CloudWatch for new log entries.
+      # @section -- Database Observability - Log Source
+      pollInterval: 1m
+      # -- How far back to read on the first poll. Empty uses the receiver default.
+      # @section -- Database Observability - Log Source
+      initialLookback: ""
+      # -- Maximum number of events per CloudWatch request.
+      # @section -- Database Observability - Log Source
+      maxEventsPerRequest: 1000
+      # -- Optional RFC3339 timestamp from which to start reading logs.
+      # @section -- Database Observability - Log Source
+      startFrom: ""
+
   collectors:
+    logs:
+      # -- Enable PostgreSQL error-log processing when logSource.type is configured. Requires a CGO-enabled Alloy 1.19 or newer build.
+      # Set PostgreSQL log_line_prefix to `%m:%r:%u@%d:[%p]:%l:%e:%s:%v:%x:%c:%q%a:` and log_min_error_statement to ERROR.
+      # The parser is positional; monitor database_observability_pg_error_log_parse_failures_total for malformed lines.
+      # @section -- Database Observability - Collectors
+      enabled: false
+
     # Collect explain plans information.
     explainPlans:
       # -- Enable collection of explain plans information.
@@ -337,6 +392,9 @@ databaseObservability:
       # -- Collect unredacted SQL query text including parameters.
       # @section -- Database Observability - Collectors
       disableQueryRedaction: false
+      # -- (bool) Emit pre-classified wait event information. Unset uses Alloy's default of false.
+      # @section -- Database Observability - Collectors
+      enablePreClassifiedWaitEvents:
       # -- (bool) Deprecated. Use the top-level `databaseObservability.excludeCurrentUser` instead. When set, this
       # takes precedence over the top-level setting.
       # @default -- `true`

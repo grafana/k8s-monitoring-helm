@@ -44,6 +44,21 @@
   {{- fail (join "\n" $msg) }}
 {{- end }}
 {{- if $dbO11yEnabled }}
+  {{- with .instance.databaseObservability }}
+    {{- if and .collectors.logs.enabled .logSource.type }}
+      {{- if eq .logSource.type "file" }}
+        {{- if not .logSource.file.paths }}
+          {{- fail (printf "PostgreSQL instance %q: set databaseObservability.logSource.file.paths to at least one readable PostgreSQL log path." $.instance.name) }}
+        {{- end }}
+      {{- else if eq .logSource.type "cloudwatch" }}
+        {{- if not (and .logSource.cloudwatch.region .logSource.cloudwatch.groupName) }}
+          {{- fail (printf "PostgreSQL instance %q: set databaseObservability.logSource.cloudwatch.region and groupName." $.instance.name) }}
+        {{- end }}
+      {{- else }}
+        {{- fail (printf "PostgreSQL instance %q: set databaseObservability.logSource.type to file or cloudwatch, or leave it empty to disable the source." $.instance.name) }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
   {{- range $label, $_ := (dig "databaseObservability" "labels" dict .instance) }}
     {{- if has $label (list "job" "instance" "dsn") }}
       {{- fail (printf "\nThe label %q in databaseObservability.labels for instance %q is reserved and cannot be overridden.\nReserved labels: job, instance, dsn.\nUse `jobLabel` to change the job value." $label $.instance.name) }}

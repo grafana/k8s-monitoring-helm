@@ -1,0 +1,245 @@
+declare "postgresql_integration" {
+  argument "metrics_destinations" {
+    comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+  }
+  argument "logs_destinations" {
+    comment = "Must be a list of log destinations where collected logs should be forwarded to"
+  }
+
+  remote.kubernetes.secret "example_db" {
+    name      = "postgresql-monitoring"
+    namespace = "monitoring"
+  } // remote.kubernetes.secret "example_db"
+
+  prometheus.exporter.postgres "example_db" {
+    data_source_names = [string.format("postgresql://%s:%s@%s:%d/postgres",
+      encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.example_db.data["username"])),
+      encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.example_db.data["password"])),
+      "example-db.example.eu-west-1.rds.amazonaws.com",
+      5432,
+    )]
+    enabled_collectors = ["database","locks","replication","replication_slot","stat_bgwriter","stat_database","stat_progress_vacuum","stat_user_tables","statio_user_tables","wal"]
+    disable_default_metrics = false
+    disable_settings_metrics = false
+  }
+
+  database_observability.postgres "example_db" {
+    targets = prometheus.exporter.postgres.example_db.targets
+    data_source_name = string.format("postgresql://%s:%s@%s:%d/postgres",
+      encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.example_db.data["username"])),
+      encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.example_db.data["password"])),
+      "example-db.example.eu-west-1.rds.amazonaws.com",
+      5432,
+    )
+    exclude_current_user = true
+    logs {
+      enable_error_logs_processing = true
+    }
+    health_check {
+      collect_interval = "30m"
+    }
+    explain_plans {
+      collect_interval = "1m"
+      per_collect_ratio = "1"
+    }
+    query_details {
+      collect_interval = "1m"
+    }
+    query_samples {
+      collect_interval = "15s"
+      disable_query_redaction = false
+      enable_pre_classified_wait_events = true
+    }
+    schema_details {
+      collect_interval = "1m"
+    }
+    enable_collectors = ["logs","explain_plans","query_details","query_samples","schema_details"]
+
+    forward_to = [loki.relabel.database_observability_postgres_example_db.receiver]
+  }
+
+  otelcol.storage.file "database_observability_postgres_example_db" {}
+
+  otelcol.receiver.awscloudwatch "database_observability_postgres_example_db" {
+    storage = otelcol.storage.file.database_observability_postgres_example_db.handler
+    region = "eu-west-1"
+    logs {
+      poll_interval = "1m"
+      max_events_per_request = 1000
+      groups {
+        named {
+          group_name = "/aws/rds/instance/example-db/postgresql"
+        }
+      }
+    }
+    output {
+      logs = [otelcol.processor.attributes.database_observability_postgres_example_db.input]
+    }
+  }
+
+  // Preserve the PostgreSQL text body for the positional log parser.
+  otelcol.processor.attributes "database_observability_postgres_example_db" {
+    action {
+      key = "loki.format"
+      action = "upsert"
+      value = "raw"
+    }
+    output {
+      logs = [otelcol.exporter.loki.database_observability_postgres_example_db.input]
+    }
+  }
+
+  otelcol.exporter.loki "database_observability_postgres_example_db" {
+    forward_to = [database_observability.postgres.example_db.logs_receiver]
+  }
+
+  loki.relabel "database_observability_postgres_example_db" {
+    forward_to = argument.logs_destinations.value
+    rule {
+      target_label = "job"
+      replacement = "integrations/db-o11y"
+    }
+    rule {
+      source_labels = ["instance"]
+      target_label = "dsn"
+    }
+    rule {
+      target_label = "instance"
+      replacement = "example-db"
+    }
+  }
+
+  discovery.relabel "database_observability_postgres_example_db" {
+    targets = database_observability.postgres.example_db.targets
+    rule {
+      target_label = "job"
+      replacement = "integrations/db-o11y"
+    }
+    rule {
+      source_labels = ["instance"]
+      target_label = "dsn"
+    }
+    rule {
+      target_label = "instance"
+      replacement = "example-db"
+    }
+  }
+  prometheus.scrape "example_db" {
+    targets = discovery.relabel.database_observability_postgres_example_db.output
+    clustering {
+      enabled = true
+    }
+
+    scrape_interval = "60s"
+    scrape_timeout = "10s"
+    scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+    scrape_classic_histograms = false
+    scrape_native_histograms = false
+    forward_to = argument.metrics_destinations.value
+  }
+}
+postgresql_integration "integration" {
+  metrics_destinations = [
+    prometheus.remote_write.metrics.receiver,
+  ]
+  logs_destinations = [
+    loki.write.logs.receiver,
+  ]
+}
+// Self Reporting
+prometheus.exporter.static "kubernetes_monitoring_telemetry" {
+  text = `
+
+# HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
+# TYPE grafana_kubernetes_monitoring_build_info gauge
+grafana_kubernetes_monitoring_build_info{version="4.5.2", namespace="default"} 1
+# HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
+# TYPE grafana_kubernetes_monitoring_feature_info gauge
+grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="postgresql", version="1.0.0"} 1
+# HELP grafana_kubernetes_monitoring_collector_info A metric to report the collectors of the Kubernetes Monitoring Helm chart
+# TYPE grafana_kubernetes_monitoring_collector_info gauge
+grafana_kubernetes_monitoring_collector_info{kind="deployment", name="alloy-singleton", presets="singleton", replicas="1", type="alloy"} 1
+# EOF
+  `
+} // prometheus.exporter.static "kubernetes_monitoring_telemetry"
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = prometheus.exporter.static.kubernetes_monitoring_telemetry.targets
+  scrape_interval = "60s"
+  clustering {
+    enabled = true
+  }
+  forward_to = [
+    prometheus.remote_write.metrics.receiver,
+  ]
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
+
+
+
+
+
+// Destination: logs (loki)
+otelcol.exporter.loki "logs" {
+  forward_to = [loki.write.logs.receiver]
+} // otelcol.exporter.loki "logs"
+
+loki.write "logs" {
+  endpoint {
+    url = "http://loki.monitoring.svc:3100/loki/api/v1/push"
+    retry_on_http_429 = true
+    tls_config {
+      insecure_skip_verify = false
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+  external_labels = {
+    "cluster" = "postgresql-error-logs",
+    "k8s_cluster_name" = "postgresql-error-logs",
+  }
+} // loki.write "logs"
+
+// Destination: metrics (prometheus)
+otelcol.exporter.prometheus "metrics" {
+  add_metric_suffixes = true
+  resource_to_telemetry_conversion = false
+  keep_identifying_resource_attributes = true
+  forward_to = [prometheus.remote_write.metrics.receiver]
+} // otelcol.exporter.prometheus "metrics"
+
+prometheus.remote_write "metrics" {
+  endpoint {
+    url = "http://prometheus.monitoring.svc:9090/api/v1/write"
+    headers = {
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    send_native_histograms = false
+
+    queue_config {
+      capacity = 10000
+      min_shards = 1
+      max_shards = 50
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "30ms"
+      max_backoff = "5s"
+      retry_on_http_429 = true
+      sample_age_limit = "0s"
+    }
+  }
+
+  wal {
+    truncate_frequency = "2h"
+    min_keepalive_time = "5m"
+    max_keepalive_time = "8h"
+  }
+  external_labels = {
+    "cluster" = "postgresql-error-logs",
+    "k8s_cluster_name" = "postgresql-error-logs",
+  }
+} // prometheus.remote_write "metrics"
+

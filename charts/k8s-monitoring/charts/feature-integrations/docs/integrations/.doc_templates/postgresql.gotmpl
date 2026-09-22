@@ -72,4 +72,83 @@ integrations:
             app.kubernetes.io/instance: test-database-pg-db
 ```
 
+## PostgreSQL error logs
+
+With a CGO-enabled Alloy 1.19 or newer build, enable `databaseObservability.collectors.logs.enabled` and configure
+`databaseObservability.logSource`. The source runs inside the PostgreSQL integration module and sends lines to
+`database_observability.postgres.logs_receiver`. Alloy processes errors and associates them with query fingerprints
+before sending the resulting telemetry through the integration's existing destinations and label rules.
+
+The instance-level `logs` setting still controls discovered pod logs. Collector `extraConfig` runs outside the module
+and cannot reference its internal receiver. Setting the logs collector without a source leaves error processing off.
+
+Configure the PostgreSQL server's `log_line_prefix` to `%m:%r:%u@%d:[%p]:%l:%e:%s:%v:%x:%c:%q%a:` and
+`log_min_error_statement` to `ERROR` so errors include their statements. The parser expects these prefix fields in
+this order. Shortening or reordering them can leave logs flowing without usable error telemetry. Monitor
+`database_observability_pg_error_log_parse_failures_total` for parsing errors and
+`database_observability_logs_processing_enabled` for whether error processing is enabled.
+
+### AWS RDS and CloudWatch
+
+Enable the RDS instance's PostgreSQL log export to CloudWatch and configure its PostgreSQL log parameters as above.
+Set the source on that integration instance:
+
+```yaml
+databaseObservability:
+  enabled: true
+  collectors:
+    logs:
+      enabled: true
+  logSource:
+    type: cloudwatch
+    cloudwatch:
+      region: eu-west-1
+      groupName: /aws/rds/instance/example-db/postgresql
+      pollInterval: 1m
+```
+
+Set `collectors.<name>.alloy.stabilityLevel` to `experimental` for the CloudWatch receiver.
+
+The group name is explicit and does not depend on `cloudProvider.aws.arn`. Use a single collector replica for each
+source, such as the `singleton` preset, to avoid reading the same logs more than once.
+The chart stores CloudWatch checkpoints in Alloy's storage directory. Mount persistent storage there so checkpoints
+survive pod replacement. The CloudWatch example includes a separate checkpoint volume.
+
+The generated attributes processor preserves the raw PostgreSQL log body during conversion to Loki entries. Without
+this format hint, the exporter wraps the line in JSON, which the PostgreSQL text parser cannot read.
+
+The receiver uses the AWS SDK default credential chain, with optional `profile` and `imdsEndpoint` settings. On EKS,
+configure IRSA or Pod Identity for the collector's ServiceAccount. Its AWS role needs `logs:FilterLogEvents`,
+`logs:GetLogEvents`, `logs:DescribeLogGroups` and `logs:DescribeLogStreams` for the configured log source. The chart
+does not create IAM roles or policies. Missing permissions cause receiver errors at runtime even when Helm renders
+successfully.
+
+### Files on a self-hosted instance
+
+Mount the database's log files into the collector container and grant the collector read access. Paths are evaluated
+inside that container and support glob patterns:
+
+```yaml
+databaseObservability:
+  enabled: true
+  collectors:
+    logs:
+      enabled: true
+  logSource:
+    type: file
+    file:
+      paths:
+        - /var/log/postgresql/*.log
+      tailFromEnd: true
+```
+
+Use `collectors.<name>.controller.volumes.extra` with `collectors.<name>.alloy.mounts.extra` to mount the logs.
+A single replica must have access to the files for its configured database. `tailFromEnd` skips existing lines when
+no stored file position exists; set it to `false` to read those lines too. Preserve Alloy's storage directory across
+restarts if file positions must survive pod replacement.
+
+The [file-source example](../../../../docs/examples/features/database-observability/postgresql-file/README.md) shows
+a read-only volume mount. The [CloudWatch example](../../../../docs/examples/features/database-observability/postgresql-cloudwatch/README.md)
+shows a singleton collector and an existing ServiceAccount.
+
 {{ template "chart.valuesSection" . }}
