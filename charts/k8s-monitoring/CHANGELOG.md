@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 3.8.14
 
 *   Fix the incorrect `job` label on nodeLogs journal logs by re-asserting it in the `loki.process` static labels stage, working around an Alloy `loki.source.journal` regression that ignores the explicitly-set `job` label. Backport of #3019. (@petewall)
 *   Update kube-state-metrics to 8.5.0, OpenCost to 2.5.31, and Node Exporter to 4.57.0. Backport of #3050. (@petewall)
