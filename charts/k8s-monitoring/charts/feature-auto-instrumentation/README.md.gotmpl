@@ -11,10 +11,52 @@ The auto-instrumentation feature deploys Grafana Beyla to automatically instrume
 
 ## Usage
 
+The feature gate is `autoInstrumentation.enabled`. Enabling it deploys Grafana Beyla as its own DaemonSet and configures
+the assigned collector to scrape that DaemonSet. `autoInstrumentation.beyla.enabled` only controls the DaemonSet, and
+it defaults to `true` when the feature is enabled. Beyla is not embedded in the Alloy collector in this chart.
+
+The Beyla Kubernetes metadata cache is a separate Deployment, `beyla-k8s-cache`. Auto-Instrumentation deploys it by
+default (`autoInstrumentation.beyla.k8sCache.replicas: 1`) so the Beyla DaemonSet pods share one cache instead of each
+querying the Kubernetes API server. Set `replicas` to `0` to skip the cache. This cache is independent of
+`telemetryServices.beyla`, which can deploy a standalone cache and is off by default.
+
+When exactly one collector is defined, the chart assigns it automatically:
+
 ```yaml
 autoInstrumentation:
   enabled: true
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
 ```
+
+When more than one collector is defined, set `collector` explicitly. This is the usual case when Application
+Observability is also enabled so Beyla can forward traces:
+
+```yaml
+autoInstrumentation:
+  enabled: true
+  collector: alloy-metrics
+
+applicationObservability:
+  enabled: true
+  collector: alloy-receiver
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-receiver:
+    presets: [deployment]
+```
+
+To collect Beyla metrics without forwarding traces, set `beyla.deliverTracesToApplicationObservability: false`.
+
+See the [upgrade guide](../../UPGRADING.md#feature-collector-assignment) if you are migrating a v3 values file.
 
 ## Testing
 
