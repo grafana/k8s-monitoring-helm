@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Fix the incorrect `job` label on nodeLogs journal logs by re-asserting it in the `loki.process` static labels stage, working around an Alloy `loki.source.journal` regression that ignores the explicitly-set `job` label. Backport of #3019. (@petewall)
+
 ## 3.8.13
 
 *   Fix the alloy-singleton `self-reporting-metric.prom` file missing its trailing newline, which caused Alloy's textfile collector to fail parsing it (`unexpected end of input stream`). Backport of #2486. (#2930) (@petewall)

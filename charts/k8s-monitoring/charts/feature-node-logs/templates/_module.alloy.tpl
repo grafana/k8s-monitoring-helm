@@ -80,6 +80,8 @@ declare "node_logs" {
         "source" = "journal",
         // default level to unknown
         level = "unknown",
+        // Set the `job` label again. Needed until https://github.com/grafana/alloy/issues/6980 is in a release.
+        job = {{ .Values.journal.jobLabel | quote }},
       }
     }
 
