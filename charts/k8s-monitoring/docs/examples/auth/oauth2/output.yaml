@@ -19,7 +19,7 @@ kind: ServiceAccount
 automountServiceAccountToken: true
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-8.4.2
+    helm.sh/chart: kube-state-metrics-8.5.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -37,7 +37,7 @@ metadata:
   name: k8smon-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: node-exporter-4.56.3
+    helm.sh/chart: node-exporter-4.57.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
@@ -1536,7 +1536,7 @@ data:
   self-reporting-metric.prom: |+
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="3.8.13", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="3.8.14", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="annotationAutodiscovery", version="1.0.0"} 1
@@ -1627,6 +1627,8 @@ data:
             "source" = "journal",
             // default level to unknown
             level = "unknown",
+            // Set the `job` label again. Needed until https://github.com/grafana/alloy/issues/6980 is in a release.
+            job = "integrations/kubernetes/journal",
           }
         }
     
@@ -2205,7 +2207,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-8.4.2
+    helm.sh/chart: kube-state-metrics-8.5.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -2401,7 +2403,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-8.4.2
+    helm.sh/chart: kube-state-metrics-8.5.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -2519,7 +2521,7 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-8.4.2
+    helm.sh/chart: kube-state-metrics-8.5.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -2546,7 +2548,7 @@ metadata:
   name: k8smon-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: node-exporter-4.56.3
+    helm.sh/chart: node-exporter-4.57.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
@@ -2601,7 +2603,7 @@ metadata:
   name: k8smon-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: node-exporter-4.56.3
+    helm.sh/chart: node-exporter-4.57.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
@@ -2625,13 +2627,12 @@ spec:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
         k8s.grafana.com/logs.job: integrations/node_exporter
       labels:
-        helm.sh/chart: node-exporter-4.56.3
-        app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
-        app.kubernetes.io/part-of: node-exporter
-        app.kubernetes.io/name: node-exporter
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "1.12.1"
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: node-exporter
+        app.kubernetes.io/part-of: node-exporter
+        app.kubernetes.io/version: 1.12.1
         release: k8smon
     spec:
       automountServiceAccountToken: false
@@ -2901,7 +2902,7 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-8.4.2
+    helm.sh/chart: kube-state-metrics-8.5.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -2920,14 +2921,13 @@ spec:
   revisionHistoryLimit: 10
   template:
     metadata:
-      labels:        
-        helm.sh/chart: kube-state-metrics-8.4.2
-        app.kubernetes.io/managed-by: Helm
+      labels:
         app.kubernetes.io/component: metrics
-        app.kubernetes.io/part-of: kube-state-metrics
-        app.kubernetes.io/name: kube-state-metrics
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "2.20.0"
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: kube-state-metrics
+        app.kubernetes.io/part-of: kube-state-metrics
+        app.kubernetes.io/version: 2.20.0
         release: k8smon
       annotations:
       
@@ -4109,7 +4109,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.8.13
+    helm.sh/chart: k8s-monitoring-3.8.14
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -4162,7 +4162,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.8.13
+    helm.sh/chart: k8s-monitoring-3.8.14
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
