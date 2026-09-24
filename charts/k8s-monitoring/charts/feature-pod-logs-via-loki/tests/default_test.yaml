@@ -101,3 +101,16 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["module.alloy"]
+
+  - it: should not index service_instance_id as a stream label by default, only as structured metadata (#3051)
+    set:
+      testing: {enabled: true}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'values = \["service_instance_id"\]'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '"service_instance_id" = "service_instance_id"'
