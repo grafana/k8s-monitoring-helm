@@ -32,11 +32,11 @@ prometheus.operator.servicemonitors "service_monitors" {
   scrape {
     default_scrape_interval = {{ .Values.serviceMonitors.scrapeInterval | default .Values.global.scrapeInterval | quote }}
     default_scrape_timeout = {{ .Values.serviceMonitors.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
-    scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
-    scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
-    convert_classic_histograms_to_nhcb = {{ .Values.global.convertClassicHistogramsToNhcb }}
-    native_histogram_bucket_limit = {{ .Values.global.nativeHistogramBucketLimit | int }}
-    native_histogram_min_bucket_factor = {{ .Values.global.nativeHistogramMinBucketFactor | float64 }}
+    scrape_classic_histograms = {{ include "feature.prometheusOperatorObjects.histogramSetting" (dict "root" $ "key" "scrapeClassicHistograms") }}
+    scrape_native_histograms = {{ include "feature.prometheusOperatorObjects.histogramSetting" (dict "root" $ "key" "scrapeNativeHistograms") }}
+    convert_classic_histograms_to_nhcb = {{ include "feature.prometheusOperatorObjects.histogramSetting" (dict "root" $ "key" "convertClassicHistogramsToNhcb") }}
+    native_histogram_bucket_limit = {{ include "feature.prometheusOperatorObjects.histogramSetting" (dict "root" $ "key" "nativeHistogramBucketLimit") | int }}
+    native_histogram_min_bucket_factor = {{ include "feature.prometheusOperatorObjects.histogramSetting" (dict "root" $ "key" "nativeHistogramMinBucketFactor") | float64 }}
   }
 
 {{- with .Values.serviceMonitors.excludeNamespaces }}
