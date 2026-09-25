@@ -299,7 +299,7 @@ details:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| extraObjects | list | `[]` | Deploy additional manifest objects |
+| extraObjects | string | `nil` | Deploy additional manifest objects. Can be a list or a map. If a map, keys are ignored and only values are used, which allows entries to be merged and overridden across values files. |
 
 ### Global Settings
 
