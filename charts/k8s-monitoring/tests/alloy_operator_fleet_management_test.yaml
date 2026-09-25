@@ -47,7 +47,6 @@ tests:
             url: https://fleet.example.com
             cluster: test-cluster
             credentialsSecret: alloy-metrics-remote-cfg-release-name-k8s-monitoring
-            credentialsNamespace: NAMESPACE
             usernameKey: username
             passwordKey: password
         template: alloy-operator-fleet-management.yaml
@@ -68,7 +67,41 @@ tests:
         template: alloy-operator-fleet-management.yaml
         documentSelector: {path: kind, value: RoleBinding}
 
-  - it: references an existing Secret and grants access to it in its namespace
+  - it: references an existing Secret and grants access to it
+    set:
+      cluster: {name: test-cluster}
+      alloy-operator: {fleetManagement: {enabled: true}}
+      collectorCommon:
+        alloy:
+          remoteConfig:
+            enabled: true
+            url: "https://fleet.example.com"
+            secret: {create: false, name: fleet-credentials}
+            auth: {usernameKey: stack-id, passwordKey: token}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - equal:
+          path: stringData
+          value:
+            url: https://fleet.example.com
+            cluster: test-cluster
+            credentialsSecret: fleet-credentials
+            usernameKey: stack-id
+            passwordKey: token
+        template: alloy-operator-fleet-management.yaml
+        documentSelector: {path: kind, value: Secret}
+      - hasDocuments:
+          count: 3
+        template: alloy-operator-fleet-management.yaml
+      - equal:
+          path: rules[0].resourceNames
+          value: [alloy-operator-fleet-management, fleet-credentials]
+        template: alloy-operator-fleet-management.yaml
+        documentSelector: {path: kind, value: Role}
+
+  - it: requires the credentials Secret in the Alloy Operator's namespace
     set:
       cluster: {name: test-cluster}
       alloy-operator: {fleetManagement: {enabled: true}}
@@ -83,26 +116,8 @@ tests:
         alloy-metrics:
           extraConfig: "// Giving this Alloy something to do"
     asserts:
-      - equal:
-          path: stringData
-          value:
-            url: https://fleet.example.com
-            cluster: test-cluster
-            credentialsSecret: fleet-credentials
-            credentialsNamespace: shared
-            usernameKey: stack-id
-            passwordKey: token
-        template: alloy-operator-fleet-management.yaml
-        documentSelector: {path: kind, value: Secret}
-      - hasDocuments:
-          count: 5
-        template: alloy-operator-fleet-management.yaml
-      - containsDocument:
-          kind: Role
-          apiVersion: rbac.authorization.k8s.io/v1
-          name: RELEASE-NAME-alloy-operator-fleet-management
-          namespace: shared
-          any: true
+      - failedTemplate:
+          errorMessage: alloy-operator.fleetManagement.enabled needs the remoteConfig Secret in the Alloy Operator's namespace, NAMESPACE, not shared.
         template: alloy-operator-fleet-management.yaml
 
   - it: copies embedded credentials

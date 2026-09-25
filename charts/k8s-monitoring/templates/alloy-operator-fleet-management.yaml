@@ -19,7 +19,7 @@
   {{- $subchart := index .Subcharts "alloy-operator" }}
   {{- $namespace := include "alloy-operator.namespace" $subchart }}
   {{- $name := "alloy-operator-fleet-management" }}
-  {{- $secretsByNamespace := dict $namespace (list $name) }}
+  {{- $secretNames := list $name }}
 ---
 apiVersion: v1
 kind: Secret
@@ -33,9 +33,11 @@ stringData:
   {{- if eq (include "secrets.usesKubernetesSecret" $remoteConfig) "true" }}
     {{- $credentialsSecret := include "secrets.kubernetesSecretName" (dict "Values" $.Values "Chart" $.Chart "Release" $.Release "object" $remoteConfig "name" $remoteConfig.name) }}
     {{- $credentialsNamespace := include "secrets.kubernetesSecretNamespace" (dict "Values" $.Values "Release" $.Release "object" $remoteConfig) }}
-    {{- $_ := set $secretsByNamespace $credentialsNamespace (append (get $secretsByNamespace $credentialsNamespace | default list) $credentialsSecret) }}
+    {{- if ne $credentialsNamespace $namespace }}
+      {{- fail (printf "alloy-operator.fleetManagement.enabled needs the remoteConfig Secret in the Alloy Operator's namespace, %s, not %s." $namespace $credentialsNamespace) }}
+    {{- end }}
+    {{- $secretNames = append $secretNames $credentialsSecret }}
   credentialsSecret: {{ $credentialsSecret | quote }}
-  credentialsNamespace: {{ $credentialsNamespace | quote }}
     {{- if or (eq (include "secrets.secretType" $remoteConfig) "create") (dig "auth" "usernameKey" "" $remoteConfig) }}
   usernameKey: {{ include "secrets.getSecretKey" (dict "object" $remoteConfig "key" "auth.username") | quote }}
     {{- else }}
@@ -48,13 +50,12 @@ stringData:
   {{- end }}
   {{- if dig "rbac" "create" true $operator }}
     {{- $roleName := printf "%s-fleet-management" (include "alloy-operator.fullname" $subchart) }}
-    {{- range $secretNamespace, $secretNames := $secretsByNamespace }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: {{ $roleName }}
-  namespace: {{ $secretNamespace }}
+  namespace: {{ $namespace }}
 rules:
   - apiGroups: [""]
     resources: [secrets]
@@ -65,7 +66,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: {{ $roleName }}
-  namespace: {{ $secretNamespace }}
+  namespace: {{ $namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -74,6 +75,5 @@ subjects:
   - kind: ServiceAccount
     name: {{ include "alloy-operator.serviceAccountName" $subchart }}
     namespace: {{ $namespace }}
-    {{- end }}
   {{- end }}
 {{- end }}
