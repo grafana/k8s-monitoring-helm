@@ -39,3 +39,9 @@
   {{- end }}
 {{- end }}
 {{- end }}
+
+{{- define "configFeatures.list.enabled" }}
+{{- if (gt ((include "destinations.prometheus.rules.alloy.list" .) | fromYamlArray | len) 0 )}}
+- destinations.mimir.rules.kubernetes.enabled
+{{- end }}
+{{- end }}

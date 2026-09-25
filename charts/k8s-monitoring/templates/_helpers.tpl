@@ -84,3 +84,19 @@
 {{- define "ec2_tag" -}}
 {{ printf "__meta_ec2_tag_%s" (regexReplaceAll "[^0-9A-Za-z_]" . "_") }}
 {{- end }}
+
+{{/* Provides a resuable list of destinations that include PrometheusRule declarations */}}
+{{/* Inputs: . (root object) */}}
+{{- define "destinations.prometheus.rules.alloy.list" }}
+{{- range $destinationName, $destination := (include "destinations.getEnabled" $.Values.destinations | fromYaml) }}
+  {{- if eq $destination.type "prometheus" }}
+    {{- $defaultValues := (printf "destinations/%s-values.yaml" $destination.type) | $.Files.Get | fromYaml }}
+    {{- $destinationWithDefaults := mergeOverwrite $defaultValues $destination }}
+    {{- if and $destinationWithDefaults.rules $destinationWithDefaults.rules.enabled }}
+- destination: {{ $destinationWithDefaults | toJson }}
+  destinationName: {{ $destinationName | quote }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- end }}
+
