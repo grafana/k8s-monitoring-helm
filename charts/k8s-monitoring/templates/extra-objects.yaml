@@ -1,4 +1,8 @@
-{{ range .Values.extraObjects }}
+{{- $extraObjects := .Values.extraObjects }}
+{{- if kindIs "map" $extraObjects }}
+{{- $extraObjects = values $extraObjects }}
+{{- end }}
+{{ range $extraObjects }}
 ---
 {{ tpl (toYaml .) $ }}
 {{ end }}
