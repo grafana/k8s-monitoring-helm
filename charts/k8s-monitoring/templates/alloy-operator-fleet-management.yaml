@@ -1,0 +1,79 @@
+{{- /* Fleet Management connection for the Alloy Operator. Credentials are referenced, not copied, when they already live in a Kubernetes Secret. */}}
+{{- $operator := index .Values "alloy-operator" }}
+{{- if and $operator.deploy (dig "fleetManagement" "enabled" false $operator) }}
+  {{- $remoteConfig := dict }}
+  {{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
+    {{- if not $remoteConfig }}
+      {{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
+      {{- if dig "remoteConfig" "enabled" false $collectorValues }}
+        {{- $remoteConfig = merge (dict "type" "remoteConfig" "name" (printf "%s-remote-cfg" $collectorName)) $collectorValues.remoteConfig }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- if not $remoteConfig }}
+    {{- fail "alloy-operator.fleetManagement.enabled requires a collector with remote config enabled, for example through collectorCommon.alloy.remoteConfig." }}
+  {{- end }}
+  {{- if or $remoteConfig.urlFrom (dig "auth" "usernameFrom" "" $remoteConfig) (dig "auth" "passwordFrom" "" $remoteConfig) }}
+    {{- fail "alloy-operator.fleetManagement.enabled can't use remoteConfig urlFrom, auth.usernameFrom, or auth.passwordFrom because the Alloy Operator can't evaluate Alloy expressions." }}
+  {{- end }}
+  {{- $subchart := index .Subcharts "alloy-operator" }}
+  {{- $namespace := include "alloy-operator.namespace" $subchart }}
+  {{- $name := "alloy-operator-fleet-management" }}
+  {{- $secretsByNamespace := dict $namespace (list $name) }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ $name }}
+  namespace: {{ $namespace }}
+type: Opaque
+stringData:
+  url: {{ required "remoteConfig.url is required for alloy-operator.fleetManagement" $remoteConfig.url | quote }}
+  cluster: {{ required "cluster.name is required for alloy-operator.fleetManagement" .Values.cluster.name | quote }}
+  {{- if eq (include "secrets.usesKubernetesSecret" $remoteConfig) "true" }}
+    {{- $credentialsSecret := include "secrets.kubernetesSecretName" (dict "Values" $.Values "Chart" $.Chart "Release" $.Release "object" $remoteConfig "name" $remoteConfig.name) }}
+    {{- $credentialsNamespace := include "secrets.kubernetesSecretNamespace" (dict "Values" $.Values "Release" $.Release "object" $remoteConfig) }}
+    {{- $_ := set $secretsByNamespace $credentialsNamespace (append (get $secretsByNamespace $credentialsNamespace | default list) $credentialsSecret) }}
+  credentialsSecret: {{ $credentialsSecret | quote }}
+  credentialsNamespace: {{ $credentialsNamespace | quote }}
+    {{- if or (eq (include "secrets.secretType" $remoteConfig) "create") (dig "auth" "usernameKey" "" $remoteConfig) }}
+  usernameKey: {{ include "secrets.getSecretKey" (dict "object" $remoteConfig "key" "auth.username") | quote }}
+    {{- else }}
+  username: {{ dig "auth" "username" "" $remoteConfig | toString | quote }}
+    {{- end }}
+  passwordKey: {{ include "secrets.getSecretKey" (dict "object" $remoteConfig "key" "auth.password") | quote }}
+  {{- else }}
+  username: {{ dig "auth" "username" "" $remoteConfig | toString | quote }}
+  password: {{ dig "auth" "password" "" $remoteConfig | toString | quote }}
+  {{- end }}
+  {{- if dig "rbac" "create" true $operator }}
+    {{- $roleName := printf "%s-fleet-management" (include "alloy-operator.fullname" $subchart) }}
+    {{- range $secretNamespace, $secretNames := $secretsByNamespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ $roleName }}
+  namespace: {{ $secretNamespace }}
+rules:
+  - apiGroups: [""]
+    resources: [secrets]
+    resourceNames: {{ $secretNames | toJson }}
+    verbs: [get]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $roleName }}
+  namespace: {{ $secretNamespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ $roleName }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "alloy-operator.serviceAccountName" $subchart }}
+    namespace: {{ $namespace }}
+    {{- end }}
+  {{- end }}
+{{- end }}

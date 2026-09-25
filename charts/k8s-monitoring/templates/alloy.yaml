@@ -14,11 +14,13 @@ metadata:
   {{- with $alloyValues.annotations }}
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- if $alloyValues.labels }}
-  labels:
-  {{- with $alloyValues.labels }}
-    {{- toYaml . | nindent 4 }}
+  {{- $labels := $alloyValues.labels | default dict }}
+  {{- if dig "fleetManagement" "enabled" false (index $.Values "alloy-operator") }}
+    {{- $labels = merge (dict "fleet.grafana.com/collector" $collectorName "fleet.grafana.com/release" $.Release.Name) $labels }}
   {{- end }}
+  {{- with $labels }}
+  labels:
+    {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:{{ $alloySpec | trim | nindent 2 }}
 {{- end }}

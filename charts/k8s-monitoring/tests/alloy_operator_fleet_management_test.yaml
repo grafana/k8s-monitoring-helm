@@ -1,0 +1,162 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Alloy Operator - Fleet Management
+templates:
+  - alloy.yaml
+  - alloy-operator-fleet-management.yaml
+tests:
+  - it: renders nothing extra when Fleet Management sync is disabled
+    set:
+      cluster: {name: test-cluster}
+      collectorCommon:
+        alloy:
+          remoteConfig: {enabled: true, url: "https://fleet.example.com", auth: {username: "12345", password: "token"}}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: alloy-operator-fleet-management.yaml
+      - notExists:
+          path: metadata.labels["fleet.grafana.com/collector"]
+        template: alloy.yaml
+
+  - it: labels collectors and references the chart's remote config Secret
+    set:
+      cluster: {name: test-cluster}
+      alloy-operator: {fleetManagement: {enabled: true}}
+      collectorCommon:
+        alloy:
+          remoteConfig: {enabled: true, url: "https://fleet.example.com", auth: {username: "12345", password: "token"}}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - equal:
+          path: metadata.labels
+          value:
+            fleet.grafana.com/collector: alloy-metrics
+            fleet.grafana.com/release: RELEASE-NAME
+        template: alloy.yaml
+      - hasDocuments:
+          count: 3
+        template: alloy-operator-fleet-management.yaml
+      - equal:
+          path: stringData
+          value:
+            url: https://fleet.example.com
+            cluster: test-cluster
+            credentialsSecret: alloy-metrics-remote-cfg-release-name-k8s-monitoring
+            credentialsNamespace: NAMESPACE
+            usernameKey: username
+            passwordKey: password
+        template: alloy-operator-fleet-management.yaml
+        documentSelector: {path: kind, value: Secret}
+      - equal:
+          path: metadata.name
+          value: alloy-operator-fleet-management
+        template: alloy-operator-fleet-management.yaml
+        documentSelector: {path: kind, value: Secret}
+      - equal:
+          path: rules[0].resourceNames
+          value: [alloy-operator-fleet-management, alloy-metrics-remote-cfg-release-name-k8s-monitoring]
+        template: alloy-operator-fleet-management.yaml
+        documentSelector: {path: kind, value: Role}
+      - equal:
+          path: subjects[0].name
+          value: RELEASE-NAME-alloy-operator
+        template: alloy-operator-fleet-management.yaml
+        documentSelector: {path: kind, value: RoleBinding}
+
+  - it: references an existing Secret and grants access to it in its namespace
+    set:
+      cluster: {name: test-cluster}
+      alloy-operator: {fleetManagement: {enabled: true}}
+      collectorCommon:
+        alloy:
+          remoteConfig:
+            enabled: true
+            url: "https://fleet.example.com"
+            secret: {create: false, name: fleet-credentials, namespace: shared}
+            auth: {usernameKey: stack-id, passwordKey: token}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - equal:
+          path: stringData
+          value:
+            url: https://fleet.example.com
+            cluster: test-cluster
+            credentialsSecret: fleet-credentials
+            credentialsNamespace: shared
+            usernameKey: stack-id
+            passwordKey: token
+        template: alloy-operator-fleet-management.yaml
+        documentSelector: {path: kind, value: Secret}
+      - hasDocuments:
+          count: 5
+        template: alloy-operator-fleet-management.yaml
+      - containsDocument:
+          kind: Role
+          apiVersion: rbac.authorization.k8s.io/v1
+          name: RELEASE-NAME-alloy-operator-fleet-management
+          namespace: shared
+          any: true
+        template: alloy-operator-fleet-management.yaml
+
+  - it: copies embedded credentials
+    set:
+      cluster: {name: test-cluster}
+      alloy-operator: {fleetManagement: {enabled: true}}
+      collectorCommon:
+        alloy:
+          remoteConfig:
+            enabled: true
+            url: "https://fleet.example.com"
+            secret: {embed: true}
+            auth: {username: "12345", password: "token"}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// Giving this Alloy something to do"
+          alloy:
+            extraEnv:
+              - name: GCLOUD_RW_API_KEY
+                value: token
+    asserts:
+      - equal:
+          path: stringData
+          value:
+            url: https://fleet.example.com
+            cluster: test-cluster
+            username: "12345"
+            password: token
+        template: alloy-operator-fleet-management.yaml
+        documentSelector: {path: kind, value: Secret}
+
+  - it: requires a collector with remote config
+    set:
+      cluster: {name: test-cluster}
+      alloy-operator: {fleetManagement: {enabled: true}}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - failedTemplate:
+          errorMessage: alloy-operator.fleetManagement.enabled requires a collector with remote config enabled, for example through collectorCommon.alloy.remoteConfig.
+        template: alloy-operator-fleet-management.yaml
+
+  - it: rejects credentials the operator can't evaluate
+    set:
+      cluster: {name: test-cluster}
+      alloy-operator: {fleetManagement: {enabled: true}}
+      collectorCommon:
+        alloy:
+          remoteConfig: {enabled: true, url: "https://fleet.example.com", auth: {username: "12345", passwordFrom: 'sys.env("TOKEN")'}}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// Giving this Alloy something to do"
+    asserts:
+      - failedTemplate:
+          errorMessage: alloy-operator.fleetManagement.enabled can't use remoteConfig urlFrom, auth.usernameFrom, or auth.passwordFrom because the Alloy Operator can't evaluate Alloy expressions.
+        template: alloy-operator-fleet-management.yaml
