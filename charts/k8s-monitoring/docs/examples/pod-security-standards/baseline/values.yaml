@@ -1,0 +1,75 @@
+---
+cluster:
+  name: pss-baseline-cluster
+
+destinations:
+  prometheus:
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+
+  loki:
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+
+# The `baseline` Pod Security Standard forbids privileged pods, host namespaces,
+# `hostPath` volumes, and capabilities outside a small allowed set.
+#
+# The chart's default collector security context does `drop: ["ALL"]` and then adds back
+# the *container-runtime* default capabilities. That default set includes `NET_RAW`,
+# which `baseline` does NOT permit (baseline allows the runtime defaults minus
+# `NET_RAW`, because `NET_RAW` enables packet spoofing/sniffing). So the chart's default
+# collectors are rejected by `baseline` with:
+#
+#   violates PodSecurity "baseline:latest": non-default capabilities
+#   (container "alloy" must not include "NET_RAW" in securityContext.capabilities.add)
+#
+# Alloy does not need `NET_RAW` (or any of the other added capabilities) to scrape
+# metrics, gather events, or read pod logs through the Kubernetes API, so the override
+# below clears the added capabilities on each collector. No other `securityContext`
+# changes are needed for `baseline`.
+#
+# Also avoid features that mount `hostPath` volumes, which `baseline` forbids: Host
+# Metrics, Node Logs, and the filesystem-based Pod Logs collector. This example collects
+# pod logs through the Kubernetes API instead, which needs no host access.
+
+clusterMetrics:
+  enabled: true
+  collector: alloy-metrics
+
+clusterEvents:
+  enabled: true
+  collector: alloy-singleton
+
+podLogsViaKubernetesApi:
+  enabled: true
+  collector: alloy-logs
+  namespaces:
+    - grafana
+    - loki
+    - prometheus
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+
+collectorCommon:
+  alloy:
+    alloy:
+      securityContext:
+        capabilities:
+          add: [ "CHOWN", "DAC_OVERRIDE", "FOWNER", "FSETID", "KILL", "SETGID", "SETUID", "SETPCAP", "NET_BIND_SERVICE", "SYS_CHROOT", "MKNOD", "AUDIT_WRITE", "SETFCAP" ]
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+
+  alloy-singleton:
+    presets: [singleton]
+
+  alloy-logs:
+    presets: [clustered, deployment]
