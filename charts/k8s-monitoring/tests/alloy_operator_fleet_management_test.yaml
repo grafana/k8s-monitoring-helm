@@ -21,7 +21,7 @@ tests:
           path: metadata.labels["fleet.grafana.com/collector"]
         template: alloy.yaml
 
-  - it: labels collectors and copies the credentials of the chart's remote config Secret
+  - it: labels collectors and points at the chart's remote config Secret
     set:
       cluster: {name: test-cluster}
       alloy-operator: {fleetManagement: {enabled: true}}
@@ -46,8 +46,9 @@ tests:
           value:
             url: https://fleet.example.com
             cluster: test-cluster
-            username: "12345"
-            password: token
+            credentialsSecret: alloy-metrics-remote-cfg-release-name-k8s-monitoring
+            usernameKey: username
+            passwordKey: password
         template: alloy-operator-fleet-management.yaml
         documentSelector: {path: kind, value: Secret}
       - equal:
@@ -57,7 +58,7 @@ tests:
         documentSelector: {path: kind, value: Secret}
       - equal:
           path: rules[0].resourceNames
-          value: [alloy-operator-fleet-management]
+          value: [alloy-operator-fleet-management, alloy-metrics-remote-cfg-release-name-k8s-monitoring]
         template: alloy-operator-fleet-management.yaml
         documentSelector: {path: kind, value: Role}
       - equal:
@@ -66,10 +67,10 @@ tests:
         template: alloy-operator-fleet-management.yaml
         documentSelector: {path: kind, value: RoleBinding}
 
-  - it: reads an existing Secret through the operator flag and grants access to it
+  - it: points at your Secret and grants access to it
     set:
       cluster: {name: test-cluster}
-      alloy-operator: {fleetManagement: {enabled: true}, extraArgs: [--fleet-credentials-secret=fleet-credentials]}
+      alloy-operator: {fleetManagement: {enabled: true}}
       collectorCommon:
         alloy:
           remoteConfig:
@@ -86,6 +87,7 @@ tests:
           value:
             url: https://fleet.example.com
             cluster: test-cluster
+            credentialsSecret: fleet-credentials
             usernameKey: stack-id
             passwordKey: token
         template: alloy-operator-fleet-management.yaml
@@ -98,25 +100,6 @@ tests:
           value: [alloy-operator-fleet-management, fleet-credentials]
         template: alloy-operator-fleet-management.yaml
         documentSelector: {path: kind, value: Role}
-
-  - it: requires the operator flag for an existing Secret
-    set:
-      cluster: {name: test-cluster}
-      alloy-operator: {fleetManagement: {enabled: true}}
-      collectorCommon:
-        alloy:
-          remoteConfig:
-            enabled: true
-            url: "https://fleet.example.com"
-            secret: {create: false, name: fleet-credentials}
-            auth: {usernameKey: stack-id, passwordKey: token}
-      collectors:
-        alloy-metrics:
-          extraConfig: "// Giving this Alloy something to do"
-    asserts:
-      - failedTemplate:
-          errorMessage: alloy-operator.fleetManagement.enabled reads the credentials from the fleet-credentials Secret, so alloy-operator.extraArgs needs --fleet-credentials-secret=fleet-credentials.
-        template: alloy-operator-fleet-management.yaml
 
   - it: requires the credentials Secret in the Alloy Operator's namespace
     set:
@@ -137,7 +120,7 @@ tests:
           errorMessage: alloy-operator.fleetManagement.enabled needs the remoteConfig Secret in the Alloy Operator's namespace, NAMESPACE, not shared.
         template: alloy-operator-fleet-management.yaml
 
-  - it: copies embedded credentials
+  - it: rejects embedded credentials
     set:
       cluster: {name: test-cluster}
       alloy-operator: {fleetManagement: {enabled: true}}
@@ -156,15 +139,9 @@ tests:
               - name: GCLOUD_RW_API_KEY
                 value: token
     asserts:
-      - equal:
-          path: stringData
-          value:
-            url: https://fleet.example.com
-            cluster: test-cluster
-            username: "12345"
-            password: token
+      - failedTemplate:
+          errorMessage: "alloy-operator.fleetManagement.enabled reads the remote config credentials from their Kubernetes Secret, so remoteConfig needs auth.username and auth.password, or secret.create: false, and can't use secret.embed."
         template: alloy-operator-fleet-management.yaml
-        documentSelector: {path: kind, value: Secret}
 
   - it: requires a collector with remote config
     set:

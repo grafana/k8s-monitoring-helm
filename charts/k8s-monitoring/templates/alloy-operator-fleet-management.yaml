@@ -1,4 +1,4 @@
-{{- /* Fleet Management connection for the Alloy Operator. Credentials the chart creates or embeds are copied; a Secret it doesn't create is read through the operator's --fleet-credentials-secret flag, since the connection Secret can't name one. */}}
+{{- /* Fleet Management connection for the Alloy Operator. It points at the Secret the remote config reads its credentials from instead of copying them. */}}
 {{- $operator := index .Values "alloy-operator" }}
 {{- if and $operator.deploy (dig "fleetManagement" "enabled" false $operator) }}
   {{- $remoteConfig := dict }}
@@ -16,10 +16,17 @@
   {{- if or $remoteConfig.urlFrom (dig "auth" "usernameFrom" "" $remoteConfig) (dig "auth" "passwordFrom" "" $remoteConfig) }}
     {{- fail "alloy-operator.fleetManagement.enabled can't use remoteConfig urlFrom, auth.usernameFrom, or auth.passwordFrom because the Alloy Operator can't evaluate Alloy expressions." }}
   {{- end }}
+  {{- if ne (include "secrets.usesKubernetesSecret" $remoteConfig) "true" }}
+    {{- fail "alloy-operator.fleetManagement.enabled reads the remote config credentials from their Kubernetes Secret, so remoteConfig needs auth.username and auth.password, or secret.create: false, and can't use secret.embed." }}
+  {{- end }}
   {{- $subchart := index .Subcharts "alloy-operator" }}
   {{- $namespace := include "alloy-operator.namespace" $subchart }}
   {{- $name := "alloy-operator-fleet-management" }}
-  {{- $secretNames := list $name }}
+  {{- $credentialsSecret := include "secrets.kubernetesSecretName" (dict "Values" $.Values "Chart" $.Chart "Release" $.Release "object" $remoteConfig "name" $remoteConfig.name) }}
+  {{- $credentialsNamespace := include "secrets.kubernetesSecretNamespace" (dict "Values" $.Values "Release" $.Release "object" $remoteConfig) }}
+  {{- if ne $credentialsNamespace $namespace }}
+    {{- fail (printf "alloy-operator.fleetManagement.enabled needs the remoteConfig Secret in the Alloy Operator's namespace, %s, not %s." $namespace $credentialsNamespace) }}
+  {{- end }}
 ---
 apiVersion: v1
 kind: Secret
@@ -30,27 +37,9 @@ type: Opaque
 stringData:
   url: {{ required "remoteConfig.url is required for alloy-operator.fleetManagement" $remoteConfig.url | quote }}
   cluster: {{ required "cluster.name is required for alloy-operator.fleetManagement" .Values.cluster.name | quote }}
-  {{- if eq (include "secrets.secretType" $remoteConfig) "external" }}
-    {{- $credentialsSecret := include "secrets.kubernetesSecretName" (dict "Values" $.Values "Chart" $.Chart "Release" $.Release "object" $remoteConfig "name" $remoteConfig.name) }}
-    {{- $credentialsNamespace := include "secrets.kubernetesSecretNamespace" (dict "Values" $.Values "Release" $.Release "object" $remoteConfig) }}
-    {{- if ne $credentialsNamespace $namespace }}
-      {{- fail (printf "alloy-operator.fleetManagement.enabled needs the remoteConfig Secret in the Alloy Operator's namespace, %s, not %s." $namespace $credentialsNamespace) }}
-    {{- end }}
-    {{- $flag := printf "--fleet-credentials-secret=%s" $credentialsSecret }}
-    {{- if not (has $flag ($operator.extraArgs | default list)) }}
-      {{- fail (printf "alloy-operator.fleetManagement.enabled reads the credentials from the %s Secret, so alloy-operator.extraArgs needs %s." $credentialsSecret $flag) }}
-    {{- end }}
-    {{- $secretNames = append $secretNames $credentialsSecret }}
-    {{- if dig "auth" "usernameKey" "" $remoteConfig }}
+  credentialsSecret: {{ $credentialsSecret | quote }}
   usernameKey: {{ include "secrets.getSecretKey" (dict "object" $remoteConfig "key" "auth.username") | quote }}
-    {{- else }}
-  username: {{ dig "auth" "username" "" $remoteConfig | toString | quote }}
-    {{- end }}
   passwordKey: {{ include "secrets.getSecretKey" (dict "object" $remoteConfig "key" "auth.password") | quote }}
-  {{- else }}
-  username: {{ dig "auth" "username" "" $remoteConfig | toString | quote }}
-  password: {{ dig "auth" "password" "" $remoteConfig | toString | quote }}
-  {{- end }}
   {{- if dig "rbac" "create" true $operator }}
     {{- $roleName := printf "%s-fleet-management" (include "alloy-operator.fullname" $subchart) }}
 ---
@@ -62,7 +51,7 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: [secrets]
-    resourceNames: {{ $secretNames | toJson }}
+    resourceNames: {{ list $name $credentialsSecret | toJson }}
     verbs: [get]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
