@@ -3,6 +3,7 @@ suite: Alloy Operator - Fleet Management
 templates:
   - alloy.yaml
   - alloy-operator-fleet-management.yaml
+  - validations.yaml
 tests:
   - it: renders nothing extra when Fleet Management sync is disabled
     set:
@@ -42,13 +43,13 @@ tests:
           count: 3
         template: alloy-operator-fleet-management.yaml
       - equal:
-          path: stringData
+          path: data
           value:
-            url: https://fleet.example.com
-            cluster: test-cluster
-            credentialsSecret: alloy-metrics-remote-cfg-release-name-k8s-monitoring
-            usernameKey: username
-            passwordKey: password
+            url: aHR0cHM6Ly9mbGVldC5leGFtcGxlLmNvbQ==
+            cluster: dGVzdC1jbHVzdGVy
+            credentialsSecret: YWxsb3ktbWV0cmljcy1yZW1vdGUtY2ZnLXJlbGVhc2UtbmFtZS1rOHMtbW9uaXRvcmluZw==
+            usernameKey: dXNlcm5hbWU=
+            passwordKey: cGFzc3dvcmQ=
         template: alloy-operator-fleet-management.yaml
         documentSelector: {path: kind, value: Secret}
       - equal:
@@ -83,13 +84,13 @@ tests:
           extraConfig: "// Giving this Alloy something to do"
     asserts:
       - equal:
-          path: stringData
+          path: data
           value:
-            url: https://fleet.example.com
-            cluster: test-cluster
-            credentialsSecret: fleet-credentials
-            usernameKey: stack-id
-            passwordKey: token
+            url: aHR0cHM6Ly9mbGVldC5leGFtcGxlLmNvbQ==
+            cluster: dGVzdC1jbHVzdGVy
+            credentialsSecret: ZmxlZXQtY3JlZGVudGlhbHM=
+            usernameKey: c3RhY2staWQ=
+            passwordKey: dG9rZW4=
         template: alloy-operator-fleet-management.yaml
         documentSelector: {path: kind, value: Secret}
       - hasDocuments:
@@ -143,7 +144,7 @@ tests:
           errorMessage: "alloy-operator.fleetManagement.enabled reads the remote config credentials from their Kubernetes Secret, so remoteConfig needs auth.username and auth.password, or secret.create: false, and can't use secret.embed."
         template: alloy-operator-fleet-management.yaml
 
-  - it: requires a collector with remote config
+  - it: requires a collector with remote config or collectorCommon remote config
     set:
       cluster: {name: test-cluster}
       alloy-operator: {fleetManagement: {enabled: true}}
@@ -152,7 +153,113 @@ tests:
           extraConfig: "// Giving this Alloy something to do"
     asserts:
       - failedTemplate:
-          errorMessage: alloy-operator.fleetManagement.enabled requires a collector with remote config enabled, for example through collectorCommon.alloy.remoteConfig.
+          errorMessage: alloy-operator.fleetManagement.enabled requires collectorCommon.alloy.remoteConfig enabled with url, auth.username, and auth.password, or a collector with remote config enabled.
+        template: alloy-operator-fleet-management.yaml
+
+  - it: stores the collectorCommon remote config credentials when there are no collectors
+    set:
+      cluster: {name: test-cluster}
+      alloy-operator: {fleetManagement: {enabled: true}}
+      collectorCommon:
+        alloy:
+          remoteConfig: {enabled: true, url: "https://fleet.example.com", auth: {type: basic, username: "12345", password: "token"}}
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: alloy.yaml
+      - hasDocuments:
+          count: 3
+        template: alloy-operator-fleet-management.yaml
+      - equal:
+          path: metadata.name
+          value: alloy-operator-fleet-management
+        template: alloy-operator-fleet-management.yaml
+        documentSelector: {path: kind, value: Secret}
+      - equal:
+          path: data
+          value:
+            url: aHR0cHM6Ly9mbGVldC5leGFtcGxlLmNvbQ==
+            cluster: dGVzdC1jbHVzdGVy
+            username: MTIzNDU=
+            password: dG9rZW4=
+        template: alloy-operator-fleet-management.yaml
+        documentSelector: {path: kind, value: Secret}
+      - equal:
+          path: rules[0].resourceNames
+          value: [alloy-operator-fleet-management]
+        template: alloy-operator-fleet-management.yaml
+        documentSelector: {path: kind, value: Role}
+
+  - it: requires collectorCommon remote config when there are no collectors
+    set:
+      cluster: {name: test-cluster}
+      alloy-operator: {fleetManagement: {enabled: true}}
+    asserts:
+      - failedTemplate:
+          errorMessage: alloy-operator.fleetManagement.enabled requires collectorCommon.alloy.remoteConfig enabled with url, auth.username, and auth.password, or a collector with remote config enabled.
+        template: alloy-operator-fleet-management.yaml
+
+  - it: requires at least one collector when Fleet Management sync is disabled
+    set:
+      cluster: {name: test-cluster}
+      collectorCommon:
+        alloy:
+          remoteConfig: {enabled: true, url: "https://fleet.example.com", auth: {username: "12345", password: "token"}}
+    asserts:
+      - failedTemplate:
+          errorPattern: At least one collector should be enabled
+        template: validations.yaml
+
+  - it: rejects your own Secret without a collector
+    set:
+      cluster: {name: test-cluster}
+      alloy-operator: {fleetManagement: {enabled: true}}
+      collectorCommon:
+        alloy:
+          remoteConfig:
+            enabled: true
+            url: "https://fleet.example.com"
+            secret: {create: false, name: fleet-credentials}
+            auth: {usernameKey: stack-id, passwordKey: token}
+    asserts:
+      - failedTemplate:
+          errorMessage: "alloy-operator.fleetManagement.enabled without a collector copies collectorCommon.alloy.remoteConfig's credentials into the alloy-operator-fleet-management Secret, so it can't use secret.create: false or secret.embed."
+        template: alloy-operator-fleet-management.yaml
+
+  - it: rejects embedded credentials without a collector
+    set:
+      cluster: {name: test-cluster}
+      alloy-operator: {fleetManagement: {enabled: true}}
+      collectorCommon:
+        alloy:
+          remoteConfig: {enabled: true, url: "https://fleet.example.com", secret: {embed: true}, auth: {username: "12345", password: "token"}}
+    asserts:
+      - failedTemplate:
+          errorMessage: "alloy-operator.fleetManagement.enabled without a collector copies collectorCommon.alloy.remoteConfig's credentials into the alloy-operator-fleet-management Secret, so it can't use secret.create: false or secret.embed."
+        template: alloy-operator-fleet-management.yaml
+
+  - it: requires basic auth credentials without a collector
+    set:
+      cluster: {name: test-cluster}
+      alloy-operator: {fleetManagement: {enabled: true}}
+      collectorCommon:
+        alloy:
+          remoteConfig: {enabled: true, url: "https://fleet.example.com", auth: {username: "12345"}}
+    asserts:
+      - failedTemplate:
+          errorMessage: alloy-operator.fleetManagement.enabled without a collector needs basic auth credentials in collectorCommon.alloy.remoteConfig.auth.username and auth.password.
+        template: alloy-operator-fleet-management.yaml
+
+  - it: rejects credentials the operator can't evaluate without a collector
+    set:
+      cluster: {name: test-cluster}
+      alloy-operator: {fleetManagement: {enabled: true}}
+      collectorCommon:
+        alloy:
+          remoteConfig: {enabled: true, urlFrom: 'sys.env("FLEET_URL")', auth: {username: "12345", password: "token"}}
+    asserts:
+      - failedTemplate:
+          errorMessage: alloy-operator.fleetManagement.enabled can't use remoteConfig urlFrom, auth.usernameFrom, or auth.passwordFrom because the Alloy Operator can't evaluate Alloy expressions.
         template: alloy-operator-fleet-management.yaml
 
   - it: rejects credentials the operator can't evaluate

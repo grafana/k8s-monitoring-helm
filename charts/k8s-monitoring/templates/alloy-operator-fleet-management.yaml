@@ -1,4 +1,4 @@
-{{- /* Fleet Management connection for the Alloy Operator. It points at the Secret the remote config reads its credentials from instead of copying them. */}}
+{{- /* Fleet Management connection for the Alloy Operator. With collector remote config it points at that Secret instead of copying the credentials; otherwise it holds collectorCommon.alloy.remoteConfig's credentials for collectors Fleet Management creates. */}}
 {{- $operator := index .Values "alloy-operator" }}
 {{- if and $operator.deploy (dig "fleetManagement" "enabled" false $operator) }}
   {{- $remoteConfig := dict }}
@@ -10,22 +10,39 @@
       {{- end }}
     {{- end }}
   {{- end }}
+  {{- $fromCollector := not (empty $remoteConfig) }}
+  {{- if not $fromCollector }}
+    {{- $commonRemoteConfig := dig "alloy" "remoteConfig" dict (.Values.collectorCommon | default dict) }}
+    {{- if dig "enabled" false $commonRemoteConfig }}
+      {{- $remoteConfig = $commonRemoteConfig }}
+    {{- end }}
+  {{- end }}
   {{- if not $remoteConfig }}
-    {{- fail "alloy-operator.fleetManagement.enabled requires a collector with remote config enabled, for example through collectorCommon.alloy.remoteConfig." }}
+    {{- fail "alloy-operator.fleetManagement.enabled requires collectorCommon.alloy.remoteConfig enabled with url, auth.username, and auth.password, or a collector with remote config enabled." }}
   {{- end }}
   {{- if or $remoteConfig.urlFrom (dig "auth" "usernameFrom" "" $remoteConfig) (dig "auth" "passwordFrom" "" $remoteConfig) }}
     {{- fail "alloy-operator.fleetManagement.enabled can't use remoteConfig urlFrom, auth.usernameFrom, or auth.passwordFrom because the Alloy Operator can't evaluate Alloy expressions." }}
   {{- end }}
-  {{- if ne (include "secrets.usesKubernetesSecret" $remoteConfig) "true" }}
-    {{- fail "alloy-operator.fleetManagement.enabled reads the remote config credentials from their Kubernetes Secret, so remoteConfig needs auth.username and auth.password, or secret.create: false, and can't use secret.embed." }}
-  {{- end }}
   {{- $subchart := index .Subcharts "alloy-operator" }}
   {{- $namespace := include "alloy-operator.namespace" $subchart }}
   {{- $name := "alloy-operator-fleet-management" }}
-  {{- $credentialsSecret := include "secrets.kubernetesSecretName" (dict "Values" $.Values "Chart" $.Chart "Release" $.Release "object" $remoteConfig "name" $remoteConfig.name) }}
-  {{- $credentialsNamespace := include "secrets.kubernetesSecretNamespace" (dict "Values" $.Values "Release" $.Release "object" $remoteConfig) }}
-  {{- if ne $credentialsNamespace $namespace }}
-    {{- fail (printf "alloy-operator.fleetManagement.enabled needs the remoteConfig Secret in the Alloy Operator's namespace, %s, not %s." $namespace $credentialsNamespace) }}
+  {{- $credentialsSecret := "" }}
+  {{- if $fromCollector }}
+    {{- if ne (include "secrets.usesKubernetesSecret" $remoteConfig) "true" }}
+      {{- fail "alloy-operator.fleetManagement.enabled reads the remote config credentials from their Kubernetes Secret, so remoteConfig needs auth.username and auth.password, or secret.create: false, and can't use secret.embed." }}
+    {{- end }}
+    {{- $credentialsSecret = include "secrets.kubernetesSecretName" (dict "Values" $.Values "Chart" $.Chart "Release" $.Release "object" $remoteConfig "name" $remoteConfig.name) }}
+    {{- $credentialsNamespace := include "secrets.kubernetesSecretNamespace" (dict "Values" $.Values "Release" $.Release "object" $remoteConfig) }}
+    {{- if ne $credentialsNamespace $namespace }}
+      {{- fail (printf "alloy-operator.fleetManagement.enabled needs the remoteConfig Secret in the Alloy Operator's namespace, %s, not %s." $namespace $credentialsNamespace) }}
+    {{- end }}
+  {{- else }}
+    {{- if or (not (dig "secret" "create" true $remoteConfig)) (dig "secret" "embed" false $remoteConfig) }}
+      {{- fail (printf "alloy-operator.fleetManagement.enabled without a collector copies collectorCommon.alloy.remoteConfig's credentials into the %s Secret, so it can't use secret.create: false or secret.embed." $name) }}
+    {{- end }}
+    {{- if or (not (dig "auth" "username" "" $remoteConfig)) (not (dig "auth" "password" "" $remoteConfig)) (not (has (dig "auth" "type" "" $remoteConfig) (list "" "basic"))) }}
+      {{- fail "alloy-operator.fleetManagement.enabled without a collector needs basic auth credentials in collectorCommon.alloy.remoteConfig.auth.username and auth.password." }}
+    {{- end }}
   {{- end }}
 ---
 apiVersion: v1
@@ -34,12 +51,18 @@ metadata:
   name: {{ $name }}
   namespace: {{ $namespace }}
 type: Opaque
-stringData:
-  url: {{ required "remoteConfig.url is required for alloy-operator.fleetManagement" $remoteConfig.url | quote }}
-  cluster: {{ required "cluster.name is required for alloy-operator.fleetManagement" .Values.cluster.name | quote }}
-  credentialsSecret: {{ $credentialsSecret | quote }}
-  usernameKey: {{ include "secrets.getSecretKey" (dict "object" $remoteConfig "key" "auth.username") | quote }}
-  passwordKey: {{ include "secrets.getSecretKey" (dict "object" $remoteConfig "key" "auth.password") | quote }}
+{{- /* data, not stringData, so a helm upgrade removes the keys a previous install set. */}}
+data:
+  url: {{ required "remoteConfig.url is required for alloy-operator.fleetManagement" $remoteConfig.url | b64enc | quote }}
+  cluster: {{ required "cluster.name is required for alloy-operator.fleetManagement" .Values.cluster.name | b64enc | quote }}
+  {{- if $fromCollector }}
+  credentialsSecret: {{ $credentialsSecret | b64enc | quote }}
+  usernameKey: {{ include "secrets.getSecretKey" (dict "object" $remoteConfig "key" "auth.username") | b64enc | quote }}
+  passwordKey: {{ include "secrets.getSecretKey" (dict "object" $remoteConfig "key" "auth.password") | b64enc | quote }}
+  {{- else }}
+  username: {{ $remoteConfig.auth.username | toString | b64enc | quote }}
+  password: {{ $remoteConfig.auth.password | toString | b64enc | quote }}
+  {{- end }}
   {{- if dig "rbac" "create" true $operator }}
     {{- $roleName := printf "%s-fleet-management" (include "alloy-operator.fullname" $subchart) }}
 ---
@@ -51,7 +74,7 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: [secrets]
-    resourceNames: {{ list $name $credentialsSecret | toJson }}
+    resourceNames: {{ list $name $credentialsSecret | compact | toJson }}
     verbs: [get]
 ---
 apiVersion: rbac.authorization.k8s.io/v1

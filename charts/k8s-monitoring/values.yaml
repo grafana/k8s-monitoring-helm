@@ -749,14 +749,17 @@ alloy-operator:
   # @section -- Alloy Operator
   conflictCheck: true
 
-  # The Alloy Operator reports each collector to Fleet Management and applies the overrides it sends back, such as a
-  # new Alloy image tag.
+  # Fleet Management pushes collectors to the Alloy Operator. With the operator's --fleet-override-sync flag, it can also
+  # override the Alloy image of the collectors this chart creates.
   fleetManagement:
-    # -- Sync collectors with Fleet Management. Connects with `cluster.name` and the remoteConfig settings of the
-    # first collector that has remote config enabled, usually from `collectorCommon.alloy.remoteConfig`, and reads the
-    # credentials from its Secret, the chart's or yours (`remoteConfig.secret.create: false`). That Secret has to be in
-    # the Alloy Operator's namespace. Needs the Alloy Operator image from
-    # grafana-experimental/hackathon-18-remote-manager, set with `alloy-operator.image`.
+    # -- Sync collectors with Fleet Management, which can also create new collectors, so the chart can be installed
+    # without any. Connects with `cluster.name` and the `alloy-operator-fleet-management` Secret in the Alloy Operator's
+    # namespace. If a collector has remote config enabled, it uses the first one's remoteConfig settings and the
+    # credentials stay in that collector's Secret, the chart's or yours (`remoteConfig.secret.create: false`), which has
+    # to be in the Alloy Operator's namespace. Otherwise it uses `collectorCommon.alloy.remoteConfig`, which needs
+    # `url`, `auth.username`, and `auth.password`, and stores them in the `alloy-operator-fleet-management` Secret as
+    # `url`, `username`, and `password`, where collectors created by Fleet Management read them. Needs the Alloy
+    # Operator image from grafana-experimental/hackathon-18-remote-manager, set with `alloy-operator.image`.
     # @section -- Alloy Operator
     enabled: false
 

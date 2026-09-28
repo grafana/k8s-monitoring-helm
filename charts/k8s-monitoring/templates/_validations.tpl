@@ -5,7 +5,11 @@
 
   {{- include "destinations.validate" . -}}
   {{- include "dataProcessors.validate" . -}}
-  {{- include "collectors.validate.atLeastOneEnabled" . }}
+  {{- $operator := index .Values "alloy-operator" }}
+  {{- $fleetManagedCollectors := and $operator.deploy (dig "fleetManagement" "enabled" false $operator) }}
+  {{- if not $fleetManagedCollectors }}
+    {{- include "collectors.validate.atLeastOneEnabled" . }}
+  {{- end }}
   {{- include "collectors.validate.uniqueNames" . }}
   {{- include "collectors.validate.deprecatedPrivilegedPreset" . }}
 
@@ -22,7 +26,9 @@
   {{- $updatedValues = merge $.Values (include "collectors.remoteConfig.collector.values" (dict "Values" $updatedValues "Files" $.Files "Release" $.Release "Chart" $.Chart) | fromYaml) }}
 
   {{- /* Feature Validations */}}
-  {{- include "validations.features_enabled" . }}
+  {{- if not $fleetManagedCollectors }}
+    {{- include "validations.features_enabled" . }}
+  {{- end }}
   {{- range $feature := ((include "features.list" .) | fromYamlArray) }}
     {{- include (printf "features.%s.validate" $feature) $ }}
   {{- end }}
