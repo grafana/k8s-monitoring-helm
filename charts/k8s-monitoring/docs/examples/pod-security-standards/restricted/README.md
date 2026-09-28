@@ -3,10 +3,11 @@
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
 # Pod Security Standards: restricted
+<!--alex disable host-hostess hostesses-hosts -->
 
 This example deploys the chart into a cluster (or namespace) that enforces the
-[`restricted` Pod Security Standard](https://kubernetes.io/docs/concepts/security/pod-security-standards/),
-the strictest built-in policy.
+[`restricted` Pod Security Standard](https://kubernetes.io/docs/concepts/security/pod-security-standards/), the
+strictest built-in policy.
 
 On top of everything `baseline` forbids, `restricted` requires every container to:
 
@@ -15,34 +16,24 @@ On top of everything `baseline` forbids, `restricted` requires every container t
 *   drop **all** capabilities and add back at most `NET_BIND_SERVICE`
 *   set `seccompProfile.type` to `RuntimeDefault` or `Localhost`
 
-The chart's default collector security context drops all capabilities but adds several
-back (such as `CHOWN`, `NET_RAW`, and `SYS_CHROOT`) and does not force a non-root user,
-so the defaults are rejected under `restricted`. This example overrides the security
-context on each Alloy collector to remove the added capabilities, pin a non-root user,
-and set a seccomp profile.
-
-The bundled components are handled as follows:
-
-*   **Alloy collectors** — overridden via `collectors.<name>.alloy.securityContext`
-    (container) and `collectors.<name>.global.podSecurityContext` (pod).
-*   **kube-state-metrics** — its subchart already ships a restricted-compliant security
-    context, so no changes are needed.
-*   **Alloy Operator** — its default container security context is compliant except that
-    it does not set a seccomp profile, which this example adds at the pod level.
+The chart's default collector security context drops all capabilities but adds several back (such as `CHOWN`, `NET_RAW`,
+and `SYS_CHROOT`) and does not force a non-root user, so the defaults are rejected under `restricted`. This example
+overrides the security context on each Alloy collector to remove the added capabilities, pin a non-root user, and set a
+seccomp profile.
 
 As with `baseline`, features that mount `hostPath` volumes cannot run under `restricted`:
-<!--alex disable host-hostess hostesses-hosts -->
-Host Metrics, Node Logs, and the filesystem-based Pod Logs collector. This example
-collects pod logs through the Kubernetes API (`podLogsViaKubernetesApi`), which needs no
-host access.
-<!--alex enable host-hostess hostesses-hosts -->
+
+*   `hostMetrics` with the Alloy source, which reads `/proc`, `/sys`, and the host root
+*   `nodeLogs`, which reads the systemd journal from the host
+*   `podLogsViaLoki` and `podLogsViaOpenTelemetry`, which mounts `/var/log` to read the Pod logs
+
+This example collects pod logs through the Kubernetes API instead, which needs no host access.
 
 ## Enforcing the policy
 
 Pod Security Standards are enforced by the built-in
-[Pod Security Admission](https://kubernetes.io/docs/concepts/security/pod-security-admission/)
-controller, which is configured per namespace with labels. To enforce `restricted` on
-the namespace the chart is installed into:
+[Pod Security Admission](https://kubernetes.io/docs/concepts/security/pod-security-admission/) controller, which is
+configured per namespace with labels. To enforce `restricted` on the namespace the chart is installed into:
 
 ```bash
 kubectl label namespace <namespace> \
@@ -50,9 +41,7 @@ kubectl label namespace <namespace> \
   pod-security.kubernetes.io/enforce-version=latest
 ```
 
-The integration test in `test/` exercises exactly this: it labels the release namespace
-with `pod-security.kubernetes.io/enforce: restricted` before installing the chart, then
-confirms that metrics and logs still flow.
+<!--alex enable host-hostess hostesses-hosts -->
 
 ## Values
 
