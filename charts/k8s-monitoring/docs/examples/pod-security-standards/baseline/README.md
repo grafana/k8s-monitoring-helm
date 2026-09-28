@@ -3,6 +3,7 @@
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
 # Pod Security Standards: baseline
+<!--alex disable host-hostess hostesses-hosts -->
 
 This example deploys the chart into a cluster (or namespace) that enforces the
 [`baseline` Pod Security Standard](https://kubernetes.io/docs/concepts/security/pod-security-standards/).
@@ -48,6 +49,7 @@ This example collects pod logs through the Kubernetes API
 If you need the stricter `restricted` policy, see the `restricted` example, which adds
 the `runAsNonRoot`, user, and seccomp settings that `restricted` requires on top of the
 capability change shown here.
+<!--alex enable host-hostess hostesses-hosts -->
 
 ## Values
 
@@ -117,7 +119,7 @@ collectorCommon:
     alloy:
       securityContext:
         capabilities:
-          add: [ "CHOWN", "DAC_OVERRIDE", "FOWNER", "FSETID", "KILL", "SETGID", "SETUID", "SETPCAP", "NET_BIND_SERVICE", "SYS_CHROOT", "MKNOD", "AUDIT_WRITE", "SETFCAP" ]
+          add: ["CHOWN", "DAC_OVERRIDE", "FOWNER", "FSETID", "KILL", "SETGID", "SETUID", "SETPCAP", "NET_BIND_SERVICE", "SYS_CHROOT", "MKNOD", "AUDIT_WRITE", "SETFCAP"]
 
 collectors:
   alloy-metrics:
