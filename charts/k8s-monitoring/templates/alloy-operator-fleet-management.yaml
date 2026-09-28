@@ -1,4 +1,4 @@
-{{- /* Fleet Management connection for the Alloy Operator. Credentials are referenced, not copied, when they already live in a Kubernetes Secret. */}}
+{{- /* Fleet Management connection for the Alloy Operator. Credentials the chart creates or embeds are copied; a Secret it doesn't create is read through the operator's --fleet-credentials-secret flag, since the connection Secret can't name one. */}}
 {{- $operator := index .Values "alloy-operator" }}
 {{- if and $operator.deploy (dig "fleetManagement" "enabled" false $operator) }}
   {{- $remoteConfig := dict }}
@@ -30,15 +30,18 @@ type: Opaque
 stringData:
   url: {{ required "remoteConfig.url is required for alloy-operator.fleetManagement" $remoteConfig.url | quote }}
   cluster: {{ required "cluster.name is required for alloy-operator.fleetManagement" .Values.cluster.name | quote }}
-  {{- if eq (include "secrets.usesKubernetesSecret" $remoteConfig) "true" }}
+  {{- if eq (include "secrets.secretType" $remoteConfig) "external" }}
     {{- $credentialsSecret := include "secrets.kubernetesSecretName" (dict "Values" $.Values "Chart" $.Chart "Release" $.Release "object" $remoteConfig "name" $remoteConfig.name) }}
     {{- $credentialsNamespace := include "secrets.kubernetesSecretNamespace" (dict "Values" $.Values "Release" $.Release "object" $remoteConfig) }}
     {{- if ne $credentialsNamespace $namespace }}
       {{- fail (printf "alloy-operator.fleetManagement.enabled needs the remoteConfig Secret in the Alloy Operator's namespace, %s, not %s." $namespace $credentialsNamespace) }}
     {{- end }}
+    {{- $flag := printf "--fleet-credentials-secret=%s" $credentialsSecret }}
+    {{- if not (has $flag ($operator.extraArgs | default list)) }}
+      {{- fail (printf "alloy-operator.fleetManagement.enabled reads the credentials from the %s Secret, so alloy-operator.extraArgs needs %s." $credentialsSecret $flag) }}
+    {{- end }}
     {{- $secretNames = append $secretNames $credentialsSecret }}
-  credentialsSecret: {{ $credentialsSecret | quote }}
-    {{- if or (eq (include "secrets.secretType" $remoteConfig) "create") (dig "auth" "usernameKey" "" $remoteConfig) }}
+    {{- if dig "auth" "usernameKey" "" $remoteConfig }}
   usernameKey: {{ include "secrets.getSecretKey" (dict "object" $remoteConfig "key" "auth.username") | quote }}
     {{- else }}
   username: {{ dig "auth" "username" "" $remoteConfig | toString | quote }}
