@@ -5,6 +5,7 @@ name: Platform Test
 on:
   pull_request:
     paths:
+      - '.github/workflows/platform-test.yml'
       - 'charts/**'
       - '!charts/k8s-monitoring-v1/**'
 
@@ -222,18 +223,9 @@ jobs:
 
       - name: Install gcx
         if: ${{ startsWith(matrix.test, 'grafana-cloud/ihub') }}
-        env:
-          GCX_VERSION: 1.1.1
-          GCX_SHA256: 7fe8778f5a67e8b60576baa99c39d2eef692082985019b53a57889bde03fb5ed
-        run: |
-          tarball="gcx_${GCX_VERSION}_linux_amd64.tar.gz"
-          url="https://github.com/grafana/gcx/releases/download/v${GCX_VERSION}/${tarball}"
-          cd /tmp
-          curl -sSL --fail-with-body "${url}" -o "${tarball}"
-          echo "${GCX_SHA256}  ${tarball}" | sha256sum -c -
-          tar -xzf "${tarball}" gcx
-          sudo install -m 0755 gcx /usr/local/bin/gcx
-          gcx --version
+        uses: grafana/setup-gcx@bdf13767f415608f4c1f1940251ce4c5d34dd36b  # v1.0.0
+        with:
+          version: v1.3.1
 
       - name: Run test
         env:
