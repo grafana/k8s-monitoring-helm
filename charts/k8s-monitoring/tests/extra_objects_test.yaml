@@ -19,3 +19,38 @@ tests:
           kind: ConfigMap
           name: my-config
           namespace: my-namespace
+
+  - it: creates extra objects from a map
+    set:
+      extraObjects:
+        my-config:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: my-config
+            namespace: my-namespace
+          data:
+            key: value
+        my-other-config:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: my-other-config
+            namespace: my-namespace
+          data:
+            key: value
+    asserts:
+      - hasDocuments:
+          count: 2
+      - containsDocument:
+          any: true
+          apiVersion: v1
+          kind: ConfigMap
+          name: my-config
+          namespace: my-namespace
+      - containsDocument:
+          any: true
+          apiVersion: v1
+          kind: ConfigMap
+          name: my-other-config
+          namespace: my-namespace
