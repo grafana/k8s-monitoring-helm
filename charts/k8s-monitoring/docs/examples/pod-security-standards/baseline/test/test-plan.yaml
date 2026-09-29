@@ -1,0 +1,85 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: pod-security-standards-baseline
+
+# Installs the `baseline` Pod Security Standards example into a namespace that enforces
+# the `baseline` policy via Pod Security Admission labels (see
+# dependencies/namespace.yaml). Because the namespace rejects any non-compliant pod, a
+# successful install plus flowing metrics and logs proves every pod the chart creates --
+# the Alloy collectors, the Alloy Operator, kube-state-metrics, and the lifecycle hook
+# Jobs -- satisfies `baseline`.
+subject:
+  releaseName: k8smon
+  path: ../../../../..
+  valuesFile: ../values.yaml
+  # Install into the pre-created, baseline-enforcing namespace.
+  namespace: monitoring
+
+cluster:
+  type: kind
+
+dependencies:
+  # Label the release namespace with `pod-security.kubernetes.io/enforce: baseline`
+  # before the chart is installed.
+  - file: dependencies/namespace.yaml
+  - preset: prometheus
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+            - name: Loki
+              type: loki
+              url: http://loki.loki.svc:3100
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: pss-baseline-cluster
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+          queries:
+            # Self-reporting metrics: the chart is up and its features are enabled.
+            - query: grafana_kubernetes_monitoring_build_info{cluster="$CLUSTER"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="clusterEvents"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="podLogsViaKubernetesApi"}
+              type: promql
+
+            # Cluster metrics: the alloy-metrics StatefulSet ran under `baseline` and
+            # scraped the kubelet and kube-state-metrics.
+            - query: kubernetes_build_info{cluster="$CLUSTER", job="integrations/kubernetes/kubelet"}
+              type: promql
+            - query: count(kube_node_info{cluster="$CLUSTER", job="integrations/kubernetes/kube-state-metrics"})
+              type: promql
+              expect:
+                value: 1
+
+            # Cluster events: the alloy-singleton Deployment ran under `baseline`.
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
+
+            # Pod logs via the Kubernetes API: the alloy-logs collector ran under
+            # `baseline` and collected logs without any host mount.
+            - query: count_over_time({cluster="$CLUSTER", job!="integrations/kubernetes/eventhandler"}[1h])
+              type: logql

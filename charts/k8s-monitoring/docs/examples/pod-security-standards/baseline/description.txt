@@ -1,0 +1,47 @@
+# Pod Security Standards: baseline
+<!--alex disable host-hostess hostesses-hosts -->
+
+This example deploys the chart into a cluster (or namespace) that enforces the
+[`baseline` Pod Security Standard](https://kubernetes.io/docs/concepts/security/pod-security-standards/).
+
+The `baseline` policy blocks known privilege escalations: privileged containers, host namespaces (`hostNetwork`,
+`hostPID`, `hostIPC`), `hostPath` volumes, and capabilities outside a small allowed set.
+
+## Capabilities: `NET_RAW`
+
+The chart's default collector security context does `drop: ["ALL"]` and then adds back the capabilities that a container
+runtime (Docker/containerd) grants by default. That default set includes `NET_RAW`, and **`baseline` does not permit
+`NET_RAW`** , because `NET_RAW` allows a container to craft and sniff raw network packets (spoofing, ARP/DNS poisoning).
+So the chart's default collectors are rejected under `baseline` with:
+
+```text
+violates PodSecurity "baseline:latest": non-default capabilities (container "alloy" must not include "NET_RAW" in
+securityContext.capabilities.add)
+```
+
+Alloy only uses `NET_RAW` when using the [`byela.ebpf` component](https://grafana.com/docs/alloy/latest/reference/components/beyla/beyla.ebpf/).
+
+## `hostPath` volumes
+
+`baseline` also forbids `hostPath` volumes, so any feature that reads from the node's filesystem cannot run under
+`baseline`:
+
+*   `hostMetrics` with the Alloy source, which reads `/proc`, `/sys`, and the host root
+*   `nodeLogs`, which reads the systemd journal from the host
+*   `podLogsViaLoki` and `podLogsViaOpenTelemetry`, which mounts `/var/log` to read the Pod logs
+
+This example collects pod logs through the Kubernetes API instead, which needs no host access.
+
+## Enforcing the policy
+
+Pod Security Standards are enforced by the built-in
+[Pod Security Admission](https://kubernetes.io/docs/concepts/security/pod-security-admission/) controller, which is
+configured per namespace with labels. To enforce `baseline` on the namespace the chart is installed into:
+
+```bash
+kubectl label namespace <namespace> \
+  pod-security.kubernetes.io/enforce=baseline \
+  pod-security.kubernetes.io/enforce-version=latest
+```
+
+<!--alex enable host-hostess hostesses-hosts -->
