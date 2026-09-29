@@ -48,6 +48,32 @@ global:
   # @section -- Global Settings
   nativeHistogramMinBucketFactor: 0.0
 
+# Feature-level histogram overrides. Each setting defaults to the matching value under
+# `global:` (i.e. cluster-wide), and only takes effect for scrapes owned by this feature
+# (PodMonitors, ServiceMonitors, Probes, ScrapeConfigs). Leave unset/null to inherit the
+# global value. This lets operator-object scrapes use a different histogram policy than the
+# rest of the cluster — e.g. native histograms globally, but classic + NHCB conversion here.
+
+# -- Override `global.scrapeClassicHistograms` for operator-object scrapes only.
+# @section -- Prometheus Operator Objects
+scrapeClassicHistograms: null
+
+# -- Override `global.scrapeNativeHistograms` for operator-object scrapes only.
+# @section -- Prometheus Operator Objects
+scrapeNativeHistograms: null
+
+# -- Override `global.convertClassicHistogramsToNhcb` for operator-object scrapes only.
+# @section -- Prometheus Operator Objects
+convertClassicHistogramsToNhcb: null
+
+# -- Override `global.nativeHistogramBucketLimit` for operator-object scrapes only.
+# @section -- Prometheus Operator Objects
+nativeHistogramBucketLimit: null
+
+# -- Override `global.nativeHistogramMinBucketFactor` for operator-object scrapes only.
+# @section -- Prometheus Operator Objects
+nativeHistogramMinBucketFactor: null
+
 # Prometheus Operator PodMonitors
 podMonitors:
   # -- Enable discovery of Prometheus Operator PodMonitor objects.
