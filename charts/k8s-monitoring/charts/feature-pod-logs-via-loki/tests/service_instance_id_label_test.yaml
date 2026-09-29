@@ -1,0 +1,38 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+# Kept in its own suite file, separate from default_test.yaml: this test nulls out a
+# nested default key (structuredMetadata.service.instance.id), and some helm-unittest
+# versions share/mutate the base default values map across test cases declared in the
+# same suite file, which would otherwise make an unrelated "default configuration" test
+# in this file flake depending on run order.
+suite: Feature - Pod Logs via Loki - service_instance_id label opt-out (#3051)
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should keep service_instance_id indexed if its structuredMetadata entry is removed
+    set:
+      testing: {enabled: true}
+      structuredMetadata:
+        service.instance.id: null
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'values = \["service_instance_id"\]'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: '"service_instance_id" = "service_instance_id"'
+  - it: should not drop the label if its structuredMetadata entry is set but empty
+    set:
+      testing: {enabled: true}
+      structuredMetadata:
+        service.instance.id: ""
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'values = \["service_instance_id"\]'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: '"service_instance_id" = "service_instance_id"'
