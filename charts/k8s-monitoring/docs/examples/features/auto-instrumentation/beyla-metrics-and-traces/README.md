@@ -54,7 +54,7 @@ autoInstrumentation:
                 - k8s.src.owner.type
         discovery:
           exclude_otel_instrumented_services: false
-          services:
+          instrument:
             - k8s_pod_labels:
                 instrument: beyla
         log_level: debug
@@ -84,7 +84,6 @@ autoInstrumentation:
             - /debug/*
             - /metrics
           unmatched: heuristic
-  preset: application
 
 collectors:
   alloy:
