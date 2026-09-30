@@ -399,11 +399,30 @@ otelcol.processor.filter {{ include "helper.alloy_name" $.destinationName | quot
 
 otelcol.exporter.loadbalancing {{ printf "%s_sampler" (include "helper.alloy_name" $.destinationName) | quote }} {
   resolver {
+    {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
+    {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-sampler" $.destinationName)) | trunc $maxLength | trimSuffix "-" | lower }}
+{{- if eq .processors.tailSampling.loadBalancer.resolver "kubernetes" }}
     kubernetes {
-      {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
-      {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-sampler" $.destinationName)) | trunc $maxLength | trimSuffix "-" | lower }}
       service = "{{ $collectorName }}"
+      ports   = [4317]
+      timeout = {{ .processors.tailSampling.loadBalancer.timeout | quote }}
     }
+{{- else if eq .processors.tailSampling.loadBalancer.resolver "dns" }}
+    dns {
+      hostname = "{{ $collectorName }}.{{ include "helper.namespace" $ }}.svc.cluster.local"
+      port     = "4317"
+      timeout = {{ .processors.tailSampling.loadBalancer.timeout | quote }}
+    }
+{{- else if eq .processors.tailSampling.loadBalancer.resolver "static" }}
+    static {
+      hostnames = [
+{{- $replicas := int (dig "collector" "controller" "replicas" 1 .processors.tailSampling) }}
+{{- range $i := until $replicas }}
+        "{{ $collectorName }}-{{ $i }}.{{ $collectorName }}.{{ include "helper.namespace" $ }}.svc.cluster.local:4317",
+{{- end }}
+      ]
+    }
+{{- end }}
   }
   protocol {
     otlp {

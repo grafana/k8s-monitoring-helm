@@ -1,0 +1,55 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: tail-sampling
+
+subject:
+  releaseName: k8smon
+  path: ../../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: dependencies/trace-generator.yaml
+  - preset: prometheus
+  - preset: tempo
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              uid: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+            - name: Tempo
+              type: tempo
+              url: http://tempo.tempo.svc:3200
+
+tests:
+  - type: kubernetes-objects-test
+    values:
+      checks:
+        - kind: StatefulSet
+          name: k8smon-tempo-sampler
+          namespace: default
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: tail-sampling
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            TEMPO_URL: http://tempo.tempo.svc:3200/api/search
+          queries:
+            # The load balancer's kubernetes resolver has found all three sampler pods.
+            - query: otelcol_loadbalancer_num_backends{cluster="$CLUSTER", component_id="otelcol.exporter.loadbalancing.tempo_sampler", resolver="k8s"}
+              type: promql
+              expect:
+                value: 3
+            # Sampled traces from this cluster are reaching Tempo.
+            - query: '{.k8s.cluster.name="tail-sampling"}'
+              type: traceql
