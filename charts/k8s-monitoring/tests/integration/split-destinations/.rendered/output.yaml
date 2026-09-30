@@ -468,7 +468,7 @@ data:
     auto_instrumentation "feature" {
       metrics_destinations = [
         prometheus.remote_write.allmetrics.receiver,
-        prometheus.remote_write.productionmetrics.receiver,
+        prometheus.relabel.productionmetrics_processing.receiver,
       ]
     }
     // Feature: Cluster Metrics
@@ -747,7 +747,7 @@ data:
     cluster_metrics "feature" {
       metrics_destinations = [
         prometheus.remote_write.allmetrics.receiver,
-        prometheus.remote_write.productionmetrics.receiver,
+        prometheus.relabel.productionmetrics_processing.receiver,
       ]
     }
     // Feature: Host Metrics - Linux Hosts
@@ -903,7 +903,7 @@ data:
     linux_host_metrics "feature" {
       metrics_destinations = [
         prometheus.remote_write.allmetrics.receiver,
-        prometheus.remote_write.productionmetrics.receiver,
+        prometheus.relabel.productionmetrics_processing.receiver,
       ]
     }
     
@@ -968,8 +968,16 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       keep_identifying_resource_attributes = true
-      forward_to = [prometheus.remote_write.productionmetrics.receiver]
+      forward_to = [prometheus.relabel.productionmetrics_processing.receiver]
     } // otelcol.exporter.prometheus "productionmetrics"
+    prometheus.relabel "productionmetrics_processing" {
+      rule {
+        source_labels = ["namespace"]
+        regex = "production"
+        action = "keep"
+      }
+      forward_to = [prometheus.remote_write.productionmetrics.receiver]
+    } // prometheus.relabel "productionmetrics_processing"
     
     prometheus.remote_write "productionmetrics" {
       endpoint {
@@ -995,11 +1003,6 @@ data:
           max_backoff = "5s"
           retry_on_http_429 = true
           sample_age_limit = "0s"
-        }
-        write_relabel_config {
-          source_labels = ["namespace"]
-          regex = "production"
-          action = "keep"
         }
       }
     
@@ -1208,7 +1211,7 @@ data:
       }
       forward_to = [
         prometheus.remote_write.allmetrics.receiver,
-        prometheus.remote_write.productionmetrics.receiver,
+        prometheus.relabel.productionmetrics_processing.receiver,
       ]
     } // prometheus.relabel "kubernetes_monitoring_telemetry"
     
@@ -1422,8 +1425,16 @@ data:
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
       keep_identifying_resource_attributes = true
-      forward_to = [prometheus.remote_write.productionmetrics.receiver]
+      forward_to = [prometheus.relabel.productionmetrics_processing.receiver]
     } // otelcol.exporter.prometheus "productionmetrics"
+    prometheus.relabel "productionmetrics_processing" {
+      rule {
+        source_labels = ["namespace"]
+        regex = "production"
+        action = "keep"
+      }
+      forward_to = [prometheus.remote_write.productionmetrics.receiver]
+    } // prometheus.relabel "productionmetrics_processing"
     
     prometheus.remote_write "productionmetrics" {
       endpoint {
@@ -1449,11 +1460,6 @@ data:
           max_backoff = "5s"
           retry_on_http_429 = true
           sample_age_limit = "0s"
-        }
-        write_relabel_config {
-          source_labels = ["namespace"]
-          regex = "production"
-          action = "keep"
         }
       }
     
