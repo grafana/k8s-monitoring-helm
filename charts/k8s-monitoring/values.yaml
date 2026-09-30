@@ -753,15 +753,44 @@ alloy-operator:
   # override the Alloy image of the collectors this chart creates.
   fleetManagement:
     # -- Sync collectors with Fleet Management, which can also create new collectors, so the chart can be installed
-    # without any. Connects with `cluster.name` and the `alloy-operator-fleet-management` Secret in the Alloy Operator's
-    # namespace. If a collector has remote config enabled, it uses the first one's remoteConfig settings and the
-    # credentials stay in that collector's Secret, the chart's or yours (`remoteConfig.secret.create: false`), which has
-    # to be in the Alloy Operator's namespace. Otherwise it uses `collectorCommon.alloy.remoteConfig`, which needs
-    # `url`, `auth.username`, and `auth.password`, and stores them in the `alloy-operator-fleet-management` Secret as
-    # `url`, `username`, and `password`, where collectors created by Fleet Management read them. Needs the Alloy
+    # without any. Connects with `cluster.name` and the settings below, which are independent of the collectors' remote
+    # config, through the `alloy-operator-fleet-management` Secret in the Alloy Operator's namespace. Needs the Alloy
     # Operator image from grafana-experimental/hackathon-18-remote-manager, set with `alloy-operator.image`.
     # @section -- Alloy Operator
     enabled: false
+
+    # -- The Fleet Management URL. The Alloy Operator requires https unless it runs with `--fleet-allow-http`.
+    # @section -- Alloy Operator
+    url: ""
+
+    auth:
+      # -- The Fleet Management username, usually the stack ID. Stored in the `alloy-operator-fleet-management` Secret
+      # with `secret.create: true`.
+      # @section -- Alloy Operator
+      username: ""
+
+      # -- The Fleet Management password, an access policy token with fleet read access. Stored in the
+      # `alloy-operator-fleet-management` Secret with `secret.create: true`.
+      # @section -- Alloy Operator
+      password: ""
+
+      # -- The key in your Secret that holds the username, with `secret.create: false`.
+      # @section -- Alloy Operator
+      usernameKey: username
+
+      # -- The key in your Secret that holds the password, with `secret.create: false`.
+      # @section -- Alloy Operator
+      passwordKey: password
+
+    secret:
+      # -- Store `auth.username` and `auth.password` in the `alloy-operator-fleet-management` Secret. With `false`,
+      # the operator reads them from your Secret, `secret.name`.
+      # @section -- Alloy Operator
+      create: true
+
+      # -- Your Secret with the credentials, in the Alloy Operator's namespace, with `secret.create: false`.
+      # @section -- Alloy Operator
+      name: ""
 
   waitForAlloyRemoval:
     # -- Run Helm hooks that ensure all Alloy instances are cleaned up before the Alloy Operator is removed. This
