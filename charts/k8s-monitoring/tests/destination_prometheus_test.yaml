@@ -58,6 +58,94 @@ tests:
           path: data["config.alloy"]
           pattern: '"k8s_cluster_name" = sys\.env\("CLUSTER_NAME"\),'
 
+  - it: applies metricProcessingRules as post-WAL write_relabel_config by default
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: prometheus
+          url: https://prometheus.example.com
+          metricProcessingRules: |-
+            write_relabel_config {
+              source_labels = ["namespace"]
+              regex = "production"
+              action = "keep"
+            }
+    asserts:
+      - isKind:
+          of: ConfigMap
+      # The rule stays inside prometheus.remote_write as write_relabel_config (post-WAL).
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'write_relabel_config \{'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.relabel "test_processing"'
+
+  - it: moves metricProcessingRules before the WAL when metricProcessingRulesBeforeWAL is true
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: prometheus
+          url: https://prometheus.example.com
+          metricProcessingRulesBeforeWAL: true
+          metricProcessingRules: |-
+            rule {
+              source_labels = ["namespace"]
+              regex = "production"
+              action = "keep"
+            }
+    asserts:
+      - isKind:
+          of: ConfigMap
+      # The rules move into a standalone prometheus.relabel component before the remote_write.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.relabel "test_processing" \{\n  rule \{'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'forward_to = \[prometheus\.remote_write\.test\.receiver\]'
+      # The exporter now feeds the processing relabel instead of the remote_write directly.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'forward_to = \[prometheus\.relabel\.test_processing\.receiver\]'
+      # No write_relabel_config should remain inside prometheus.remote_write.
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'write_relabel_config \{'
+
+  - it: rewrites a legacy write_relabel_config block to rule when metricProcessingRulesBeforeWAL is true
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: prometheus
+          url: https://prometheus.example.com
+          metricProcessingRulesBeforeWAL: true
+          metricProcessingRules: |-
+            write_relabel_config {
+              source_labels = ["namespace"]
+              regex = "production"
+              action = "keep"
+            }
+    asserts:
+      - isKind:
+          of: ConfigMap
+      # prometheus.relabel expects `rule`, so a legacy write_relabel_config block is rewritten to it.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'prometheus\.relabel "test_processing" \{\n  rule \{'
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'write_relabel_config \{'
+
   - it: allows you to disable keepIdentifyingResourceAttributes
     set:
       cluster: {name: test-cluster}
