@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Add the option to set the `metricProcessingRules` for Prometheus destinations in their own `prometheus.relabel` component. (#3035) (@petewall)
 *   Add `kubelet_evictions` to the default Kubelet allow list, and `kube_pod_status_ready`, `kube_poddisruptionbudget_status_current_healthy`, and `kube_poddisruptionbudget_status_desired_healthy` to the default Kube State Metrics allow list, so the provisioned alerting and recording rules have the metrics they need. (@TylerHelmuth)
 
 ## 4.5.2
