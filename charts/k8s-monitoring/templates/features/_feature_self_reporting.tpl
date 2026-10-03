@@ -152,6 +152,11 @@ grafana_kubernetes_monitoring_build_info{version="{{ .Chart.Version }}", namespa
 grafana_kubernetes_monitoring_feature_info{{ include "label_list" (merge $featureSummary (dict "feature" $feature)) }} 1
     {{- end }}
   {{- end }}
+# HELP grafana_kubernetes_monitoring_config_feature_info A metric to report the enabled configuration features of the Kubernetes Monitoring Helm chart
+# TYPE grafana_kubernetes_monitoring_config_feature_info gauge
+{{- range $feature := include "configFeatures.list.enabled" . | fromYamlArray }}
+grafana_kubernetes_monitoring_config_feature_info{{ include "label_list" (dict "config_feature" $feature) }} 1
+{{- end }}
 # HELP grafana_kubernetes_monitoring_collector_info A metric to report the collectors of the Kubernetes Monitoring Helm chart
 # TYPE grafana_kubernetes_monitoring_collector_info gauge
 {{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
