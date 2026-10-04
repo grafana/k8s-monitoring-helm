@@ -1,4 +1,5 @@
 {{- define "feature.applicationObservability.pipeline" }}
+{{- $resourceDetectionEnabled := .Values.processors.resourceDetection.enabled }}
 # Format:
 # - name: Alloy component name
 #   description: Human friendly description of the component
@@ -18,10 +19,14 @@
     metrics: [{name: default, component: processor.memory_limiter}]
     logs: [{name: default, component: processor.memory_limiter}]
     traces: [{name: default, component: processor.memory_limiter}]
-{{- else }}
+{{- else if $resourceDetectionEnabled }}
     metrics: [{name: default, component: processor.resourcedetection}]
     logs: [{name: default, component: processor.resourcedetection}]
     traces: [{name: default, component: processor.resourcedetection}]
+{{- else }}
+    metrics: [{name: default, component: processor.k8sattributes}]
+    logs: [{name: default, component: processor.k8sattributes}]
+    traces: [{name: default, component: processor.k8sattributes}]
 {{- end }}
 {{- end }}
 {{- if or .Values.receivers.jaeger.grpc.enabled .Values.receivers.jaeger.thriftBinary.enabled .Values.receivers.jaeger.thriftCompact.enabled .Values.receivers.jaeger.thriftHttp.enabled }}
@@ -31,8 +36,10 @@
   targets:
 {{- if .Values.processors.memoryLimiter.enabled }}
     traces: [{name: default, component: processor.memory_limiter}]
-{{- else }}
+{{- else if $resourceDetectionEnabled }}
     traces: [{name: default, component: processor.resourcedetection}]
+{{- else }}
+    traces: [{name: default, component: processor.k8sattributes}]
 {{- end }}
 {{- end }}
 {{- if .Values.receivers.zipkin.enabled }}
@@ -42,8 +49,10 @@
   targets:
 {{- if .Values.processors.memoryLimiter.enabled }}
     traces: [{name: default, component: processor.memory_limiter}]
-{{- else }}
+{{- else if $resourceDetectionEnabled }}
     traces: [{name: default, component: processor.resourcedetection}]
+{{- else }}
+    traces: [{name: default, component: processor.k8sattributes}]
 {{- end }}
 {{- end }}
 
@@ -52,12 +61,18 @@
   description: Memory Limiter
   component: processor.memory_limiter
   targets:
+{{- if $resourceDetectionEnabled }}
     metrics: [{name: default, component: processor.resourcedetection}]
     logs: [{name: default, component: processor.resourcedetection}]
     traces: [{name: default, component: processor.resourcedetection}]
+{{- else }}
+    metrics: [{name: default, component: processor.k8sattributes}]
+    logs: [{name: default, component: processor.k8sattributes}]
+    traces: [{name: default, component: processor.k8sattributes}]
+{{- end }}
 {{- end }}
 
-
+{{- if $resourceDetectionEnabled }}
 - name: default
   description: Resource Detection Processor
   component: processor.resourcedetection
@@ -65,6 +80,7 @@
     metrics: [{name: default, component: processor.k8sattributes}]
     logs: [{name: default, component: processor.k8sattributes}]
     traces: [{name: default, component: processor.k8sattributes}]
+{{- end }}
 
 - name: default
   description: K8s Attributes Processor

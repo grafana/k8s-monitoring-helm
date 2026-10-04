@@ -75,7 +75,7 @@ otelcol.processor.resourcedetection "{{ .name | default "default" }}" {
 {{- define "feature.applicationObservability.processor.resourcedetection.detectors" }}
 {{- $enabledDetectors := list }}
 {{- range $detector, $options := .Values.processors.resourceDetection }}
-  {{- if ne $detector "override" }}
+  {{- if and (ne $detector "enabled") (ne $detector "override") }}
     {{- if $options.enabled }}
       {{- $enabledDetectors = append $enabledDetectors $detector }}
     {{- end }}
