@@ -1,0 +1,30 @@
+# VMware vSphere Kubernetes Service (VKS)
+
+Broadcom's [VMware vSphere Kubernetes Service](https://www.vmware.com/products/cloud-infrastructure/vsphere-kubernetes-service)
+(VKS) utilizes Kubernetes [Pod Security Standards](https://kubernetes.io/docs/concepts/security/pod-security-standards/)
+at the `baseline` level by default. This example is configured to collect useful cluster and workload data while
+keeping its workloads compatible with that policy: it enables cluster metrics, cluster events, Kubernetes manifests,
+pod logs collected through the Kubernetes API, and cost metrics.
+
+The baseline policy limits access to the host. These features will not work with the baseline policy:
+
+*   Pod Logs via Loki or OpenTelemetry, which mount the host's `/var/log` directory. This example collects pod logs
+    through the Kubernetes API instead, which avoids a host filesystem mount but depends on API access and the required
+    permissions.
+*   Beyla auto-instrumentation, which needs host-level access and elevated permissions.
+*   Host Metrics using Node Exporter, Windows Exporter, or Kepler, which need host access.
+*   Host Logs, which reads logs from the host.
+
+For these features, use a namespace where the `privileged` Pod Security Standard is allowed.
+
+To allow any chart feature from the perspective of Pod Security Standards, deploy into a namespace enforcing
+`privileged` instead of `baseline`:
+
+```bash
+kubectl label namespace <namespace> \
+  pod-security.kubernetes.io/enforce=privileged \
+  pod-security.kubernetes.io/enforce-version=latest
+```
+
+This removes Pod Security Admission's baseline restrictions for workloads in that namespace. Other cluster policies
+and permissions still apply.
