@@ -28,6 +28,10 @@ check-helm-version:
 check-helm-version-consistency:
 	@./scripts/check-helm-version-consistency.sh
 
+.PHONY: test-helm-version-tooling
+test-helm-version-tooling:
+	@./scripts/test-helm-version-tooling.sh
+
 ##@ Build
 .PHONY: clean
 clean: ## Clean all charts
@@ -54,7 +58,7 @@ test: build lint ## Run tests for all charts
 	$(MAKE) -C charts/k8s-monitoring $@;
 
 .PHONY: lint
-lint: check-helm-version-consistency lint-alloy lint-shell lint-markdown lint-terraform lint-text lint-yaml lint-alex lint-misspell lint-actionlint lint-zizmor ## Run all linters
+lint: check-helm-version-consistency test-helm-version-tooling lint-alloy lint-shell lint-markdown lint-terraform lint-text lint-yaml lint-alex lint-misspell lint-actionlint lint-zizmor ## Run all linters
 
 .PHONY: lint-alloy
 ALLOY_FILES = $(shell find . -name "*.alloy" ! -path "./data-alloy/*")
@@ -65,7 +69,7 @@ lint-alloy: ## Lint Alloy files
 .PHONY: lint-shell
 # renovate: datasource=docker depName=koalaman/shellcheck
 SHELLCHECK_VERSION = v0.11.0
-SHELL_SCRIPTS = $(shell find . -type f -name "*.sh" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -path "./charts/k8s-monitoring-v1/test/spec/*" -o -path "./charts/k8s-monitoring/tests/example-checks/spec/*" -o -path "./charts/k8s-monitoring/tests/misc-checks/spec/*" \))
+SHELL_SCRIPTS = scripts/bin/helm $(shell find . -type f -name "*.sh" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -path "./charts/k8s-monitoring-v1/test/spec/*" -o -path "./charts/k8s-monitoring/tests/example-checks/spec/*" -o -path "./charts/k8s-monitoring/tests/misc-checks/spec/*" \))
 lint-shell: ## Lint shell scripts
 	@if command -v shellcheck &> /dev/null; then \
 		shellcheck $(SHELL_SCRIPTS); \

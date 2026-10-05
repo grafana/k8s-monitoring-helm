@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+scriptDir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+helmRunner="${scriptDir}/../helm-with-version"
+
+if [[ -z "${HELM_VERSION:-}" ]]; then
+    echo "HELM_VERSION must be set when using the repository Helm shim." >&2
+    exit 1
+fi
+
+exec "${helmRunner}" "${HELM_VERSION}" "$@"
