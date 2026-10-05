@@ -33,7 +33,8 @@ SWEEP_TYPES: list[tuple[str, list[str]]] = [
     ("health-checks", []),
     ("http-health-checks", []),
     ("https-health-checks", []),
-    ("addresses", []),
+    # NAT_AUTO addresses are managed by their Cloud NAT router (standing infra); never sweep them.
+    ("addresses", ["--filter=purpose!=NAT_AUTO"]),
     ("disks", []),
     ("images", ["--no-standard-images"]),
     ("firewall-rules", ["--filter=network!~/networks/default$"]),
@@ -102,20 +103,45 @@ def region_of(r: dict) -> str:
     return ""
 
 
+# keep wins over age: compute uses .labels, GKE uses .resourceLabels; any non-"false" value protects.
+def wants_keep(r: dict) -> bool:
+    labels = {**(r.get("labels") or {}), **(r.get("resourceLabels") or {})}
+    v = labels.get("keep")
+    return v is not None and v.strip().lower() != "false"
+
+
+# A kept cluster's dependents often can't be keep-labeled (OKD's router/firewall/LB, or any
+# unlabeled resource), so match them by ownership: OKD names everything <infraID>-* and labels
+# kubernetes-io-cluster-<infraID>; GKE stamps goog-k8s-cluster-name. Returns the owner id or "".
+def kept_cluster_of(r: dict, name: str, kept_okd: set[str], kept_gke: set[str]) -> str:
+    labels = {**(r.get("labels") or {}), **(r.get("resourceLabels") or {})}
+    gke = labels.get("goog-k8s-cluster-name", "")
+    if gke and gke in kept_gke:
+        return gke
+    for infra in kept_okd:
+        if name.startswith(f"{infra}-") or f"kubernetes-io-cluster-{infra}" in labels:
+            return infra
+    return ""
+
+
 class Cleanup:
     def __init__(self) -> None:
         self.failures = 0
+        self.kept_okd: set[str] = set()
+        self.kept_gke: set[str] = set()
 
-    def destroy_okd_clusters(self) -> None:
+    def destroy_okd_clusters(self) -> set[str]:
         log("== Phase 1: OpenShift (OKD) clusters ==")
         # OKD stamps every cluster resource with a kubernetes-io-cluster-<infraID> label; a
         # regional resource yields the destroy region directly, a zonal one via its zone prefix.
         newest: dict[str, int] = {}
         region: dict[str, str] = {}
+        keep: dict[str, bool] = {}
         for kind in ("instances", "disks", "addresses", "images", "forwarding-rules"):
             for r in gcloud_json(["compute", kind, "list"]):
                 created = epoch_of(r.get("creationTimestamp", ""))
                 reg = region_of(r)
+                kept = wants_keep(r)
                 for key in (r.get("labels") or {}):
                     if not key.startswith("kubernetes-io-cluster-"):
                         continue
@@ -123,18 +149,27 @@ class Cleanup:
                     newest[infra] = max(newest.get(infra, 0), created)
                     if reg and not region.get(infra):
                         region[infra] = reg
+                    if kept:
+                        keep[infra] = True
 
         if not newest:
             log("No OKD clusters found.")
-            return
+            return set()
 
+        kept_ids: set[str] = set()
         for infra, ts in newest.items():
+            if keep.get(infra):
+                log(f"Keeping OKD cluster {infra} (keep label).")
+                kept_ids.add(infra)
+                continue
             if not (0 < ts < CUTOFF_EPOCH):
                 log(f"Keeping OKD cluster {infra} (newer than {MAX_AGE_HOURS}h or unknown age).")
+                kept_ids.add(infra)
                 continue
             reg = region.get(infra) or OKD_REGION_DEFAULT
             log(f"Destroying OKD cluster {infra} in {reg}.")
             self._destroy_okd(infra, reg)
+        return kept_ids
 
     def _destroy_okd(self, infra: str, region: str) -> None:
         with tempfile.TemporaryDirectory() as d:
@@ -154,18 +189,24 @@ class Cleanup:
                 warn(f"openshift-install destroy failed for {infra}")
                 self.failures += 1
 
-    def delete_gke_clusters(self) -> None:
+    def delete_gke_clusters(self) -> set[str]:
         log("== Phase 2: GKE clusters ==")
         clusters = gcloud_json(["container", "clusters", "list"])
         if not clusters:
             log("No GKE clusters found.")
-            return
+            return set()
+        kept: set[str] = set()
         for c in clusters:
             name, location = c.get("name", ""), c.get("location", "")
             if not name:
                 continue
+            if wants_keep(c):
+                log(f"Keeping GKE cluster {name} (keep label).")
+                kept.add(name)
+                continue
             if not old_enough(c.get("createTime", "")):
                 log(f"Keeping GKE cluster {name} (newer than {MAX_AGE_HOURS}h or unknown age).")
+                kept.add(name)
                 continue
             log(f"Deleting GKE cluster {name} ({location}).")
             if not do_delete([
@@ -173,6 +214,7 @@ class Cleanup:
                 f"--location={location}", f"--project={PROJECT}", "--quiet",
             ]):
                 self.failures += 1
+        return kept
 
     def sweep_orphans(self) -> None:
         log("== Phase 3: orphaned compute resources ==")
@@ -186,6 +228,17 @@ class Cleanup:
         for r in gcloud_json(["compute", rtype, "list", *extra]):
             name = r.get("name", "")
             if not name:
+                continue
+            if wants_keep(r):
+                log(f"Keeping {rtype}/{name} (keep label).")
+                continue
+            owner = kept_cluster_of(r, name, self.kept_okd, self.kept_gke)
+            if owner:
+                log(f"Keeping {rtype}/{name} (belongs to kept cluster {owner}).")
+                continue
+            # in-use resources can't be deleted anyway; a managed disk goes with its cluster (Phase 2).
+            if r.get("users"):
+                log(f"Keeping {rtype}/{name} (in use).")
                 continue
             if not old_enough(r.get("creationTimestamp", "")):
                 log(f"Keeping {rtype}/{name} (newer than {MAX_AGE_HOURS}h or unknown age).")
@@ -212,6 +265,13 @@ class Cleanup:
             name = b.get("name", "")
             if not name:
                 continue
+            if wants_keep(b):
+                log(f"Keeping bucket {name} (keep label).")
+                continue
+            owner = kept_cluster_of(b, name, self.kept_okd, self.kept_gke)
+            if owner:
+                log(f"Keeping bucket {name} (belongs to kept cluster {owner}).")
+                continue
             # gcloud storage names the timestamp creation_time; timeCreated is the legacy fallback.
             created = b.get("creation_time") or b.get("timeCreated") or ""
             if not old_enough(created):
@@ -224,8 +284,8 @@ class Cleanup:
         log("GCP test-resource cleanup")
         log(f"  project={PROJECT} max_age_hours={MAX_AGE_HOURS} dry_run={str(DRY_RUN).lower()}")
         log(f"  cutoff (UTC epoch)={CUTOFF_EPOCH}")
-        self.destroy_okd_clusters()
-        self.delete_gke_clusters()
+        self.kept_okd = self.destroy_okd_clusters()
+        self.kept_gke = self.delete_gke_clusters()
         self.sweep_orphans()
         self.delete_buckets()
         if self.failures > 0:
