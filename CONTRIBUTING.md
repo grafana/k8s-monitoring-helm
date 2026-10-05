@@ -157,6 +157,13 @@ scripts/helm-with-version 3.14.4 version
 scripts/helm-with-version v3.12.0 template k8smon charts/k8s-monitoring -f values.yaml
 ```
 
+To use the repository's default Helm version with tools that invoke `helm` themselves, add it to `PATH` for the current
+shell:
+
+```bash
+eval "$(scripts/helm-with-version export "$(cat .helm-version)")"
+```
+
 If you are going to be running platform tests, you might want to install the following tools:
 
 <!-- textlint-disable no-dead-link -->
@@ -250,6 +257,7 @@ chart and runs helm test as well.
 To run the integration tests for the `k8s-monitoring` chart, use the following commands:
 
 ```bash
+eval "$(scripts/helm-with-version export "$(cat .helm-version)")"
 helm-test charts/k8s-monitoring/tests/integration/<test dir>
 ```
 

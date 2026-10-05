@@ -4,6 +4,12 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SEARCH_PATH="${1:-$REPO_ROOT/charts}"
+helmVersion="${HELM_VERSION-$(<"${REPO_ROOT}/.helm-version")}"
+if [[ -n "${helmVersion}" ]]; then
+    helmCommand=("${REPO_ROOT}/scripts/helm-with-version" "${helmVersion}")
+else
+    helmCommand=(helm)
+fi
 
 # Resolve to absolute path if relative
 if [[ "$SEARCH_PATH" != /* ]]; then
@@ -25,7 +31,7 @@ add_repo() {
         fi
     done
 
-    helm repo add "$name" "$url" --force-update >/dev/null 2>&1
+    "${helmCommand[@]}" repo add "$name" "$url" --force-update >/dev/null 2>&1
     repos_added+=("$url")
 }
 
@@ -110,7 +116,7 @@ for chart_file in "${chart_files[@]}"; do
 done
 
 echo "Updating Helm repositories..."
-helm repo update >/dev/null 2>&1
+"${helmCommand[@]}" repo update >/dev/null 2>&1
 
 # Second pass: update versions
 updated_charts=()
@@ -132,7 +138,7 @@ for chart_file in "${chart_files[@]}"; do
             latest_version=$(latest_oci_version "$repo" "$name")
         else
             repo_name=$(echo "$repo" | sed -e 's|https\?://||' -e 's|/\?$||' -e 's|[^a-zA-Z0-9]|-|g')
-            latest_version=$(helm search repo "$repo_name/$name" --output json 2>/dev/null | jq -r '.[0].version // empty')
+            latest_version=$("${helmCommand[@]}" search repo "$repo_name/$name" --output json 2>/dev/null | jq -r '.[0].version // empty')
         fi
 
         if [[ -z "$latest_version" ]]; then

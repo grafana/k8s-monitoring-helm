@@ -1,3 +1,5 @@
+include ../helm-version.mk
+
 .PHONY: run-test
 run-test:
 	direnv allow .

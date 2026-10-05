@@ -3,6 +3,13 @@ set -euo pipefail
 
 SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 CHART_DIR=$(realpath "${SCRIPT_DIR}/..")
+REPO_ROOT=$(realpath "${CHART_DIR}/../..")
+helmVersion="${HELM_VERSION-$(<"${REPO_ROOT}/.helm-version")}"
+if [[ -n "${helmVersion}" ]]; then
+  helmCommand=("${REPO_ROOT}/scripts/helm-with-version" "${helmVersion}")
+else
+  helmCommand=(helm)
+fi
 
 PYROSCOPE_SECRET="op://Kubernetes Monitoring/helmchart Pyroscope"
 
@@ -43,7 +50,7 @@ cpuProfile="$(dirname "${valuesFile}")/helm.cpu.pb.gz"
 memProfile="$(dirname "${valuesFile}")/helm.mem.pb.gz"
 HELM_PPROF_CPU_PROFILE="${cpuProfile}" \
 HELM_PPROF_MEM_PROFILE="${memProfile}" \
-  helm template k8smon "${CHART_DIR}" -f "${valuesFile}" >/dev/null
+  "${helmCommand[@]}" template k8smon "${CHART_DIR}" -f "${valuesFile}" >/dev/null
 
 if [[ "${upload}" == true ]]; then
   chartName="$(yq eval '.name' "${CHART_DIR}/Chart.yaml")"
