@@ -3,6 +3,10 @@ ifeq ($(HELM_VERSION),)
 HELM = helm
 else
 HELM = ../../../../../scripts/helm-with-version $(HELM_VERSION)
+HELM_BIN := $(shell ../../../../../scripts/helm-with-version which $(HELM_VERSION))
+ifneq ($(HELM_BIN),)
+export PATH := $(dir $(HELM_BIN)):$(PATH)
+endif
 endif
 
 HAS_HELM_UNITTEST := $(shell $(HELM) plugin list | grep unittest 2> /dev/null)

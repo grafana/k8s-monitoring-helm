@@ -3,6 +3,10 @@ ifeq ($(HELM_VERSION),)
 HELM = helm
 else
 HELM = ../../../../scripts/helm-with-version $(HELM_VERSION)
+HELM_BIN := $(shell ../../../../scripts/helm-with-version which $(HELM_VERSION))
+ifneq ($(HELM_BIN),)
+export PATH := $(dir $(HELM_BIN)):$(PATH)
+endif
 endif
 
 # Pinned manually and intentionally NOT tracked by Renovate: the tag is
