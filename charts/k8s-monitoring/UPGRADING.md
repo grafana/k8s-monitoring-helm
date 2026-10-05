@@ -55,6 +55,73 @@ collectors:
   alloy-singleton: {}
 ```
 
+The previous top-level keys such as `alloy-metrics` and `alloy-logs` are ignored. They do not create a
+collector.
+
+### Feature collector assignment
+
+In v3, each feature defaulted `collector` to a fixed Alloy instance (`alloy-metrics`, `alloy-logs`,
+`alloy-singleton`, `alloy-receiver`, or `alloy-profiles`). In v4, that default is empty. The chart assigns a
+collector automatically only when exactly one collector is defined. If you define more than one collector, every
+enabled feature must set `collector` explicitly.
+
+This commonly shows up with Auto-Instrumentation. A typical v3 values file enabled Beyla with only
+`autoInstrumentation.enabled: true` and relied on the `alloy-metrics` default. After converting collectors to a
+map, the same setup often defines both `alloy-metrics` and `alloy-receiver` (for Application Observability traces)
+and then fails with:
+
+```text
+The Auto-Instrumentation feature requires a collector to be assigned.
+Please assign one by setting the following:
+autoInstrumentation:
+  collector: alloy-metrics or alloy-receiver
+```
+
+Before (v3):
+
+```yaml
+autoInstrumentation:
+  enabled: true
+# collector defaulted to alloy-metrics
+
+applicationObservability:
+  enabled: true
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+
+alloy-metrics:
+  enabled: true
+alloy-receiver:
+  enabled: true
+```
+
+After (v4):
+
+```yaml
+autoInstrumentation:
+  enabled: true
+  collector: alloy-metrics
+
+applicationObservability:
+  enabled: true
+  collector: alloy-receiver
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-receiver:
+    presets: [deployment]
+```
+
+The feature gate is `autoInstrumentation.enabled`. Setting `autoInstrumentation.beyla.enabled` only controls
+whether the Beyla DaemonSet is deployed, and it defaults to `true` once the feature is enabled.
+
 ### Prometheus Operator Object CRDs removed
 
 Prometheus Operator Object CRDs (ServiceMonitor, PodMonitor, Probe) are no longer bundled with this chart. If you use
