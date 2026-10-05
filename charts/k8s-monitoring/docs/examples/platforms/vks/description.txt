@@ -6,9 +6,10 @@ at the `baseline` level by default. This example is configured to collect useful
 keeping its workloads compatible with that policy: it enables cluster metrics, cluster events, Kubernetes manifests,
 pod logs collected through the Kubernetes API, and cost metrics.
 
+<!--alex disable host-hostess-->
 The baseline policy limits access to the host. These features will not work with the baseline policy:
 
-*   Pod Logs via Loki or OpenTelemetry, which mount the host's `/var/log` directory. This example collects pod logs
+*   Pod Logs via Loki or OpenTelemetry, which mount the node's `/var/log` directory. This example collects pod logs
     through the Kubernetes API instead, which avoids a host filesystem mount but depends on API access and the required
     permissions.
 *   Beyla auto-instrumentation, which needs host-level access and elevated permissions.
@@ -28,3 +29,4 @@ kubectl label namespace <namespace> \
 
 This removes Pod Security Admission's baseline restrictions for workloads in that namespace. Other cluster policies
 and permissions still apply.
+<!--alex enable host-hostess-->
