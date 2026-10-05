@@ -1,4 +1,4 @@
-HELM_VERSION ?=
+HELM_VERSION ?= 4.1.4
 ifeq ($(HELM_VERSION),)
 HELM = helm
 else

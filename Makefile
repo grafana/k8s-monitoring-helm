@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-HELM_VERSION ?= $(shell helm version --short)
+HELM_VERSION ?= 4.1.4
 HELM_MAJOR_VERSION = $(shell echo $(HELM_VERSION) | cut -d '.' -f 1 | sed -e 's/v//')
 HELM_MINOR_VERSION = $(shell echo $(HELM_VERSION) | cut -d '.' -f 2)
 HELM_REQUIRED_MAJOR_VERSION = 3

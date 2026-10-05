@@ -167,7 +167,12 @@ If you are going to be running platform tests, you might want to install the fol
     -   `gh release download --repo okd-project/okd -p "openshift-install-mac-arm64*"`
 <!-- textlint-enable no-dead-link -->
 
-Each chart has a Makefile with targets to automate much of the process.
+Each chart has a Makefile with targets to automate much of the process. These Makefiles use the same Helm version as
+CI by default. To test another version, set `HELM_VERSION` explicitly, for example:
+
+```bash
+make -C charts/k8s-monitoring HELM_VERSION=4.2.2 test
+```
 
 ## Contributor Guides
 
