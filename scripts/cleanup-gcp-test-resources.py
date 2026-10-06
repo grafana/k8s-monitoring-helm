@@ -208,10 +208,12 @@ class Cleanup:
                 log(f"Keeping GKE cluster {name} (newer than {MAX_AGE_HOURS}h or unknown age).")
                 kept.add(name)
                 continue
-            log(f"Deleting GKE cluster {name} ({location}).")
+            # --async: fire-and-forget. The call still fails loudly on auth/permission/not-found,
+            # but we don't wait on the server-side delete; a stuck cluster is re-issued next run.
+            log(f"Deleting GKE cluster {name} ({location}) (async).")
             if not do_delete([
                 "gcloud", "container", "clusters", "delete", name,
-                f"--location={location}", f"--project={PROJECT}", "--quiet",
+                f"--location={location}", f"--project={PROJECT}", "--async", "--quiet",
             ]):
                 self.failures += 1
         return kept
@@ -280,6 +282,17 @@ class Cleanup:
             log(f"Deleting bucket gs://{name}.")
             do_delete(["gcloud", "storage", "rm", "--recursive", f"gs://{name}"])
 
+    # Since GKE deletes are async (unwatched), this is the only visibility into what is left:
+    # just-issued clusters show STOPPING, kept ones RUNNING, a stuck one would persist here.
+    def summarize(self) -> None:
+        log("== Remaining GKE clusters ==")
+        clusters = gcloud_json(["container", "clusters", "list"])
+        if not clusters:
+            log("  (none)")
+            return
+        for c in sorted(clusters, key=lambda c: c.get("name", "")):
+            log(f"  {c.get('name', '')} ({c.get('location', '')}, {c.get('status', '')})")
+
     def run(self) -> int:
         log("GCP test-resource cleanup")
         log(f"  project={PROJECT} max_age_hours={MAX_AGE_HOURS} dry_run={str(DRY_RUN).lower()}")
@@ -288,6 +301,7 @@ class Cleanup:
         self.kept_gke = self.delete_gke_clusters()
         self.sweep_orphans()
         self.delete_buckets()
+        self.summarize()
         if self.failures > 0:
             warn(f"cleanup finished with {self.failures} failure(s) in cluster teardown.")
             return 1
