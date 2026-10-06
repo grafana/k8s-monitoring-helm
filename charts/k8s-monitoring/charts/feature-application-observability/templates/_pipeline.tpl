@@ -1,5 +1,5 @@
 {{- define "feature.applicationObservability.pipeline" }}
-{{- $resourceDetectionEnabled := .Values.processors.resourceDetection.enabled }}
+{{- $resourceDetectionEnabled := eq (include "feature.applicationObservability.processor.resourcedetection.enabled" .) "true" }}
 # Format:
 # - name: Alloy component name
 #   description: Human friendly description of the component

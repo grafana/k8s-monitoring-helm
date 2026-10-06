@@ -86,5 +86,5 @@ otelcol.processor.resourcedetection "{{ .name | default "default" }}" {
 
 {{- define "feature.applicationObservability.processor.resourcedetection.enabled" }}
 {{- $detectors := include "feature.applicationObservability.processor.resourcedetection.detectors" . | fromYamlArray }}
-{{- gt (len $detectors) 0 }}
+{{- and .Values.processors.resourceDetection.enabled (gt (len $detectors) 0) }}
 {{- end }}

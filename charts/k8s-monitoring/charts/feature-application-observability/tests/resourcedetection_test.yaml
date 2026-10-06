@@ -39,6 +39,30 @@ tests:
       - matchSnapshot:
           path: data["module.alloy"]
 
+  - it: bypasses resource detection when every detector is disabled
+    set:
+      testing: {enabled: true}
+      processors:
+        resourceDetection:
+          env:
+            enabled: false
+          system:
+            enabled: false
+          kubernetesNode:
+            enabled: false
+      receivers:
+        otlp:
+          grpc:
+            enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: otelcol\.processor\.resourcedetection
+      - matchSnapshot:
+          path: data["module.alloy"]
+
   - it: routes the memory limiter directly to Kubernetes attributes when resource detection is disabled
     set:
       testing: {enabled: true}
