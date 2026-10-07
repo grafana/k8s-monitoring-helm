@@ -9,7 +9,7 @@ echo "Provisioning Instrumentation Hub (SetupK8sDiscovery + SetK8SInstrumentatio
 gcx instrumentation setup "${CLUSTER}" --use-defaults --node-logs --energy-metrics >/dev/null
 
 # Family 3 (application observability / otel-receiver): the deployment-collector
-# assertion (standard/maximum) needs FM to hold a workloadType=deployment pipeline.
+# assertion (standard/maximum) needs FM to hold the otel-receiver pipeline.
 # Only those tiers set IHUB_APP_NAMESPACE; minimal (daemonset-only) leaves it unset
 # and skips this. Requires gcx >= 1.1.1 (grafana/gcx#1198).
 if [ -n "${IHUB_APP_NAMESPACE:-}" ]; then
