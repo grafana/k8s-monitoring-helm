@@ -37,6 +37,113 @@ tests:
       - matchSnapshot:
           path: data["self-reporting-metric.prom"]
 
+  - it: reports enabled destinations grouped by type and configuration
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {presets: [singleton]}}
+      selfReporting:
+        destinations: [prometheus]
+      destinations:
+        custom:
+          type: custom
+          ecosystem: otlp
+          metrics: {enabled: true}
+          logs: {enabled: false}
+          traces: {enabled: true}
+          profiles: {enabled: false}
+        custom-unknown:
+          type: custom
+          ecosystem: user-defined
+        loki:
+          type: loki
+          url: http://loki:3100/loki/api/v1/push
+        loki-duplicate:
+          type: loki
+          url: http://loki-duplicate:3100/loki/api/v1/push
+        loki-disabled:
+          type: loki
+          disabled: true
+          url: http://loki-disabled:3100/loki/api/v1/push
+        loki-stdout:
+          type: loki-stdout
+        nop:
+          type: nop
+          profiles: {enabled: false}
+        otlp:
+          type: otlp
+          url: http://otlp:4317
+        otlp-with-processors:
+          type: otlp
+          url: http://otlp-with-processors:4317
+          metrics: {enabled: false}
+          traces: {enabled: false}
+          processors:
+            serviceGraphMetrics: {enabled: true}
+            tailSampling: {enabled: true}
+        otlp-with-null-signals:
+          type: otlp
+          url: http://otlp-with-null-signals:4317
+          metrics: {enabled: null}
+          logs: {enabled: null}
+          traces: {enabled: null}
+        otlp-with-disabled-signals:
+          type: otlp
+          url: http://otlp-with-disabled-signals:4317
+          metrics: {enabled: false}
+          logs: {enabled: false}
+          traces: {enabled: false}
+        prometheus:
+          type: prometheus
+          url: http://prometheus:9090/api/v1/write
+          rules: {enabled: true}
+        prometheus-duplicate:
+          type: prometheus
+          url: http://prometheus-duplicate:9090/api/v1/write
+          rules: {enabled: true}
+        pyroscope:
+          type: pyroscope
+          url: http://pyroscope:4040
+        router:
+          type: router
+          ecosystem: prometheus
+          defaultDestinations: [prometheus]
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["self-reporting-metric.prom"]
+          pattern: 'grafana_kubernetes_monitoring_destination_info\{ecosystem="otlp", logs="false", metrics="true", profiles="false", traces="true", type="custom"\} 1'
+      - matchRegex:
+          path: data["self-reporting-metric.prom"]
+          pattern: 'grafana_kubernetes_monitoring_destination_info\{ecosystem="unknown", logs="false", metrics="false", profiles="false", traces="false", type="custom"\} 1'
+      - matchRegex:
+          path: data["self-reporting-metric.prom"]
+          pattern: 'grafana_kubernetes_monitoring_destination_info\{type="loki"\} 2'
+      - matchRegex:
+          path: data["self-reporting-metric.prom"]
+          pattern: 'grafana_kubernetes_monitoring_destination_info\{type="loki-stdout"\} 1'
+      - matchRegex:
+          path: data["self-reporting-metric.prom"]
+          pattern: 'grafana_kubernetes_monitoring_destination_info\{logs="true", metrics="true", profiles="false", traces="true", type="nop"\} 1'
+      - matchRegex:
+          path: data["self-reporting-metric.prom"]
+          pattern: 'grafana_kubernetes_monitoring_destination_info\{logs="true", metrics="true", service_graph_metrics_enabled="false", tail_sampling_enabled="false", traces="true", type="otlp"\} 1'
+      - matchRegex:
+          path: data["self-reporting-metric.prom"]
+          pattern: 'grafana_kubernetes_monitoring_destination_info\{logs="true", metrics="false", service_graph_metrics_enabled="true", tail_sampling_enabled="true", traces="false", type="otlp"\} 1'
+      - matchRegex:
+          path: data["self-reporting-metric.prom"]
+          pattern: 'grafana_kubernetes_monitoring_destination_info\{logs="false", metrics="false", service_graph_metrics_enabled="false", tail_sampling_enabled="false", traces="false", type="otlp"\} 2'
+      - matchRegex:
+          path: data["self-reporting-metric.prom"]
+          pattern: 'grafana_kubernetes_monitoring_destination_info\{rules_enabled="true", type="prometheus"\} 2'
+      - matchRegex:
+          path: data["self-reporting-metric.prom"]
+          pattern: 'grafana_kubernetes_monitoring_destination_info\{type="pyroscope"\} 1'
+      - matchRegex:
+          path: data["self-reporting-metric.prom"]
+          pattern: 'grafana_kubernetes_monitoring_destination_info\{ecosystem="prometheus", type="router"\} 1'
+
   - it: reports the configured platform in the build info metric
     set:
       cluster: {name: test-cluster}
