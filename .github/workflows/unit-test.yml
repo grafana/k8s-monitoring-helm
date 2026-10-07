@@ -231,12 +231,20 @@ jobs:
           cd "charts/${CHART}"
           if [ "${CHART}" == "k8s-monitoring" ]; then
             # Skip checking subchart files for k8s-monitoring, which are always modified, even if the contents are identical
-            if ! git diff --exit-code -- ':!charts/*.tgz'; then
-              echo "Generated files in charts/${CHART} are not up to date. Please run 'make build' and commit the changes."
-              exit 1
-            fi
-          elif ! git diff --exit-code .; then
-            echo "Generated files in charts/${CHART} are not up to date. Please run 'make build' and commit the changes."
+            changed_files=$( {
+              git diff --name-only -- . ':!charts/*.tgz'
+              git ls-files --others --exclude-standard -- . ':!charts/*.tgz'
+            } | sort -u )
+          else
+            changed_files=$( {
+              git diff --name-only -- .
+              git ls-files --others --exclude-standard -- .
+            } | sort -u )
+          fi
+
+          if [ -n "${changed_files}" ]; then
+            echo "This list of generated files would be modified by this change. Please regenerate them and add them to your PR:"
+            printf '%s\n' "${changed_files}"
             exit 1
           else
             echo "Generated files in charts/${CHART} are up to date."
