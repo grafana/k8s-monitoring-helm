@@ -47,19 +47,11 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 ## Values
 
-### Gather settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| clustering | bool | `false` | Whether to enable clustering for cluster events collection. When `true`, the assigned collector must have clustering enabled, and events will be sharded across cluster peers. When `false` (default), the feature should run on a singleton collector. |
-| excludeNamespaces | list | `[]` | List of namespaces to ignore events for. |
-| logFormat | string | `"logfmt"` | Log format used to forward cluster events. Allowed values: `logfmt` (default), `json`. |
-| namespaces | list | `[]` | List of namespaces to watch for events (`[]` means all namespaces) |
-
 ### Processing settings
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| autoConfigureOTLPLabels | bool | `true` | Whether to automatically set the resource labels (`resources.k8s.object.kind` and `resources.k8s.object.name`) required by the Grafana Cloud Kubernetes Monitoring system when cluster events are delivered exclusively to OTLP destinations. Set to false to opt out. |
 | excludeLevels | list | `[]` | List of event levels to ignore. e.g. `["Normal", "Warning"]` |
 | excludeReasons | list | `[]` | List of event reasons to ignore. e.g. `["Pulling", "Started"]` |
 | extraLogProcessingStages | string | `""` | Stage blocks to be added to the loki.process component for cluster events. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
@@ -68,6 +60,15 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | jobLabel | string | `"integrations/kubernetes/eventhandler"` | The value for the job label. |
 | labels | object | `{"reason":"reason"}` | Log labels to set from extracted event fields. Note: "level" is always set as a label for log level normalization and filtering. Format: `<label>: <extracted_key>`. Available extracted keys: `component`, `kind`, `name`, `node`, `reason`. |
 | structuredMetadata | object | `{"name":"name","node":"node"}` | The structured metadata mappings to set. Format: `<key>: <extracted_key>`. Example: structuredMetadata:   component: component   kind: kind   name: name |
+
+### Gather settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| clustering | bool | `false` | Whether to enable clustering for cluster events collection. When `true`, the assigned collector must have clustering enabled, and events will be sharded across cluster peers. When `false` (default), the feature should run on a singleton collector. |
+| excludeNamespaces | list | `[]` | List of namespaces to ignore events for. |
+| logFormat | string | `"logfmt"` | Log format used to forward cluster events. Allowed values: `logfmt` (default), `json`. |
+| namespaces | list | `[]` | List of namespaces to watch for events (`[]` means all namespaces) |
 
 ### Global Settings
 
