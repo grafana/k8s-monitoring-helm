@@ -436,9 +436,14 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | prometheusOperatorObjects | object | Disabled | Prometheus Operator Objects enables the gathering of metrics from objects like Probes, PodMonitors, and ServiceMonitors. Requires a destination that supports metrics. To see the valid options, please see the [Prometheus Operator Objects feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-prometheus-operator-objects). |
+| prometheusOperatorObjects.convertClassicHistogramsToNhcb | string | `nil` | Override `global.convertClassicHistogramsToNhcb` for operator-object scrapes only. Null inherits the global value. |
 | prometheusOperatorObjects.dataProcessors | list | `[]` | Optional chain of processors to run before delivering data to destinations. Each entry is a key from the top-level `dataProcessors:` map. |
 | prometheusOperatorObjects.destinations | list | `[]` | The destinations where metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | prometheusOperatorObjects.enabled | bool | `false` | Enable gathering metrics from Prometheus Operator Objects. |
+| prometheusOperatorObjects.nativeHistogramBucketLimit | string | `nil` | Override `global.nativeHistogramBucketLimit` for operator-object scrapes only. Null inherits the global value. |
+| prometheusOperatorObjects.nativeHistogramMinBucketFactor | string | `nil` | Override `global.nativeHistogramMinBucketFactor` for operator-object scrapes only. Null inherits the global value. |
+| prometheusOperatorObjects.scrapeClassicHistograms | string | `nil` | Override `global.scrapeClassicHistograms` for operator-object scrapes only. Null inherits the global value. |
+| prometheusOperatorObjects.scrapeNativeHistograms | string | `nil` | Override `global.scrapeNativeHistograms` for operator-object scrapes only. Null inherits the global value. |
 
 ### Configuration Management
 

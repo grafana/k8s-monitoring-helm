@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Add per-feature histogram scrape overrides (`scrapeClassicHistograms`, `scrapeNativeHistograms`, `convertClassicHistogramsToNhcb`, `nativeHistogramBucketLimit`, `nativeHistogramMinBucketFactor`) for the Prometheus Operator Objects feature, so each object type (PodMonitors, Probes, ServiceMonitors, ScrapeConfigs) can override the global histogram settings. (#3065) (@nlamirault)
+
 ## 4.5.3
 
 *   Only set the cluster name in Beyla's config when using `.cluster.name`. Avoids the case of setting it to an empty string. (#3060) (@petewall)
