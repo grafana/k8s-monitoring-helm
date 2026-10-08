@@ -166,3 +166,20 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["config.alloy"]
+
+  - it: drops a flat k8s_cluster_name datapoint attribute that duplicates k8s.cluster.name
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: otlp
+          url: https://otlp.example.com
+    asserts:
+      - isKind:
+          of: ConfigMap
+      # The delete must run in the datapoint context after the cluster label statements that add k8s.cluster.name.
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'context = "datapoint"\s+statements = \[\s+`set\(attributes\["cluster"\], "test-cluster"\)`,\s+`set\(attributes\["k8s\.cluster\.name"\], "test-cluster"\)`,\s+(?://[^\n]*\n\s*)*`delete_key\(attributes, "k8s_cluster_name"\) where attributes\["k8s_cluster_name"\] == attributes\["k8s\.cluster\.name"\]`,'

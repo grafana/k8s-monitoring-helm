@@ -170,6 +170,11 @@ otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | q
   metric_statements {
     context = "datapoint"
     statements = [{{ (join "\n" $clusterLabelOTTL) | nindent 6 }}
+      // Scrape targets such as Grafana Beyla (3.20 and newer) put a flat k8s_cluster_name label on every
+      // series. The cluster label statements above add k8s.cluster.name to the same datapoint, both
+      // translate to the same Prometheus label, and the OTLP endpoint joins the values with ";". Drop
+      // the flat copy when the values match.
+      `delete_key(attributes, "k8s_cluster_name") where attributes["k8s_cluster_name"] == attributes["k8s.cluster.name"]`,
 {{- range $datapointAttribute, $resourceAttribute := .processors.transform.metrics.datapointToResource }}
   {{- if $resourceAttribute }}
 {{- if or (eq $resourceAttribute "service.name") (eq $resourceAttribute "service.namespace") }}
