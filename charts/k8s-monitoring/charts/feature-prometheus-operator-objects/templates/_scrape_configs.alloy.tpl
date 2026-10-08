@@ -31,7 +31,11 @@ prometheus.operator.scrapeconfigs "scrapeConfigs" {
   scrape {
     default_scrape_interval = {{ .Values.scrapeConfigs.scrapeInterval | default .Values.global.scrapeInterval | quote }}
     default_scrape_timeout = {{ .Values.scrapeConfigs.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
+    scrape_classic_histograms = {{ include "feature.prometheusOperatorObjects.histogramSetting" (dict "root" $ "key" "scrapeClassicHistograms") }}
     scrape_native_histograms = {{ include "feature.prometheusOperatorObjects.histogramSetting" (dict "root" $ "key" "scrapeNativeHistograms") }}
+    convert_classic_histograms_to_nhcb = {{ include "feature.prometheusOperatorObjects.histogramSetting" (dict "root" $ "key" "convertClassicHistogramsToNhcb") }}
+    native_histogram_bucket_limit = {{ include "feature.prometheusOperatorObjects.histogramSetting" (dict "root" $ "key" "nativeHistogramBucketLimit") | float64 | int }}
+    native_histogram_min_bucket_factor = {{ include "feature.prometheusOperatorObjects.histogramSetting" (dict "root" $ "key" "nativeHistogramMinBucketFactor") | float64 }}
   }
 
 {{- with .Values.scrapeConfigs.excludeNamespaces }}
