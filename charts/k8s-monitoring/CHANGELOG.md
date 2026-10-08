@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Fix `k8s_cluster_name` label values being joined with `;` on Beyla metrics sent through OTLP destinations, by dropping the flat per-series copy when it equals the `k8s.cluster.name` set by the chart. (@mbaykara)
+
 ## 4.5.3
 
 *   Only set the cluster name in Beyla's config when using `.cluster.name`. Avoids the case of setting it to an empty string. (#3060) (@petewall)
