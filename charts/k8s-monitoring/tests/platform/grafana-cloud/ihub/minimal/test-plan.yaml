@@ -5,10 +5,9 @@ name: ihub-minimal
 
 # Minimal tier: a single `alloy` collector (daemonset) carrying the
 # service-discovery + otel-receiver presets, mirroring the unified-helm-wizard
-# "lightweight" onboarding. Because the collector is a daemonset, FM's
-# otel-receiver pipeline (workloadType=deployment) cannot match it — so this tier
-# exercises the survey + k8s-monitoring instrumentation families only. See the
-# plan for context.
+# "lightweight" onboarding. Application observability is not provisioned
+# (IHUB_APP_NAMESPACE is unset), so this tier exercises the survey +
+# k8s-monitoring instrumentation families only. See the plan for context.
 
 subject:
   releaseName: grafana-cloud
@@ -42,7 +41,7 @@ tests:
 
   # Primary assertion (REQUIRES the toolbox `remotecfg-components-test` type —
   # prerequisite). Only the daemonset role is checked: this tier has no deployment
-  # collector, so no otel-receiver pipeline is expected.
+  # collector.
   - type: remotecfg-components-test
     values:
       attempts: 20

@@ -1,0 +1,18 @@
+---
+# Create the release namespace ahead of the subject and enforce the `restricted` Pod
+# Security Standard on it. Pod Security Admission reads these labels and rejects any pod
+# that does not comply, so the chart must render restricted-compliant pods for the
+# install to succeed. `helm --create-namespace` is a no-op because the namespace already
+# exists here.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pss-restricted
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    # Also warn and audit so any drift shows up in `kubectl` output and the audit log.
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: latest
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: latest
