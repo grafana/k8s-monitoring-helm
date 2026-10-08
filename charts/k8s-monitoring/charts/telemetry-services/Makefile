@@ -1,8 +1,10 @@
-HELM_VERSION ?=
+HELM_VERSION ?= 4.1.4
 ifeq ($(HELM_VERSION),)
 HELM = helm
 else
 HELM = ../../../../scripts/helm-with-version $(HELM_VERSION)
+export HELM_VERSION
+export PATH := $(abspath $(dir $(word 1,$(HELM)))bin):$(PATH)
 endif
 
 # Pinned manually and intentionally NOT tracked by Renovate: the tag is

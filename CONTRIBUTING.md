@@ -157,6 +157,13 @@ scripts/helm-with-version 3.14.4 version
 scripts/helm-with-version v3.12.0 template k8smon charts/k8s-monitoring -f values.yaml
 ```
 
+To use the repository's default Helm version with tools that invoke `helm` themselves, add it to `PATH` for the current
+shell:
+
+```bash
+eval "$(scripts/helm-with-version export "$(cat .helm-version)")"
+```
+
 If you are going to be running platform tests, you might want to install the following tools:
 
 <!-- textlint-disable no-dead-link -->
@@ -167,7 +174,13 @@ If you are going to be running platform tests, you might want to install the fol
     -   `gh release download --repo okd-project/okd -p "openshift-install-mac-arm64*"`
 <!-- textlint-enable no-dead-link -->
 
-Each chart has a Makefile with targets to automate much of the process.
+Each chart has a Makefile with targets to automate much of the process. These Makefiles use the same Helm version as
+CI by default. To test another version for the entire Make invocation, including tools such as `ct`, set
+`HELM_VERSION` explicitly, for example:
+
+```bash
+make -C charts/k8s-monitoring HELM_VERSION=4.1.3 test
+```
 
 ## Contributor Guides
 
@@ -244,6 +257,7 @@ chart and runs helm test as well.
 To run the integration tests for the `k8s-monitoring` chart, use the following commands:
 
 ```bash
+eval "$(scripts/helm-with-version export "$(cat .helm-version)")"
 helm-test charts/k8s-monitoring/tests/integration/<test dir>
 ```
 

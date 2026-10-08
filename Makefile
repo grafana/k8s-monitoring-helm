@@ -1,26 +1,36 @@
 SHELL := /bin/bash
 
-HELM_VERSION ?= $(shell helm version --short)
-HELM_MAJOR_VERSION = $(shell echo $(HELM_VERSION) | cut -d '.' -f 1 | sed -e 's/v//')
-HELM_MINOR_VERSION = $(shell echo $(HELM_VERSION) | cut -d '.' -f 2)
+HELM_VERSION ?= 4.1.4
+HELM_VERSION_TO_CHECK = $(if $(strip $(HELM_VERSION)),$(HELM_VERSION),$(shell helm version --template '{{.Version}}' 2> /dev/null))
 HELM_REQUIRED_MAJOR_VERSION = 3
 HELM_REQUIRED_MINOR_VERSION = 14
 
 .PHONY: check-helm-version
 check-helm-version:
-	@if [ "$(HELM_MAJOR_VERSION)" -lt "$(HELM_REQUIRED_MAJOR_VERSION)" ]; then \
-		echo "This project requires Helm v$(HELM_REQUIRED_MAJOR_VERSION).$(HELM_REQUIRED_MINOR_VERSION)."; \
-		echo "You are currently using version v$(HELM_MAJOR_VERSION).$(HELM_MINOR_VERSION)."; \
-		echo "Please install a newer version of the Helm CLI."; \
-		echo "  https://helm.sh/docs/intro/install/"; \
+	@version="$(HELM_VERSION_TO_CHECK)"; \
+	if [[ ! "$$version" =~ ^v?([0-9]+)[.]([0-9]+) ]]; then \
+		echo "Unable to determine the Helm version."; \
+		echo "Set HELM_VERSION explicitly or install the Helm CLI."; \
 		exit 1; \
-	elif [ "$(HELM_MAJOR_VERSION)" -eq "$(HELM_REQUIRED_MAJOR_VERSION)" ] && [ "$(HELM_MINOR_VERSION)" -lt "$(HELM_REQUIRED_MINOR_VERSION)" ]; then \
+	fi; \
+	major="$${BASH_REMATCH[1]}"; \
+	minor="$${BASH_REMATCH[2]}"; \
+	if [ "$$major" -lt "$(HELM_REQUIRED_MAJOR_VERSION)" ] || \
+		{ [ "$$major" -eq "$(HELM_REQUIRED_MAJOR_VERSION)" ] && [ "$$minor" -lt "$(HELM_REQUIRED_MINOR_VERSION)" ]; }; then \
 		echo "This project requires Helm v$(HELM_REQUIRED_MAJOR_VERSION).$(HELM_REQUIRED_MINOR_VERSION)."; \
-		echo "You are currently using version v$(HELM_MAJOR_VERSION).$(HELM_MINOR_VERSION)."; \
+		echo "You are currently using version $$version."; \
 		echo "Please install a newer version of the Helm CLI."; \
 		echo "  https://helm.sh/docs/intro/install/"; \
 		exit 1; \
 	fi
+
+.PHONY: check-helm-version-consistency
+check-helm-version-consistency:
+	@./scripts/check-helm-version-consistency.sh
+
+.PHONY: test-helm-version-tooling
+test-helm-version-tooling:
+	@./scripts/test-helm-version-tooling.sh
 
 ##@ Build
 .PHONY: clean
@@ -48,7 +58,7 @@ test: build lint ## Run tests for all charts
 	$(MAKE) -C charts/k8s-monitoring $@;
 
 .PHONY: lint
-lint: lint-alloy lint-shell lint-markdown lint-terraform lint-text lint-yaml lint-alex lint-misspell lint-actionlint lint-zizmor ## Run all linters
+lint: check-helm-version-consistency test-helm-version-tooling lint-alloy lint-shell lint-markdown lint-terraform lint-text lint-yaml lint-alex lint-misspell lint-actionlint lint-zizmor ## Run all linters
 
 .PHONY: lint-alloy
 ALLOY_FILES = $(shell find . -name "*.alloy" ! -path "./data-alloy/*")
@@ -59,7 +69,7 @@ lint-alloy: ## Lint Alloy files
 .PHONY: lint-shell
 # renovate: datasource=docker depName=koalaman/shellcheck
 SHELLCHECK_VERSION = v0.11.0
-SHELL_SCRIPTS = $(shell find . -type f -name "*.sh" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -path "./charts/k8s-monitoring-v1/test/spec/*" -o -path "./charts/k8s-monitoring/tests/example-checks/spec/*" -o -path "./charts/k8s-monitoring/tests/misc-checks/spec/*" \))
+SHELL_SCRIPTS = scripts/bin/helm $(shell find . -type f -name "*.sh" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -path "./charts/k8s-monitoring-v1/test/spec/*" -o -path "./charts/k8s-monitoring/tests/example-checks/spec/*" -o -path "./charts/k8s-monitoring/tests/misc-checks/spec/*" \))
 lint-shell: ## Lint shell scripts
 	@if command -v shellcheck &> /dev/null; then \
 		shellcheck $(SHELL_SCRIPTS); \
