@@ -109,32 +109,44 @@ jobs:
           TEST: ${{ matrix.test }}
         run: yq eval '"cluster-type=" + .cluster.type' "${TEST}/test-plan.yaml" > "${GITHUB_OUTPUT}"
 
+      # kind cluster tests only
       - name: Setup Kind CLI
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'kind' }}
         uses: helm/kind-action@06c1ae10762d3b9c1644e7fe69596ae519e015a2  # v1.15.0
         with:
           install_only: true
 
+      # Azure AKS cluster tests only
+      - name: Fetch Azure Credentials from Vault
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'aks' }}
+        id: get-azure-credentials
+        uses: grafana/shared-workflows/actions/get-vault-secrets@a37de51f3d713a30a9e4b21bcdfbd38170020593  # v1.3.0
+        env:
+          VAULT_REPO_SECRET_NAME: azure
+        with:
+          export_env: false
+          repo_secrets: |
+            AZURE_CLIENT_ID=${{ env.VAULT_REPO_SECRET_NAME }}:client-id
+            AZURE_CLIENT_SECRET=${{ env.VAULT_REPO_SECRET_NAME }}:client-secret
+            AZURE_SUBSCRIPTION_ID=${{ env.VAULT_REPO_SECRET_NAME }}:subscription-id
+            AZURE_TENANT_ID=${{ env.VAULT_REPO_SECRET_NAME }}:tenant-id
+            AZURE_RESOURCE_GROUP=${{ env.VAULT_REPO_SECRET_NAME }}:resource-group
+
       - name: Configure Azure Credentials
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'aks' }}
-        run: |
-          echo "Not ready for automated testing yet"
-          exit 1
-#        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5  # v2.3.0
-#        with:
-#          auth-type: IDENTITY
-#          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-#          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-#          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-
-      - name: Setup Azure CLI
-        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'aks' }}
-        uses: azure/cli@9eb25b8360668fb0ecbafa808d40e2197b2f5f52  # v3.0.0
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5  # v2.3.0
         with:
-          azcliversion: latest
-          inlineScript: |
-            az version
+          creds: >-
+            {"clientId":"${{ fromJSON(steps.get-azure-credentials.outputs.secrets).AZURE_CLIENT_ID }}",
+            "clientSecret":"${{ fromJSON(steps.get-azure-credentials.outputs.secrets).AZURE_CLIENT_SECRET }}",
+            "tenantId":"${{ fromJSON(steps.get-azure-credentials.outputs.secrets).AZURE_TENANT_ID }}",
+            "subscriptionId":"${{ fromJSON(steps.get-azure-credentials.outputs.secrets).AZURE_SUBSCRIPTION_ID }}"}
 
+      - name: Set Azure default resource group
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'aks' }}
+        run: az configure --defaults group="${{ fromJSON(steps.get-azure-credentials.outputs.secrets).AZURE_RESOURCE_GROUP }}"
+
+      # Amazon EKS cluster tests only
       - name: Setup eksctl CLI
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'eks' }}
         run: |
@@ -144,16 +156,6 @@ jobs:
           sudo mv /tmp/eksctl /usr/local/bin
         env:
           ARCH: amd64
-
-      - name: Setup OpenShift Installer CLI
-        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'openshift' }}
-        uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
-        with:
-          repository: okd-project/okd
-          latest: true
-          fileName: openshift-install-linux-[.0-9]*.tar.gz
-          extract: true
-          out-file-path: /usr/local/bin
 
       - name: Fetch AWS Credentials from Vault
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'eks' }}
@@ -175,6 +177,18 @@ jobs:
           aws-secret-access-key: '${{ fromJSON(steps.get-aws-credentials.outputs.secrets).AWS_SECRET_ACCESS_KEY }}'
           aws-region: ap-northeast-2
 
+      # OpenShift clusters only
+      - name: Setup OpenShift Installer CLI
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'openshift' }}
+        uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
+        with:
+          repository: okd-project/okd
+          latest: true
+          fileName: openshift-install-linux-[.0-9]*.tar.gz
+          extract: true
+          out-file-path: /usr/local/bin
+
+      # Google GKE or OpenShift clusters only
       - name: Fetch GCP Credentials from Vault
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'gke' || steps.check-cluster-config.outputs.cluster-type == 'gke-autopilot' ||steps.check-cluster-config.outputs.cluster-type == 'openshift' }}
         id: get-gcp-service-account-token
@@ -197,6 +211,7 @@ jobs:
         with:
           install_components: gke-gcloud-auth-plugin
 
+      # Set up Grafana Cloud credentials
       - name: Fetch Grafana Cloud Credentials from Vault
         uses: grafana/shared-workflows/actions/get-vault-secrets@a37de51f3d713a30a9e4b21bcdfbd38170020593  # v1.3.0
         env:
