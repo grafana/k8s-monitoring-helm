@@ -5,7 +5,7 @@
 
 # k8s-monitoring
 
-![Version: 4.5.2](https://img.shields.io/badge/Version-4.5.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.5.2](https://img.shields.io/badge/AppVersion-4.5.2-informational?style=flat-square)
+![Version: 4.5.3](https://img.shields.io/badge/Version-4.5.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.5.3](https://img.shields.io/badge/AppVersion-4.5.3-informational?style=flat-square)
 Capture all telemetry data from your Kubernetes cluster.
 
 > **Upgrading?** Breaking changes and migration steps for each major version are documented in
@@ -200,7 +200,7 @@ details:
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
 |  | windowsEventLogs(feature-windows-event-logs) | 1.0.0 |
 |  | telemetryServices(telemetry-services) | 1.0.0 |
-| https://grafana.github.io/helm-charts | alloy-operator | 0.7.1 |
+| https://grafana.github.io/helm-charts | alloy-operator | 0.8.0 |
 <!-- markdownlint-enable no-bare-urls -->
 
 <!--alex disable host-hostess-->
