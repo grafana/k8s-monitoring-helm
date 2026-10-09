@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Add `applicationObservability.processors.resourceDetection.enabled` to allow disabling resource detection when it would add collector host attributes to pass-through telemetry. (#3015) (@Iro-engin)
 *   Fix `k8s_cluster_name` label values being joined with `;` on Beyla metrics sent through OTLP destinations, by dropping the flat per-series copy when it equals the `k8s.cluster.name` set by the chart. (@mbaykara)
 
 ## 4.5.3
