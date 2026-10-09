@@ -11,6 +11,7 @@
 *   Update kube-state-metrics to 8.5.0, OpenCost to 2.5.31, and Node Exporter to 4.57.0 (@petewall)
 *   Update kube-state-metrics to 8.6.0 and Node Exporter to 4.59.0 (@TylerHelmuth)
 *   Update Alloy Operator to 0.8.0 (@TylerHelmuth)
+*   Add the missing `loki_canary_*` metrics to the Loki integration default allow list. (#3080) (@julian-waibel)
 
 ## 4.5.2
 
