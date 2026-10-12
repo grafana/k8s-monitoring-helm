@@ -11,12 +11,17 @@ if [[ ! "${expectedVersion}" =~ ^[0-9]+[.][0-9]+[.][0-9]+$ ]]; then
 fi
 
 while IFS= read -r makefile; do
-    while IFS= read -r actualVersion; do
-        if [[ "${actualVersion}" != "${expectedVersion}" ]]; then
-            echo "${makefile#"${repoRoot}/"}: HELM_VERSION is ${actualVersion}, expected ${expectedVersion}" >&2
+    while IFS= read -r defaultValue; do
+        if [[ "${defaultValue}" != '$(shell cat $(HELM_VERSION_FILE))' ]]; then
+            echo "${makefile#"${repoRoot}/"}: HELM_VERSION must read from HELM_VERSION_FILE" >&2
             failed=true
         fi
     done < <(sed -n 's/^HELM_VERSION ?= //p' "${makefile}")
+    if grep -q '^HELM_VERSION ?=' "${makefile}" && \
+       ! grep -Eq '^HELM_VERSION_FILE := .*\.helm-version(\))?$' "${makefile}"; then
+        echo "${makefile#"${repoRoot}/"}: HELM_VERSION_FILE must point to .helm-version" >&2
+        failed=true
+    fi
 done < <(find "${repoRoot}" -type f \( -name Makefile -o -name '*.mk' \) -print)
 
 while IFS= read -r workflow; do
@@ -48,4 +53,4 @@ if [[ "${failed}" == true ]]; then
     exit 1
 fi
 
-echo "All development and CI Helm versions match ${expectedVersion}."
+echo "All Makefile defaults read .helm-version and CI Helm versions match ${expectedVersion}."

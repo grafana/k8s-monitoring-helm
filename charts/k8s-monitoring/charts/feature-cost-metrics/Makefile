@@ -1,4 +1,5 @@
-HELM_VERSION ?= 4.1.4
+HELM_VERSION_FILE := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/../../../../.helm-version)
+HELM_VERSION ?= $(shell cat $(HELM_VERSION_FILE))
 ifeq ($(HELM_VERSION),)
 HELM = helm
 else

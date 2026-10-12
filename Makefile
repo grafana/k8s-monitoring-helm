@@ -1,6 +1,7 @@
 SHELL := /bin/bash
 
-HELM_VERSION ?= 4.1.4
+HELM_VERSION_FILE := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/.helm-version)
+HELM_VERSION ?= $(shell cat $(HELM_VERSION_FILE))
 HELM_VERSION_TO_CHECK = $(if $(strip $(HELM_VERSION)),$(HELM_VERSION),$(shell helm version --template '{{.Version}}' 2> /dev/null))
 HELM_REQUIRED_MAJOR_VERSION = 3
 HELM_REQUIRED_MINOR_VERSION = 14
