@@ -146,6 +146,42 @@ tests:
           value: '{"inferred":[],"resolved":{"cluster":[{"apiGroups":[""],"resources":["configmaps"],"verbs":["get"]},{"apiGroups":[""],"resources":["nodes","pods"],"verbs":["get","list","watch"]}],"dropped":[],"namespaced":{"apps":[{"apiGroups":[""],"resourceNames":["creds"],"resources":["secrets"],"verbs":["get"]}]}},"userComponents":["discovery.kubernetes (extraConfig)","remote.kubernetes.secret (extraConfig)","remote.kubernetes.configmap (extraConfig)"]}'
         template: collectors/test/rbac.yaml
 
+  - it: warns about the nodes/proxy grant
+    set:
+      clusterMetrics:
+        enabled: true
+        kubelet: {nodeAddressFormat: proxy}
+        kube-state-metrics: {enabled: false}
+      destinations:
+        prometheus: {type: prometheus, url: http://prometheus.prometheus.svc:9090/api/v1/write}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+          rbac: {mode: minimal}
+    asserts:
+      - matchRegexRaw:
+          pattern: 'so they were granted\s+"get" on nodes/proxy'
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: '\* alloy-metrics: clusterMetrics.kubelet'
+        template: NOTES.txt
+
+  - it: lists the cluster-scoped bundles dropped by rbac.namespaces
+    set:
+      clusterMetrics:
+        enabled: true
+        kube-state-metrics: {enabled: false}
+      destinations:
+        prometheus: {type: prometheus, url: http://prometheus.prometheus.svc:9090/api/v1/write}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+          rbac: {mode: minimal, namespaces: [team-a]}
+    asserts:
+      - matchRegexRaw:
+          pattern: '\* alloy-metrics: kubeletMetrics, nodes'
+        template: NOTES.txt
+
   - it: lists collectors that stay in alloy mode because of remote configuration
     set:
       collectors:
@@ -161,4 +197,20 @@ tests:
     asserts:
       - matchRegexRaw:
           pattern: 'These collectors use remote configuration[^*]+\* alloy-singleton'
+        template: NOTES.txt
+
+  - it: adds no notes in alloy mode
+    set:
+      clusterMetrics:
+        enabled: true
+        kubelet: {nodeAddressFormat: proxy}
+        kube-state-metrics: {enabled: false}
+      destinations:
+        prometheus: {type: prometheus, url: http://prometheus.prometheus.svc:9090/api/v1/write}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+    asserts:
+      - notMatchRegexRaw:
+          pattern: 'nodes/proxy'
         template: NOTES.txt

@@ -39,6 +39,8 @@ renders only the rules they need:
     otherwise.
 *   A destination whose credentials are in a Kubernetes Secret gets `get` on that one Secret, in its namespace.
 *   The ClusterRole and Roles show up in `helm template` output, so they can be reviewed.
+*   Some settings that need extra permissions, such as `nodeAddressFormat: proxy` and the `eks-proxy` discovery mode,
+    get them automatically.
 
 The objects are named `<collector full name>-rbac`. They are bound to the collector's ServiceAccount, which the Alloy
 Operator still creates. The `Alloy` resource gets `rbac.create: false`, so the operator doesn't create its own RBAC.
@@ -49,6 +51,12 @@ The rules come from the bundles in
 [collectors/rbac-bundles.yaml](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/collectors/rbac-bundles.yaml).
 Unless noted, verbs are `get`, `list`, and `watch`. "In `namespaces`" means a Role in each listed namespace, or a
 ClusterRole when the list is empty or has a regular expression.
+
+*   **`clusterMetrics`**: Nodes and `get` on `nodes/metrics` for the kubelet, kubelet resource, kubelet probes, and
+    cAdvisor sources. `get` on `nodes/proxy` instead, for sources with `nodeAddressFormat: proxy`. EndpointSlices,
+    Services, and Pods in `default`, and `get` on `/metrics` for the API server. Pods in `kube-system` for the
+    controller manager, scheduler, and kube-proxy. EndpointSlices in `kube-system` for kube-dns. `get` on the EKS
+    Control Plane Metrics API for `discoveryMode: eks-proxy`. The kube-state-metrics discovery type, in its namespace.
 
 Rules from other sources:
 

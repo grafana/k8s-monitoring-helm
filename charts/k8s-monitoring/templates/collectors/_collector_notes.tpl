@@ -23,6 +23,7 @@
 {{- $remoteConfig := list }}
 {{- $scanned := list }}
 {{- $dropped := list }}
+{{- $kubeletProxy := list }}
 {{- $replacements := list }}
 {{- range $replacement := .Values.replaceComponent | default list }}
   {{- $replacements = append $replacements (printf "%s \"%s\" {\n%s\n}" $replacement.type $replacement.name $replacement.content) }}
@@ -48,6 +49,14 @@
       {{- if $computed.resolved.dropped }}
         {{- $dropped = append $dropped (printf "%s: %s" $collectorName (join ", " $computed.resolved.dropped)) }}
       {{- end }}
+      {{- if and (has "clusterMetrics" $featureKeys) $.Values.clusterMetrics.enabled }}
+        {{- range $source := list "kubelet" "kubeletResource" "kubeletProbes" "cadvisor" }}
+          {{- $sourceValues := index $.Values.clusterMetrics $source }}
+          {{- if and $sourceValues.enabled (eq $sourceValues.nodeAddressFormat "proxy") }}
+            {{- $kubeletProxy = append $kubeletProxy (printf "%s: clusterMetrics.%s" $collectorName $source) }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
     {{- end }}
   {{- end }}
 {{- end }}
@@ -72,6 +81,15 @@ To limit this access to some namespaces, set rbac.namespaces on the collector.
 ⚠️ These collectors set rbac.namespaces, so they were not granted the cluster-scoped permissions from these bundles,
 and the components that need them may not find any data:
 {{- range $dropped }}
+* {{ . }}
+{{- end }}
+{{- end }}
+{{- if $kubeletProxy }}
+
+⚠️ These collectors scrape the kubelet through the API server proxy (nodeAddressFormat: proxy), so they were granted
+"get" on nodes/proxy. That permission gives access to the whole kubelet API on every Node. Use
+nodeAddressFormat: direct unless the collector can't reach the kubelet directly:
+{{- range $kubeletProxy }}
 * {{ . }}
 {{- end }}
 {{- end }}
