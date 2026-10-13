@@ -1,0 +1,70 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: rbac-minimal-application-observability
+
+subject:
+  releaseName: k8smon
+  path: ../../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: ../../tail-sampling/dependencies/alloy-instrumented.yaml
+  - preset: prometheus
+  - preset: tempo
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              uid: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+            - name: Tempo
+              type: tempo
+              url: http://tempo.tempo.svc:3200
+
+tests:
+  - type: kubernetes-objects-test
+    values:
+      checks:
+        - {kind: ClusterRole, name: k8smon-alloy-receiver-rbac}
+        - {kind: Role, name: k8smon-alloy-receiver-rbac, namespace: default}
+        - {kind: Role, name: k8smon-tempo-sampler-rbac, namespace: default}
+        - {kind: Role, name: k8smon-tempo-servicegraph-rbac, namespace: default}
+        - {kind: ClusterRole, name: k8smon-tempo-sampler-rbac, expect: {count: 0}}
+        - {kind: ClusterRole, name: k8smon-tempo-servicegraph-rbac, expect: {count: 0}}
+        - {kind: ClusterRole, name: k8smon-alloy-receiver, expect: {count: 0}}
+        - {kind: ClusterRole, name: k8smon-tempo-sampler, expect: {count: 0}}
+        - {kind: ClusterRole, name: k8smon-tempo-servicegraph, expect: {count: 0}}
+
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: rbac-minimal-app-o11y
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            PROMETHEUS_USER: promuser
+            PROMETHEUS_PASS: prometheuspassword
+            TEMPO_URL: http://tempo.tempo.svc:3200/api/search
+          queries:
+            # k8sattributes sets the Deployment name, and the trace went through the sampler, which read its Secret
+            - query: '{resource.cluster="$CLUSTER" && resource.k8s.deployment.name="alloy-app"}'
+              type: traceql
+            # The load balancers can read EndpointSlices, and every sampler and service graph Pod is ready
+            - query: otelcol_loadbalancer_num_backends{component_id="otelcol.exporter.loadbalancing.tempo_sampler", cluster="$CLUSTER"}
+              type: promql
+              expect:
+                value: 2
+                operator: ==
+            - query: otelcol_loadbalancer_num_backends{component_id="otelcol.exporter.loadbalancing.tempo_servicegraph", cluster="$CLUSTER"}
+              type: promql
+              expect:
+                value: 2
+                operator: ==

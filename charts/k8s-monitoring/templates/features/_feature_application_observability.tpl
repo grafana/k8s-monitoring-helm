@@ -163,3 +163,36 @@ http://{{ include "collector.alloy.fullname" $values }}.{{ include "helper.names
 http://{{ include "collector.alloy.fullname" $values }}.{{ include "helper.namespace" . }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.http.port }}
 {{- end }}
 {{- end }}
+
+{{- define "features.applicationObservability.rbac" }}
+{{- $entries := list }}
+{{- $v := .Values.applicationObservability }}
+{{- if $v.enabled }}
+  {{- $k8sattributes := $v.processors.k8sattributes }}
+  {{- $namespaces := list }}
+  {{- if $k8sattributes.filters.byNamespace }}
+    {{- $namespaces = list $k8sattributes.filters.byNamespace }}
+  {{- else }}
+    {{- $entries = append $entries (dict "bundle" "namespaces") }}
+  {{- end }}
+  {{- $entries = append $entries (dict "bundle" "k8sattributes" "namespaces" $namespaces) }}
+  {{- $fromNode := or $k8sattributes.filters.byNode $k8sattributes.filters.ownNode }}
+  {{- range $extract := concat ($k8sattributes.labels | default list) ($k8sattributes.annotations | default list) }}
+    {{- if eq (dig "from" "pod" $extract) "node" }}{{- $fromNode = true }}{{- end }}
+  {{- end }}
+  {{- if $fromNode }}
+    {{- $entries = append $entries (dict "bundle" "nodes") }}
+  {{- end }}
+  {{- $detectors := include "feature.applicationObservability.processor.resourcedetection.detectors" (dict "Values" $v) | fromYamlArray }}
+  {{- if has "kubernetesNode" $detectors }}
+    {{- $entries = append $entries (dict "bundle" "nodeGet") }}
+  {{- end }}
+  {{- if has "kubeadm" $detectors }}
+    {{- $entries = append $entries (dict "bundle" "kubeadmConfig" "namespaces" (list "kube-system")) }}
+  {{- end }}
+  {{- if has "openshift" $detectors }}
+    {{- $entries = append $entries (dict "bundle" "openshiftInfrastructures") }}
+  {{- end }}
+{{- end }}
+{{- $entries | toYaml }}
+{{- end }}

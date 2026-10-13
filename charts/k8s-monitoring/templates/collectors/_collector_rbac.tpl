@@ -9,7 +9,7 @@
 
 {{/* Inputs: . (root with collectorName), featureKeys, destinationNames, alloyValues (optional) */}}
 {{- define "collectors.rbac.entries" -}}
-{{- $featuresWithRules := list "annotationAutodiscovery" "autoInstrumentation" "clusterEvents" "clusterMetrics" "costMetrics" "hostMetrics_energyMetrics" "hostMetrics_linuxHosts" "hostMetrics_windowsHosts" "integrations" "kubernetesManifests" "podLogsObjects" "podLogsViaKubernetesApi" "podLogsViaLoki" "podLogsViaOpenTelemetry" "profiling" "prometheusOperatorObjects" }}
+{{- $featuresWithRules := list "annotationAutodiscovery" "applicationObservability" "autoInstrumentation" "clusterEvents" "clusterMetrics" "costMetrics" "hostMetrics_energyMetrics" "hostMetrics_linuxHosts" "hostMetrics_windowsHosts" "integrations" "kubernetesManifests" "podLogsObjects" "podLogsViaKubernetesApi" "podLogsViaLoki" "podLogsViaOpenTelemetry" "profiling" "prometheusOperatorObjects" }}
 {{- $entries := list }}
 {{- range $featureKey := .featureKeys }}
   {{- if has $featureKey $featuresWithRules }}
@@ -17,6 +17,8 @@
   {{- end }}
 {{- end }}
 {{- $entries = concat $entries (include "collectors.rbac.secretEntries" $ | fromYamlArray) }}
+{{- $entries = concat $entries (include "collectors.rbac.destinationEntries" $ | fromYamlArray) }}
+{{- $entries = concat $entries (include "collectors.rbac.dataProcessorEntries" $ | fromYamlArray) }}
 {{- $entries = concat $entries (include "collectors.rbac.sdkInjectorEntries" $ | fromYamlArray) }}
 {{- $entries | toYaml }}
 {{- end }}
@@ -42,6 +44,51 @@
 {{- $entries | toYaml }}
 {{- end }}
 
+{{/* Separate from collectors.rbac.secretEntries, which sampler and service graph instances use without these. Inputs: . (root with collectorName), destinationNames */}}
+{{- define "collectors.rbac.destinationEntries" -}}
+{{- $entries := list }}
+{{- $releaseNamespace := include "helper.namespace" $ }}
+{{- range $destinationName := .destinationNames }}
+  {{- $destination := get $.Values.destinations $destinationName }}
+  {{- if $destination }}
+    {{- $destination = mergeOverwrite ((printf "destinations/%s-values.yaml" $destination.type) | $.Files.Get | fromYaml) $destination }}
+    {{- if eq $destination.type "prometheus" }}
+      {{- if or (dig "metricEnrichment" "podLabels" list $destination) (dig "metricEnrichment" "namespaceLabels" list $destination) }}
+        {{- $entries = append $entries (dict "bundle" "pods") }}
+      {{- end }}
+      {{- if dig "metricEnrichment" "namespaceLabels" list $destination }}
+        {{- $entries = append $entries (dict "bundle" "namespaces") }}
+      {{- end }}
+    {{- else if eq $destination.type "otlp" }}
+      {{- $sendsToSampler := and (eq (include "destinations.otlp.isTailSamplingEnabled" $destination) "true") (eq (dig "processors" "tailSampling" "loadBalancer" "resolver" "kubernetes" $destination) "kubernetes") }}
+      {{- $sendsToServiceGraph := and (eq (include "destinations.otlp.isServiceGraphsEnabled" $destination) "true") (eq (dig "processors" "serviceGraphMetrics" "loadBalancer" "resolver" "kubernetes" $destination) "kubernetes") }}
+      {{- if or $sendsToSampler $sendsToServiceGraph }}
+        {{- $entries = append $entries (dict "bundle" "loadBalancer" "namespaces" (list $releaseNamespace)) }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- /* Rules are synchronized by a single collector per destination, like destinations.prometheus.rules.alloy. */}}
+{{- range $destinationName, $destination := (include "destinations.getEnabled" $.Values.destinations | fromYaml) }}
+  {{- if eq $destination.type "prometheus" }}
+    {{- $destination = mergeOverwrite ("destinations/prometheus-values.yaml" | $.Files.Get | fromYaml) $destination }}
+    {{- if dig "rules" "enabled" false $destination }}
+      {{- $rulesCollector := $destination.rules.collector }}
+      {{- if not $rulesCollector }}
+        {{- $rulesCollector = include "collectors.list.enabled" $ | fromYamlArray | first }}
+      {{- end }}
+      {{- if eq $rulesCollector $.collectorName }}
+        {{- $entries = append $entries (dict "bundle" "prometheusRules") }}
+        {{- if eq (include "secrets.usesKubernetesSecret" $destination) "true" }}
+          {{- $entries = append $entries (include "collectors.rbac.secretEntry" (merge (dict "destination" $destination "destinationName" $destinationName) $) | fromYaml) }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- $entries | toYaml }}
+{{- end }}
+
 {{/* Inputs: . (root), featureKeys */}}
 {{- define "collectors.rbac.dataProcessorNames" -}}
 {{- $names := list }}
@@ -55,6 +102,19 @@
   {{- end }}
 {{- end }}
 {{- $names | uniq | sortAlpha | toYaml }}
+{{- end }}
+
+{{/* Inputs: . (root), featureKeys */}}
+{{- define "collectors.rbac.dataProcessorEntries" -}}
+{{- $entries := list }}
+{{- range $name := include "collectors.rbac.dataProcessorNames" $ | fromYamlArray }}
+  {{- if eq (get $.Values.dataProcessors $name).type "kubernetesEnrichment" }}
+    {{- $entries = append $entries (dict "bundle" "pods") }}
+    {{- $entries = append $entries (dict "bundle" "namespaces") }}
+    {{- $entries = append $entries (dict "bundle" "k8sattributes") }}
+  {{- end }}
+{{- end }}
+{{- $entries | toYaml }}
 {{- end }}
 
 {{/* The SDK Injector only accepts ConfigMaps from the users in allowedConfigMapWriters. Inputs: . (root with collectorName) */}}

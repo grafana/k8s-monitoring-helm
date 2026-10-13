@@ -1,17 +1,13 @@
-# rbac_minimal_known_gaps.txt lists the rbac-inferred annotations expected until every feature computes its own rules.
+# Every example renders with rbac.mode: minimal into .rendered/rbac-minimal, and any rbac-inferred annotation is a gap.
 findInferredRBAC() {
-  grep -r "k8s.grafana.com/rbac-inferred" .rendered/rbac-minimal | sed 's|^\.rendered/rbac-minimal/||; s|:[[:space:]]*k8s.grafana.com/rbac-inferred: "\(.*\)"$|: \1|' | LC_ALL=C sort -u
-}
-
-compareToKnownGaps() {
-  findInferredRBAC | diff spec/rbac_minimal_known_gaps.txt -
+  grep -r -A1 "k8s.grafana.com/rbac-inferred" .rendered/rbac-minimal
 }
 
 Describe 'Minimal RBAC Check'
   Describe 'Rendering every example with rbac.mode: minimal'
-    It 'computes rules that cover every Kubernetes API component, except the known gaps'
-      When call compareToKnownGaps
-      The status should be success
+    It 'computes rules that cover every Kubernetes API component'
+      When call findInferredRBAC
+      The status should be failure
       The output should equal ''
     End
   End

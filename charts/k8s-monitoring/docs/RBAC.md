@@ -81,12 +81,23 @@ ClusterRole when the list is empty or has a regular expression.
 *   **`podLogsViaOpenTelemetry`**: Pods, ReplicaSets, and Namespaces cluster-wide. Nodes for `nodeLabels` or
     `nodeAnnotations`.
 *   **`podLogsObjects`**: PodLogs, Pods, Namespaces, and `get` on `pods/log`, cluster-wide.
+*   **`applicationObservability`**: Pods and ReplicaSets in `processors.k8sattributes.filters.byNamespace`, or
+    cluster-wide with Namespaces. Nodes when filtering by node or extracting node metadata. The resource detectors that
+    read the Kubernetes API: `kubernetesNode`, `kubeadm`, and `openshift`.
 *   **`autoInstrumentation`**: Pods in the release namespace.
 *   **`profiling`**: Pods in each enabled profiling type's `namespaces`.
+*   **Other features**: Nothing.
 
 Rules from other sources:
 
 *   **A destination with credentials in a Kubernetes Secret**: `get` on that Secret, in its namespace.
+*   **A Prometheus destination with `rules.enabled`**: PrometheusRules and Namespaces, on the collector that
+    synchronizes the rules.
+*   **A Prometheus destination with `metricEnrichment`**: Pods, and Namespaces for `namespaceLabels`, cluster-wide.
+*   **An OTLP destination with tail sampling or service graphs that use the `kubernetes` load balancer resolver**:
+    EndpointSlices and Endpoints in the release namespace, on the collectors that send to it.
+*   **A `kubernetesEnrichment` data processor**: Pods, ReplicaSets, and Namespaces, cluster-wide, on the collectors that
+    use it.
 *   **The SDK Injector**: `get`, `create`, and `update` on ConfigMaps in the release namespace, for the collectors listed
     in `telemetryServices.sdkInjector.allowedConfigMapWriters`.
 

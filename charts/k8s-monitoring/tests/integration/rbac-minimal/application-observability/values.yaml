@@ -1,0 +1,71 @@
+---
+cluster:
+  name: rbac-minimal-app-o11y
+
+destinations:
+  prometheus:
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+    auth:
+      type: basic
+      username: promuser
+      password: prometheuspassword
+  tempo:
+    type: otlp
+    url: tempo.tempo.svc:4317
+    tls:
+      insecure: true
+      insecureSkipVerify: true
+    # Tempo doesn't check this token. It makes the sampler read a Secret.
+    auth:
+      type: bearerToken
+      bearerToken: not-checked
+    metrics: {enabled: false}
+    logs: {enabled: false}
+    traces: {enabled: true}
+    processors:
+      tailSampling:
+        enabled: true
+        collector:
+          controller:
+            replicas: 2
+        policies:
+          - name: always
+            type: always_sample
+      serviceGraphMetrics:
+        enabled: true
+        destinations: [prometheus]
+        collector:
+          controller:
+            replicas: 2
+
+applicationObservability:
+  enabled: true
+  collector: alloy-receiver
+  logs: {enabled: false}
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+
+integrations:
+  collector: alloy-metrics
+  alloy:
+    instances:
+      - name: alloy-receiver
+        labelSelectors:
+          app.kubernetes.io/instance: k8smon-alloy-receiver
+        metrics:
+          tuning:
+            includeMetrics: [otelcol_loadbalancer_.*]
+
+collectorCommon:
+  alloy:
+    rbac:
+      mode: minimal
+
+collectors:
+  alloy-receiver:
+    presets: [deployment]
+  alloy-metrics:
+    presets: [clustered, statefulset]

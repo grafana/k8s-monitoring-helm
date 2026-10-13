@@ -1,5 +1,5 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:braces rule:commas
-suite: RBAC - Minimal mode - Destinations
+suite: RBAC - Minimal mode - Destinations and data processors
 release:
   name: test
   namespace: monitoring
@@ -76,7 +76,62 @@ tests:
             - {kind: ServiceAccount, name: test-alloy-singleton, namespace: monitoring}
         template: alloy-config.yaml
 
-  - it: grants the sampler and the service graph instances their destination Secrets
+  - it: grants PrometheusRules to the collector that synchronizes rules
+    set:
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+          rules: {enabled: true, collector: alloy-singleton}
+        loki: {type: loki, url: http://loki.loki.svc:3100/loki/api/v1/push}
+      clusterEvents: {enabled: true, collector: alloy-singleton}
+      podLogsViaLoki: {enabled: true, collector: alloy-logs}
+      collectors:
+        alloy-logs: {presets: [filesystem-log-reader, daemonset]}
+        alloy-singleton: {presets: [singleton]}
+    asserts:
+      - documentSelector:
+          path: "$[?(@.kind == 'ClusterRole' && @.metadata.name == 'test-alloy-singleton-rbac')].kind"
+          value: ClusterRole
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [monitoring.coreos.com], resources: [prometheusrules], verbs: [get, list, watch]}
+            - {apiGroups: [""], resources: [events, namespaces], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+      - documentSelector:
+          path: "$[?(@.kind == 'ClusterRole' && @.metadata.name == 'test-alloy-logs-rbac')].kind"
+          value: ClusterRole
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
+  - it: grants pod discovery for metricEnrichment
+    set:
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+          metricEnrichment: {namespaceLabels: [team]}
+      clusterMetrics:
+        enabled: true
+        kubelet: {enabled: false}
+        cadvisor: {enabled: false}
+        kubeletResource: {enabled: false}
+        kube-state-metrics: {enabled: false}
+      collectors:
+        alloy-metrics: {presets: [clustered, statefulset], alloy: {stabilityLevel: experimental}}
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [namespaces, pods], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
+  - it: grants the sender, the sampler, and the service graph instances what they need
     set:
       destinations:
         prometheus:
@@ -101,6 +156,24 @@ tests:
       collectors:
         alloy-receiver: {presets: [deployment, otel-receiver]}
     asserts:
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'monitoring')].kind"
+          value: Role
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [discovery.k8s.io], resources: [endpointslices], verbs: [get, list, watch]}
+            - {apiGroups: [""], resources: [endpoints], verbs: [get, list, watch]}
+            - {apiGroups: [""], resourceNames: [prometheus-test-k8s-monitoring], resources: [secrets], verbs: [get]}
+        template: alloy-config.yaml
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'secrets')].kind"
+          value: Role
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resourceNames: [tempo-token], resources: [secrets], verbs: [get]}
+        template: alloy-config.yaml
       - equal:
           path: spec.rbac
           value: {create: false}
@@ -131,6 +204,65 @@ tests:
           value:
             - {apiGroups: [""], resourceNames: [prometheus-test-k8s-monitoring], resources: [secrets], verbs: [get]}
         template: alloy-servicegraph.yaml
+
+  - it: grants enrichment discovery to collectors using a kubernetesEnrichment data processor
+    set:
+      destinations:
+        prometheus: {type: prometheus, url: http://prometheus.prometheus.svc:9090/api/v1/write}
+      dataProcessors:
+        k8s-enrich:
+          type: kubernetesEnrichment
+          podLabels: {app_name: app.kubernetes.io/name}
+      clusterMetrics:
+        enabled: true
+        dataProcessors: [k8s-enrich]
+        kubelet: {enabled: false}
+        cadvisor: {enabled: false}
+        kubeletResource: {enabled: false}
+        kube-state-metrics: {enabled: false}
+      collectors:
+        alloy-metrics: {presets: [clustered, statefulset], alloy: {stabilityLevel: experimental}}
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [apps], resources: [replicasets], verbs: [get, list, watch]}
+            - {apiGroups: [""], resources: [namespaces, pods], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: ClusterRole}
+        notExists:
+          path: metadata.annotations
+        template: alloy-config.yaml
+
+  - it: does not grant load balancer access when the sampler uses the dns resolver
+    set:
+      destinations:
+        tempo:
+          type: otlp
+          url: http://tempo.tempo.svc:4317
+          metrics: {enabled: false}
+          logs: {enabled: false}
+          processors:
+            tailSampling:
+              enabled: true
+              loadBalancer: {resolver: dns}
+      applicationObservability:
+        enabled: true
+        receivers: {otlp: {grpc: {enabled: true}}}
+        logs: {enabled: false}
+        metrics: {enabled: false}
+      collectors:
+        alloy-receiver: {presets: [deployment, otel-receiver]}
+    asserts:
+      - hasDocuments:
+          count: 3
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: ClusterRole}
+        notContains:
+          path: rules
+          content: {apiGroups: [discovery.k8s.io], resources: [endpointslices], verbs: [get, list, watch]}
+        template: alloy-config.yaml
 
   - it: fails on an unknown RBAC mode for a sampler collector
     set:
