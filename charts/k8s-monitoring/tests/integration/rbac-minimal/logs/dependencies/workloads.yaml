@@ -1,0 +1,87 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: logs-api
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: logger
+  namespace: logs-api
+  labels:
+    app: logger
+spec:
+  containers:
+    - name: busybox
+      image: busybox
+      args:
+        - /bin/sh
+        - -c
+        - |
+          while true; do
+            echo "level=INFO Logging from logs-api"
+            sleep 5
+          done
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: logs-otel
+  labels:
+    color: green
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: logger
+  namespace: logs-otel
+  labels:
+    app: logger
+spec:
+  containers:
+    - name: busybox
+      image: busybox
+      args:
+        - /bin/sh
+        - -c
+        - |
+          while true; do
+            echo "level=INFO Logging from logs-otel"
+            sleep 5
+          done
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: logs-objects
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: logger
+  namespace: logs-objects
+  labels:
+    app: logger
+spec:
+  containers:
+    - name: busybox
+      image: busybox
+      args:
+        - /bin/sh
+        - -c
+        - |
+          while true; do
+            echo "level=INFO Logging from logs-objects"
+            sleep 5
+          done
+---
+apiVersion: monitoring.grafana.com/v1alpha2
+kind: PodLogs
+metadata:
+  name: logger
+  namespace: logs-objects
+spec:
+  selector:
+    matchLabels:
+      app: logger

@@ -72,6 +72,15 @@ ClusterRole when the list is empty or has a regular expression.
     `attachMetadata` are only known at runtime.
 *   **`integrations`**: Pods in each instance's `namespaces`. For Istio, Pods cluster-wide and EndpointSlices in the
     istiod namespace. For MySQL and PostgreSQL, `get` on the instance's credentials Secret.
+*   **`clusterEvents`**: Events in `namespaces`.
+*   **`kubernetesManifests`**: Pods and `get` on `pods/log`, cluster-wide.
+*   **`podLogsViaLoki`**: Pods in `namespaces`. Nodes for `nodeSelectors` or `nodeLabels`. Namespaces for
+    `attachNamespaceMetadata`.
+*   **`podLogsViaKubernetesApi`**: Pods and `get` on `pods/log` in `namespaces`. Nodes for `nodeSelectors` or
+    `nodeLabels`. Namespaces for `attachNamespaceMetadata`.
+*   **`podLogsViaOpenTelemetry`**: Pods, ReplicaSets, and Namespaces cluster-wide. Nodes for `nodeLabels` or
+    `nodeAnnotations`.
+*   **`podLogsObjects`**: PodLogs, Pods, Namespaces, and `get` on `pods/log`, cluster-wide.
 *   **`autoInstrumentation`**: Pods in the release namespace.
 *   **`profiling`**: Pods in each enabled profiling type's `namespaces`.
 

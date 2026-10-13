@@ -9,7 +9,7 @@
 
 {{/* Inputs: . (root with collectorName), featureKeys, destinationNames, alloyValues (optional) */}}
 {{- define "collectors.rbac.entries" -}}
-{{- $featuresWithRules := list "annotationAutodiscovery" "autoInstrumentation" "clusterMetrics" "costMetrics" "hostMetrics_energyMetrics" "hostMetrics_linuxHosts" "hostMetrics_windowsHosts" "integrations" "profiling" "prometheusOperatorObjects" }}
+{{- $featuresWithRules := list "annotationAutodiscovery" "autoInstrumentation" "clusterEvents" "clusterMetrics" "costMetrics" "hostMetrics_energyMetrics" "hostMetrics_linuxHosts" "hostMetrics_windowsHosts" "integrations" "kubernetesManifests" "podLogsObjects" "podLogsViaKubernetesApi" "podLogsViaLoki" "podLogsViaOpenTelemetry" "profiling" "prometheusOperatorObjects" }}
 {{- $entries := list }}
 {{- range $featureKey := .featureKeys }}
   {{- if has $featureKey $featuresWithRules }}

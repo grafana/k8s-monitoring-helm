@@ -1,0 +1,52 @@
+---
+cluster:
+  name: rbac-minimal-namespaced
+
+destinations:
+  prometheus:
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+    auth:
+      type: basic
+      username: promuser
+      password: prometheuspassword
+  loki:
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      usernameKey: username
+      passwordKey: password
+    secret:
+      create: false
+      name: loki-credentials
+      namespace: credentials
+
+annotationAutodiscovery:
+  enabled: true
+  collector: alloy-metrics
+  namespaces: [team-a]
+
+clusterEvents:
+  enabled: true
+  collector: alloy-singleton
+  namespaces: [team-a]
+
+podLogsViaLoki:
+  enabled: true
+  collector: alloy-logs
+  namespaces: [team-a]
+
+collectorCommon:
+  alloy:
+    rbac:
+      mode: minimal
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-singleton:
+    presets: [singleton]
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]

@@ -52,3 +52,22 @@ pod_logs_via_loki "feature" {
 {{- include "feature.podLogsViaLoki.collector.validate" (dict "Values" $.Values.podLogsViaLoki "Collector" $collectorValues "CollectorName" $collectorName) }}
 {{- end -}}
 {{- end -}}
+
+{{- define "features.podLogsViaLoki.rbac" }}
+{{- $entries := list }}
+{{- $v := .Values.podLogsViaLoki }}
+{{- if $v.enabled }}
+  {{- $namespaces := list }}
+  {{- if and $v.namespaces (ne (include "feature.podLogsViaLoki.namespaces.hasRegex" $v.namespaces) "true") }}
+    {{- $namespaces = $v.namespaces }}
+  {{- end }}
+  {{- $entries = append $entries (dict "bundle" "pods" "namespaces" $namespaces) }}
+  {{- if or $v.nodeSelectors (eq (include "collectors.rbac.anyEnabled" $v.nodeLabels) "true") }}
+    {{- $entries = append $entries (dict "bundle" "nodes") }}
+  {{- end }}
+  {{- if $v.attachNamespaceMetadata }}
+    {{- $entries = append $entries (dict "bundle" "namespaces") }}
+  {{- end }}
+{{- end }}
+{{- $entries | toYaml }}
+{{- end }}
