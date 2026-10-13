@@ -58,4 +58,16 @@ linux_host_metrics "feature" {
 {{- end }}
 {{- end }}
 
-{{- define "features.hostMetrics_linuxHosts.rbac" }}[]{{- end }}
+{{- define "features.hostMetrics_linuxHosts.rbac" }}
+{{- $entries := list }}
+{{- if eq (include "features.hostMetrics_linuxHosts.enabled" .) "true" }}
+  {{- if ne (.Values.hostMetrics.linuxHosts.source | default "node-exporter") "alloy" }}
+    {{- $namespace := include "feature.hostMetrics.linuxHosts.namespace" (dict "Values" .Values.hostMetrics "Release" $.Release "telemetryServices" $.Values.telemetryServices) }}
+    {{- $entries = append $entries (dict "bundle" "pods" "namespaces" (compact (list $namespace))) }}
+    {{- if eq (include "collectors.rbac.anyEnabled" .Values.hostMetrics.nodeLabels) "true" }}
+      {{- $entries = append $entries (dict "bundle" "nodes") }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- $entries | toYaml }}
+{{- end }}

@@ -50,4 +50,11 @@ cost_metrics "feature" {
 {{- end }}
 {{- end }}
 
-{{- define "features.costMetrics.rbac" }}[]{{- end }}
+{{- define "features.costMetrics.rbac" }}
+{{- $entries := list }}
+{{- if .Values.costMetrics.enabled }}
+  {{- $namespace := include "feature.costMetrics.opencost.namespace" (dict "Values" .Values.costMetrics "Release" $.Release "telemetryServices" $.Values.telemetryServices) }}
+  {{- $entries = append $entries (dict "bundle" "pods" "namespaces" (compact (list $namespace))) }}
+{{- end }}
+{{- $entries | toYaml }}
+{{- end }}

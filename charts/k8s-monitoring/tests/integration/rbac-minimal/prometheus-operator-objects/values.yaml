@@ -1,0 +1,37 @@
+---
+cluster:
+  name: rbac-minimal-prom-operator-objects
+
+destinations:
+  prometheus:
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+
+prometheusOperatorObjects:
+  enabled: true
+  collector: alloy-metrics
+  serviceMonitors:
+    enabled: true
+    namespaces: [grafana]
+    labelSelectors:
+      app.kubernetes.io/name: grafana
+  podMonitors:
+    enabled: true
+    namespaces: [nginx]
+  probes:
+    enabled: true
+    namespaces: [grafana]
+  scrapeConfigs:
+    enabled: true
+    namespaces: [default]
+
+collectorCommon:
+  alloy:
+    rbac:
+      mode: minimal
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    alloy:
+      stabilityLevel: experimental

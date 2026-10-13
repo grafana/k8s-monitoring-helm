@@ -67,4 +67,16 @@ windows_host_metrics "feature" {
 {{- end }}
 {{- end }}
 
-{{- define "features.hostMetrics_windowsHosts.rbac" }}[]{{- end }}
+{{- define "features.hostMetrics_windowsHosts.rbac" }}
+{{- $entries := list }}
+{{- if eq (include "features.hostMetrics_windowsHosts.enabled" .) "true" }}
+  {{- if ne (.Values.hostMetrics.windowsHosts.source | default "windows-exporter") "alloy" }}
+    {{- $namespace := include "feature.hostMetrics.windowsHosts.namespace" (dict "Values" .Values.hostMetrics "Release" $.Release "telemetryServices" $.Values.telemetryServices) }}
+    {{- $entries = append $entries (dict "bundle" "pods" "namespaces" (compact (list $namespace))) }}
+    {{- if eq (include "collectors.rbac.anyEnabled" .Values.hostMetrics.nodeLabels) "true" }}
+      {{- $entries = append $entries (dict "bundle" "nodes") }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- $entries | toYaml }}
+{{- end }}

@@ -57,6 +57,18 @@ ClusterRole when the list is empty or has a regular expression.
     Services, and Pods in `default`, and `get` on `/metrics` for the API server. Pods in `kube-system` for the
     controller manager, scheduler, and kube-proxy. EndpointSlices in `kube-system` for kube-dns. `get` on the EKS
     Control Plane Metrics API for `discoveryMode: eks-proxy`. The kube-state-metrics discovery type, in its namespace.
+*   **`hostMetrics`**: Pods in the exporter's namespace. Nodes when any `nodeLabels` is set. Nothing for `source:
+    alloy`.
+*   **`costMetrics`**: Pods in the OpenCost namespace.
+*   **`annotationAutodiscovery`**: Pods and Services in `namespaces`. Nodes when any `nodeLabels` is set. Namespaces for
+    `attachNamespaceMetadata`. `get` on `/metrics` when `bearerToken.enabled`.
+*   **`prometheusOperatorObjects`**: Each enabled object type, and `get` on Secrets and ConfigMaps for credentials, in
+    that type's `namespaces`. Cluster-wide target discovery and Nodes, because a monitor's `namespaceSelector` and
+    `attachMetadata` are only known at runtime.
+*   **`integrations`**: Pods in each instance's `namespaces`. For Istio, Pods cluster-wide and EndpointSlices in the
+    istiod namespace. For MySQL and PostgreSQL, `get` on the instance's credentials Secret.
+*   **`autoInstrumentation`**: Pods in the release namespace.
+*   **`profiling`**: Pods in each enabled profiling type's `namespaces`.
 
 Rules from other sources:
 

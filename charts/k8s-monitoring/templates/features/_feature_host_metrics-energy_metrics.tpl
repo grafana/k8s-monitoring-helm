@@ -53,4 +53,14 @@ energy_metrics "feature" {
 {{- end }}
 {{- end }}
 
-{{- define "features.hostMetrics_energyMetrics.rbac" }}[]{{- end }}
+{{- define "features.hostMetrics_energyMetrics.rbac" }}
+{{- $entries := list }}
+{{- if eq (include "features.hostMetrics_energyMetrics.enabled" .) "true" }}
+  {{- $namespace := include "feature.hostMetrics.energyMetrics.namespace" (dict "Values" .Values.hostMetrics "Release" $.Release "telemetryServices" $.Values.telemetryServices) }}
+  {{- $entries = append $entries (dict "bundle" "pods" "namespaces" (compact (list $namespace))) }}
+  {{- if eq (include "collectors.rbac.anyEnabled" .Values.hostMetrics.nodeLabels) "true" }}
+    {{- $entries = append $entries (dict "bundle" "nodes") }}
+  {{- end }}
+{{- end }}
+{{- $entries | toYaml }}
+{{- end }}

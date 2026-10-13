@@ -218,4 +218,37 @@ collector, so they need no assignment.
 {{- end }}
 {{- end }}
 
-{{- define "features.integrations.rbac" }}[]{{- end }}
+{{- define "features.integrations.rbac" }}
+{{- $entries := list }}
+{{- $filteredIntegrations := include "collectors.integrations.filterInstancesForCollector" (dict "root" $ "collectorName" $.collectorName) | fromYaml }}
+{{- $files := $.Subcharts.integrations.Files }}
+{{- $secretContext := dict "Values" $filteredIntegrations "Chart" $.Subcharts.integrations.Chart "Release" $.Release }}
+{{- range $type := include "integrations.types" . | fromYamlArray }}
+  {{- $typeValues := index $filteredIntegrations $type | default dict }}
+  {{- range $instance := $typeValues.instances | default list }}
+    {{- if include "collectors.integrations.instanceProducesOutput" (dict "type" $type "instance" $instance "Files" $files) }}
+      {{- $merged := mergeOverwrite ($files.Get (printf "integrations/%s-values.yaml" $type) | fromYaml) (deepCopy $instance) (dict "type" (printf "integration.%s" $type)) }}
+      {{- $metrics := include "feature.integrations.configured.metrics" (dict "Values" (dict $type (dict "instances" (list $instance))) "Files" $files) | fromYamlArray }}
+      {{- if has $type (list "mysql" "postgresql") }}
+        {{- if eq (include "secrets.usesKubernetesSecret" $merged) "true" }}
+          {{- $secretArgs := merge (dict "object" $merged) $secretContext }}
+          {{- $entries = append $entries (dict "bundle" "secret" "namespaces" (list (include "secrets.kubernetesSecretNamespace" $secretArgs)) "resourceNames" (list (include "secrets.kubernetesSecretName" $secretArgs))) }}
+        {{- end }}
+      {{- else if and (eq $type "istio") (has $type $metrics) }}
+        {{- if $merged.sidecarMetrics.enabled }}
+          {{- $entries = append $entries (dict "bundle" "pods") }}
+        {{- end }}
+        {{- if $merged.istiodMetrics.enabled }}
+          {{- $entries = append $entries (dict "bundle" "endpointslices" "namespaces" (compact (list $merged.istiodMetrics.namespace))) }}
+        {{- end }}
+      {{- else if has $type $metrics }}
+        {{- $entries = append $entries (dict "bundle" "pods" "namespaces" ($merged.namespaces | default list)) }}
+        {{- if eq (include "collectors.rbac.anyEnabled" $.Values.integrations.nodeLabels) "true" }}
+          {{- $entries = append $entries (dict "bundle" "nodes") }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- $entries | toYaml }}
+{{- end }}

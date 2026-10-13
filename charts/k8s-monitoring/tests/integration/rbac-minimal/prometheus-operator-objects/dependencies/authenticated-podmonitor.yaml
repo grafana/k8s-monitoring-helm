@@ -1,0 +1,32 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: scrape-credentials
+  namespace: nginx
+stringData:
+  username: scraper
+  password: not-checked-by-nginx
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: nginx-static-metrics-auth
+  namespace: nginx
+spec:
+  namespaceSelector:
+    matchNames:
+      - nginx
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: static-metrics
+      app.kubernetes.io/instance: nginx-static-metrics
+  podMetricsEndpoints:
+    - portNumber: 8080
+      basicAuth:
+        username:
+          name: scrape-credentials
+          key: username
+        password:
+          name: scrape-credentials
+          key: password
