@@ -2,13 +2,17 @@
 {{- if .Values.serviceMonitors.enabled }}
 {{- $metricAllowList := .Values.serviceMonitors.metricsTuning.includeMetrics }}
 {{- $metricDenyList := .Values.serviceMonitors.metricsTuning.excludeMetrics }}
+{{- $namespacesHaveRegex := "" }}
+{{- if .Values.serviceMonitors.namespaces }}
+  {{- $namespacesHaveRegex = include "feature.prometheusOperatorObjects.namespaces.hasRegex" .Values.serviceMonitors.namespaces }}
+{{- end }}
 // Prometheus Operator ServiceMonitor objects
 prometheus.operator.servicemonitors "service_monitors" {
   kubernetes_role = "endpointslice"
 {{- if .Values.serviceMonitors.allowArbitraryFileAccess }}
   allow_arbitrary_file_access = true
 {{- end }}
-{{- if .Values.serviceMonitors.namespaces }}
+{{- if and .Values.serviceMonitors.namespaces (ne $namespacesHaveRegex "true") }}
   namespaces = {{ .Values.serviceMonitors.namespaces | toJson }}
 {{- end }}
 {{- if or .Values.serviceMonitors.labelSelectors .Values.serviceMonitors.labelExpressions }}
@@ -42,10 +46,24 @@ prometheus.operator.servicemonitors "service_monitors" {
     native_histogram_min_bucket_factor = {{ .Values.global.nativeHistogramMinBucketFactor | float64 }}
   }
 
+{{- if or (eq $namespacesHaveRegex "true") .Values.serviceMonitors.excludeNamespaces }}
+  rule {  // extract the namespace from the job label (serviceMonitor/<namespace>/<name>/<index>) so the regexes below are matched against the namespace alone, and can't accidentally span into the name
+    source_labels = ["job"]
+    regex = "serviceMonitor/([^/]+)/.*"
+    target_label = "__tmp_namespace"
+  }
+{{- end }}
+{{- if eq $namespacesHaveRegex "true" }}
+  rule {  // namespaces contains a regex, so ServiceMonitors cannot be pre-filtered by the component; keep only matching namespaces here
+    source_labels = ["__tmp_namespace"]
+    regex = {{ .Values.serviceMonitors.namespaces | join "|" | quote }}
+    action = "keep"
+  }
+{{- end }}
 {{- with .Values.serviceMonitors.excludeNamespaces }}
   rule {
-    source_labels = ["job"]
-    regex = "serviceMonitor/({{ . | join "|" }})/.*"
+    source_labels = ["__tmp_namespace"]
+    regex = {{ . | join "|" | quote }}
     action = "drop"
   }
 {{- end }}

@@ -18,6 +18,16 @@ declare "prometheus_operator_objects" {
       native_histogram_bucket_limit = 0
       native_histogram_min_bucket_factor = 0
     }
+    rule {  // extract the namespace from the job label (podMonitor/<namespace>/<name>/<index>) so the regexes below are matched against the namespace alone, and can't accidentally span into the name
+      source_labels = ["job"]
+      regex = "podMonitor/([^/]+)/.*"
+      target_label = "__tmp_namespace"
+    }
+    rule {  // namespaces contains a regex, so PodMonitors cannot be pre-filtered by the component; keep only matching namespaces here
+      source_labels = ["__tmp_namespace"]
+      regex = "nginx|nginx-.*"
+      action = "keep"
+    }
     rule {
       source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
       target_label = "service_name"
@@ -43,8 +53,9 @@ declare "prometheus_operator_objects" {
     forward_to = argument.metrics_destinations.value
   } // prometheus.operator.probes "probes"
 
-  // Prometheus Operator Probe objects
+  // Prometheus Operator ScrapeConfig objects
   prometheus.operator.scrapeconfigs "scrapeConfigs" {
+    namespaces = ["default"]
     clustering {
       enabled = true
     }
@@ -76,9 +87,14 @@ declare "prometheus_operator_objects" {
       native_histogram_bucket_limit = 0
       native_histogram_min_bucket_factor = 0
     }
-    rule {
+    rule {  // extract the namespace from the job label (serviceMonitor/<namespace>/<name>/<index>) so the regexes below are matched against the namespace alone, and can't accidentally span into the name
       source_labels = ["job"]
-      regex = "serviceMonitor/(default)/.*"
+      regex = "serviceMonitor/([^/]+)/.*"
+      target_label = "__tmp_namespace"
+    }
+    rule {
+      source_labels = ["__tmp_namespace"]
+      regex = "default"
       action = "drop"
     }
     forward_to = argument.metrics_destinations.value
@@ -104,7 +120,7 @@ grafana_kubernetes_monitoring_feature_info{feature="prometheusOperatorObjects", 
 grafana_kubernetes_monitoring_destination_info_count{rules_enabled="false", type="prometheus"} 1
 # HELP grafana_kubernetes_monitoring_collector_info A metric to report the collectors of the Kubernetes Monitoring Helm chart
 # TYPE grafana_kubernetes_monitoring_collector_info gauge
-grafana_kubernetes_monitoring_collector_info{kind="statefulset", name="alloy-metrics", presets="clustered,statefulset", replicas="1", type="alloy"} 1
+grafana_kubernetes_monitoring_collector_info{kind="statefulset", name="alloy", presets="clustered,statefulset", replicas="1", type="alloy"} 1
 # EOF
   `
 } // prometheus.exporter.static "kubernetes_monitoring_telemetry"
