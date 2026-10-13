@@ -1,5 +1,5 @@
 {{- define "feature.clusterMetrics.kubeScheduler.alloy" }}
-{{- if eq (include "feature.clusterMetrics.kubeScheduler.enabled" .) "true" }}
+{{- if or .Values.kubeScheduler.enabled (and .Values.controlPlane.enabled (not (eq .Values.kubeScheduler.enabled false))) }}
 {{- $metricAllowList := .Values.kubeScheduler.metricsTuning.includeMetrics }}
 {{- $metricDenyList := .Values.kubeScheduler.metricsTuning.excludeMetrics }}
 {{- if eq .Values.kubeScheduler.discoveryMode "eks-proxy" }}
