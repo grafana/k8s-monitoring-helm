@@ -1,0 +1,75 @@
+---
+cluster:
+  name: vks-cluster
+
+destinations:
+  metrics-destination:
+    type: prometheus
+    url: http://prometheus.example.com/api/prom/push
+
+  loki:
+    type: loki
+    url: http://loki.example.com/loki/api/v1/push
+    tenantId: "1"
+
+clusterMetrics:
+  enabled: true
+  collector: alloy-metrics
+
+costMetrics:
+  enabled: true
+  collector: alloy-metrics
+
+clusterEvents:
+  enabled: true
+  collector: alloy-singleton
+
+kubernetesManifests:
+  enabled: true
+  collector: alloy-singleton
+
+podLogsViaKubernetesApi:
+  enabled: true
+  collector: alloy-logs
+
+telemetryServices:
+  k8s-manifest-tail:
+    deploy: true
+    config:
+      objects:
+        - apiVersion: v1
+          kind: Pod
+        - apiVersion: apps/v1
+          kind: Deployment
+        - apiVersion: apps/v1
+          kind: StatefulSet
+        - apiVersion: apps/v1
+          kind: DaemonSet
+  kube-state-metrics:
+    deploy: true
+  opencost:
+    deploy: true
+    metricsSource: metrics-destination
+    opencost:
+      exporter:
+        defaultClusterId: vks-cluster
+      prometheus:
+        external:
+          url: http://prometheus.example.com/api/prom
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-singleton:
+    presets: [singleton]
+  alloy-logs:
+    presets: [clustered, deployment]
+
+# Remove the "NET_RAW" capability by redefining the add list. That capability is not permitted in the baseline pod
+# security standard.
+collectorCommon:
+  alloy:
+    alloy:
+      securityContext:
+        capabilities:
+          add: ["CHOWN", "DAC_OVERRIDE", "FOWNER", "FSETID", "KILL", "SETGID", "SETUID", "SETPCAP", "NET_BIND_SERVICE", "SYS_CHROOT", "MKNOD", "AUDIT_WRITE", "SETFCAP"]

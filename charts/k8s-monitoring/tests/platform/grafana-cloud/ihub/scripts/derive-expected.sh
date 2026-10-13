@@ -9,16 +9,31 @@ SOURCE="${EXPECTED_SOURCE:-k8s-monitoring}"
 
 pipelines="$(gcx fleet pipelines list -o json --limit 0)"
 
-# $1 = jq condition selecting the collector-role bucket.
+# The remotecfg attributes a collector advertises to FM, read from its rendered config.
+collector_attributes() {
+  awk '/attributes = \{/ { a = 1; next } a && /\}/ { exit } a' "$1" \
+    | jq -Rn '[inputs | capture("\"(?<key>[^\"]+)\" = \"(?<value>[^\"]*)\"") | {(.key): .value}] | add'
+}
+
+# The pipelines FM would deliver to a collector with the given attributes. cluster is
+# covered by the cluster_name selection; sourceVersion is ignored so a version
+# mismatch surfaces as expected components missing from the running collector.
 contents_for() {
-  jq -r --arg cluster "${CLUSTER}" --arg source "${SOURCE}" "
+  jq -r --arg cluster "${CLUSTER}" --arg source "${SOURCE}" --argjson attrs "$1" '
+    def matches:
+      capture("^(?<key>[^=~]+)(?<op>=~?)\"?(?<value>.*?)\"?$") as $m
+      | ($attrs[$m.key] // "") as $actual
+      | if $m.key == "cluster" or $m.key == "sourceVersion" then true
+        elif $m.op == "=" then $actual == $m.value
+        else $actual | test("^(?:" + $m.value + ")$")
+        end;
     .[]
     | .spec
-    | select(any(.matchers[]; . == (\"source=\" + \$source)))
-    | select((.metadata.instrumentation.cluster_name == \$cluster) or (.metadata.type == \"discovery\"))
-    | select($1)
-    | .contents // \"\"
-  " <<<"${pipelines}"
+    | select(any(.matchers[]; . == ("source=" + $source)))
+    | select((.metadata.instrumentation.cluster_name == $cluster) or (.metadata.type == "discovery"))
+    | select(all(.matchers[]; matches))
+    | .contents // ""
+  ' <<<"${pipelines}"
 }
 
 # Alloy component types are dotted (namespace.name); config sub-blocks and
@@ -30,8 +45,20 @@ extract() {
     | sort -u || true
 }
 
-daemonset="$(contents_for '(any(.matchers[]; . == "workloadType=deployment") | not)' | extract | paste -sd' ' -)"
-deployment="$(contents_for 'any(.matchers[]; . == "workloadType=deployment")' | extract | paste -sd' ' -)"
+# Components FM would deliver to this tier's collector of the given workloadType
+# (empty when the tier has no such collector).
+expected_components() {
+  local rendered attrs
+  for rendered in .rendered/*.alloy; do
+    attrs="$(collector_attributes "${rendered}")"
+    if [ "$(jq -r '.workloadType' <<<"${attrs}")" = "$1" ]; then
+      contents_for "${attrs}" | extract | paste -sd' ' -
+    fi
+  done
+}
+
+daemonset="$(expected_components daemonset)"
+deployment="$(expected_components deployment)"
 
 kubectl create configmap expected-components \
   --namespace "${NAMESPACE}" \

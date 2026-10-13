@@ -47,12 +47,21 @@ Describe 'Alloy version consistency'
     chart_version() {
       sed -n 's/^version:[[:space:]]*//p' "${chart_root}/Chart.yaml"
     }
-    versions_md_binary() {
-      awk -F'|' -v v="$(chart_version)" '
-        { gsub(/[[:space:]]/, "", $2); gsub(/[[:space:]]/, "", $5) }
-        $2 == v { print $5 }
+    versions_md_column() {
+      awk -F'|' -v v="$(chart_version)" -v col="$1" '
+        { gsub(/[[:space:]]/, "", $2); gsub(/[[:space:]]/, "", $col) }
+        $2 == v { print $col }
       ' "${chart_root}/docs/Versions.md"
     }
+    versions_md_binary() {
+      versions_md_column 5
+    }
+    # A tagged release's row keeps the Alloy Operator it shipped with, so it can't match a newer unreleased bump.
+    released_with_other_operator() {
+      operator="$(versions_md_column 3)"
+      [ -n "${operator}" ] && [ "${operator}" != "${ALLOY_OPERATOR_VERSION}" ]
+    }
+    Skip if 'the current chart version was released with a different Alloy Operator' released_with_other_operator
     It 'lists the pinned Alloy binary version for the current chart version'
       When call versions_md_binary
       The output should equal "$(pinned_tag | sed 's/^v//')"
