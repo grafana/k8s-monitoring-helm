@@ -46,3 +46,28 @@ Input: dict with "namespace", "labelMatchers", and "serviceName".
 {{- end }}
 {{- end }}
 {{- end -}}
+
+{{/* The namespace each exporter is discovered in, or empty for every namespace. */}}
+{{- define "feature.hostMetrics.linuxHosts.namespace" -}}
+{{- $namespace := .Values.linuxHosts.namespace -}}
+{{- if dig "node-exporter" "deploy" false (.telemetryServices | default dict) -}}
+  {{- $namespace = (dig "node-exporter" "namespaceOverride" false (.telemetryServices | default dict) | default .Release.Namespace) -}}
+{{- end -}}
+{{- $namespace -}}
+{{- end }}
+
+{{- define "feature.hostMetrics.windowsHosts.namespace" -}}
+{{- $namespace := .Values.windowsHosts.namespace -}}
+{{- if dig "windows-exporter" "deploy" false (.telemetryServices | default dict) -}}
+  {{- $namespace = (dig "windows-exporter" "namespaceOverride" false (.telemetryServices | default dict) | default .Release.Namespace) -}}
+{{- end -}}
+{{- $namespace -}}
+{{- end }}
+
+{{- define "feature.hostMetrics.energyMetrics.namespace" -}}
+{{- $namespace := .Values.energyMetrics.namespace -}}
+{{- if dig "kepler" "deploy" false (.telemetryServices | default dict) -}}
+  {{- $namespace = .Release.Namespace -}}
+{{- end -}}
+{{- $namespace -}}
+{{- end }}

@@ -8,55 +8,17 @@
 {{- end }}
 {{- /* Render one Alloy config ConfigMap per enabled collector. */}}
 {{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
-{{- /* Seed the collector's destination list with any explicitly included destinations. */}}
-{{- $destinationNames := (get $.Values.collectors $collectorName).includeDestinations | default list }}
-{{- $collectorContext := dict "Values" $.Values "Chart" $.Chart "Files" $.Files "Release" $.Release "Subcharts" $.Subcharts "Template" $.Template "Capabilities" $.Capabilities "collectorName" $collectorName }}
-{{- /* Add the destinations required by each feature assigned to this collector. */}}
-{{- range $featureKey := include "features.list" $ | fromYamlArray }}
-  {{- $featureCollectorNames := include "collectors.getCollectorsForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) | fromYamlArray }}
-  {{- if has $collectorName $featureCollectorNames }}
-    {{- $destinationNames = concat $destinationNames ((include (printf "features.%s.destinations" $featureKey) $collectorContext) | fromYamlArray) }}
-  {{- end }}
-{{- end }}
-
-{{/* Router destination type. Any enabled `type: router` destination that ended up in
-     $destinationNames (because a feature pointed at it) fans out to real destinations that are
-     never referenced by a feature directly, so those downstream destinations would otherwise
-     never get a body rendered and the router's gates would dangle. Union them in here, before
-     destinations.alloy.config renders bodies below. Single-level only: a router referencing
-     another router is not resolved transitively by this pass. */}}
-{{- range $routerCandidateName := $destinationNames }}
-  {{- if hasKey $.Values.destinations $routerCandidateName }}
-    {{- $routerCandidate := get $.Values.destinations $routerCandidateName }}
-    {{- if and (eq $routerCandidate.type "router") (not $routerCandidate.disabled) }}
-      {{- range $downstreamName := ($routerCandidate.defaultDestinations | default list) }}
-        {{- if and (hasKey $.Values.destinations $downstreamName) (not (get $.Values.destinations $downstreamName).disabled) }}
-          {{- $destinationNames = append $destinationNames $downstreamName }}
-        {{- end }}
-      {{- end }}
-      {{- range $route := ($routerCandidate.routes | default list) }}
-        {{- range $downstreamName := ($route.destinations | default list) }}
-          {{- if and (hasKey $.Values.destinations $downstreamName) (not (get $.Values.destinations $downstreamName).disabled) }}
-            {{- $destinationNames = append $destinationNames $downstreamName }}
-          {{- end }}
-        {{- end }}
-      {{- end }}
-    {{- end }}
-  {{- end }}
-{{- end }}
-
 {{/* Save the top level object and add the collector name */}}
 {{- $values := dict "Values" $.Values "Chart" $.Chart "Files" $.Files "Release" $.Release "Subcharts" $.Subcharts "Template" $.Template "Capabilities" $.Capabilities "collectorName" $collectorName }}
+{{- $featureKeys := include "collectors.features" $values | fromYamlArray }}
+{{- $destinationNames := include "collectors.destinationNames" (merge (dict "featureKeys" $featureKeys) $values) | fromYamlArray }}
 {{- $collectorValues := include "collector.alloy.values" $values | fromYaml }}
 {{- $alloyConfig := "" }}
 {{- /* Build the collector's config by concatenating the config from each of its assigned features. */}}
-{{- range $featureKey := include "features.list" . | fromYamlArray }}
-  {{- $featureCollectorNames := include "collectors.getCollectorsForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) | fromYamlArray }}
-  {{- if has $collectorName $featureCollectorNames }}
-    {{- $featureConfig := include (printf "features.%s.include" $featureKey) $values | trim }}
-    {{- if $featureConfig }}
-      {{ $alloyConfig = cat $alloyConfig ($featureConfig | nindent 0) }}
-    {{- end }}
+{{- range $featureKey := $featureKeys }}
+  {{- $featureConfig := include (printf "features.%s.include" $featureKey) $values | trim }}
+  {{- if $featureConfig }}
+    {{ $alloyConfig = cat $alloyConfig ($featureConfig | nindent 0) }}
   {{- end }}
 {{- end }}
 {{- /* Append each shared data-processor pipeline once per collector, before collectorComponents needs to see it (issue #3014). */}}
@@ -76,7 +38,7 @@
 {{- $alloyConfig = cat $alloyConfig (include "collectors.extraConfig.alloy" $values | trim | nindent 0) }}
 {{- /* Append the write rules and component bodies for the collector's destinations. */}}
 {{- $alloyConfig = cat $alloyConfig (include "destinations.alloy.rules" (deepCopy $ | merge (dict "collectorName" $collectorName)) | trim | nindent 0) }}
-{{- $alloyConfig = cat $alloyConfig (include "destinations.alloy.config" (deepCopy $ | merge (dict "destinationNames" ($destinationNames | uniq | sortAlpha))) | trim | nindent 0) }}
+{{- $alloyConfig = cat $alloyConfig (include "destinations.alloy.config" (deepCopy $ | merge (dict "destinationNames" $destinationNames)) | trim | nindent 0) }}
 
 {{- /* Apply any component replacements and record which ones matched. */}}
 {{- range $replacement := $.Values.replaceComponent }}
