@@ -108,3 +108,21 @@ profiling "feature" {
 {{- include "feature.profiling.validate" (dict "Values" $.Values.profiling) }}
 {{- end -}}
 {{- end -}}
+
+{{- define "features.profiling.rbac" }}
+{{- $entries := list }}
+{{- if .Values.profiling.enabled }}
+  {{- $profilingValues := include "collectors.profiling.filterSubfeaturesForCollector" (dict "root" $ "collectorName" $.collectorName) | fromYaml }}
+  {{- range $sub := include "profiling.subfeatures" . | fromYamlArray }}
+    {{- $subValues := index $profilingValues $sub | default dict }}
+    {{- if $subValues.enabled }}
+      {{- $namespaces := list }}
+      {{- if and $subValues.namespaces (ne (include "feature.profiling.namespaces.hasRegex" $subValues.namespaces) "true") }}
+        {{- $namespaces = $subValues.namespaces }}
+      {{- end }}
+      {{- $entries = append $entries (dict "bundle" "pods" "namespaces" $namespaces) }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- $entries | toYaml }}
+{{- end }}

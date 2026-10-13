@@ -100,3 +100,11 @@ Beyla on a unique port.
 {{- end -}}
 
 {{- define "features.autoInstrumentation.collector.values" }}{{- end -}}
+
+{{- define "features.autoInstrumentation.rbac" }}
+{{- $entries := list }}
+{{- if .Values.autoInstrumentation.enabled }}
+  {{- $entries = append $entries (dict "bundle" "pods" "namespaces" (list (include "helper.namespace" .))) }}
+{{- end }}
+{{- $entries | toYaml }}
+{{- end }}

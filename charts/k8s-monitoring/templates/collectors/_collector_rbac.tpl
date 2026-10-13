@@ -1,6 +1,6 @@
 {{/* Inputs: . (root with collectorName), featureKeys, destinationNames, alloyValues (optional) */}}
 {{- define "collectors.rbac.entries" -}}
-{{- $featuresWithRules := list "clusterMetrics" }}
+{{- $featuresWithRules := list "annotationAutodiscovery" "autoInstrumentation" "clusterMetrics" "costMetrics" "hostMetrics_energyMetrics" "hostMetrics_linuxHosts" "hostMetrics_windowsHosts" "integrations" "profiling" "prometheusOperatorObjects" }}
 {{- $entries := list }}
 {{- range $featureKey := .featureKeys }}
   {{- if has $featureKey $featuresWithRules }}

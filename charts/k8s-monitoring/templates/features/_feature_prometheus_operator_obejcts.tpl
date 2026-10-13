@@ -47,3 +47,23 @@ prometheus_operator_objects "feature" {
 {{- include "feature.prometheusOperatorObjects.validate" (dict "Values" $.Values.prometheusOperatorObjects) }}
 {{- end -}}
 {{- end -}}
+
+{{- define "features.prometheusOperatorObjects.rbac" }}
+{{- $entries := list }}
+{{- $v := .Values.prometheusOperatorObjects }}
+{{- if $v.enabled }}
+  {{- $targetBundles := dict "podMonitors" (list "pods" "nodes") "serviceMonitors" (list "endpointslices" "nodes") "probes" (list "ingresses") "scrapeConfigs" (list) }}
+  {{- range $type, $bundles := $targetBundles }}
+    {{- $typeValues := index $v $type }}
+    {{- if $typeValues.enabled }}
+      {{- $namespaces := $typeValues.namespaces | default list }}
+      {{- $entries = append $entries (dict "bundle" (printf "promOperator.%s" ($type | lower)) "namespaces" $namespaces) }}
+      {{- $entries = append $entries (dict "bundle" "promOperatorCredentials" "namespaces" $namespaces) }}
+      {{- range $bundle := $bundles }}
+        {{- $entries = append $entries (dict "bundle" $bundle) }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- $entries | toYaml }}
+{{- end }}

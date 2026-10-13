@@ -50,3 +50,30 @@ annotation_autodiscovery "feature" {
   {{- include "feature.annotationAutodiscovery.validate" (dict "Values" $.Values.annotationAutodiscovery) }}
 {{- end -}}
 {{- end -}}
+
+{{- define "features.annotationAutodiscovery.rbac" }}
+{{- $entries := list }}
+{{- $v := .Values.annotationAutodiscovery }}
+{{- if $v.enabled }}
+  {{- $namespaces := list }}
+  {{- if and $v.namespaces (ne (include "feature.annotationAutodiscovery.namespaces.hasRegex" $v.namespaces) "true") }}
+    {{- $namespaces = $v.namespaces }}
+  {{- end }}
+  {{- if $v.pods.enabled }}
+    {{- $entries = append $entries (dict "bundle" "pods" "namespaces" $namespaces) }}
+    {{- if eq (include "collectors.rbac.anyEnabled" $v.nodeLabels) "true" }}
+      {{- $entries = append $entries (dict "bundle" "nodes") }}
+    {{- end }}
+  {{- end }}
+  {{- if $v.services.enabled }}
+    {{- $entries = append $entries (dict "bundle" "services" "namespaces" $namespaces) }}
+  {{- end }}
+  {{- if $v.attachNamespaceMetadata }}
+    {{- $entries = append $entries (dict "bundle" "namespaces") }}
+  {{- end }}
+  {{- if $v.bearerToken.enabled }}
+    {{- $entries = append $entries (dict "bundle" "metricsEndpoint") }}
+  {{- end }}
+{{- end }}
+{{- $entries | toYaml }}
+{{- end }}
