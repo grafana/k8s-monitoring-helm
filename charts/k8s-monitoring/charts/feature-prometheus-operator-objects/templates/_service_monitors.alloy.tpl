@@ -2,10 +2,14 @@
 {{- if .Values.serviceMonitors.enabled }}
 {{- $metricAllowList := .Values.serviceMonitors.metricsTuning.includeMetrics }}
 {{- $metricDenyList := .Values.serviceMonitors.metricsTuning.excludeMetrics }}
+{{- $namespacesHaveRegex := "" }}
+{{- if .Values.serviceMonitors.namespaces }}
+  {{- $namespacesHaveRegex = include "feature.prometheusOperatorObjects.namespaces.hasRegex" .Values.serviceMonitors.namespaces }}
+{{- end }}
 // Prometheus Operator ServiceMonitor objects
 prometheus.operator.servicemonitors "service_monitors" {
   kubernetes_role = "endpointslice"
-{{- if .Values.serviceMonitors.namespaces }}
+{{- if and .Values.serviceMonitors.namespaces (ne $namespacesHaveRegex "true") }}
   namespaces = {{ .Values.serviceMonitors.namespaces | toJson }}
 {{- end }}
 {{- if or .Values.serviceMonitors.labelSelectors .Values.serviceMonitors.labelExpressions }}
@@ -39,6 +43,13 @@ prometheus.operator.servicemonitors "service_monitors" {
     native_histogram_min_bucket_factor = {{ .Values.global.nativeHistogramMinBucketFactor | float64 }}
   }
 
+{{- if eq $namespacesHaveRegex "true" }}
+  rule {  // namespaces contains a regex, so ServiceMonitors cannot be pre-filtered by the component; keep only matching namespaces here
+    source_labels = ["job"]
+    regex = "serviceMonitor/({{ .Values.serviceMonitors.namespaces | join "|" }})/.*"
+    action = "keep"
+  }
+{{- end }}
 {{- with .Values.serviceMonitors.excludeNamespaces }}
   rule {
     source_labels = ["job"]

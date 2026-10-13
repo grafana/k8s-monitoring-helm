@@ -2,9 +2,13 @@
 {{- if .Values.probes.enabled }}
 {{- $metricAllowList := .Values.probes.metricsTuning.includeMetrics }}
 {{- $metricDenyList := .Values.probes.metricsTuning.excludeMetrics }}
+{{- $namespacesHaveRegex := "" }}
+{{- if .Values.probes.namespaces }}
+  {{- $namespacesHaveRegex = include "feature.prometheusOperatorObjects.namespaces.hasRegex" .Values.probes.namespaces }}
+{{- end }}
 // Prometheus Operator Probe objects
 prometheus.operator.probes "probes" {
-{{- if .Values.probes.namespaces }}
+{{- if and .Values.probes.namespaces (ne $namespacesHaveRegex "true") }}
   namespaces = {{ .Values.probes.namespaces | toJson }}
 {{- end }}
 {{- if or .Values.probes.labelSelectors .Values.probes.labelExpressions }}
@@ -38,6 +42,13 @@ prometheus.operator.probes "probes" {
     native_histogram_min_bucket_factor = {{ .Values.global.nativeHistogramMinBucketFactor | float64 }}
   }
 
+{{- if eq $namespacesHaveRegex "true" }}
+  rule {  // namespaces contains a regex, so Probes cannot be pre-filtered by the component; keep only matching namespaces here
+    source_labels = ["job"]
+    regex = "probe/({{ .Values.probes.namespaces | join "|" }})/.*"
+    action = "keep"
+  }
+{{- end }}
 {{- with .Values.probes.excludeNamespaces }}
   rule {
     source_labels = ["job"]
