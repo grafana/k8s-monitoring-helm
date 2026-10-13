@@ -12,7 +12,7 @@ fi
 
 while IFS= read -r makefile; do
     while IFS= read -r defaultValue; do
-        if [[ "${defaultValue}" != '$(shell cat $(HELM_VERSION_FILE))' ]]; then
+        if [[ "${defaultValue}" != "\$(shell cat \$(HELM_VERSION_FILE))" ]]; then
             echo "${makefile#"${repoRoot}/"}: HELM_VERSION must read from HELM_VERSION_FILE" >&2
             failed=true
         fi
