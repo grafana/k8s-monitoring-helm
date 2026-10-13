@@ -142,7 +142,7 @@ class Cleanup:
         self.failures = 0
         self.kept_okd: set[str] = set()
         self.kept_gke: set[str] = set()
-        self.deleted_gke: set[str] = set()
+        self.issued_gke: set[str] = set()
 
     def preflight(self) -> None:
         # Fail loudly on missing/expired auth so a blind run can't masquerade as "nothing to clean".
@@ -230,14 +230,14 @@ class Cleanup:
                 continue
             # --async: fire-and-forget. The call still fails loudly on auth/permission/not-found,
             # but we don't wait on the server-side delete; a stuck cluster is re-issued next run.
+            # Protect its resources from the Phase 3 race whether or not the request is accepted:
+            # on success the async teardown owns them; on a rejected request the cluster still runs.
             log(f"Deleting GKE cluster {name} ({location}) (async).")
-            if do_delete([
+            self.issued_gke.add(name)
+            if not do_delete([
                 "gcloud", "container", "clusters", "delete", name,
                 f"--location={location}", f"--project={PROJECT}", "--async", "--quiet",
             ]):
-                # async delete is in flight; protect its resources from the Phase 3 race.
-                self.deleted_gke.add(name)
-            else:
                 self.failures += 1
         return kept
 
@@ -257,7 +257,7 @@ class Cleanup:
             if wants_keep(r):
                 log(f"Keeping {rtype}/{name} (keep label).")
                 continue
-            owner = kept_cluster_of(r, name, self.kept_okd, self.kept_gke | self.deleted_gke)
+            owner = kept_cluster_of(r, name, self.kept_okd, self.kept_gke | self.issued_gke)
             if owner:
                 log(f"Keeping {rtype}/{name} (belongs to cluster {owner}).")
                 continue
@@ -293,7 +293,7 @@ class Cleanup:
             if wants_keep(b):
                 log(f"Keeping bucket {name} (keep label).")
                 continue
-            owner = kept_cluster_of(b, name, self.kept_okd, self.kept_gke | self.deleted_gke)
+            owner = kept_cluster_of(b, name, self.kept_okd, self.kept_gke | self.issued_gke)
             if owner:
                 log(f"Keeping bucket {name} (belongs to cluster {owner}).")
                 continue
