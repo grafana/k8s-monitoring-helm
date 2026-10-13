@@ -297,6 +297,11 @@ data:
         statements = [
           `set(attributes["cluster"], "applications-cluster")`,
           `set(attributes["k8s.cluster.name"], "applications-cluster")`,
+          // Scrape targets such as Grafana Beyla (3.20 and newer) put a flat k8s_cluster_name label on every
+          // series. The cluster label statements above add k8s.cluster.name to the same datapoint, both
+          // translate to the same Prometheus label, and the OTLP endpoint joins the values with ";". Drop
+          // the flat copy when the values match.
+          `delete_key(attributes, "k8s_cluster_name") where attributes["k8s_cluster_name"] == attributes["k8s.cluster.name"]`,
           `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
           `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
           `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,

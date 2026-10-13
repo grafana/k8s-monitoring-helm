@@ -3,6 +3,7 @@
 ## Unreleased
 
 *   Add per-feature histogram scrape overrides (`scrapeClassicHistograms`, `scrapeNativeHistograms`, `convertClassicHistogramsToNhcb`, `nativeHistogramBucketLimit`, `nativeHistogramMinBucketFactor`) for the Prometheus Operator Objects feature, so each object type (PodMonitors, Probes, ServiceMonitors, ScrapeConfigs) can override the global histogram settings. (#3065) (@nlamirault)
+*   Fix `k8s_cluster_name` label values being joined with `;` on Beyla metrics sent through OTLP destinations, by dropping the flat per-series copy when it equals the `k8s.cluster.name` set by the chart. (@mbaykara)
 
 ## 4.5.3
 
