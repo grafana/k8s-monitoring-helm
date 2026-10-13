@@ -11,7 +11,10 @@
 
 {{- define "feature.hostMetrics.energyMetrics.alloy" }}
 {{- if .Values.energyMetrics.enabled }}
-{{- $namespace := include "feature.hostMetrics.energyMetrics.namespace" . }}
+{{- $namespace := .Values.energyMetrics.namespace }}
+{{- if dig "kepler" "deploy" false (.telemetryServices | default dict) }}
+  {{- $namespace = .Release.Namespace }}
+{{- end }}
 {{- $metricAllowList := include "feature.hostMetrics.energyMetrics.allowList" . | fromYamlArray }}
 {{- $metricDenyList := .Values.energyMetrics.metricsTuning.excludeMetrics }}
 {{- $labelSelectors := list }}
