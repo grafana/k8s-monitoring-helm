@@ -173,6 +173,9 @@ should filter via discovery.relabel when the namespaces list contains a regex:
               "service_instance_id" = "service_instance_id",
             }
           }
+          stage.label_drop {
+            values = ["service_instance_id"]
+          }
 
           forward_to = argument.logs_destinations.value
         } // loki.process "pod_logs"
@@ -349,6 +352,9 @@ should pre-filter in discovery.kubernetes when all namespaces are exact names:
               "pod" = "pod",
               "service_instance_id" = "service_instance_id",
             }
+          }
+          stage.label_drop {
+            values = ["service_instance_id"]
           }
 
           forward_to = argument.logs_destinations.value
