@@ -11,7 +11,14 @@ import tempfile
 # hard-coded, not env-overridable: this destructive tool must only ever target the test project
 PROJECT = "grafana-helm-chart-tests"
 OKD_REGION_DEFAULT = os.environ.get("OKD_REGION", "us-central1")
-MAX_AGE_HOURS = int(os.environ.get("MAX_AGE_HOURS", "6"))
+try:
+    MAX_AGE_HOURS = int(os.environ.get("MAX_AGE_HOURS", "6"))
+except ValueError:
+    MAX_AGE_HOURS = 0
+# guard a destructive footgun: a value < 1 moves the cutoff to now/future, making every resource
+# "old enough" and eligible for deletion in a single pass.
+if MAX_AGE_HOURS < 1:
+    sys.exit(f"MAX_AGE_HOURS must be a positive integer; got {os.environ.get('MAX_AGE_HOURS')!r}")
 # fail safe: only an explicit "false" disables dry-run, so a typo can't trigger real deletes
 DRY_RUN = os.environ.get("DRY_RUN", "true").strip().lower() != "false"
 
@@ -38,7 +45,9 @@ SWEEP_TYPES: list[tuple[str, list[str]]] = [
     ("disks", []),
     ("images", ["--no-standard-images"]),
     ("firewall-rules", ["--filter=network!~/networks/default$"]),
-    ("routers", ["--filter=network!~/networks/default$"]),
+    # routers intentionally omitted: they can't carry a keep label, and deleting a standing
+    # custom-network Cloud NAT router would remove egress. OKD routers are named <infra>-* and
+    # handled by openshift-install destroy / the kept-cluster skip instead.
     ("subnetworks", ["--filter=name!=default"]),
     ("networks", ["--filter=name!=default"]),
 ]
@@ -72,17 +81,21 @@ def basename(url: str) -> str:
 
 
 def gcloud_json(args: list[str]) -> list[dict]:
+    # A failed inventory must abort, never return []: silently treating an auth/permission/network
+    # failure as "no resources" would skip everything and still report success.
     try:
         out = subprocess.run(
             ["gcloud", *args, f"--project={PROJECT}", "--format=json"],
             capture_output=True, text=True, check=True,
         ).stdout
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return []
+    except FileNotFoundError:
+        sys.exit("gcloud not found on PATH")
+    except subprocess.CalledProcessError as e:
+        sys.exit(f"gcloud {' '.join(args)} failed (exit {e.returncode}): {e.stderr.strip()}")
     try:
         return json.loads(out) if out.strip() else []
     except json.JSONDecodeError:
-        return []
+        sys.exit(f"unparseable JSON from: gcloud {' '.join(args)}")
 
 
 def do_delete(args: list[str]) -> bool:
@@ -129,6 +142,13 @@ class Cleanup:
         self.failures = 0
         self.kept_okd: set[str] = set()
         self.kept_gke: set[str] = set()
+        self.deleted_gke: set[str] = set()
+
+    def preflight(self) -> None:
+        # Fail loudly on missing/expired auth so a blind run can't masquerade as "nothing to clean".
+        r = subprocess.run(["gcloud", "auth", "print-access-token"], capture_output=True, text=True)
+        if r.returncode != 0:
+            sys.exit("gcloud is not authenticated (run `gcloud auth login`): " + r.stderr.strip())
 
     def destroy_okd_clusters(self) -> set[str]:
         log("== Phase 1: OpenShift (OKD) clusters ==")
@@ -211,10 +231,13 @@ class Cleanup:
             # --async: fire-and-forget. The call still fails loudly on auth/permission/not-found,
             # but we don't wait on the server-side delete; a stuck cluster is re-issued next run.
             log(f"Deleting GKE cluster {name} ({location}) (async).")
-            if not do_delete([
+            if do_delete([
                 "gcloud", "container", "clusters", "delete", name,
                 f"--location={location}", f"--project={PROJECT}", "--async", "--quiet",
             ]):
+                # async delete is in flight; protect its resources from the Phase 3 race.
+                self.deleted_gke.add(name)
+            else:
                 self.failures += 1
         return kept
 
@@ -234,9 +257,9 @@ class Cleanup:
             if wants_keep(r):
                 log(f"Keeping {rtype}/{name} (keep label).")
                 continue
-            owner = kept_cluster_of(r, name, self.kept_okd, self.kept_gke)
+            owner = kept_cluster_of(r, name, self.kept_okd, self.kept_gke | self.deleted_gke)
             if owner:
-                log(f"Keeping {rtype}/{name} (belongs to kept cluster {owner}).")
+                log(f"Keeping {rtype}/{name} (belongs to cluster {owner}).")
                 continue
             # in-use resources can't be deleted anyway; a managed disk goes with its cluster (Phase 2).
             if r.get("users"):
@@ -270,9 +293,9 @@ class Cleanup:
             if wants_keep(b):
                 log(f"Keeping bucket {name} (keep label).")
                 continue
-            owner = kept_cluster_of(b, name, self.kept_okd, self.kept_gke)
+            owner = kept_cluster_of(b, name, self.kept_okd, self.kept_gke | self.deleted_gke)
             if owner:
-                log(f"Keeping bucket {name} (belongs to kept cluster {owner}).")
+                log(f"Keeping bucket {name} (belongs to cluster {owner}).")
                 continue
             # gcloud storage names the timestamp creation_time; timeCreated is the legacy fallback.
             created = b.get("creation_time") or b.get("timeCreated") or ""
@@ -297,6 +320,7 @@ class Cleanup:
         log("GCP test-resource cleanup")
         log(f"  project={PROJECT} max_age_hours={MAX_AGE_HOURS} dry_run={str(DRY_RUN).lower()}")
         log(f"  cutoff (UTC epoch)={CUTOFF_EPOCH}")
+        self.preflight()
         self.kept_okd = self.destroy_okd_clusters()
         self.kept_gke = self.delete_gke_clusters()
         self.sweep_orphans()
