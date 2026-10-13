@@ -49,3 +49,5 @@ cluster_metrics "feature" {
   {{- include "feature.clusterMetrics.validate" (dict "Values" $.Values.clusterMetrics "telemetryServices" $.Values.telemetryServices) }}
 {{- end }}
 {{- end }}
+
+{{- define "features.clusterMetrics.rbac" }}[]{{- end }}

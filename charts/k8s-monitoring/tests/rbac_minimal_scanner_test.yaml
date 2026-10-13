@@ -1,0 +1,164 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:braces rule:commas
+suite: RBAC - Minimal mode - User-supplied configuration and notes
+release:
+  name: test
+  namespace: monitoring
+templates:
+  - alloy-config.yaml
+  - collectors/test/rbac.yaml
+  - NOTES.txt
+set:
+  cluster: {name: test-cluster}
+  selfReporting: {enabled: false}
+tests:
+  - it: grants what the components in extraConfig need
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            discovery.kubernetes "services" {
+              role = "service"
+            }
+            remote.kubernetes.secret "credentials" {
+              name      = "credentials"
+              namespace = "apps"
+            }
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [services], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: ClusterRole}
+        notExists:
+          path: metadata.annotations
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: Role}
+        isSubset:
+          path: metadata
+          content: {name: test-alloy-singleton-rbac, namespace: apps}
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resourceNames: [credentials], resources: [secrets], verbs: [get]}
+        template: alloy-config.yaml
+      - matchRegexRaw:
+          pattern: '\* alloy-singleton: discovery.kubernetes \(extraConfig\)'
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: '\* alloy-singleton: remote.kubernetes.secret \(extraConfig\)'
+        template: NOTES.txt
+
+  - it: grants get on every Secret when the name or namespace isn't a literal string
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            remote.kubernetes.secret "credentials" {
+              name      = "credentials"
+              namespace = sys.env("SECRET_NAMESPACE")
+            }
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [secrets], verbs: [get]}
+        template: alloy-config.yaml
+
+  - it: grants what a replaced component needs
+    set:
+      clusterEvents: {enabled: true}
+      destinations:
+        loki: {type: loki, url: http://loki.loki.svc:3100/loki/api/v1/push}
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+      replaceComponent:
+        - type: loki.source.kubernetes_events
+          module: cluster_events
+          name: cluster_events
+          content: |-
+            forward_to = [loki.process.cluster_events.receiver]
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [events], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+      - matchRegexRaw:
+          pattern: '\* alloy-singleton: loki.source.kubernetes_events \(replaceComponent\)'
+        template: NOTES.txt
+
+  - it: grants what a custom destination's configuration needs
+    set:
+      clusterEvents: {enabled: true, namespaces: [team-a]}
+      destinations:
+        custom-loki:
+          type: custom
+          logs: {enabled: true}
+          ecosystem: loki
+          config: |-
+            remote.kubernetes.configmap "settings" {
+              name      = "settings"
+              namespace = "config"
+            }
+            loki.write "custom_loki" {
+              endpoint {
+                url = convert.nonsensitive(remote.kubernetes.configmap.settings.data["url"])
+              }
+            }
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+    asserts:
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'config')].kind"
+          value: Role
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resourceNames: [settings], resources: [configmaps], verbs: [get]}
+        template: alloy-config.yaml
+
+  - it: infers rules for components that the computed rules miss, and flags them
+    set:
+      testing: true
+      collectors:
+        alloy-singleton: {extraConfig: " "}
+    asserts:
+      - equal:
+          path: data.driftGuard
+          value: '{"inferred":["discovery.kubernetes (nodes)","remote.kubernetes.configmap (configMap)","remote.kubernetes.secret (secret apps/creds)"],"resolved":{"cluster":[{"apiGroups":[""],"resources":["configmaps"],"verbs":["get"]},{"apiGroups":[""],"resources":["nodes"],"verbs":["get","list","watch"]}],"dropped":[],"namespaced":{"a":[{"apiGroups":[""],"resources":["pods"],"verbs":["get","list","watch"]}],"apps":[{"apiGroups":[""],"resourceNames":["creds"],"resources":["secrets"],"verbs":["get"]}]}},"userComponents":[]}'
+        template: collectors/test/rbac.yaml
+      - equal:
+          path: data.userConfig
+          value: '{"inferred":[],"resolved":{"cluster":[{"apiGroups":[""],"resources":["configmaps"],"verbs":["get"]},{"apiGroups":[""],"resources":["nodes","pods"],"verbs":["get","list","watch"]}],"dropped":[],"namespaced":{"apps":[{"apiGroups":[""],"resourceNames":["creds"],"resources":["secrets"],"verbs":["get"]}]}},"userComponents":["discovery.kubernetes (extraConfig)","remote.kubernetes.secret (extraConfig)","remote.kubernetes.configmap (extraConfig)"]}'
+        template: collectors/test/rbac.yaml
+
+  - it: lists collectors that stay in alloy mode because of remote configuration
+    set:
+      collectors:
+        alloy-singleton:
+          rbac: {mode: minimal}
+          remoteConfig:
+            enabled: true
+            url: https://fleet-management-prod-001.grafana.net
+            auth:
+              type: basic
+              username: 123456
+              password: "It's a secret to everyone"
+    asserts:
+      - matchRegexRaw:
+          pattern: 'These collectors use remote configuration[^*]+\* alloy-singleton'
+        template: NOTES.txt

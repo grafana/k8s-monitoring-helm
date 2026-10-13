@@ -173,3 +173,5 @@ grafana_kubernetes_monitoring_collector_info{{ include "label_list" $labels }} 1
 {{- define "feature.selfReporting.notes.deployments" }}{{ end }}
 {{- define "feature.selfReporting.notes.task" }}{{ end }}
 {{- define "feature.selfReporting.notes.actions" }}{{ end }}
+
+{{- define "features.selfReporting.rbac" }}[]{{- end }}

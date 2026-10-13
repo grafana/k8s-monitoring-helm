@@ -1,0 +1,137 @@
+// Self Reporting
+prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
+  set_collectors = ["textfile"]
+  textfile {
+    directory = "/etc/release-info"
+  }
+} // prometheus.exporter.unix "kubernetes_monitoring_telemetry"
+
+discovery.relabel "kubernetes_monitoring_telemetry" {
+  targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
+  rule {
+    target_label = "instance"
+    action = "replace"
+    replacement = "k8smon"
+  }
+  rule {
+    target_label = "job"
+    action = "replace"
+    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  }
+} // discovery.relabel "kubernetes_monitoring_telemetry"
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+  scrape_interval = "60s"
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
+
+prometheus.relabel "kubernetes_monitoring_telemetry" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "grafana_kubernetes_monitoring_.*"
+    action = "keep"
+  }
+  forward_to = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+} // prometheus.relabel "kubernetes_monitoring_telemetry"
+
+
+
+discovery.kubernetes "self" {
+  role = "pod"
+  selectors {
+    role  = "pod"
+    label = "app.kubernetes.io/instance=k8smon-alloy-custom"
+  }
+}
+
+discovery.relabel "self" {
+  targets = discovery.kubernetes.self.targets
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    regex         = "http-metrics"
+    action        = "keep"
+  }
+}
+
+remote.kubernetes.secret "prometheus_credentials" {
+  name      = "prometheus-credentials"
+  namespace = "credentials"
+}
+
+prometheus.scrape "self" {
+  targets    = discovery.relabel.self.output
+  job_name   = "extra-config"
+  forward_to = [prometheus.remote_write.extra_config.receiver]
+}
+
+prometheus.remote_write "extra_config" {
+  endpoint {
+    url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["username"])
+      password = remote.kubernetes.secret.prometheus_credentials.data["password"]
+    }
+  }
+  external_labels = {
+    cluster = "rbac-minimal-extra-config",
+  }
+}
+
+// Destination: prometheus (prometheus)
+otelcol.exporter.prometheus "prometheus" {
+  add_metric_suffixes = true
+  resource_to_telemetry_conversion = false
+  keep_identifying_resource_attributes = true
+  forward_to = [prometheus.remote_write.prometheus.receiver]
+} // otelcol.exporter.prometheus "prometheus"
+
+prometheus.remote_write "prometheus" {
+  endpoint {
+    url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
+    headers = {
+    }
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["username"])
+      password = remote.kubernetes.secret.prometheus.data["password"]
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    send_native_histograms = false
+
+    queue_config {
+      capacity = 10000
+      min_shards = 1
+      max_shards = 50
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "30ms"
+      max_backoff = "5s"
+      retry_on_http_429 = true
+      sample_age_limit = "0s"
+    }
+  }
+
+  wal {
+    truncate_frequency = "2h"
+    min_keepalive_time = "5m"
+    max_keepalive_time = "8h"
+  }
+  external_labels = {
+    "cluster" = "rbac-minimal-extra-config",
+    "k8s_cluster_name" = "rbac-minimal-extra-config",
+  }
+} // prometheus.remote_write "prometheus"
+
+remote.kubernetes.secret "prometheus" {
+  name      = "prometheus-k8smon-k8s-monitoring"
+  namespace = "default"
+} // remote.kubernetes.secret "prometheus"
+

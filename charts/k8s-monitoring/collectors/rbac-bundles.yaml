@@ -1,0 +1,112 @@
+---
+# RBAC rule bundles used by collectors with `rbac.mode: minimal`. Each bundle covers one kind of Kubernetes API access.
+# A bundle with `clusterOnly: true` always goes in the ClusterRole, because the component that uses it can't be
+# restricted to namespaces. Rules for cluster-scoped resources always go in the ClusterRole too.
+# docs/RBAC.md documents these bundles, so update it when changing this file.
+pods:
+  rules:
+    - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
+services:
+  rules:
+    - {apiGroups: [""], resources: [services], verbs: [get, list, watch]}
+endpoints:
+  rules:
+    - {apiGroups: [""], resources: [endpoints, services, pods], verbs: [get, list, watch]}
+endpointslices:
+  rules:
+    - {apiGroups: [discovery.k8s.io], resources: [endpointslices], verbs: [get, list, watch]}
+    - {apiGroups: [""], resources: [services, pods], verbs: [get, list, watch]}
+ingresses:
+  rules:
+    - {apiGroups: [networking.k8s.io], resources: [ingresses], verbs: [get, list, watch]}
+replicasets:
+  rules:
+    - {apiGroups: [apps], resources: [replicasets], verbs: [get, list, watch]}
+nodes:
+  rules:
+    - {apiGroups: [""], resources: [nodes], verbs: [get, list, watch]}
+namespaces:
+  rules:
+    - {apiGroups: [""], resources: [namespaces], verbs: [get, list, watch]}
+kubeletMetrics:
+  rules:
+    - {apiGroups: [""], resources: [nodes/metrics], verbs: [get]}
+kubeletProxy:
+  rules:
+    - {apiGroups: [""], resources: [nodes/proxy], verbs: [get]}
+kubeletPods:
+  rules:
+    - {apiGroups: [""], resources: [nodes/pods], verbs: [get]}
+metricsEndpoint:
+  rules:
+    - {nonResourceURLs: [/metrics], verbs: [get]}
+eksControlPlaneMetrics:
+  clusterOnly: true
+  rules:
+    - {apiGroups: [metrics.eks.amazonaws.com], resources: [kcm/metrics, ksh/metrics, ksh/resourcemetrics], verbs: [get]}
+podLogs:
+  rules:
+    - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
+    - {apiGroups: [""], resources: [pods/log], verbs: [get]}
+events:
+  rules:
+    - {apiGroups: [""], resources: [events], verbs: [get, list, watch]}
+podLogsObjects:
+  clusterOnly: true
+  rules:
+    - {apiGroups: [monitoring.grafana.com], resources: [podlogs], verbs: [get, list, watch]}
+    - {apiGroups: [""], resources: [pods, namespaces], verbs: [get, list, watch]}
+    - {apiGroups: [""], resources: [pods/log], verbs: [get]}
+promOperator.podmonitors:
+  rules:
+    - {apiGroups: [monitoring.coreos.com], resources: [podmonitors], verbs: [get, list, watch]}
+promOperator.servicemonitors:
+  rules:
+    - {apiGroups: [monitoring.coreos.com], resources: [servicemonitors], verbs: [get, list, watch]}
+promOperator.probes:
+  rules:
+    - {apiGroups: [monitoring.coreos.com], resources: [probes], verbs: [get, list, watch]}
+promOperator.scrapeconfigs:
+  rules:
+    - {apiGroups: [monitoring.coreos.com], resources: [scrapeconfigs], verbs: [get, list, watch]}
+promOperatorCredentials:
+  rules:
+    - {apiGroups: [""], resources: [secrets, configmaps], verbs: [get]}
+prometheusRules:
+  clusterOnly: true
+  rules:
+    - {apiGroups: [monitoring.coreos.com], resources: [prometheusrules], verbs: [get, list, watch]}
+    - {apiGroups: [""], resources: [namespaces], verbs: [get, list, watch]}
+alertmanagerConfigs:
+  clusterOnly: true
+  rules:
+    - {apiGroups: [monitoring.coreos.com], resources: [alertmanagerconfigs], verbs: [get, list, watch]}
+    - {apiGroups: [""], resources: [namespaces], verbs: [get, list, watch]}
+    - {apiGroups: [""], resources: [secrets, configmaps], verbs: [get]}
+k8sattributes:
+  rules:
+    - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
+    - {apiGroups: [apps], resources: [replicasets], verbs: [get, list, watch]}
+nodeGet:
+  rules:
+    - {apiGroups: [""], resources: [nodes], verbs: [get, list]}
+kubeadmConfig:
+  rules:
+    - {apiGroups: [""], resources: [configmaps], resourceNames: [kubeadm-config], verbs: [get]}
+    - {apiGroups: [""], resources: [namespaces], resourceNames: [kube-system], verbs: [get]}
+openshiftInfrastructures:
+  rules:
+    - {apiGroups: [config.openshift.io], resources: [infrastructures, infrastructures/status], verbs: [get, list, watch]}
+loadBalancer:
+  rules:
+    - {apiGroups: [discovery.k8s.io], resources: [endpointslices], verbs: [get, list, watch]}
+    - {apiGroups: [""], resources: [endpoints], verbs: [get, list, watch]}
+secret:
+  rules:
+    - {apiGroups: [""], resources: [secrets], verbs: [get]}
+configMap:
+  rules:
+    - {apiGroups: [""], resources: [configmaps], verbs: [get]}
+configMapWriter:
+  rules:
+    - {apiGroups: [""], resources: [configmaps], verbs: [get, create, update]}

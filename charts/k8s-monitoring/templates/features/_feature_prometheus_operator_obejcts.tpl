@@ -47,3 +47,5 @@ prometheus_operator_objects "feature" {
 {{- include "feature.prometheusOperatorObjects.validate" (dict "Values" $.Values.prometheusOperatorObjects) }}
 {{- end -}}
 {{- end -}}
+
+{{- define "features.prometheusOperatorObjects.rbac" }}[]{{- end }}

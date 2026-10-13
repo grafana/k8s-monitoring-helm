@@ -1,0 +1,52 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: rbac-minimal-extra-config
+
+subject:
+  releaseName: k8smon
+  path: ../../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: dependencies/credentials.yaml
+  - preset: prometheus
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+
+tests:
+  - type: kubernetes-objects-test
+    values:
+      checks:
+        - {kind: ClusterRole, name: k8smon-alloy-metrics-rbac}
+        - {kind: ClusterRole, name: k8smon-alloy-custom-rbac}
+        - {kind: Role, name: k8smon-alloy-custom-rbac, namespace: credentials}
+        - {kind: ClusterRole, name: k8smon-alloy-metrics, expect: {count: 0}}
+        - {kind: ClusterRole, name: k8smon-alloy-custom, expect: {count: 0}}
+
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: rbac-minimal-extra-config
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            PROMETHEUS_USER: promuser
+            PROMETHEUS_PASS: prometheuspassword
+          queries:
+            # The replaced component lists Pods in every namespace
+            - query: kube_node_info{cluster="$CLUSTER"}
+              type: promql
+            # extraConfig discovers Pods, and reads the remote_write credentials from a Secret by name
+            - query: alloy_build_info{cluster="$CLUSTER", job="extra-config"}
+              type: promql

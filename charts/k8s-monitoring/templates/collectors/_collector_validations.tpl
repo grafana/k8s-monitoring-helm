@@ -182,3 +182,21 @@
     {{- end }}
   {{- end }}
 {{- end }}
+
+{{/* Inputs: name (collector name), collectorValues (merged collector values), valuesPath (where the collector values are set) */}}
+{{- define "collectors.validate.rbac" }}
+  {{- $mode := dig "rbac" "mode" "alloy" .collectorValues }}
+  {{- if not (has $mode (list "alloy" "minimal")) }}
+    {{- $msg := list "" (printf "The %s collector has an unknown RBAC mode: %q" .name $mode) }}
+    {{- $msg = append $msg "Please set rbac.mode to \"alloy\" or \"minimal\"." }}
+    {{- fail (join "\n" $msg) }}
+  {{- end }}
+  {{- if eq (include "collector.alloy.rbacMode" .collectorValues) "minimal" }}
+    {{- if and (not (dig "serviceAccount" "create" true .collectorValues)) (not (dig "serviceAccount" "name" "" .collectorValues)) }}
+      {{- $msg := list "" (printf "The %s collector uses rbac.mode: minimal, but does not create a ServiceAccount or name one." .name) }}
+      {{- $msg = append $msg "Its RBAC would be granted to the namespace's \"default\" ServiceAccount." }}
+      {{- $msg = append $msg (printf "Please set %s.serviceAccount.name to the ServiceAccount that the collector runs as." (.valuesPath | default (printf "collectors.%s" .name))) }}
+      {{- fail (join "\n" $msg) }}
+    {{- end }}
+  {{- end }}
+{{- end }}

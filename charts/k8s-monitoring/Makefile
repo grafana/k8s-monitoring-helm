@@ -337,8 +337,14 @@ examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES)
 check-alloy-closures: $(EXAMPLE_ALLOY_FILES) $(INTEGRATION_TEST_ALLOY_FILES) $(PLATFORM_TEST_ALLOY_FILES)
 	awk -f ../../scripts/check-alloy-closures.awk $(EXAMPLE_ALLOY_FILES) $(INTEGRATION_TEST_ALLOY_FILES) $(PLATFORM_TEST_ALLOY_FILES)
 
+# Every example rendered with rbac.mode: minimal, for the RBAC drift check in tests/example-checks.
+RBAC_MINIMAL_OUTPUT_FILES := $(EXAMPLE_VALUES_FILES:docs/examples/%/values.yaml=tests/example-checks/.rendered/rbac-minimal/%.yaml)
+tests/example-checks/.rendered/rbac-minimal/%.yaml: docs/examples/%/values.yaml $(HELM_TEMPLATE_DEPS) | build-features
+	mkdir -p $(dir $@)
+	$(HELM) template $(EXAMPLE_RELEASE_NAME) . -f $< --set collectorCommon.alloy.rbac.mode=minimal > $@
+
 .PHONY: example-checks
-example-checks: $(EXAMPLE_OUTPUT_FILES)
+example-checks: $(EXAMPLE_OUTPUT_FILES) $(RBAC_MINIMAL_OUTPUT_FILES)
 ifdef HAS_SHELLSPEC
 	shellspec -c tests/example-checks
 else
@@ -372,6 +378,7 @@ clean: clean-examples
 
 .PHONY: clean-examples
 clean-examples:
+	rm -rf tests/example-checks/.rendered
 	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(INTEGRATION_TEST_ALLOY_FILES) $(PLATFORM_TEST_OUTPUT_FILES) $(PLATFORM_TEST_ALLOY_FILES) $(PLATFORM_TEST_README_FILES)
 
 .PHONY: build-features
