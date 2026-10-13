@@ -12,12 +12,13 @@ metadata:
     app.kubernetes.io/version: "1.13.0"
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
+
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: k8smon-alloy-metrics
+  name: k8smon-alloy
   namespace: default
 data:
   config.alloy: |
@@ -40,6 +41,11 @@ data:
           convert_classic_histograms_to_nhcb = false
           native_histogram_bucket_limit = 0
           native_histogram_min_bucket_factor = 0
+        }
+        rule {  // namespaces contains a regex, so PodMonitors cannot be pre-filtered by the component; keep only matching namespaces here
+          source_labels = ["job"]
+          regex = "podMonitor/(nginx|nginx-.*)/.*"
+          action = "keep"
         }
         rule {
           source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
@@ -66,8 +72,9 @@ data:
         forward_to = argument.metrics_destinations.value
       } // prometheus.operator.probes "probes"
     
-      // Prometheus Operator Probe objects
+      // Prometheus Operator ScrapeConfig objects
       prometheus.operator.scrapeconfigs "scrapeConfigs" {
+        namespaces = ["default"]
         clustering {
           enabled = true
         }
@@ -124,7 +131,7 @@ data:
     grafana_kubernetes_monitoring_feature_info{feature="prometheusOperatorObjects", sources="ServiceMonitors,PodMonitors,Probes", version="1.0.0"} 1
     # HELP grafana_kubernetes_monitoring_collector_info A metric to report the collectors of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_collector_info gauge
-    grafana_kubernetes_monitoring_collector_info{kind="statefulset", name="alloy-metrics", presets="clustered,statefulset", replicas="1", type="alloy"} 1
+    grafana_kubernetes_monitoring_collector_info{kind="statefulset", name="alloy", presets="clustered,statefulset", replicas="1", type="alloy"} 1
     # EOF
       `
     } // prometheus.exporter.static "kubernetes_monitoring_telemetry"
@@ -186,6 +193,7 @@ data:
         "k8s_cluster_name" = "prom-operator-objects-cluster",
       }
     } // prometheus.remote_write "localprometheus"
+
 ---
 # Source: k8s-monitoring/templates/release-info.yaml
 apiVersion: v1
@@ -204,8 +212,11 @@ data:
     grafana_kubernetes_monitoring_feature_info{feature="prometheusOperatorObjects", sources="ServiceMonitors,PodMonitors,Probes", version="1.0.0"} 1
     # HELP grafana_kubernetes_monitoring_collector_info A metric to report the collectors of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_collector_info gauge
-    grafana_kubernetes_monitoring_collector_info{kind="statefulset", name="alloy-metrics", presets="clustered,statefulset", replicas="1", type="alloy"} 1
+    grafana_kubernetes_monitoring_collector_info{kind="statefulset", name="alloy", presets="clustered,statefulset", replicas="1", type="alloy"} 1
     # EOF
+    
+
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -233,6 +244,7 @@ rules:
       - patch
       - update
       - watch
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-objects.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -270,6 +282,7 @@ rules:
   - apiGroups: ["rbac.authorization.k8s.io"]
     resources: ["clusterroles", "clusterrolebindings", "roles", "rolebindings"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete", "bind", "escalate"]
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -290,6 +303,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-objects.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -310,6 +324,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/leader-election.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -355,6 +370,7 @@ rules:
     verbs:
       - create
       - patch
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/leader-election.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -376,6 +392,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/service.yaml
 apiVersion: v1
@@ -403,6 +420,7 @@ spec:
   selector:
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/deployment.yaml
 apiVersion: apps/v1
@@ -474,12 +492,13 @@ spec:
             readOnlyRootFilesystem: true
       nodeSelector:
         kubernetes.io/os: linux
+
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
-  name: k8smon-alloy-metrics
+  name: k8smon-alloy
   namespace: default
   annotations:
     helm.sdk.operatorframework.io/uninstall-wait: "true"
@@ -487,7 +506,7 @@ spec:
   alloy:
     clustering:
       enabled: true
-      name: alloy-metrics
+      name: alloy
     configMap:
       create: false
     resources: {}
@@ -523,7 +542,7 @@ spec:
     type: statefulset
   crds:
     create: false
-  nameOverride: alloy-metrics
+  nameOverride: alloy
 ---
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
 apiVersion: v1
@@ -535,6 +554,7 @@ metadata:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
     "helm.sh/hook-weight": "5"
+
 ---
 # Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
 apiVersion: v1
@@ -545,6 +565,7 @@ metadata:
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+
 ---
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -560,6 +581,7 @@ rules:
   - apiGroups: ["apps"]
     resources: ["deployments"]
     verbs: ["get", "list", "watch", "patch"]
+
 ---
 # Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -577,6 +599,7 @@ rules:
   - apiGroups: ["collectors.grafana.com"]
     resources: ["alloys"]
     verbs: ["get", "list", "watch", "delete"]
+
 ---
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -596,6 +619,7 @@ roleRef:
   kind: Role
   name: k8smon-k8s-monitoring-add-finalizer
   apiGroup: rbac.authorization.k8s.io
+
 ---
 # Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -614,6 +638,7 @@ roleRef:
   kind: Role
   name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
   apiGroup: rbac.authorization.k8s.io
+
 ---
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
 apiVersion: batch/v1
@@ -667,6 +692,7 @@ spec:
             runAsUser: 4242
             seccompProfile:
               type: RuntimeDefault
+
 ---
 # Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
 apiVersion: batch/v1
@@ -705,9 +731,9 @@ spec:
             - /bin/bash
             - -ce
             - |
-              echo "Deleting Alloy instance: alloy/k8smon-alloy-metrics..."
-              kubectl delete alloy/k8smon-alloy-metrics --ignore-not-found=true --wait
-              kubectl wait --for=delete alloy/k8smon-alloy-metrics --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-metrics or it may not exist."
+              echo "Deleting Alloy instance: alloy/k8smon-alloy..."
+              kubectl delete alloy/k8smon-alloy --ignore-not-found=true --wait
+              kubectl wait --for=delete alloy/k8smon-alloy --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy or it may not exist."
 
               kubectl patch \
                 --namespace=default \
@@ -724,3 +750,4 @@ spec:
             runAsUser: 4242
             seccompProfile:
               type: RuntimeDefault
+
