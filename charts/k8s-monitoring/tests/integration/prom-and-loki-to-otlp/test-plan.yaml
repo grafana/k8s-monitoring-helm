@@ -101,6 +101,10 @@ tests:
             - query: count_over_time({k8s_cluster_name="$CLUSTER", service_name="integrations/kubernetes/eventhandler"}[1h])
               type: logql
 
+            # Cluster events arrive with the auto-injected OTLP resource labels
+            - query: count_over_time({k8s_cluster_name="$CLUSTER", service_name="integrations/kubernetes/eventhandler"} | resources_k8s_object_kind!="" [1h])
+              type: logql
+
             # Pod logs
             - query: count_over_time({k8s_cluster_name="$CLUSTER", service_name!="integrations/kubernetes/eventhandler", k8s_namespace_name="default", k8s_pod_name="k8smon-alloy-metrics-0"}[1h])
               type: logql
