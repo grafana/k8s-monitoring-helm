@@ -52,3 +52,5 @@ pod_logs_via_loki "feature" {
 {{- include "feature.podLogsViaLoki.collector.validate" (dict "Values" $.Values.podLogsViaLoki "Collector" $collectorValues "CollectorName" $collectorName) }}
 {{- end -}}
 {{- end -}}
+
+{{- define "features.podLogsViaLoki.rbac" }}[]{{- end }}

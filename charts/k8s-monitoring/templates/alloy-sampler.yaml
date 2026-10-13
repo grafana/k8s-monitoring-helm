@@ -42,7 +42,8 @@
     {{- $alloyConfig = cat $alloyConfig (include "collectors.logging.alloy" $alloyValues | trim | nindent 0) }}
     {{- $alloyConfig = cat $alloyConfig (include "collectors.liveDebugging.alloy" $alloyValues | trim | nindent 0) }}
     {{- $alloyConfig = cat $alloyConfig (include "collectors.remoteConfig.alloy" $values | trim | nindent 0) }}
-    {{- $alloyConfig = cat $alloyConfig (include "collectors.extraConfig.alloy" $values | trim | nindent 0) }}
+    {{- $extraConfig := include "collectors.extraConfig.alloy" $values | trim }}
+    {{- $alloyConfig = cat $alloyConfig ($extraConfig | nindent 0) }}
     {{- $alloyConfig = cat $alloyConfig ($destinationConfigComponents | trim | nindent 0) }}
     {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" | trim }}
 
@@ -66,6 +67,23 @@ metadata:
   {{- end }}
   {{- end }}
 spec:{{ $alloySpec | trim | nindent 2 }}
+{{- if eq (include "collector.alloy.rbacMode" $alloyValues) "minimal" }}
+  {{- $rbacEntries := list }}
+  {{- if eq (include "secrets.usesKubernetesSecret" $destination) "true" }}
+    {{- $rbacEntries = append $rbacEntries (include "collectors.rbac.secretEntry" (merge (dict "destination" $destination "destinationName" $destinationName) $) | fromYaml) }}
+  {{- end }}
+  {{- include "collectors.rbac.instance" (dict
+    "Files" $.Files
+    "collectorValues" $alloyValues
+    "entries" $rbacEntries
+    "userConfig" (include "collectors.rbac.userConfig" (dict "extraConfig" $extraConfig) | fromYamlArray)
+    "config" $alloyConfig
+    "name" $collectorName
+    "namespace" (include "helper.namespace" $)
+    "labels" (include "collector.alloy.labels" $ | fromYaml)
+    "serviceAccountName" (include "collector.alloy.serviceAccountName" $values)
+    "valuesPath" (printf "destinations.%s.processors.tailSampling.collector" $destinationName)) }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

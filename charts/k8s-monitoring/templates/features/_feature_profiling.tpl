@@ -108,3 +108,5 @@ profiling "feature" {
 {{- include "feature.profiling.validate" (dict "Values" $.Values.profiling) }}
 {{- end -}}
 {{- end -}}
+
+{{- define "features.profiling.rbac" }}[]{{- end }}

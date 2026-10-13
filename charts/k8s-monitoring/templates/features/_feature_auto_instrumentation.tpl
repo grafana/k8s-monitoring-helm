@@ -100,3 +100,5 @@ Beyla on a unique port.
 {{- end -}}
 
 {{- define "features.autoInstrumentation.collector.values" }}{{- end -}}
+
+{{- define "features.autoInstrumentation.rbac" }}[]{{- end }}

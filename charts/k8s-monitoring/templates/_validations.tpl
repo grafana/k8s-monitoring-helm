@@ -30,6 +30,7 @@
   {{- include "collectors.validate.featuresEnabled" . }}
   {{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
     {{- include "collectors.validate.remoteConfig" (deepCopy $ | merge (dict "collectorName" $collectorName)) }}
+    {{- include "collectors.validate.rbac" (dict "name" $collectorName "collectorValues" (include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml)) }}
   {{- end }}
   {{- include "telemetryServices.validate" . }}
   {{- include "alloyOperator.validate" . }}

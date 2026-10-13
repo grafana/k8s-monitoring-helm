@@ -49,3 +49,5 @@ pod_logs_via_opentelemetry "feature" {
 {{- include "feature.podLogsViaOpenTelemetry.collector.validate" (dict "Values" $.Values.podLogsViaOpenTelemetry "Collector" $collectorValues "CollectorName" $collectorName) }}
 {{- end -}}
 {{- end -}}
+
+{{- define "features.podLogsViaOpenTelemetry.rbac" }}[]{{- end }}

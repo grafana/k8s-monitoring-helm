@@ -63,3 +63,5 @@ loki_logs_receiver "feature" {
   {{- include "collectors.requireExtraPort" (dict "collectorName" $collectorName "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.lokiLogsReceiver.port "portName" "loki-logs" "portProtocol" "TCP") }}
 {{- end -}}
 {{- end -}}
+
+{{- define "features.lokiLogsReceiver.rbac" }}[]{{- end }}

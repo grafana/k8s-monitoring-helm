@@ -51,3 +51,5 @@ pod_logs_via_kubernetes_api "feature" {
 {{- include "feature.podLogsViaKubernetesApi.collector.validate" (dict "Values" $.Values.podLogsViaKubernetesApi "Collector" $collectorValues "CollectorName" $collectorName) }}
 {{- end -}}
 {{- end -}}
+
+{{- define "features.podLogsViaKubernetesApi.rbac" }}[]{{- end }}
