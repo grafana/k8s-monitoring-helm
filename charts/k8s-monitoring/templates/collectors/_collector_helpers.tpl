@@ -309,3 +309,50 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
   {{- end }}
 {{- end }}
 {{- end }}
+
+{{/* Lists the features assigned to a collector, whether or not they are enabled. Inputs: . (root), collectorName */}}
+{{- define "collectors.features" -}}
+{{- range $featureKey := include "features.list" . | fromYamlArray }}
+  {{- $featureCollectorNames := include "collectors.getCollectorsForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) | fromYamlArray }}
+  {{- if has $.collectorName $featureCollectorNames }}
+- {{ $featureKey }}
+  {{- end }}
+{{- end }}
+{{- end }}
+
+{{/* Lists the destinations whose components are rendered on a collector. Inputs: . (root), collectorName, featureKeys (from collectors.features) */}}
+{{- define "collectors.destinationNames" -}}
+{{- /* Seed the collector's destination list with any explicitly included destinations. */}}
+{{- $destinationNames := (get $.Values.collectors $.collectorName).includeDestinations | default list }}
+{{- /* Add the destinations required by each feature assigned to this collector. */}}
+{{- range $featureKey := .featureKeys }}
+  {{- $destinationNames = concat $destinationNames ((include (printf "features.%s.destinations" $featureKey) $) | fromYamlArray) }}
+{{- end }}
+
+{{- /* Router destination type. Any enabled `type: router` destination that ended up in
+     $destinationNames (because a feature pointed at it) fans out to real destinations that are
+     never referenced by a feature directly, so those downstream destinations would otherwise
+     never get a body rendered and the router's gates would dangle. Union them in here, before
+     destinations.alloy.config renders bodies. Single-level only: a router referencing
+     another router is not resolved transitively by this pass. */}}
+{{- range $routerCandidateName := $destinationNames }}
+  {{- if hasKey $.Values.destinations $routerCandidateName }}
+    {{- $routerCandidate := get $.Values.destinations $routerCandidateName }}
+    {{- if and (eq $routerCandidate.type "router") (not $routerCandidate.disabled) }}
+      {{- range $downstreamName := ($routerCandidate.defaultDestinations | default list) }}
+        {{- if and (hasKey $.Values.destinations $downstreamName) (not (get $.Values.destinations $downstreamName).disabled) }}
+          {{- $destinationNames = append $destinationNames $downstreamName }}
+        {{- end }}
+      {{- end }}
+      {{- range $route := ($routerCandidate.routes | default list) }}
+        {{- range $downstreamName := ($route.destinations | default list) }}
+          {{- if and (hasKey $.Values.destinations $downstreamName) (not (get $.Values.destinations $downstreamName).disabled) }}
+            {{- $destinationNames = append $destinationNames $downstreamName }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- $destinationNames | uniq | sortAlpha | toYaml }}
+{{- end }}
