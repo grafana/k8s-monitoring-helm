@@ -1,6 +1,13 @@
-{{/* Inputs: . (root with collectorName), destinationNames, alloyValues (optional) */}}
+{{/* Inputs: . (root with collectorName), featureKeys, destinationNames, alloyValues (optional) */}}
 {{- define "collectors.rbac.entries" -}}
-{{- $entries := include "collectors.rbac.secretEntries" $ | fromYamlArray }}
+{{- $featuresWithRules := list "clusterMetrics" }}
+{{- $entries := list }}
+{{- range $featureKey := .featureKeys }}
+  {{- if has $featureKey $featuresWithRules }}
+    {{- $entries = concat $entries (include (printf "features.%s.rbac" $featureKey) $ | fromYamlArray) }}
+  {{- end }}
+{{- end }}
+{{- $entries = concat $entries (include "collectors.rbac.secretEntries" $ | fromYamlArray) }}
 {{- $entries = concat $entries (include "collectors.rbac.sdkInjectorEntries" $ | fromYamlArray) }}
 {{- $entries | toYaml }}
 {{- end }}
@@ -236,7 +243,7 @@
 {{- join ", " ($descriptions | uniq) }}
 {{- end }}
 
-{{/* Inputs: catalog, entries. Output: {cluster, namespaced}, mapping "apiGroup|resource|name" to verbs */}}
+{{/* Inputs: catalog, entries. Output: {cluster, namespaced}, mapping "apiGroup|resource|name" or a URL to verbs */}}
 {{- define "collectors.rbac.expand" -}}
 {{- $state := dict "cluster" (dict) "namespaced" (dict) }}
 {{- range $entry := .entries }}
@@ -245,6 +252,9 @@
     {{- fail (printf "\nUnknown RBAC bundle %q." $entry.bundle) }}
   {{- end }}
   {{- range $rule := $bundle.rules }}
+    {{- range $url := $rule.nonResourceURLs }}
+      {{- $_ := set $state.cluster $url (concat (get $state.cluster $url | default list) $rule.verbs | uniq | sortAlpha) }}
+    {{- end }}
     {{- range $resource := $rule.resources }}
       {{- $scopes := list "" }}
       {{- if and $entry.namespaces (not $rule.clusterScoped) }}
@@ -276,8 +286,10 @@
 {{- if not .sameScope }}
   {{- $candidates = append $candidates .key }}
 {{- end }}
-{{- if index $parts 2 }}
-  {{- $candidates = append $candidates (printf "%s|%s|" (index $parts 0) (index $parts 1)) }}
+{{- if eq (len $parts) 3 }}
+  {{- if index $parts 2 }}
+    {{- $candidates = append $candidates (printf "%s|%s|" (index $parts 0) (index $parts 1)) }}
+  {{- end }}
 {{- end }}
 {{- $covered := false }}
 {{- range $candidate := $candidates }}
@@ -317,11 +329,15 @@
 {{- $groups := dict }}
 {{- range $key, $verbs := . }}
   {{- $parts := splitList "|" $key }}
-  {{- $groupKey := printf "1|%s|%s" (index $parts 0) (join "," $verbs) }}
-  {{- $item := index $parts 1 }}
-  {{- if index $parts 2 }}
-    {{- $groupKey = printf "2|%s|%s|%s" (index $parts 0) (index $parts 1) (join "," $verbs) }}
-    {{- $item = index $parts 2 }}
+  {{- $groupKey := printf "3|%s" (join "," $verbs) }}
+  {{- $item := $key }}
+  {{- if not (hasPrefix "/" $key) }}
+    {{- $groupKey = printf "1|%s|%s" (index $parts 0) (join "," $verbs) }}
+    {{- $item = index $parts 1 }}
+    {{- if index $parts 2 }}
+      {{- $groupKey = printf "2|%s|%s|%s" (index $parts 0) (index $parts 1) (join "," $verbs) }}
+      {{- $item = index $parts 2 }}
+    {{- end }}
   {{- end }}
   {{- $group := get $groups $groupKey | default (dict "parts" $parts "verbs" $verbs "items" (list)) }}
   {{- $_ := set $group "items" (append $group.items $item) }}
@@ -329,7 +345,9 @@
 {{- end }}
 {{- $rules := list }}
 {{- range $groupKey, $group := $groups }}
-  {{- if hasPrefix "1|" $groupKey }}
+  {{- if hasPrefix "3|" $groupKey }}
+    {{- $rules = append $rules (dict "nonResourceURLs" $group.items "verbs" $group.verbs) }}
+  {{- else if hasPrefix "1|" $groupKey }}
     {{- $rules = append $rules (dict "apiGroups" (list (index $group.parts 0)) "resources" $group.items "verbs" $group.verbs) }}
   {{- else }}
     {{- $rules = append $rules (dict "apiGroups" (list (index $group.parts 0)) "resources" (list (index $group.parts 1)) "resourceNames" $group.items "verbs" $group.verbs) }}

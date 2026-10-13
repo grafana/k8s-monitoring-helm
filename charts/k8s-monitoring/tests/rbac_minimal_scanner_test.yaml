@@ -484,3 +484,39 @@ tests:
       - failedTemplate:
           errorPattern: 'Could not read a discovery.kubernetes block to compute its RBAC'
         template: alloy-config.yaml
+
+  - it: warns about the nodes/proxy grant
+    set:
+      clusterMetrics:
+        enabled: true
+        kubelet: {nodeAddressFormat: proxy}
+        kube-state-metrics: {enabled: false}
+      destinations:
+        prometheus: {type: prometheus, url: http://prometheus.prometheus.svc:9090/api/v1/write}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+          rbac: {mode: minimal}
+    asserts:
+      - matchRegexRaw:
+          pattern: 'so they were granted\s+"get" on nodes/proxy'
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: '\* alloy-metrics: clusterMetrics.kubelet'
+        template: NOTES.txt
+
+  - it: adds no RBAC notes in alloy mode
+    set:
+      clusterMetrics:
+        enabled: true
+        kubelet: {nodeAddressFormat: proxy}
+        kube-state-metrics: {enabled: false}
+      destinations:
+        prometheus: {type: prometheus, url: http://prometheus.prometheus.svc:9090/api/v1/write}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+    asserts:
+      - notMatchRegexRaw:
+          pattern: 'nodes/proxy|rbac-'
+        template: NOTES.txt

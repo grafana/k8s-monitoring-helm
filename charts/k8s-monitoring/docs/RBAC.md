@@ -39,6 +39,8 @@ so it renders only the rules they need:
     otherwise.
 *   A destination whose credentials are in a Kubernetes Secret gets `get` on that one Secret, in its namespace.
 *   The ClusterRole and Roles show up in `helm template` output, so they can be reviewed.
+*   Some settings that need extra permissions, such as `nodeAddressFormat: proxy` and the `eks-proxy` discovery mode,
+    get them automatically.
 
 The objects are named `<collector full name>-rbac`. Roles outside the release namespace, such as the one for a
 destination's Secret in another namespace, are named `<collector full name>-<release namespace>-rbac`, so releases with
@@ -51,7 +53,17 @@ chart. `--create-namespace` only creates the release namespace.
 ## What collectors are granted
 
 The rules come from the bundles in
-[collectors/rbac-bundles.yaml](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/collectors/rbac-bundles.yaml):
+[collectors/rbac-bundles.yaml](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/collectors/rbac-bundles.yaml).
+Unless noted, verbs are `get`, `list`, and `watch`. "In `namespaces`" means a Role in each listed namespace, or a
+ClusterRole when the list is empty or has a regular expression.
+
+*   **`clusterMetrics`**: Nodes and `get` on `nodes/metrics` for the kubelet, kubelet resource, kubelet probes, and
+    cAdvisor sources. `get` on `nodes/proxy` instead, for sources with `nodeAddressFormat: proxy`. EndpointSlices,
+    Services, and Pods in `default`, and `get` on `/metrics` for the API server. Pods in `kube-system` for the
+    controller manager, scheduler, and kube-proxy. EndpointSlices in `kube-system` for kube-dns. `get` on the EKS
+    Control Plane Metrics API for `discoveryMode: eks-proxy`. The kube-state-metrics discovery type, in its namespace.
+
+Rules from other sources:
 
 *   **A destination with credentials in a Kubernetes Secret**: `get` on that Secret, in its namespace.
 *   **The SDK Injector**: `get`, `create`, and `update` on ConfigMaps in the release namespace, for the collectors listed

@@ -28,17 +28,35 @@
   {{- if eq (dig "type" "" $processor) "custom" }}{{ $userConfig = true }}{{ end }}
 {{- end }}
 {{- $minimal := list }}
+{{- $kubeletProxy := list }}
 {{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
   {{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
   {{- if and (eq (include "collector.alloy.rbacMode" $collectorValues) "minimal") (dig "rbac" "create" true $collectorValues) }}
     {{- $minimal = append $minimal $collectorName }}
     {{- if $collectorValues.extraConfig }}{{ $userConfig = true }}{{ end }}
+    {{- if and $.Values.clusterMetrics.enabled (eq (include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" "clusterMetrics") | trim) $collectorName) }}
+      {{- range $source := list "kubelet" "kubeletResource" "kubeletProbes" "cadvisor" }}
+        {{- $sourceValues := index $.Values.clusterMetrics $source }}
+        {{- if and $sourceValues.enabled (eq $sourceValues.nodeAddressFormat "proxy") }}
+          {{- $kubeletProxy = append $kubeletProxy (printf "%s: clusterMetrics.%s" $collectorName $source) }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
   {{- end }}
 {{- end }}
 {{- if and $minimal $userConfig }}
 
 Collectors with rbac.mode "minimal" are granted RBAC for the Kubernetes components in user-supplied configuration. The
 k8s.grafana.com/rbac-user-config annotation on their ClusterRole and Roles lists those grants.
+{{- end }}
+{{- if $kubeletProxy }}
+
+⚠️ These collectors scrape the kubelet through the API server proxy (nodeAddressFormat: proxy), so they were granted
+"get" on nodes/proxy. That permission gives access to the whole kubelet API on every Node. Use
+nodeAddressFormat: direct unless the collector can't reach the kubelet directly:
+{{- range $kubeletProxy }}
+* {{ . }}
+{{- end }}
 {{- end }}
 {{- end }}
 

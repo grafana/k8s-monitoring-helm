@@ -600,6 +600,10 @@ rules:
     - get
     - list
     - watch
+  - nonResourceURLs:
+    - /metrics
+    verbs:
+    - get
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -812,6 +816,15 @@ metadata:
   annotations:
     k8s.grafana.com/rbac-user-config: "discovery.kubernetes from replaceComponent (pods)"
 rules:
+  - apiGroups:
+    - ""
+    resources:
+    - endpoints
+    - services
+    verbs:
+    - get
+    - list
+    - watch
   - apiGroups:
     - ""
     resourceNames:

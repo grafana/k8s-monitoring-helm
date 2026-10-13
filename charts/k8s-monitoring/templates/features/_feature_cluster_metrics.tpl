@@ -49,3 +49,50 @@ cluster_metrics "feature" {
   {{- include "feature.clusterMetrics.validate" (dict "Values" $.Values.clusterMetrics "telemetryServices" $.Values.telemetryServices) }}
 {{- end }}
 {{- end }}
+
+{{- define "features.clusterMetrics.rbac" }}
+{{- $entries := list }}
+{{- $v := .Values.clusterMetrics }}
+{{- if $v.enabled }}
+  {{- $featureContext := dict "Values" $v "Release" $.Release "telemetryServices" $.Values.telemetryServices }}
+  {{- range $source := list "kubelet" "kubeletResource" "kubeletProbes" "cadvisor" }}
+    {{- $sourceValues := index $v $source }}
+    {{- if $sourceValues.enabled }}
+      {{- $entries = append $entries (dict "bundle" "nodes") }}
+      {{- if eq $sourceValues.nodeAddressFormat "proxy" }}
+        {{- $entries = append $entries (dict "bundle" "kubeletProxy") }}
+      {{- else }}
+        {{- $entries = append $entries (dict "bundle" "kubeletMetrics") }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- if eq (include "feature.clusterMetrics.apiServer.enabled" $featureContext) "true" }}
+    {{- $entries = append $entries (dict "bundle" "endpointslices" "namespaces" (list "default")) }}
+    {{- $entries = append $entries (dict "bundle" "metricsEndpoint") }}
+  {{- end }}
+  {{- range $source := list "kubeControllerManager" "kubeScheduler" }}
+    {{- if eq (include (printf "feature.clusterMetrics.%s.enabled" $source) $featureContext) "true" }}
+      {{- if eq (index $v $source).discoveryMode "eks-proxy" }}
+        {{- $entries = append $entries (dict "bundle" "eksControlPlaneMetrics") }}
+      {{- else }}
+        {{- $entries = append $entries (dict "bundle" "pods" "namespaces" (list "kube-system")) }}
+        {{- $entries = append $entries (dict "bundle" "metricsEndpoint") }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- if eq (include "feature.clusterMetrics.kubeProxy.enabled" $featureContext) "true" }}
+    {{- $entries = append $entries (dict "bundle" "pods" "namespaces" (list "kube-system")) }}
+  {{- end }}
+  {{- if eq (include "feature.clusterMetrics.kubeDNS.enabled" $featureContext) "true" }}
+    {{- $entries = append $entries (dict "bundle" "endpointslices" "namespaces" (list "kube-system")) }}
+  {{- end }}
+  {{- $ksm := index $v "kube-state-metrics" }}
+  {{- if $ksm.enabled }}
+    {{- $bundles := dict "endpoints" "endpoints" "endpointslice" "endpointslices" "service" "services" "pod" "pods" }}
+    {{- $namespace := include "feature.clusterMetrics.kube_state_metrics.namespace" $featureContext }}
+    {{- $entries = append $entries (dict "bundle" (get $bundles $ksm.discoveryType | default $ksm.discoveryType) "namespaces" (compact (list $namespace))) }}
+    {{- $entries = append $entries (dict "bundle" "metricsEndpoint") }}
+  {{- end }}
+{{- end }}
+{{- $entries | toYaml }}
+{{- end }}
