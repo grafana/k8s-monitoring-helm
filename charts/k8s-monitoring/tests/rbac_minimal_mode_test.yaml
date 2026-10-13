@@ -52,17 +52,17 @@ tests:
           path: spec.rbac
           value: {create: false}
         template: alloy.yaml
-      - containsDocument:
+      - documentSelector: {path: kind, value: ClusterRole}
+        containsDocument:
           kind: ClusterRole
           apiVersion: rbac.authorization.k8s.io/v1
           name: test-alloy-singleton-rbac
-          any: true
         template: alloy-config.yaml
-      - containsDocument:
+      - documentSelector: {path: kind, value: ClusterRoleBinding}
+        containsDocument:
           kind: ClusterRoleBinding
           apiVersion: rbac.authorization.k8s.io/v1
           name: test-alloy-singleton-rbac
-          any: true
         template: alloy-config.yaml
       - documentSelector: {path: kind, value: ClusterRole}
         equal:
@@ -128,11 +128,11 @@ tests:
           path: spec.rbac
           value: {create: false}
         template: alloy.yaml
-      - containsDocument:
+      - documentSelector: {path: kind, value: ClusterRole}
+        containsDocument:
           kind: ClusterRole
           apiVersion: rbac.authorization.k8s.io/v1
           name: test-alloy-singleton-rbac
-          any: true
         template: alloy-config.yaml
 
   - it: renders no RBAC with rbac.create false
