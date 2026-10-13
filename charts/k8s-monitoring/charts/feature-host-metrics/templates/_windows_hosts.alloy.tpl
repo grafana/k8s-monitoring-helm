@@ -82,7 +82,10 @@ prometheus.relabel "windows_exporter" {
 {{- end }}
 
 {{- define "feature.hostMetrics.windowsHosts.discovery.viaWindowsExporter" }}
-{{- $namespace := include "feature.hostMetrics.windowsHosts.namespace" . }}
+{{- $namespace := .Values.windowsHosts.namespace }}
+{{- if dig "windows-exporter" "deploy" false (.telemetryServices | default dict) }}
+  {{- $namespace = (dig "windows-exporter" "namespaceOverride" false (.telemetryServices | default dict) | default .Release.Namespace) }}
+{{- end }}
 {{- $labelSelectors := list }}
 {{- if .Values.windowsHosts.labelMatchers }}
   {{- range $label, $value := .Values.windowsHosts.labelMatchers }}

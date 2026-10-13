@@ -11,7 +11,10 @@
 
 {{- define "feature.clusterMetrics.kube_state_metrics.alloy" }}
 {{- if (index .Values "kube-state-metrics").enabled }}
-{{- $namespace := include "feature.clusterMetrics.kube_state_metrics.namespace" . }}
+{{- $namespace := (index .Values "kube-state-metrics").namespace }}
+{{- if dig "kube-state-metrics" "deploy" false (.telemetryServices | default dict) }}
+  {{- $namespace = (dig "kube-state-metrics" "namespaceOverride" false (.telemetryServices | default dict) | default .Release.Namespace) }}
+{{- end }}
 {{- $metricAllowList := include "feature.clusterMetrics.kube_state_metrics.allowList" . | fromYamlArray }}
 {{- $metricDenyList := (index .Values "kube-state-metrics").metricsTuning.excludeMetrics }}
 {{- $labelSelectors := list }}

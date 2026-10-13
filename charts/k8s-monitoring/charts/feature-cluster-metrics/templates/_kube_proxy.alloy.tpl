@@ -1,5 +1,5 @@
 {{- define "feature.clusterMetrics.kubeProxy.alloy" }}
-{{- if eq (include "feature.clusterMetrics.kubeProxy.enabled" .) "true" }}
+{{- if or .Values.kubeProxy.enabled (and .Values.controlPlane.enabled (not (eq .Values.kubeProxy.enabled false))) }}
 {{- $metricAllowList := .Values.kubeProxy.metricsTuning.includeMetrics }}
 {{- $metricDenyList := .Values.kubeProxy.metricsTuning.excludeMetrics }}
 
