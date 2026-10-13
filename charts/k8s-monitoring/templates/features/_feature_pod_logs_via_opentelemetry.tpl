@@ -50,4 +50,15 @@ pod_logs_via_opentelemetry "feature" {
 {{- end -}}
 {{- end -}}
 
-{{- define "features.podLogsViaOpenTelemetry.rbac" }}[]{{- end }}
+{{- define "features.podLogsViaOpenTelemetry.rbac" }}
+{{- $entries := list }}
+{{- $v := .Values.podLogsViaOpenTelemetry }}
+{{- if $v.enabled }}
+  {{- $entries = append $entries (dict "bundle" "k8sattributes") }}
+  {{- $entries = append $entries (dict "bundle" "namespaces") }}
+  {{- if or $v.nodeLabels $v.nodeAnnotations }}
+    {{- $entries = append $entries (dict "bundle" "nodes") }}
+  {{- end }}
+{{- end }}
+{{- $entries | toYaml }}
+{{- end }}

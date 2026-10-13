@@ -1,0 +1,72 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: rbac-minimal-logs
+
+subject:
+  releaseName: k8smon
+  path: ../../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: dependencies/podlogs-crd.yaml
+    verb: create
+  - file: dependencies/workloads.yaml
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Loki
+              type: loki
+              url: http://loki-gateway.loki.svc:8080
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+              isDefault: true
+
+tests:
+  - type: kubernetes-objects-test
+    values:
+      checks:
+        - {kind: Role, name: k8smon-alloy-logs-api-rbac, namespace: logs-api}
+        - {kind: ClusterRole, name: k8smon-alloy-logs-api-rbac, expect: {count: 0}}
+        - {kind: ClusterRole, name: k8smon-alloy-logs-otel-rbac}
+        - {kind: ClusterRole, name: k8smon-alloy-podlogs-rbac}
+        - {kind: ClusterRole, name: k8smon-alloy-singleton-rbac}
+        - {kind: ClusterRole, name: k8smon-alloy-logs-api, expect: {count: 0}}
+        - {kind: ClusterRole, name: k8smon-alloy-logs-otel, expect: {count: 0}}
+        - {kind: ClusterRole, name: k8smon-alloy-podlogs, expect: {count: 0}}
+        - {kind: ClusterRole, name: k8smon-alloy-singleton, expect: {count: 0}}
+
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: rbac-minimal-logs
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+          queries:
+            # podLogsViaKubernetesApi: pods and pods/log in logs-api
+            - query: count_over_time({cluster="$CLUSTER", namespace="logs-api"}[1h])
+              type: logql
+            # podLogsViaOpenTelemetry: k8sattributes reads the namespace label
+            - query: count_over_time({k8s_cluster_name="$CLUSTER", k8s_namespace_name="logs-otel"} | color = "green"[1h])
+              type: logql
+            # podLogsObjects: PodLogs objects, pods, and pods/log
+            - query: count_over_time({cluster="$CLUSTER", namespace="logs-objects"}[1h])
+              type: logql
+            # kubernetesManifests: pods and pods/log for k8s-manifest-tail
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/manifests"}[1h])
+              type: logql

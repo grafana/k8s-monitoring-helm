@@ -55,4 +55,10 @@ kubernetes_manifests "feature" {
 {{- end -}}
 {{- end -}}
 
-{{- define "features.kubernetesManifests.rbac" }}[]{{- end }}
+{{- define "features.kubernetesManifests.rbac" }}
+{{- $entries := list }}
+{{- if .Values.kubernetesManifests.enabled }}
+  {{- $entries = append $entries (dict "bundle" "podLogs") }}
+{{- end }}
+{{- $entries | toYaml }}
+{{- end }}

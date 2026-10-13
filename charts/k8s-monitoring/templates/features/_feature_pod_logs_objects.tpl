@@ -63,4 +63,10 @@ pod_logs_objects "feature" {
 {{- end -}}
 {{- end -}}
 
-{{- define "features.podLogsObjects.rbac" }}[]{{- end }}
+{{- define "features.podLogsObjects.rbac" }}
+{{- $entries := list }}
+{{- if .Values.podLogsObjects.enabled }}
+  {{- $entries = append $entries (dict "bundle" "podLogsObjects") }}
+{{- end }}
+{{- $entries | toYaml }}
+{{- end }}

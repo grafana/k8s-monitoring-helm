@@ -49,4 +49,10 @@ cluster_events "feature" {
 {{- end -}}
 {{- end -}}
 
-{{- define "features.clusterEvents.rbac" }}[]{{- end }}
+{{- define "features.clusterEvents.rbac" }}
+{{- $entries := list }}
+{{- if .Values.clusterEvents.enabled }}
+  {{- $entries = append $entries (dict "bundle" "events" "namespaces" (.Values.clusterEvents.namespaces | default list)) }}
+{{- end }}
+{{- $entries | toYaml }}
+{{- end }}

@@ -52,4 +52,21 @@ pod_logs_via_kubernetes_api "feature" {
 {{- end -}}
 {{- end -}}
 
-{{- define "features.podLogsViaKubernetesApi.rbac" }}[]{{- end }}
+{{- define "features.podLogsViaKubernetesApi.rbac" }}
+{{- $entries := list }}
+{{- $v := .Values.podLogsViaKubernetesApi }}
+{{- if $v.enabled }}
+  {{- $namespaces := list }}
+  {{- if and $v.namespaces (ne (include "feature.podLogsViaKubernetesApi.namespaces.hasRegex" $v.namespaces) "true") }}
+    {{- $namespaces = $v.namespaces }}
+  {{- end }}
+  {{- $entries = append $entries (dict "bundle" "podLogs" "namespaces" $namespaces) }}
+  {{- if or $v.nodeSelectors (eq (include "collectors.rbac.anyEnabled" $v.nodeLabels) "true") }}
+    {{- $entries = append $entries (dict "bundle" "nodes") }}
+  {{- end }}
+  {{- if $v.attachNamespaceMetadata }}
+    {{- $entries = append $entries (dict "bundle" "namespaces") }}
+  {{- end }}
+{{- end }}
+{{- $entries | toYaml }}
+{{- end }}

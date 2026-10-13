@@ -1,0 +1,78 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: rbac-minimal-upgrade
+
+subject:
+  releaseName: k8smon
+  path: ../../../..
+  valuesFile: alloy-values.yaml
+  sleepAfter: 60
+
+  upgrade:
+    valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - preset: prometheus
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+            - name: Loki
+              type: loki
+              url: http://loki-gateway.loki.svc:8080
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+
+tests:
+  - type: kubernetes-objects-test
+    values:
+      attempts: 20
+      checks:
+        - {kind: ClusterRole, name: k8smon-alloy-metrics-rbac}
+        - {kind: ClusterRole, name: k8smon-alloy-singleton-rbac}
+        - {kind: ClusterRole, name: k8smon-alloy-logs-rbac}
+        # The Alloy Operator removes the RBAC it created before the upgrade.
+        - {kind: ClusterRole, name: k8smon-alloy-metrics, expect: {count: 0}}
+        - {kind: ClusterRole, name: k8smon-alloy-singleton, expect: {count: 0}}
+        - {kind: ClusterRole, name: k8smon-alloy-logs, expect: {count: 0}}
+
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: rbac-minimal-upgrade
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            PROMETHEUS_USER: promuser
+            PROMETHEUS_PASS: prometheuspassword
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+          # Every query requires the phase="upgraded" label, which only data sent after the upgrade has.
+          queries:
+            - query: kubernetes_build_info{cluster="$CLUSTER", job="integrations/kubernetes/kubelet", phase="upgraded"}
+              type: promql
+            - query: kube_node_info{cluster="$CLUSTER", job="integrations/kubernetes/kube-state-metrics", phase="upgraded"}
+              type: promql
+            - query: node_exporter_build_info{cluster="$CLUSTER", job="integrations/node_exporter", phase="upgraded"}
+              type: promql
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler", phase="upgraded"}[1h])
+              type: logql
+            - query: count_over_time({cluster="$CLUSTER", namespace="default", phase="upgraded"}[1h])
+              type: logql
