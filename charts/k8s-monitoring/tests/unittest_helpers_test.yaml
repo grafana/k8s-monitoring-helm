@@ -49,3 +49,27 @@ tests:
       testing: true
     asserts:
       - {equal: {path: "data.enabledNames", value: '["enabledDest"]'}, documentIndex: 2 }
+
+  - it: collectors.features and collectors.destinationNames list what each collector renders
+    set:
+      testing: true
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        prometheus: {type: prometheus, url: http://prometheus.example.com/api/v1/write}
+        loki: {type: loki, url: http://loki.example.com/loki/api/v1/push}
+        extra: {type: prometheus, url: http://extra.example.com/api/v1/write}
+      clusterMetrics: {enabled: true, collector: alloy-metrics}
+      podLogsViaLoki: {enabled: true, collector: alloy-logs}
+      collectors:
+        alloy-metrics: {}
+        alloy-logs: {includeDestinations: [extra]}
+    documentSelector:
+      path: metadata.name
+      value: test-collectors-features-and-destinations
+    asserts:
+      - {equal: {path: "data.metricsFeatures",                 value: '["clusterMetrics"]'}}
+      - {equal: {path: "data.logsFeatures",                    value: '["podLogsViaLoki"]'}}
+      - {equal: {path: "data.metricsDestinations",             value: '["extra","prometheus"]'}}
+      - {equal: {path: "data.logsDestinations",                value: '["extra","loki"]'}}
+      - {equal: {path: "data.logsDestinationsWithoutFeatures", value: '["extra"]'}}

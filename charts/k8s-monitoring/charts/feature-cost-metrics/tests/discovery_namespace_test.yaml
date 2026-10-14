@@ -1,0 +1,31 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:braces rule:commas
+suite: Feature - Cost Metrics - discovery namespaces
+release:
+  namespace: monitoring
+templates:
+  - test/configmap.yaml
+tests:
+  - it: discovers OpenCost in every namespace when the namespace is null
+    set:
+      testing: {enabled: true}
+      opencost:
+        namespace: null
+        labelMatchers: {app.kubernetes.io/name: opencost}
+    asserts:
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'names = \[""\]'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: '(?s)discovery\.kubernetes "opencost" \{[^}]*namespaces \{'
+
+  - it: discovers a deployed OpenCost in its namespace override
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          opencost: {deploy: true, namespaceOverride: cost}
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'names = \["cost"\]'

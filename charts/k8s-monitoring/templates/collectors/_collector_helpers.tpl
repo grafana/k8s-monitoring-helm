@@ -320,21 +320,17 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{- end }}
 {{- end }}
 
-{{/* Lists the destinations whose components are rendered on a collector. Inputs: . (root), collectorName, featureKeys (from collectors.features) */}}
+{{/* Lists the destinations whose components are rendered on a collector. Inputs: . (root), collectorName, featureKeys (optional, from collectors.features) */}}
 {{- define "collectors.destinationNames" -}}
-{{- /* Seed the collector's destination list with any explicitly included destinations. */}}
-{{- $destinationNames := (get $.Values.collectors $.collectorName).includeDestinations | default list }}
-{{- /* Add the destinations required by each feature assigned to this collector. */}}
-{{- range $featureKey := .featureKeys }}
+{{- $featureKeys := .featureKeys }}
+{{- if not (hasKey . "featureKeys") }}
+  {{- $featureKeys = include "collectors.features" . | fromYamlArray }}
+{{- end }}
+{{- $destinationNames := dig "includeDestinations" list (get ($.Values.collectors | default dict) $.collectorName | default dict) }}
+{{- range $featureKey := $featureKeys }}
   {{- $destinationNames = concat $destinationNames ((include (printf "features.%s.destinations" $featureKey) $) | fromYamlArray) }}
 {{- end }}
-
-{{- /* Router destination type. Any enabled `type: router` destination that ended up in
-     $destinationNames (because a feature pointed at it) fans out to real destinations that are
-     never referenced by a feature directly, so those downstream destinations would otherwise
-     never get a body rendered and the router's gates would dangle. Union them in here, before
-     destinations.alloy.config renders bodies. Single-level only: a router referencing
-     another router is not resolved transitively by this pass. */}}
+{{- /* Routers fan out to destinations that no feature references, so their components must be rendered too. Single-level only. */}}
 {{- range $routerCandidateName := $destinationNames }}
   {{- if hasKey $.Values.destinations $routerCandidateName }}
     {{- $routerCandidate := get $.Values.destinations $routerCandidateName }}

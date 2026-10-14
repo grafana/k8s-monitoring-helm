@@ -10,7 +10,7 @@
 {{ end }}
 
 {{- define "feature.costMetrics.opencost.alloy" }}
-{{- $namespace := include "feature.costMetrics.opencost.namespace" . }}
+{{- $namespace := include "feature.costMetrics.discoveryNamespace" (dict "namespace" .Values.opencost.namespace "service" "opencost" "overridable" true "telemetryServices" .telemetryServices "Release" .Release) }}
 {{- $metricAllowList := include "feature.costMetrics.opencost.allowList" . | fromYamlArray }}
 {{- $metricDenyList := .Values.opencost.metricsTuning.excludeMetrics }}
 {{- $labelSelectors := list }}
@@ -90,13 +90,4 @@ prometheus.relabel "opencost" {
   forward_to = argument.metrics_destinations.value
 } // prometheus.scrape "opencost"
 {{- end }}
-{{- end }}
-
-{{/* The namespace OpenCost is discovered in, or empty for every namespace. */}}
-{{- define "feature.costMetrics.opencost.namespace" -}}
-{{- $namespace := .Values.opencost.namespace -}}
-{{- if dig "opencost" "deploy" false (.telemetryServices | default dict) -}}
-  {{- $namespace = (dig "opencost" "namespaceOverride" false (.telemetryServices | default dict) | default .Release.Namespace) -}}
-{{- end -}}
-{{- $namespace -}}
 {{- end }}
