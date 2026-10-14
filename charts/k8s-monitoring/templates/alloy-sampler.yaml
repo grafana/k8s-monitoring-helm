@@ -67,6 +67,7 @@ metadata:
   {{- end }}
   {{- end }}
 spec:{{ $alloySpec | trim | nindent 2 }}
+{{- include "collectors.validate.rbac" (dict "name" $collectorName "collectorValues" $alloyValues "valuesPath" (printf "destinations.%s.processors.tailSampling.collector" $destinationName)) }}
 {{- if eq (include "collector.alloy.rbacMode" $alloyValues) "minimal" }}
   {{- $rbacEntries := list }}
   {{- if eq (include "secrets.usesKubernetesSecret" $destination) "true" }}
@@ -81,8 +82,7 @@ spec:{{ $alloySpec | trim | nindent 2 }}
     "name" $collectorName
     "namespace" (include "helper.namespace" $)
     "labels" (include "collector.alloy.labels" $ | fromYaml)
-    "serviceAccountName" (include "collector.alloy.serviceAccountName" $values)
-    "valuesPath" (printf "destinations.%s.processors.tailSampling.collector" $destinationName)) }}
+    "serviceAccountName" (include "collector.alloy.serviceAccountName" $values)) }}
 {{- end }}
 {{- end }}
 {{- end }}

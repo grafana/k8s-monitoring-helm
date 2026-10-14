@@ -1,9 +1,6 @@
-# The Makefile renders every example with rbac.mode: minimal into .rendered/rbac-minimal. The chart annotates RBAC
-# objects with k8s.grafana.com/rbac-inferred when the configuration uses a Kubernetes API component that the computed
-# rules don't cover. rbac_minimal_known_gaps.txt lists the annotations expected for features that don't compute their
-# own rules yet, so any other annotation means a feature's RBAC rules are out of date.
+# rbac_minimal_known_gaps.txt lists the rbac-inferred annotations expected until every feature computes its own rules.
 findInferredRBAC() {
-  grep -r "k8s.grafana.com/rbac-inferred" .rendered/rbac-minimal | sed 's|^\.rendered/rbac-minimal/||; s|:[[:space:]]*k8s.grafana.com/rbac-inferred: "\(.*\)"$|: \1|' | sort -u
+  grep -r "k8s.grafana.com/rbac-inferred" .rendered/rbac-minimal | sed 's|^\.rendered/rbac-minimal/||; s|:[[:space:]]*k8s.grafana.com/rbac-inferred: "\(.*\)"$|: \1|' | LC_ALL=C sort -u
 }
 
 compareToKnownGaps() {

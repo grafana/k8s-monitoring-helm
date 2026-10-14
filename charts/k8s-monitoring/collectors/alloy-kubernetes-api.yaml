@@ -1,98 +1,80 @@
 ---
-# Alloy components that talk to the Kubernetes API, and the bundles from rbac-bundles.yaml that they need. Collectors
-# with `rbac.mode: minimal` scan configuration text for these patterns:
-#   * User-supplied configuration (extraConfig, replaceComponent, custom destinations and data processors) gets every
-#     bundle in `bundles` for each match, cluster-wide.
-#   * The final configuration is checked against the rules the chart computed. A match whose `requires` bundles
-#     (default: `bundles`) aren't already granted still gets `bundles`, and is listed in the
-#     `k8s.grafana.com/rbac-inferred` annotation so that tests can catch the gap.
-# `namespaces` limits the namespaced rules of a match to those namespaces.
-# `namedObject` components read one object by name. The scanner grants `get` on that object only, when the name and
-# namespace are literal strings.
+# Alloy components that use the Kubernetes API, and the rbac-bundles.yaml bundles they need. See docs/RBAC.md.
 - component: discovery.kubernetes
-  pattern: 'discovery\.kubernetes\s+"[^"]*"\s*\{(?:[^{}]|\{[^{}]*\})*?\brole\s*=\s*"pod"'
-  bundles: [pods]
-- component: discovery.kubernetes
-  pattern: 'discovery\.kubernetes\s+"[^"]*"\s*\{(?:[^{}]|\{[^{}]*\})*?\brole\s*=\s*"service"'
-  bundles: [services]
-- component: discovery.kubernetes
-  pattern: 'discovery\.kubernetes\s+"[^"]*"\s*\{(?:[^{}]|\{[^{}]*\})*?\brole\s*=\s*"endpoints"'
-  bundles: [endpoints]
-- component: discovery.kubernetes
-  pattern: 'discovery\.kubernetes\s+"[^"]*"\s*\{(?:[^{}]|\{[^{}]*\})*?\brole\s*=\s*"endpointslice"'
-  bundles: [endpointslices]
-- component: discovery.kubernetes
-  pattern: 'discovery\.kubernetes\s+"[^"]*"\s*\{(?:[^{}]|\{[^{}]*\})*?\brole\s*=\s*"ingress"'
-  bundles: [ingresses]
-- component: discovery.kubernetes
-  pattern: 'discovery\.kubernetes\s+"[^"]*"\s*\{(?:[^{}]|\{[^{}]*\})*?\brole\s*=\s*"node"'
-  bundles: [nodes]
+  scope: namespacesBlock
+  roles:
+    pod: [pods]
+    service: [services]
+    endpoints: [endpoints]
+    endpointslice: [endpointslices]
+    ingress: [ingresses]
+    node: [nodes]
 - component: discovery.kubernetes
   pattern: 'attach_metadata\s*\{[^{}]*\bnode\s*=\s*true'
   bundles: [nodes]
 - component: discovery.kubernetes
   pattern: 'attach_metadata\s*\{[^{}]*\bnamespace\s*=\s*true'
   bundles: [namespaces]
+- component: discovery.kubernetes
+  pattern: 'selectors\s*\{[^{}]*\brole\s*=\s*"node"'
+  bundles: [nodes]
 - component: discovery.kubelet
-  pattern: 'discovery\.kubelet\s+"'
   bundles: [nodes, kubeletPods]
 - component: loki.source.kubernetes
-  pattern: 'loki\.source\.kubernetes\s+"'
+  scope: unknown
   bundles: [podLogs]
 - component: loki.source.kubernetes_events
-  pattern: 'loki\.source\.kubernetes_events\s+"'
+  scope: namespacesAttribute
   bundles: [events]
 - component: loki.source.podlogs
-  pattern: 'loki\.source\.podlogs\s+"'
   bundles: [podLogsObjects]
 - component: prometheus.operator.podmonitors
-  pattern: 'prometheus\.operator\.podmonitors\s+"'
-  bundles: [promOperator.podmonitors, promOperatorCredentials, pods, nodes]
+  scope: namespacesAttribute
+  bundles: [promOperator.podmonitors, promOperatorCredentials]
+  clusterBundles: [pods, nodes]
   requires: [promOperator.podmonitors]
 - component: prometheus.operator.servicemonitors
-  pattern: 'prometheus\.operator\.servicemonitors\s+"'
-  bundles: [promOperator.servicemonitors, promOperatorCredentials, endpoints, endpointslices, nodes]
+  scope: namespacesAttribute
+  bundles: [promOperator.servicemonitors, promOperatorCredentials]
+  clusterBundles: [endpoints, endpointslices, nodes]
   requires: [promOperator.servicemonitors]
 - component: prometheus.operator.probes
-  pattern: 'prometheus\.operator\.probes\s+"'
-  bundles: [promOperator.probes, promOperatorCredentials, ingresses]
+  scope: namespacesAttribute
+  bundles: [promOperator.probes, promOperatorCredentials]
+  clusterBundles: [ingresses]
   requires: [promOperator.probes]
 - component: prometheus.operator.scrapeconfigs
-  pattern: 'prometheus\.operator\.scrapeconfigs\s+"'
+  scope: namespacesAttribute
   bundles: [promOperator.scrapeconfigs, promOperatorCredentials]
   requires: [promOperator.scrapeconfigs]
 - component: mimir.rules.kubernetes
-  pattern: 'mimir\.rules\.kubernetes\s+"'
   bundles: [prometheusRules]
 - component: loki.rules.kubernetes
-  pattern: 'loki\.rules\.kubernetes\s+"'
   bundles: [prometheusRules]
 - component: mimir.alerts.kubernetes
-  pattern: 'mimir\.alerts\.kubernetes\s+"'
   bundles: [alertmanagerConfigs]
 - component: remote.kubernetes.secret
-  pattern: 'remote\.kubernetes\.secret\s+"[^"]*"\s*\{[^{}]*\}'
   namedObject: secret
 - component: remote.kubernetes.configmap
-  pattern: 'remote\.kubernetes\.configmap\s+"[^"]*"\s*\{[^{}]*\}'
   namedObject: configMap
 - component: otelcol.processor.k8sattributes
-  pattern: 'otelcol\.processor\.k8sattributes\s+"'
-  bundles: [k8sattributes, namespaces, nodes]
+  scope: filterNamespace
+  bundles: [k8sattributes]
+  clusterBundles: [namespaces, nodes]
   requires: [k8sattributes]
 - component: otelcol.processor.resourcedetection
-  pattern: 'otelcol\.processor\.resourcedetection\s+"[^"]*"\s*\{[^{}]*?\bdetectors\s*=\s*\[[^\]]*"kubernetes_node"'
+  match: 'detectors\s*=\s*\[[^\]]*"kubernetes_node"'
   bundles: [nodeGet]
 - component: otelcol.processor.resourcedetection
-  pattern: 'otelcol\.processor\.resourcedetection\s+"[^"]*"\s*\{[^{}]*?\bdetectors\s*=\s*\[[^\]]*"kubeadm"'
+  match: 'detectors\s*=\s*\[[^\]]*"kubeadm"'
   bundles: [kubeadmConfig]
   namespaces: [kube-system]
 - component: otelcol.processor.resourcedetection
-  pattern: 'otelcol\.processor\.resourcedetection\s+"[^"]*"\s*\{[^{}]*?\bdetectors\s*=\s*\[[^\]]*"openshift"'
+  match: 'detectors\s*=\s*\[[^\]]*"openshift"'
   bundles: [openshiftInfrastructures]
 - component: otelcol.exporter.loadbalancing
-  pattern: 'otelcol\.exporter\.loadbalancing\s+"[^"]*"\s*\{(?:[^{}]|\{[^{}]*\})*?\bresolver\s*\{\s*kubernetes\s*\{'
+  scope: unknown
+  match: 'resolver\s*\{\s*kubernetes\s*\{'
   bundles: [loadBalancer]
 - component: beyla.ebpf
-  pattern: 'beyla\.ebpf\s+"'
   bundles: [pods, services, nodes, replicasets]

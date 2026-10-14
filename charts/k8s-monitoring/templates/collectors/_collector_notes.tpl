@@ -18,35 +18,28 @@
 {{- include "collectors.notes.rbac" . }}
 {{- end }}
 
-{{/* Explains what collectors with rbac.mode "minimal" were granted, or why they weren't. */}}
+{{/* Points collectors with rbac.mode "minimal" to the annotations that explain their RBAC. */}}
 {{- define "collectors.notes.rbac" }}
 {{- $remoteConfig := list }}
-{{- $scanned := list }}
-{{- $dropped := list }}
-{{- $replacements := list }}
-{{- range $replacement := .Values.replaceComponent | default list }}
-  {{- $replacements = append $replacements (printf "%s \"%s\" {\n%s\n}" $replacement.type $replacement.name $replacement.content) }}
+{{- $restricted := list }}
+{{- $userConfig := or .Values.replaceComponent }}
+{{- range $_, $destination := .Values.destinations | default dict }}
+  {{- if eq (dig "type" "" $destination) "custom" }}{{ $userConfig = true }}{{ end }}
 {{- end }}
+{{- range $_, $processor := .Values.dataProcessors | default dict }}
+  {{- if eq (dig "type" "" $processor) "custom" }}{{ $userConfig = true }}{{ end }}
+{{- end }}
+{{- $minimal := list }}
 {{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
-  {{- $values := dict "Values" $.Values "Chart" $.Chart "Files" $.Files "Release" $.Release "Subcharts" $.Subcharts "Template" $.Template "Capabilities" $.Capabilities "collectorName" $collectorName }}
-  {{- $collectorValues := include "collector.alloy.values" $values | fromYaml }}
+  {{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
   {{- if eq (dig "rbac" "mode" "alloy" $collectorValues) "minimal" }}
     {{- if ne (include "collector.alloy.rbacMode" $collectorValues) "minimal" }}
       {{- $remoteConfig = append $remoteConfig $collectorName }}
     {{- else if dig "rbac" "create" true $collectorValues }}
-      {{- $featureKeys := include "collectors.features" $values | fromYamlArray }}
-      {{- $rbacContext := merge (dict "featureKeys" $featureKeys "extraConfig" (include "collectors.extraConfig.alloy" $values | trim) "replacements" $replacements) $values }}
-      {{- $_ := set $rbacContext "destinationNames" (include "collectors.destinationNames" $rbacContext | fromYamlArray) }}
-      {{- $computed := include "collectors.rbac.compute" (dict
-        "Files" $.Files
-        "collectorValues" $collectorValues
-        "entries" (include "collectors.rbac.entries" $rbacContext | fromYamlArray)
-        "userConfig" (include "collectors.rbac.userConfig" $rbacContext | fromYamlArray)) | fromYaml }}
-      {{- range $component := $computed.userComponents }}
-        {{- $scanned = append $scanned (printf "%s: %s" $collectorName $component) }}
-      {{- end }}
-      {{- if $computed.resolved.dropped }}
-        {{- $dropped = append $dropped (printf "%s: %s" $collectorName (join ", " $computed.resolved.dropped)) }}
+      {{- $minimal = append $minimal $collectorName }}
+      {{- if $collectorValues.extraConfig }}{{ $userConfig = true }}{{ end }}
+      {{- if dig "rbac" "namespaces" list $collectorValues }}
+        {{- $restricted = append $restricted $collectorName }}
       {{- end }}
     {{- end }}
   {{- end }}
@@ -59,19 +52,16 @@ RBAC even though rbac.mode is "minimal":
 * {{ . }}
 {{- end }}
 {{- end }}
-{{- if $scanned }}
+{{- if and $minimal $userConfig }}
 
-These collectors were granted cluster-wide RBAC for the Kubernetes components found in user-supplied configuration:
-{{- range $scanned }}
-* {{ . }}
+Collectors with rbac.mode "minimal" are granted RBAC for the Kubernetes components in user-supplied configuration. The
+k8s.grafana.com/rbac-user-config annotation on their ClusterRole and Roles lists those grants.
 {{- end }}
-To limit this access to some namespaces, set rbac.namespaces on the collector.
-{{- end }}
-{{- if $dropped }}
+{{- if $restricted }}
 
-⚠️ These collectors set rbac.namespaces, so they were not granted the cluster-scoped permissions from these bundles,
-and the components that need them may not find any data:
-{{- range $dropped }}
+⚠️ These collectors set rbac.namespaces, so they aren't granted cluster-scoped permissions, and the components that
+need them may not find any data. The k8s.grafana.com/rbac-dropped annotation on their Roles lists what was left out:
+{{- range $restricted }}
 * {{ . }}
 {{- end }}
 {{- end }}

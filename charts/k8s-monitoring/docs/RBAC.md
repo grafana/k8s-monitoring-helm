@@ -61,9 +61,16 @@ Rules from other sources:
 The chart can't know what `extraConfig`, `replaceComponent`, custom destinations, and custom data processors do, so it
 scans them for the components listed in
 [collectors/alloy-kubernetes-api.yaml](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/collectors/alloy-kubernetes-api.yaml),
-and grants what those components need, cluster-wide. `remote.kubernetes.secret` and `remote.kubernetes.configmap` only
-get `get` on the object they name, when the name and namespace are literal strings. The installation notes list what
-was added.
+and grants what those components need:
+
+*   A component limited to namespaces listed as string literals, such as `namespaces { names = ["team-a"] }` in
+    `discovery.kubernetes`, gets Roles in those namespaces. Otherwise, it gets a ClusterRole.
+*   `remote.kubernetes.secret` and `remote.kubernetes.configmap` get `get` on the object they name. If the `namespace`
+    isn't a string literal, that name is readable in every namespace. If the `name` isn't a string literal, every
+    object in the namespace is readable. Use string literals to keep this access small.
+*   Only the replaced components and custom data processor blocks that a collector renders are scanned.
+
+The `k8s.grafana.com/rbac-user-config` annotation on the ClusterRole and Roles lists what was added.
 
 The chart also scans the final configuration. If a component that uses the Kubernetes API isn't covered by the rules
 above, it's granted what it needs and listed in the `k8s.grafana.com/rbac-inferred` annotation on the ClusterRole and
@@ -103,7 +110,8 @@ collectors:
 *   Rules that would be cluster-wide are put in Roles in these namespaces instead.
 *   Rules the chart already scopes to a namespace, such as a destination's Secret, stay in that namespace.
 *   Rules for cluster-scoped resources, such as Nodes and Namespaces, and `rbac.clusterRules`, are dropped. The
-    installation notes list them, because the components that need them won't find any data.
+    `k8s.grafana.com/rbac-dropped` annotation on the Roles lists them, because the components that need them won't find
+    any data.
 
 Roles are only created in the release namespace and in namespaces named in the values. Those namespaces must exist
 before installing the chart.

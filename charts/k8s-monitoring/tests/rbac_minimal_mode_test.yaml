@@ -86,8 +86,10 @@ tests:
             app.kubernetes.io/part-of: alloy
         template: alloy-config.yaml
       - documentSelector: {path: kind, value: ClusterRole}
-        notExists:
+        equal:
           path: metadata.annotations
+          value:
+            k8s.grafana.com/rbac-user-config: loki.source.kubernetes_events from extraConfig (events)
         template: alloy-config.yaml
       - documentSelector: {path: kind, value: ClusterRoleBinding}
         equal:

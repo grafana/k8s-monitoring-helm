@@ -97,6 +97,7 @@ metadata:
   {{- end }}
   {{- end }}
 spec:{{ $alloySpec | trim | nindent 2 }}
+{{- include "collectors.validate.rbac" (dict "name" $collectorName "collectorValues" $alloyValues "valuesPath" (printf "destinations.%s.processors.serviceGraphMetrics.collector" $destinationName)) }}
 {{- if eq (include "collector.alloy.rbacMode" $alloyValues) "minimal" }}
   {{- include "collectors.rbac.instance" (dict
     "Files" $.Files
@@ -107,8 +108,7 @@ spec:{{ $alloySpec | trim | nindent 2 }}
     "name" $collectorName
     "namespace" (include "helper.namespace" $)
     "labels" (include "collector.alloy.labels" $ | fromYaml)
-    "serviceAccountName" (include "collector.alloy.serviceAccountName" $values)
-    "valuesPath" (printf "destinations.%s.processors.serviceGraphMetrics.collector" $destinationName)) }}
+    "serviceAccountName" (include "collector.alloy.serviceAccountName" $values)) }}
 {{- end }}
 {{- end }}
 {{- end }}

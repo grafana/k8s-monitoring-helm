@@ -110,3 +110,31 @@ tests:
           value:
             - {apiGroups: [""], resourceNames: [prometheus-test-k8s-monitoring], resources: [secrets], verbs: [get]}
         template: alloy-servicegraph.yaml
+
+  - it: fails on an unknown RBAC mode for a sampler collector
+    set:
+      destinations:
+        tempo:
+          type: otlp
+          url: http://tempo.tempo.svc:4317
+          metrics: {enabled: false}
+          logs: {enabled: false}
+          processors:
+            tailSampling:
+              enabled: true
+              collector:
+                rbac: {mode: bogus}
+      applicationObservability:
+        enabled: true
+        receivers: {otlp: {grpc: {enabled: true}}}
+        logs: {enabled: false}
+        metrics: {enabled: false}
+      collectorCommon:
+        alloy:
+          rbac: {mode: alloy}
+      collectors:
+        alloy-receiver: {presets: [deployment, otel-receiver]}
+    asserts:
+      - failedTemplate:
+          errorPattern: 'has an unknown RBAC mode: "bogus"'
+        template: alloy-sampler.yaml
