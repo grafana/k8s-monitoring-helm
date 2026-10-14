@@ -59,8 +59,9 @@ k8s.grafana.com/rbac-user-config annotation on their ClusterRole and Roles lists
 {{- end }}
 {{- if $restricted }}
 
-⚠️ These collectors set rbac.namespaces, so they aren't granted cluster-scoped permissions, and the components that
-need them may not find any data. The k8s.grafana.com/rbac-dropped annotation on their Roles lists what was left out:
+⚠️ These collectors set rbac.namespaces, so they aren't granted cluster-scoped permissions. If they need any, the
+k8s.grafana.com/rbac-dropped annotation on their Roles lists them, and the components that use them may not find any
+data:
 {{- range $restricted }}
 * {{ . }}
 {{- end }}

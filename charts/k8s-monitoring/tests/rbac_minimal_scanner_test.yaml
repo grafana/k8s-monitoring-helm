@@ -325,5 +325,66 @@ tests:
             }
     asserts:
       - matchRegexRaw:
-          pattern: 'The k8s.grafana.com/rbac-dropped annotation on their Roles lists what was left out:\s+\* alloy-singleton'
+          pattern: 'rbac-dropped annotation on their Roles lists them, and the components that use them may not find any\s+data:\s+\* alloy-singleton'
         template: NOTES.txt
+
+  - it: finds components with blocks nested several levels deep
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            otelcol.exporter.loadbalancing "traces" {
+              resolver {
+                kubernetes {
+                  service = "sampler"
+                }
+              }
+              protocol {
+                otlp {
+                  client {
+                    tls {
+                      insecure = true
+                    }
+                  }
+                }
+              }
+            }
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [discovery.k8s.io], resources: [endpointslices], verbs: [get, list, watch]}
+            - {apiGroups: [""], resources: [endpoints], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
+  - it: scopes discovery to namespaces listed across several lines
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            discovery.kubernetes "pods" {
+              role = "pod"
+              namespaces {
+                names = [
+                  "team-a",
+                  "team-b",
+                ]
+              }
+            }
+    asserts:
+      - hasDocuments:
+          count: 5
+        template: alloy-config.yaml
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'team-b')].kind"
+          value: Role
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
+        template: alloy-config.yaml

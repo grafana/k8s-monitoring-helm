@@ -100,8 +100,11 @@
 
 {{/* The value of a top-level attribute in a component body, or "" if it isn't set. Inputs: body, name */}}
 {{- define "collectors.rbac.attribute" -}}
+{{- $list := regexFind (printf `(?m)^\s*%s\s*=\s*\[[^\]]*\]` .name) .body }}
 {{- $line := regexFind (printf `(?m)^\s*%s\s*=.*$` .name) .body }}
-{{- if $line }}
+{{- if $list }}
+  {{- regexReplaceAll (printf `(?s)^\s*%s\s*=\s*` .name) $list "" | replace "\n" " " }}
+{{- else if $line }}
   {{- regexReplaceAll (printf `^\s*%s\s*=\s*(.*?)\s*(//.*)?$` .name) $line "${1}" }}
 {{- end }}
 {{- end }}
@@ -149,7 +152,10 @@
 {{/* Finds the components in collectors/alloy-kubernetes-api.yaml in configuration text. Inputs: components, text, releaseNamespace. Output: [{component, entries, requires, anyScope}] */}}
 {{- define "collectors.rbac.scan" -}}
 {{- $matches := list }}
-{{- $nested := `(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*` }}
+{{- $nested := `[^{}]*` }}
+{{- range $_ := until 8 }}
+  {{- $nested = printf `(?:[^{}]|\{%s\})*` $nested }}
+{{- end }}
 {{- range $item := .components }}
   {{- if $item.pattern }}
     {{- if regexMatch (printf "(?s)%s" $item.pattern) $.text }}
@@ -162,7 +168,10 @@
   {{- else }}
     {{- range $block := regexFindAll (printf `%s\s+"[^"]*"\s*\{%s\}` ($item.component | replace "." `\.`) $nested) $.text -1 }}
       {{- $inner := regexReplaceAll `^[^{]*\{` (trimSuffix "}" $block) "" }}
-      {{- $body := regexReplaceAll `\{[^{}]*\}` (regexReplaceAll `\{[^{}]*\}` $inner "{}") "{}" }}
+      {{- $body := $inner }}
+      {{- range $_ := until 8 }}
+        {{- $body = regexReplaceAll `\{[^{}]*\}` $body "{}" }}
+      {{- end }}
       {{- if or (not $item.match) (regexMatch (printf "(?s)%s" ($item.match | default "")) $inner) }}
         {{- if $item.namedObject }}
           {{- $name := include "collectors.rbac.literal" (dict "value" (include "collectors.rbac.attribute" (dict "body" $body "name" "name"))) }}
