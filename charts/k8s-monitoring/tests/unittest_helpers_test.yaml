@@ -73,3 +73,23 @@ tests:
       - {equal: {path: "data.metricsDestinations",             value: '["extra","prometheus"]'}}
       - {equal: {path: "data.logsDestinations",                value: '["extra","loki"]'}}
       - {equal: {path: "data.logsDestinationsWithoutFeatures", value: '["extra"]'}}
+
+  - it: collectors.destinationNames handles a null includeDestinations
+    set:
+      testing: true
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        prometheus: {type: prometheus, url: http://prometheus.example.com/api/v1/write}
+        loki: {type: loki, url: http://loki.example.com/loki/api/v1/push}
+      clusterMetrics: {enabled: true, collector: alloy-metrics}
+      podLogsViaLoki: {enabled: true, collector: alloy-logs}
+      collectors:
+        alloy-metrics: {includeDestinations: null}
+        alloy-logs: {includeDestinations: null}
+    documentSelector:
+      path: metadata.name
+      value: test-collectors-features-and-destinations
+    asserts:
+      - {equal: {path: "data.metricsDestinations", value: '["prometheus"]'}}
+      - {equal: {path: "data.logsDestinations",    value: '["loki"]'}}

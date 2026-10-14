@@ -326,7 +326,7 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{- if not (hasKey . "featureKeys") }}
   {{- $featureKeys = include "collectors.features" . | fromYamlArray }}
 {{- end }}
-{{- $destinationNames := dig "includeDestinations" list (get ($.Values.collectors | default dict) $.collectorName | default dict) }}
+{{- $destinationNames := dig "includeDestinations" list (get ($.Values.collectors | default dict) $.collectorName | default dict) | default list }}
 {{- range $featureKey := $featureKeys }}
   {{- $destinationNames = concat $destinationNames ((include (printf "features.%s.destinations" $featureKey) $) | fromYamlArray) }}
 {{- end }}
