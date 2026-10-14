@@ -2,9 +2,13 @@
 {{- if .Values.scrapeConfigs.enabled }}
 {{- $metricAllowList := .Values.scrapeConfigs.metricsTuning.includeMetrics }}
 {{- $metricDenyList := .Values.scrapeConfigs.metricsTuning.excludeMetrics }}
-// Prometheus Operator Probe objects
-prometheus.operator.scrapeconfigs "scrapeConfigs" {
+{{- $namespacesHaveRegex := "" }}
 {{- if .Values.scrapeConfigs.namespaces }}
+  {{- $namespacesHaveRegex = include "feature.prometheusOperatorObjects.namespaces.hasRegex" .Values.scrapeConfigs.namespaces }}
+{{- end }}
+// Prometheus Operator ScrapeConfig objects
+prometheus.operator.scrapeconfigs "scrapeConfigs" {
+{{- if and .Values.scrapeConfigs.namespaces (ne $namespacesHaveRegex "true") }}
   namespaces = {{ .Values.scrapeConfigs.namespaces | toJson }}
 {{- end }}
 {{- if or .Values.scrapeConfigs.labelSelectors .Values.scrapeConfigs.labelExpressions }}
@@ -34,10 +38,17 @@ prometheus.operator.scrapeconfigs "scrapeConfigs" {
     scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
   }
 
+{{- if eq $namespacesHaveRegex "true" }}
+  rule {  // namespaces contains a regex, so ScrapeConfigs cannot be pre-filtered by the component; keep only matching namespaces here
+    source_labels = ["job"]
+    regex = "scrapeConfig/({{ .Values.scrapeConfigs.namespaces | join "|" }})/.*"
+    action = "keep"
+  }
+{{- end }}
 {{- with .Values.scrapeConfigs.excludeNamespaces }}
   rule {
     source_labels = ["job"]
-    regex = "probe/({{ . | join "|" }})/.*"
+    regex = "scrapeConfig/({{ . | join "|" }})/.*"
     action = "drop"
   }
 {{- end }}
