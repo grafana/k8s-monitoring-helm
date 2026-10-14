@@ -62,3 +62,5 @@ pod_logs_objects "feature" {
 {{- include "feature.podLogsObjects.collector.validate" (dict "Values" $.Values.podLogsObjects "Collector" $collectorValues "CollectorName" $collectorName) }}
 {{- end -}}
 {{- end -}}
+
+{{- define "features.podLogsObjects.rbac" }}[]{{- end }}

@@ -217,3 +217,5 @@ collector, so they need no assignment.
 {{- include "feature.integrations.validate" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) }}
 {{- end }}
 {{- end }}
+
+{{- define "features.integrations.rbac" }}[]{{- end }}

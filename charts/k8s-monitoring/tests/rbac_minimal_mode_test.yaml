@@ -1,0 +1,350 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:braces rule:commas
+suite: RBAC - Minimal mode
+release:
+  name: test
+  namespace: monitoring
+templates:
+  - alloy.yaml
+  - alloy-config.yaml
+  - sdk-injector-rbac.yaml
+  - validations.yaml
+set:
+  cluster: {name: test-cluster}
+  selfReporting: {enabled: false}
+  destinations:
+    loki:
+      type: loki
+      url: http://loki.loki.svc:3100/loki/api/v1/push
+      auth: {type: basic, username: user, password: pass}
+  collectors:
+    alloy-singleton:
+      extraConfig: " "
+      includeDestinations: [loki]
+tests:
+  - it: leaves the Alloy spec without rbac in alloy mode
+    set:
+      collectors:
+        alloy-singleton: {presets: [singleton]}
+    asserts:
+      - notExists:
+          path: spec.rbac
+        template: alloy.yaml
+      - hasDocuments:
+          count: 1
+        template: alloy-config.yaml
+
+  - it: passes the other rbac settings to the Alloy spec in alloy mode
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac:
+            mode: alloy
+            namespaces: [a]
+    asserts:
+      - equal:
+          path: spec.rbac
+          value: {namespaces: [a]}
+        template: alloy.yaml
+
+  - it: disables the operator's RBAC and renders its own in minimal mode
+    set:
+      collectors:
+        alloy-singleton: {presets: [singleton], rbac: {mode: minimal}}
+    asserts:
+      - equal:
+          path: spec.rbac
+          value: {create: false}
+        template: alloy.yaml
+      - containsDocument:
+          kind: Role
+          apiVersion: rbac.authorization.k8s.io/v1
+          name: test-alloy-singleton-rbac
+          namespace: monitoring
+          any: true
+        template: alloy-config.yaml
+      - containsDocument:
+          kind: RoleBinding
+          apiVersion: rbac.authorization.k8s.io/v1
+          name: test-alloy-singleton-rbac
+          namespace: monitoring
+          any: true
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resourceNames: [loki-test-k8s-monitoring], resources: [secrets], verbs: [get]}
+        template: alloy-config.yaml
+
+  - it: names, labels, and binds the RBAC objects to the collector's ServiceAccount
+    set:
+      collectors:
+        alloy-singleton: {presets: [singleton], rbac: {mode: minimal}}
+    asserts:
+      - documentSelector: {path: kind, value: Role}
+        isSubset:
+          path: metadata.labels
+          content:
+            app.kubernetes.io/component: rbac
+            app.kubernetes.io/instance: test-alloy-singleton
+            app.kubernetes.io/managed-by: Helm
+            app.kubernetes.io/part-of: alloy
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: Role}
+        notExists:
+          path: metadata.annotations
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: RoleBinding}
+        equal:
+          path: roleRef
+          value: {apiGroup: rbac.authorization.k8s.io, kind: Role, name: test-alloy-singleton-rbac}
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: RoleBinding}
+        equal:
+          path: subjects
+          value:
+            - {kind: ServiceAccount, name: test-alloy-singleton, namespace: monitoring}
+        template: alloy-config.yaml
+
+  - it: binds to a named ServiceAccount
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          serviceAccount: {create: false, name: my-sa}
+    asserts:
+      - documentSelector: {path: kind, value: RoleBinding}
+        equal:
+          path: subjects
+          value:
+            - {kind: ServiceAccount, name: my-sa, namespace: monitoring}
+        template: alloy-config.yaml
+
+  - it: applies collectorCommon to every collector
+    set:
+      collectorCommon:
+        alloy:
+          rbac: {mode: minimal}
+      collectors:
+        alloy-singleton: {presets: [singleton]}
+    asserts:
+      - equal:
+          path: spec.rbac
+          value: {create: false}
+        template: alloy.yaml
+      - containsDocument:
+          kind: Role
+          apiVersion: rbac.authorization.k8s.io/v1
+          name: test-alloy-singleton-rbac
+          namespace: monitoring
+          any: true
+        template: alloy-config.yaml
+
+  - it: renders no RBAC with rbac.create false
+    set:
+      collectors:
+        alloy-singleton: {presets: [singleton], rbac: {mode: minimal, create: false}}
+    asserts:
+      - equal:
+          path: spec.rbac
+          value: {create: false}
+        template: alloy.yaml
+      - hasDocuments:
+          count: 1
+        template: alloy-config.yaml
+
+  - it: keeps alloy mode for collectors with remote configuration
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          remoteConfig:
+            enabled: true
+            url: https://fleet-management-prod-001.grafana.net
+            auth:
+              type: basic
+              username: 123456
+              password: "It's a secret to everyone"
+    asserts:
+      - notExists:
+          path: spec.rbac
+        template: alloy.yaml
+      - hasDocuments:
+          count: 1
+        template: alloy-config.yaml
+
+  - it: adds rbac.rules and rbac.clusterRules to the ClusterRole
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac:
+            mode: minimal
+            rules:
+              - {apiGroups: [""], resources: [configmaps], verbs: [get, list]}
+            clusterRules:
+              - {nonResourceURLs: [/healthz], verbs: [get]}
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [configmaps], verbs: [get, list]}
+            - {nonResourceURLs: [/healthz], verbs: [get]}
+        template: alloy-config.yaml
+
+  - it: merges verbs for the same resource
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac:
+            mode: minimal
+            rules:
+              - {apiGroups: [""], resources: [events], verbs: [get, list]}
+              - {apiGroups: [""], resources: [events], verbs: [watch, list]}
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [events], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
+  - it: puts the rules in Roles and drops cluster-scoped rules with rbac.namespaces
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac:
+            mode: minimal
+            namespaces: [team-a, team-b]
+            rules:
+              - {apiGroups: [""], resources: [configmaps], verbs: [get]}
+            clusterRules:
+              - {nonResourceURLs: [/healthz], verbs: [get]}
+    asserts:
+      - notExists:
+          path: spec.rbac.namespaces
+        template: alloy.yaml
+      - hasDocuments:
+          count: 7
+        template: alloy-config.yaml
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'team-a')].kind"
+          value: Role
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [configmaps], verbs: [get]}
+        template: alloy-config.yaml
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'team-a')].kind"
+          value: Role
+        equal:
+          path: metadata.annotations
+          value:
+            k8s.grafana.com/rbac-dropped: rbac.clusterRules
+        template: alloy-config.yaml
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'monitoring')].kind"
+          value: Role
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resourceNames: [loki-test-k8s-monitoring], resources: [secrets], verbs: [get]}
+        template: alloy-config.yaml
+      - documentSelector:
+          path: "$[?(@.kind == 'RoleBinding' && @.metadata.namespace == 'team-b')].kind"
+          value: RoleBinding
+        equal:
+          path: roleRef
+          value: {apiGroup: rbac.authorization.k8s.io, kind: Role, name: test-alloy-singleton-rbac}
+        template: alloy-config.yaml
+
+  - it: carries the dropped permissions on an empty Role when nothing else is rendered
+    set:
+      destinations: null
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          includeDestinations: []
+          rbac:
+            mode: minimal
+            namespaces: [team-a]
+            clusterRules:
+              - {nonResourceURLs: [/healthz], verbs: [get]}
+    asserts:
+      - hasDocuments:
+          count: 3
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value: []
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: metadata.annotations
+          value:
+            k8s.grafana.com/rbac-dropped: rbac.clusterRules
+        template: alloy-config.yaml
+
+  - it: fails when no ServiceAccount is created or named
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          serviceAccount: {create: false}
+    asserts:
+      - failedTemplate:
+          errorPattern: 'The alloy-singleton collector uses rbac.mode: minimal, but does not create a ServiceAccount or name one'
+        template: validations.yaml
+
+  - it: fails on an unknown mode
+    set:
+      collectors:
+        alloy-singleton: {presets: [singleton], rbac: {mode: tiny}}
+    asserts:
+      - failedTemplate:
+          errorPattern: 'The alloy-singleton collector has an unknown RBAC mode: "tiny"'
+        template: validations.yaml
+
+  - it: replaces the SDK Injector shim with a Role for listed ConfigMap writers
+    set:
+      telemetryServices:
+        sdkInjector:
+          deploy: true
+          allowedConfigMapWriters: system:serviceaccount:$(POD_NAMESPACE):test-alloy-singleton
+      collectors:
+        alloy-singleton: {presets: [singleton], rbac: {mode: minimal}}
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: sdk-injector-rbac.yaml
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'monitoring')].kind"
+          value: Role
+        contains:
+          path: rules
+          content: {apiGroups: [""], resources: [configmaps], verbs: [create, get, update]}
+        template: alloy-config.yaml
+
+  - it: does not grant ConfigMap writes to collectors that aren't listed
+    set:
+      telemetryServices:
+        sdkInjector:
+          deploy: true
+          allowedConfigMapWriters: system:serviceaccount:monitoring:someone-else
+      collectors:
+        alloy-singleton: {presets: [singleton], rbac: {mode: minimal}}
+    asserts:
+      - documentSelector: {path: kind, value: Role}
+        notContains:
+          path: rules
+          content: {apiGroups: [""], resources: [configmaps], verbs: [create, get, update]}
+        template: alloy-config.yaml

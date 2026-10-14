@@ -15,6 +15,42 @@
 {{- define "collectors.notes.warnings" }}
 {{- include "collectors.notes.istio" . }}
 {{- include "collectors.notes.remoteConfigInferredAuth" . }}
+{{- include "collectors.notes.rbac" . }}
+{{- end }}
+
+{{/* Points collectors with rbac.mode "minimal" to the annotations that explain their RBAC. */}}
+{{- define "collectors.notes.rbac" }}
+{{- $remoteConfig := list }}
+{{- $restricted := list }}
+{{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
+  {{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
+  {{- if eq (dig "rbac" "mode" "alloy" $collectorValues) "minimal" }}
+    {{- if ne (include "collector.alloy.rbacMode" $collectorValues) "minimal" }}
+      {{- $remoteConfig = append $remoteConfig $collectorName }}
+    {{- else if dig "rbac" "create" true $collectorValues }}
+      {{- if dig "rbac" "namespaces" list $collectorValues }}
+        {{- $restricted = append $restricted $collectorName }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- if $remoteConfig }}
+
+⚠️ These collectors use remote configuration, which can run any component, so they keep the Alloy Operator's default
+RBAC even though rbac.mode is "minimal":
+{{- range $remoteConfig }}
+* {{ . }}
+{{- end }}
+{{- end }}
+{{- if $restricted }}
+
+⚠️ These collectors set rbac.namespaces, so they aren't granted cluster-scoped permissions. If they need any, the
+k8s.grafana.com/rbac-dropped annotation on their Roles lists them, and the components that use them may not find any
+data:
+{{- range $restricted }}
+* {{ . }}
+{{- end }}
+{{- end }}
 {{- end }}
 
 {{/* Warns when a collector's remote configuration authentication type is being inferred as "basic". */}}

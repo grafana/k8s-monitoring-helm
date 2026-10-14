@@ -64,6 +64,17 @@ metadata:
   namespace: {{ include "helper.namespace" $ }}
 data:
   config.alloy: |{{ $alloyConfig | trim | nindent 4 }}
+{{- if eq (include "collector.alloy.rbacMode" $collectorValues) "minimal" }}
+  {{- $rbacContext := merge (dict "featureKeys" $featureKeys "destinationNames" $destinationNames) $values }}
+  {{- include "collectors.rbac.instance" (dict
+    "Files" $.Files
+    "collectorValues" $collectorValues
+    "entries" (include "collectors.rbac.entries" $rbacContext | fromYamlArray)
+    "name" (include "collector.alloy.fullname" $values)
+    "namespace" (include "helper.namespace" $)
+    "labels" (include "collector.alloy.labels" $values | fromYaml)
+    "serviceAccountName" (include "collector.alloy.serviceAccountName" $values)) }}
+{{- end }}
 {{- end }}
 {{- /*
 Validate replacements only after every collector has been processed: a replacement may match

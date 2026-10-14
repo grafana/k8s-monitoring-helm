@@ -1,0 +1,140 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:braces rule:commas
+suite: RBAC - Minimal mode - Destinations
+release:
+  name: test
+  namespace: monitoring
+templates:
+  - alloy-config.yaml
+  - alloy-sampler.yaml
+  - alloy-servicegraph.yaml
+set:
+  cluster: {name: test-cluster}
+  selfReporting: {enabled: false}
+  collectorCommon:
+    alloy:
+      rbac: {mode: minimal}
+tests:
+  - it: grants get on chart-created and external destination Secrets in their namespaces
+    set:
+      destinations:
+        loki:
+          type: loki
+          url: http://loki.loki.svc:3100/loki/api/v1/push
+          auth: {type: basic, username: user, password: pass}
+        external-loki:
+          type: loki
+          url: http://loki.example.com/loki/api/v1/push
+          auth: {type: basic, usernameKey: user, passwordKey: pass}
+          secret: {create: false, name: loki-credentials, namespace: secrets}
+      clusterEvents: {enabled: true}
+      collectors:
+        alloy-singleton: {presets: [singleton]}
+    asserts:
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'monitoring')].kind"
+          value: Role
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resourceNames: [loki-test-k8s-monitoring], resources: [secrets], verbs: [get]}
+        template: alloy-config.yaml
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'secrets')].kind"
+          value: Role
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resourceNames: [loki-credentials], resources: [secrets], verbs: [get]}
+        template: alloy-config.yaml
+      - documentSelector:
+          path: "$[?(@.kind == 'RoleBinding' && @.metadata.namespace == 'secrets')].kind"
+          value: RoleBinding
+        equal:
+          path: subjects
+          value:
+            - {kind: ServiceAccount, name: test-alloy-singleton, namespace: monitoring}
+        template: alloy-config.yaml
+
+  - it: grants the sampler and the service graph instances their destination Secrets
+    set:
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+          auth: {type: basic, username: user, password: pass}
+        tempo:
+          type: otlp
+          url: http://tempo.tempo.svc:4317
+          metrics: {enabled: false}
+          logs: {enabled: false}
+          auth: {type: bearerToken, bearerTokenKey: token}
+          secret: {create: false, name: tempo-token, namespace: secrets}
+          processors:
+            tailSampling: {enabled: true}
+            serviceGraphMetrics: {enabled: true, destinations: [prometheus]}
+      applicationObservability:
+        enabled: true
+        receivers: {otlp: {grpc: {enabled: true}}}
+        logs: {enabled: false}
+        metrics: {enabled: false}
+      collectors:
+        alloy-receiver: {presets: [deployment, otel-receiver]}
+    asserts:
+      - equal:
+          path: spec.rbac
+          value: {create: false}
+        documentSelector: {path: kind, value: Alloy}
+        template: alloy-sampler.yaml
+      - hasDocuments:
+          count: 3
+        template: alloy-sampler.yaml
+      - documentSelector: {path: kind, value: Role}
+        isSubset:
+          path: metadata
+          content: {name: test-tempo-sampler-rbac, namespace: secrets}
+        template: alloy-sampler.yaml
+      - documentSelector: {path: kind, value: RoleBinding}
+        equal:
+          path: subjects
+          value:
+            - {kind: ServiceAccount, name: test-tempo-sampler, namespace: monitoring}
+        template: alloy-sampler.yaml
+      - documentSelector: {path: kind, value: Role}
+        isSubset:
+          path: metadata
+          content: {name: test-tempo-servicegraph-rbac, namespace: monitoring}
+        template: alloy-servicegraph.yaml
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resourceNames: [prometheus-test-k8s-monitoring], resources: [secrets], verbs: [get]}
+        template: alloy-servicegraph.yaml
+
+  - it: fails on an unknown RBAC mode for a sampler collector
+    set:
+      destinations:
+        tempo:
+          type: otlp
+          url: http://tempo.tempo.svc:4317
+          metrics: {enabled: false}
+          logs: {enabled: false}
+          processors:
+            tailSampling:
+              enabled: true
+              collector:
+                rbac: {mode: bogus}
+      applicationObservability:
+        enabled: true
+        receivers: {otlp: {grpc: {enabled: true}}}
+        logs: {enabled: false}
+        metrics: {enabled: false}
+      collectorCommon:
+        alloy:
+          rbac: {mode: alloy}
+      collectors:
+        alloy-receiver: {presets: [deployment, otel-receiver]}
+    asserts:
+      - failedTemplate:
+          errorPattern: 'has an unknown RBAC mode: "bogus"'
+        template: alloy-sampler.yaml

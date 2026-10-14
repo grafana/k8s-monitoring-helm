@@ -66,6 +66,21 @@ metadata:
   {{- end }}
   {{- end }}
 spec:{{ $alloySpec | trim | nindent 2 }}
+{{- include "collectors.validate.rbac" (dict "name" $collectorName "collectorValues" $alloyValues "valuesPath" (printf "destinations.%s.processors.tailSampling.collector" $destinationName)) }}
+{{- if eq (include "collector.alloy.rbacMode" $alloyValues) "minimal" }}
+  {{- $rbacEntries := list }}
+  {{- if eq (include "secrets.usesKubernetesSecret" $destination) "true" }}
+    {{- $rbacEntries = append $rbacEntries (include "collectors.rbac.secretEntry" (merge (dict "destination" $destination "destinationName" $destinationName) $) | fromYaml) }}
+  {{- end }}
+  {{- include "collectors.rbac.instance" (dict
+    "Files" $.Files
+    "collectorValues" $alloyValues
+    "entries" $rbacEntries
+    "name" $collectorName
+    "namespace" (include "helper.namespace" $)
+    "labels" (include "collector.alloy.labels" $ | fromYaml)
+    "serviceAccountName" (include "collector.alloy.serviceAccountName" $values)) }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
