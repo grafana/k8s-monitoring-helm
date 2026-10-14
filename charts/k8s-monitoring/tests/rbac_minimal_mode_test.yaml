@@ -56,19 +56,23 @@ tests:
           path: spec.rbac
           value: {create: false}
         template: alloy.yaml
-      - containsDocument:
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'monitoring')].kind"
+          value: Role
+        containsDocument:
           kind: Role
           apiVersion: rbac.authorization.k8s.io/v1
           name: test-alloy-singleton-rbac
           namespace: monitoring
-          any: true
         template: alloy-config.yaml
-      - containsDocument:
+      - documentSelector:
+          path: "$[?(@.kind == 'RoleBinding' && @.metadata.namespace == 'monitoring')].kind"
+          value: RoleBinding
+        containsDocument:
           kind: RoleBinding
           apiVersion: rbac.authorization.k8s.io/v1
           name: test-alloy-singleton-rbac
           namespace: monitoring
-          any: true
         template: alloy-config.yaml
       - documentSelector: {path: kind, value: Role}
         equal:
@@ -134,12 +138,14 @@ tests:
           path: spec.rbac
           value: {create: false}
         template: alloy.yaml
-      - containsDocument:
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'monitoring')].kind"
+          value: Role
+        containsDocument:
           kind: Role
           apiVersion: rbac.authorization.k8s.io/v1
           name: test-alloy-singleton-rbac
           namespace: monitoring
-          any: true
         template: alloy-config.yaml
 
   - it: renders no RBAC with rbac.create false
