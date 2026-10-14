@@ -161,7 +161,7 @@ tests:
           count: 1
         template: alloy-config.yaml
 
-  - it: keeps alloy mode for collectors with remote configuration
+  - it: fails for collectors with remote configuration
     set:
       collectors:
         alloy-singleton:
@@ -175,12 +175,9 @@ tests:
               username: 123456
               password: "It's a secret to everyone"
     asserts:
-      - notExists:
-          path: spec.rbac
-        template: alloy.yaml
-      - hasDocuments:
-          count: 1
-        template: alloy-config.yaml
+      - failedTemplate:
+          errorPattern: 'The alloy-singleton collector uses rbac.mode: minimal with remote configuration'
+        template: validations.yaml
 
   - it: fails when no ServiceAccount is created or named
     set:

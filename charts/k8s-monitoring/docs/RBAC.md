@@ -64,8 +64,8 @@ validation. They still work as before with `rbac.mode: alloy`. To create no RBAC
 
 ## Remote configuration
 
-Collectors with `remoteConfig.enabled` keep `alloy` mode, even if `rbac.mode` is `minimal`. Remote configuration can run
-any component, so the chart can't compute the rules it needs. The installation notes list these collectors.
+Collectors with `remoteConfig.enabled` must use `alloy` mode. Remote configuration can run any component, so the chart
+can't compute the rules it needs, and setting `rbac.mode: minimal` on such a collector fails validation.
 
 ## Switching modes
 

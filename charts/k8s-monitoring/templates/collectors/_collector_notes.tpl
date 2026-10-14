@@ -15,28 +15,6 @@
 {{- define "collectors.notes.warnings" }}
 {{- include "collectors.notes.istio" . }}
 {{- include "collectors.notes.remoteConfigInferredAuth" . }}
-{{- include "collectors.notes.rbac" . }}
-{{- end }}
-
-{{/* Lists collectors that keep alloy mode even though rbac.mode is "minimal". */}}
-{{- define "collectors.notes.rbac" }}
-{{- $remoteConfig := list }}
-{{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
-  {{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
-  {{- if eq (dig "rbac" "mode" "alloy" $collectorValues) "minimal" }}
-    {{- if ne (include "collector.alloy.rbacMode" $collectorValues) "minimal" }}
-      {{- $remoteConfig = append $remoteConfig $collectorName }}
-    {{- end }}
-  {{- end }}
-{{- end }}
-{{- if $remoteConfig }}
-
-⚠️ These collectors use remote configuration, which can run any component, so they keep the Alloy Operator's default
-RBAC even though rbac.mode is "minimal":
-{{- range $remoteConfig }}
-* {{ . }}
-{{- end }}
-{{- end }}
 {{- end }}
 
 {{/* Warns when a collector's remote configuration authentication type is being inferred as "basic". */}}

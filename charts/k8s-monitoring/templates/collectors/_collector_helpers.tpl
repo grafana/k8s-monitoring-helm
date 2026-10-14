@@ -242,13 +242,9 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{ $cleanValues | toYaml }}
 {{- end }}
 
-{{/* The effective RBAC mode of a collector. Remote configuration can run any component, so it keeps the Alloy defaults. Inputs: . (merged collector values) */}}
+{{/* Inputs: . (merged collector values) */}}
 {{- define "collector.alloy.rbacMode" -}}
-{{- if dig "remoteConfig" "enabled" false . -}}
-alloy
-{{- else -}}
 {{- dig "rbac" "mode" "alloy" . -}}
-{{- end -}}
 {{- end }}
 
 {{/* Lists the fields that are not a part of Alloy itself, and should be removed before creating an Alloy instance. */}}

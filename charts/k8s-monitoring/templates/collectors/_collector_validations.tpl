@@ -192,6 +192,11 @@
     {{- fail (join "\n" $msg) }}
   {{- end }}
   {{- if eq (include "collector.alloy.rbacMode" .collectorValues) "minimal" }}
+    {{- if dig "remoteConfig" "enabled" false .collectorValues }}
+      {{- $msg := list "" (printf "The %s collector uses rbac.mode: minimal with remote configuration, which can run any component, so its RBAC can't be computed." .name) }}
+      {{- $msg = append $msg (printf "Please set %s.rbac.mode to \"alloy\", or disable remoteConfig." (.valuesPath | default (printf "collectors.%s" .name))) }}
+      {{- fail (join "\n" $msg) }}
+    {{- end }}
     {{- range $setting := list "rules" "clusterRules" "namespaces" }}
       {{- if dig "rbac" $setting nil $.collectorValues }}
         {{- $msg := list "" (printf "The %s collector sets rbac.%s, which only applies with rbac.mode: alloy for now." $.name $setting) }}
