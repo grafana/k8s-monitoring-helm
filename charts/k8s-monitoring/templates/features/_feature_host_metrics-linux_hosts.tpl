@@ -62,7 +62,7 @@ linux_host_metrics "feature" {
 {{- $entries := list }}
 {{- if eq (include "features.hostMetrics_linuxHosts.enabled" .) "true" }}
   {{- if ne (.Values.hostMetrics.linuxHosts.source | default "node-exporter") "alloy" }}
-    {{- $namespace := include "feature.hostMetrics.linuxHosts.namespace" (dict "Values" .Values.hostMetrics "Release" $.Release "telemetryServices" $.Values.telemetryServices) }}
+    {{- $namespace := include "feature.hostMetrics.discoveryNamespace" (dict "namespace" .Values.hostMetrics.linuxHosts.namespace "service" "node-exporter" "overridable" true "telemetryServices" $.Values.telemetryServices "Release" $.Release) }}
     {{- $entries = append $entries (dict "bundle" "pods" "namespaces" (compact (list $namespace))) }}
     {{- if eq (include "collectors.rbac.anyEnabled" .Values.hostMetrics.nodeLabels) "true" }}
       {{- $entries = append $entries (dict "bundle" "nodes") }}

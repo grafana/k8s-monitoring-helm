@@ -53,7 +53,7 @@ cost_metrics "feature" {
 {{- define "features.costMetrics.rbac" }}
 {{- $entries := list }}
 {{- if .Values.costMetrics.enabled }}
-  {{- $namespace := include "feature.costMetrics.opencost.namespace" (dict "Values" .Values.costMetrics "Release" $.Release "telemetryServices" $.Values.telemetryServices) }}
+  {{- $namespace := include "feature.costMetrics.discoveryNamespace" (dict "namespace" .Values.costMetrics.opencost.namespace "service" "opencost" "overridable" true "telemetryServices" $.Values.telemetryServices "Release" $.Release) }}
   {{- $entries = append $entries (dict "bundle" "pods" "namespaces" (compact (list $namespace))) }}
 {{- end }}
 {{- $entries | toYaml }}

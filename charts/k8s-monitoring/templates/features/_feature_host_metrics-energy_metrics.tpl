@@ -56,7 +56,7 @@ energy_metrics "feature" {
 {{- define "features.hostMetrics_energyMetrics.rbac" }}
 {{- $entries := list }}
 {{- if eq (include "features.hostMetrics_energyMetrics.enabled" .) "true" }}
-  {{- $namespace := include "feature.hostMetrics.energyMetrics.namespace" (dict "Values" .Values.hostMetrics "Release" $.Release "telemetryServices" $.Values.telemetryServices) }}
+  {{- $namespace := include "feature.hostMetrics.discoveryNamespace" (dict "namespace" .Values.hostMetrics.energyMetrics.namespace "service" "kepler" "overridable" false "telemetryServices" $.Values.telemetryServices "Release" $.Release) }}
   {{- $entries = append $entries (dict "bundle" "pods" "namespaces" (compact (list $namespace))) }}
   {{- if eq (include "collectors.rbac.anyEnabled" .Values.hostMetrics.nodeLabels) "true" }}
     {{- $entries = append $entries (dict "bundle" "nodes") }}
