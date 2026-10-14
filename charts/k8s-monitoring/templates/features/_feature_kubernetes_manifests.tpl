@@ -54,5 +54,3 @@ kubernetes_manifests "feature" {
 {{- end }}
 {{- end -}}
 {{- end -}}
-
-{{- define "features.kubernetesManifests.rbac" }}[]{{- end }}

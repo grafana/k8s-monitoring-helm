@@ -63,5 +63,3 @@ prometheus_metrics_receiver "feature" {
   {{- include "collectors.requireExtraPort" (dict "collectorName" $collectorName "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.prometheusMetricsReceiver.port "portName" "metrics" "portProtocol" "TCP") }}
 {{- end -}}
 {{- end -}}
-
-{{- define "features.prometheusMetricsReceiver.rbac" }}[]{{- end }}

@@ -32,13 +32,10 @@ In `alloy` mode, every collector gets the Alloy chart's default ClusterRole, wha
 read access to every Secret and ConfigMap. The RBAC is created by the Alloy Operator at runtime, so it doesn't appear in
 `helm template` output.
 
-In `minimal` mode, the chart knows which features, destinations, and data processors run on each collector, so it
-renders only the rules they need:
+In `minimal` mode, the chart knows which destinations run on each collector, so it renders only the rules they need:
 
-*   Rules are put in Roles when the configuration limits a component to some namespaces, and in a ClusterRole
-    otherwise.
 *   A destination whose credentials are in a Kubernetes Secret gets `get` on that one Secret, in its namespace.
-*   The ClusterRole and Roles show up in `helm template` output, so they can be reviewed.
+*   The Roles show up in `helm template` output, so they can be reviewed.
 
 The objects are named `<collector full name>-rbac`. They are bound to the collector's ServiceAccount, which the Alloy
 Operator still creates. The `Alloy` resource gets `rbac.create: false`, so the operator doesn't create its own RBAC.
@@ -46,11 +43,7 @@ Operator still creates. The `Alloy` resource gets `rbac.create: false`, so the o
 ## What collectors are granted
 
 The rules come from the bundles in
-[collectors/rbac-bundles.yaml](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/collectors/rbac-bundles.yaml).
-Unless noted, verbs are `get`, `list`, and `watch`. "In `namespaces`" means a Role in each listed namespace, or a
-ClusterRole when the list is empty or has a regular expression.
-
-Rules from other sources:
+[collectors/rbac-bundles.yaml](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/collectors/rbac-bundles.yaml):
 
 *   **A destination with credentials in a Kubernetes Secret**: `get` on that Secret, in its namespace.
 *   **The SDK Injector**: `get`, `create`, and `update` on ConfigMaps in the release namespace, for the collectors listed
@@ -70,7 +63,7 @@ can't compute the rules it needs, and setting `rbac.mode: minimal` on such a col
 ## Switching modes
 
 Helm creates RBAC objects before custom resources, so switching a collector from `alloy` to `minimal` creates the new
-ClusterRole and Roles before the Alloy Operator removes its own. Permissions add up, so the collector keeps working
+Roles before the Alloy Operator removes its own. Permissions add up, so the collector keeps working
 during the switch.
 
 Switching from `minimal` back to `alloy` removes the chart's RBAC objects right away, but the Alloy Operator only

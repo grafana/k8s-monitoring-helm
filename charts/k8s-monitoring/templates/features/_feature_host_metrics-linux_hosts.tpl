@@ -57,5 +57,3 @@ linux_host_metrics "feature" {
   {{- include "feature.hostMetrics.linuxHosts.collector.validate" (dict "Values" $.Values.hostMetrics "Collector" $collectorValues "CollectorName" $collectorName) }}
 {{- end }}
 {{- end }}
-
-{{- define "features.hostMetrics_linuxHosts.rbac" }}[]{{- end }}

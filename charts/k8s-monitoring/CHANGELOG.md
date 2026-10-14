@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-*   Add `rbac.mode: minimal` for collectors. The chart renders a ClusterRole and Roles that only grant what each collector's configuration needs, instead of the Alloy chart's default RBAC, which can read every Secret and ConfigMap in the cluster. Collectors with remote configuration keep the default. See [RBAC](./docs/RBAC.md). (#2732, #974) (@TylerHelmuth)
+*   Add `rbac.mode: minimal` for collectors. The chart renders RBAC objects that only grant what each collector's configuration needs, instead of the Alloy chart's default RBAC, which can read every Secret and ConfigMap in the cluster. Collectors with remote configuration must keep `rbac.mode: alloy`. See [RBAC](./docs/RBAC.md). (#2732, #974) (@TylerHelmuth)
 *   Fix `k8s_cluster_name` label values being joined with `;` on Beyla metrics sent through OTLP destinations, by dropping the flat per-series copy when it equals the `k8s.cluster.name` set by the chart. (@mbaykara)
 
 ## 4.5.3

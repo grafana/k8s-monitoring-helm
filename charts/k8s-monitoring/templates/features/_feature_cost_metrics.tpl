@@ -49,5 +49,3 @@ cost_metrics "feature" {
   {{- include "feature.costMetrics.validate" (dict "Values" $.Values.costMetrics "telemetryServices" $.Values.telemetryServices) }}
 {{- end }}
 {{- end }}
-
-{{- define "features.costMetrics.rbac" }}[]{{- end }}

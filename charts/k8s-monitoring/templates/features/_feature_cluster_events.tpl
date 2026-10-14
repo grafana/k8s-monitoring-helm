@@ -48,5 +48,3 @@ cluster_events "feature" {
 {{- end }}
 {{- end -}}
 {{- end -}}
-
-{{- define "features.clusterEvents.rbac" }}[]{{- end }}

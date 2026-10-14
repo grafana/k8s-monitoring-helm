@@ -66,5 +66,3 @@ windows_host_metrics "feature" {
   {{- include "feature.hostMetrics.windowsHosts.collector.validate" (dict "Values" $.Values.hostMetrics "Collector" $collectorValues "CollectorName" $collectorName) }}
 {{- end }}
 {{- end }}
-
-{{- define "features.hostMetrics_windowsHosts.rbac" }}[]{{- end }}

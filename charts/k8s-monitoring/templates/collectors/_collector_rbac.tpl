@@ -1,12 +1,8 @@
 {{/* RBAC for Alloy instances with `rbac.mode: minimal`. See docs/RBAC.md. */}}
 
-{{/* Inputs: . (root with collectorName), featureKeys, destinationNames */}}
+{{/* Inputs: . (root with collectorName), destinationNames */}}
 {{- define "collectors.rbac.entries" -}}
-{{- $entries := list }}
-{{- range $featureKey := .featureKeys }}
-  {{- $entries = concat $entries (include (printf "features.%s.rbac" $featureKey) $ | fromYamlArray) }}
-{{- end }}
-{{- $entries = concat $entries (include "collectors.rbac.destinationEntries" $ | fromYamlArray) }}
+{{- $entries := include "collectors.rbac.destinationEntries" $ | fromYamlArray }}
 {{- $entries = concat $entries (include "collectors.rbac.sdkInjectorEntries" $ | fromYamlArray) }}
 {{- $entries | toYaml }}
 {{- end }}
@@ -51,80 +47,30 @@
 {{- $entries | toYaml }}
 {{- end }}
 
-{{/* Adds verbs for one resource to a scope. Inputs: state, scope ("" for the ClusterRole), key, verbs */}}
-{{- define "collectors.rbac.addRule" -}}
-{{- $rules := .state.cluster }}
-{{- if .scope }}
-  {{- $rules = get .state.namespaced .scope | default (dict) }}
-  {{- $_ := set .state.namespaced .scope $rules }}
-{{- end }}
-{{- $_ := set $rules .key (concat (get $rules .key | default (list)) .verbs | uniq | sortAlpha) }}
-{{- end }}
-
-{{/* Inputs: state, scopes, rule (PolicyRule) */}}
-{{- define "collectors.rbac.addPolicyRule" -}}
-{{- range $url := .rule.nonResourceURLs | default (list) }}
-  {{- $_ := include "collectors.rbac.addRule" (dict "state" $.state "scope" "" "key" (printf "u|%s" $url) "verbs" $.rule.verbs) }}
-{{- end }}
-{{- range $apiGroup := .rule.apiGroups | default (list) }}
-  {{- range $resource := $.rule.resources | default (list) }}
-    {{- range $scope := $.scopes }}
-      {{- range $name := $.rule.resourceNames | default (list "") }}
-        {{- $_ := include "collectors.rbac.addRule" (dict "state" $.state "scope" $scope "key" (printf "r|%s|%s|%s" $apiGroup $resource $name) "verbs" $.rule.verbs) }}
-      {{- end }}
-    {{- end }}
-  {{- end }}
-{{- end }}
-{{- end }}
-
-{{/* Expands entries into rules per scope. Inputs: catalog, entries. Output: {cluster, namespaced} */}}
+{{/* Expands entries into rules per namespace. Inputs: catalog, entries. Output: {namespace: {"apiGroup|resource|name": verbs}} */}}
 {{- define "collectors.rbac.expand" -}}
-{{- $clusterScopedResources := list "nodes" "nodes/metrics" "nodes/pods" "nodes/proxy" "namespaces" "infrastructures" "infrastructures/status" }}
-{{- $state := dict "cluster" (dict) "namespaced" (dict) }}
+{{- $namespaced := dict }}
 {{- range $entry := .entries }}
   {{- $bundle := get $.catalog $entry.bundle }}
   {{- if not $bundle }}
     {{- fail (printf "\nUnknown RBAC bundle %q." $entry.bundle) }}
   {{- end }}
-  {{- range $rule := $bundle.rules }}
-    {{- $names := $rule.resourceNames | default ($entry.resourceNames | default (list "")) }}
-    {{- if $rule.nonResourceURLs }}
-      {{- $_ := include "collectors.rbac.addPolicyRule" (dict "state" $state "scopes" (list "") "rule" $rule) }}
-    {{- end }}
-    {{- range $resource := $rule.resources | default (list) }}
-      {{- $scopes := list "" }}
-      {{- if and $entry.namespaces (not $bundle.clusterOnly) (not (has $resource $clusterScopedResources)) }}
-        {{- $scopes = $entry.namespaces }}
+  {{- range $namespace := $entry.namespaces }}
+    {{- $rules := get $namespaced $namespace | default dict }}
+    {{- range $rule := $bundle.rules }}
+      {{- range $apiGroup := $rule.apiGroups }}
+        {{- range $resource := $rule.resources }}
+          {{- range $name := $entry.resourceNames | default (list "") }}
+            {{- $key := printf "%s|%s|%s" $apiGroup $resource $name }}
+            {{- $_ := set $rules $key (concat (get $rules $key | default list) $rule.verbs | uniq | sortAlpha) }}
+          {{- end }}
+        {{- end }}
       {{- end }}
-      {{- $_ := include "collectors.rbac.addPolicyRule" (dict "state" $state "scopes" $scopes "rule" (dict "apiGroups" $rule.apiGroups "resources" (list $resource) "resourceNames" (compact $names) "verbs" $rule.verbs)) }}
     {{- end }}
+    {{- $_ := set $namespaced $namespace $rules }}
   {{- end }}
 {{- end }}
-{{- $state | toYaml }}
-{{- end }}
-
-{{/* Returns "true" if rules already grant the verbs for a key. Inputs: rules, key, verbs, sameScope */}}
-{{- define "collectors.rbac.coveredBy" -}}
-{{- $parts := splitList "|" .key }}
-{{- $candidates := list }}
-{{- if not .sameScope }}
-  {{- $candidates = append $candidates .key }}
-{{- end }}
-{{- if and (eq (first $parts) "r") (last $parts) }}
-  {{- $candidates = append $candidates (printf "r|%s|%s|" (index $parts 1) (index $parts 2)) }}
-{{- end }}
-{{- $covered := false }}
-{{- range $candidate := $candidates }}
-  {{- $granted := get ($.rules | default dict) $candidate | default (list) }}
-  {{- if $granted }}
-    {{- $missing := false }}
-    {{- range $verb := $.verbs }}
-      {{- if not (or (has "*" $granted) (has $verb $granted)) }}{{ $missing = true }}{{ end }}
-    {{- end }}
-    {{- if not $missing }}{{ $covered = true }}{{ end }}
-  {{- end }}
-{{- end }}
-{{- $covered }}
+{{- $namespaced | toYaml }}
 {{- end }}
 
 {{/* Groups a map of keys to verbs into PolicyRules. Inputs: . (map) */}}
@@ -132,17 +78,11 @@
 {{- $groups := dict }}
 {{- range $key, $verbs := . }}
   {{- $parts := splitList "|" $key }}
-  {{- $groupKey := "" }}
-  {{- $item := "" }}
-  {{- if eq (first $parts) "u" }}
-    {{- $groupKey = printf "3|%s" (join "," $verbs) }}
-    {{- $item = index $parts 1 }}
-  {{- else if eq (index $parts 3) "" }}
-    {{- $groupKey = printf "1|%s|%s" (index $parts 1) (join "," $verbs) }}
+  {{- $groupKey := printf "1|%s|%s" (index $parts 0) (join "," $verbs) }}
+  {{- $item := index $parts 1 }}
+  {{- if index $parts 2 }}
+    {{- $groupKey = printf "2|%s|%s|%s" (index $parts 0) (index $parts 1) (join "," $verbs) }}
     {{- $item = index $parts 2 }}
-  {{- else }}
-    {{- $groupKey = printf "2|%s|%s|%s" (index $parts 1) (index $parts 2) (join "," $verbs) }}
-    {{- $item = index $parts 3 }}
   {{- end }}
   {{- $group := get $groups $groupKey | default (dict "parts" $parts "verbs" $verbs "items" (list)) }}
   {{- $_ := set $group "items" (append $group.items $item) }}
@@ -150,72 +90,19 @@
 {{- end }}
 {{- $rules := list }}
 {{- range $groupKey, $group := $groups }}
-  {{- $kind := substr 0 1 $groupKey }}
-  {{- if eq $kind "3" }}
-    {{- $rules = append $rules (dict "nonResourceURLs" $group.items "verbs" $group.verbs) }}
-  {{- else if eq $kind "1" }}
-    {{- $rules = append $rules (dict "apiGroups" (list (index $group.parts 1)) "resources" $group.items "verbs" $group.verbs) }}
+  {{- if hasPrefix "1|" $groupKey }}
+    {{- $rules = append $rules (dict "apiGroups" (list (index $group.parts 0)) "resources" $group.items "verbs" $group.verbs) }}
   {{- else }}
-    {{- $rules = append $rules (dict "apiGroups" (list (index $group.parts 1)) "resources" (list (index $group.parts 2)) "resourceNames" $group.items "verbs" $group.verbs) }}
+    {{- $rules = append $rules (dict "apiGroups" (list (index $group.parts 0)) "resources" (list (index $group.parts 1)) "resourceNames" $group.items "verbs" $group.verbs) }}
   {{- end }}
 {{- end }}
 {{- $rules | toYaml }}
 {{- end }}
 
-{{/* Turns RBAC entries into the rules for a ClusterRole and per-namespace Roles. Inputs: catalog, entries. Output: {cluster, namespaced} */}}
-{{- define "collectors.rbac.resolve" -}}
-{{- $state := include "collectors.rbac.expand" (dict "catalog" .catalog "entries" .entries) | fromYaml }}
-{{- $cluster := dict }}
-{{- range $key, $verbs := $state.cluster }}
-  {{- if ne (include "collectors.rbac.coveredBy" (dict "rules" $state.cluster "key" $key "verbs" $verbs "sameScope" true)) "true" }}
-    {{- $_ := set $cluster $key $verbs }}
-  {{- end }}
-{{- end }}
-{{- $namespaced := dict }}
-{{- range $namespace, $rules := $state.namespaced }}
-  {{- $kept := dict }}
-  {{- range $key, $verbs := $rules }}
-    {{- $coveredByCluster := include "collectors.rbac.coveredBy" (dict "rules" $state.cluster "key" $key "verbs" $verbs "sameScope" false) }}
-    {{- $coveredByNamespace := include "collectors.rbac.coveredBy" (dict "rules" $rules "key" $key "verbs" $verbs "sameScope" true) }}
-    {{- if and (ne $coveredByCluster "true") (ne $coveredByNamespace "true") }}
-      {{- $_ := set $kept $key $verbs }}
-    {{- end }}
-  {{- end }}
-  {{- if $kept }}
-    {{- $_ := set $namespaced $namespace (include "collectors.rbac.groupRules" $kept | fromYamlArray) }}
-  {{- end }}
-{{- end }}
-{{- dict "cluster" (include "collectors.rbac.groupRules" $cluster | fromYamlArray) "namespaced" $namespaced | toYaml }}
-{{- end }}
-
-{{/* Inputs: name, namespace, labels, serviceAccountName, resolved */}}
+{{/* Inputs: name, namespace, labels, serviceAccountName, roles ({namespace: rules}) */}}
 {{- define "collectors.rbac.render" }}
 {{- $subjects := list (dict "kind" "ServiceAccount" "name" .serviceAccountName "namespace" .namespace) }}
-{{- if .resolved.cluster }}
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: {{ .name }}
-  labels:
-    {{- toYaml .labels | nindent 4 }}
-rules:
-  {{- toYaml .resolved.cluster | nindent 2 }}
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: {{ .name }}
-  labels:
-    {{- toYaml .labels | nindent 4 }}
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: {{ .name }}
-subjects:
-  {{- toYaml $subjects | nindent 2 }}
-{{- end }}
-{{- range $namespace, $rules := .resolved.namespaced }}
+{{- range $namespace, $rules := .roles }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -243,17 +130,15 @@ subjects:
 {{- end }}
 {{- end }}
 
-{{/* Inputs: Files, entries. Output: {resolved} */}}
-{{- define "collectors.rbac.compute" -}}
-{{- $catalog := .Files.Get "collectors/rbac-bundles.yaml" | fromYaml }}
-{{- dict "resolved" (include "collectors.rbac.resolve" (dict "catalog" $catalog "entries" .entries) | fromYaml) | toYaml }}
-{{- end }}
-
 {{/* Inputs: Files, collectorValues, entries, name (instance fullname), namespace, labels, serviceAccountName */}}
 {{- define "collectors.rbac.instance" }}
 {{- if dig "rbac" "create" true .collectorValues }}
-  {{- $computed := include "collectors.rbac.compute" . | fromYaml }}
+  {{- $catalog := .Files.Get "collectors/rbac-bundles.yaml" | fromYaml }}
+  {{- $roles := dict }}
+  {{- range $namespace, $rules := include "collectors.rbac.expand" (dict "catalog" $catalog "entries" .entries) | fromYaml }}
+    {{- $_ := set $roles $namespace (include "collectors.rbac.groupRules" $rules | fromYamlArray) }}
+  {{- end }}
   {{- $labels := merge (dict "app.kubernetes.io/component" "rbac" "app.kubernetes.io/instance" .name) .labels }}
-  {{- include "collectors.rbac.render" (dict "name" (printf "%s-rbac" .name) "namespace" .namespace "labels" $labels "serviceAccountName" .serviceAccountName "resolved" $computed.resolved) }}
+  {{- include "collectors.rbac.render" (dict "name" (printf "%s-rbac" .name) "namespace" .namespace "labels" $labels "serviceAccountName" .serviceAccountName "roles" $roles) }}
 {{- end }}
 {{- end }}

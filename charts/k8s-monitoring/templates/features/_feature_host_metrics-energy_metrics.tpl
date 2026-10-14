@@ -52,5 +52,3 @@ energy_metrics "feature" {
   {{- include "feature.hostMetrics.energyMetrics.validate" (dict "Values" $.Values.hostMetrics "telemetryServices" $.Values.telemetryServices) }}
 {{- end }}
 {{- end }}
-
-{{- define "features.hostMetrics_energyMetrics.rbac" }}[]{{- end }}

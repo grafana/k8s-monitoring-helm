@@ -49,5 +49,3 @@ node_logs "feature" {
 {{- include "feature.nodeLogs.collector.validate" (dict "Values" $.Values.nodeLogs "Collector" $collectorValues "CollectorName" $collectorName) }}
 {{- end -}}
 {{- end -}}
-
-{{- define "features.nodeLogs.rbac" }}[]{{- end }}

@@ -68,5 +68,3 @@ windows_event_logs "feature" {
 {{- include "feature.windowsEventLogs.collector.validate" (dict "Values" $.Values.windowsEventLogs "Collector" $collectorValues "CollectorName" $collectorName) }}
 {{- end -}}
 {{- end -}}
-
-{{- define "features.windowsEventLogs.rbac" }}[]{{- end }}

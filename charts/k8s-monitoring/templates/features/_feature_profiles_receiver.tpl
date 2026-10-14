@@ -63,5 +63,3 @@ profiles_receiver "feature" {
   {{- include "collectors.requireExtraPort" (dict "collectorName" $collectorName "collectorValues" $collectorValues "featureName" $featureName "portNumber" $.Values.profilesReceiver.port "portName" "profiles" "portProtocol" "TCP") }}
 {{- end -}}
 {{- end -}}
-
-{{- define "features.profilesReceiver.rbac" }}[]{{- end }}
