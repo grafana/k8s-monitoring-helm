@@ -20,7 +20,8 @@ Collectors with `rbac.mode: minimal` get this permission from their own Role ins
 {{- if .Values.telemetryServices.sdkInjector.deploy }}
 {{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
 {{- $values := dict "Values" $.Values "Files" $.Files "Release" $.Release "Chart" $.Chart "collectorName" $collectorName }}
-{{- if ne (include "collector.alloy.rbacMode" (include "collector.alloy.values" $values | fromYaml)) "minimal" }}
+{{- $_ := set $values "alloyValues" (include "collector.alloy.values" $values | fromYaml) }}
+{{- if ne (include "collector.alloy.rbacMode" $values.alloyValues) "minimal" }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role

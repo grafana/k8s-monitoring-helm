@@ -65,7 +65,7 @@ metadata:
 data:
   config.alloy: |{{ $alloyConfig | trim | nindent 4 }}
 {{- if eq (include "collector.alloy.rbacMode" $collectorValues) "minimal" }}
-  {{- $rbacContext := merge (dict "destinationNames" $destinationNames) $values }}
+  {{- $rbacContext := merge (dict "destinationNames" $destinationNames "alloyValues" $collectorValues) $values }}
   {{- include "collectors.rbac.instance" (dict
     "Files" $.Files
     "collectorValues" $collectorValues
@@ -73,7 +73,7 @@ data:
     "name" (include "collector.alloy.fullname" $values)
     "namespace" (include "helper.namespace" $)
     "labels" (include "collector.alloy.labels" $values | fromYaml)
-    "serviceAccountName" (include "collector.alloy.serviceAccountName" $values)) }}
+    "serviceAccountName" (include "collector.alloy.serviceAccountName" $rbacContext)) }}
 {{- end }}
 {{- end }}
 {{- /*

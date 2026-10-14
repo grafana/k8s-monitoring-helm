@@ -1,6 +1,4 @@
-{{/* RBAC for Alloy instances with `rbac.mode: minimal`. See docs/RBAC.md. */}}
-
-{{/* Inputs: . (root with collectorName), destinationNames */}}
+{{/* Inputs: . (root with collectorName), destinationNames, alloyValues (optional) */}}
 {{- define "collectors.rbac.entries" -}}
 {{- $entries := include "collectors.rbac.destinationEntries" $ | fromYamlArray }}
 {{- $entries = concat $entries (include "collectors.rbac.sdkInjectorEntries" $ | fromYamlArray) }}
@@ -47,7 +45,7 @@
 {{- $entries | toYaml }}
 {{- end }}
 
-{{/* Expands entries into rules per namespace. Inputs: catalog, entries. Output: {namespace: {"apiGroup|resource|name": verbs}} */}}
+{{/* Inputs: catalog, entries. Output: {namespace: {"apiGroup|resource|name": verbs}} */}}
 {{- define "collectors.rbac.expand" -}}
 {{- $namespaced := dict }}
 {{- range $entry := .entries }}
@@ -73,7 +71,7 @@
 {{- $namespaced | toYaml }}
 {{- end }}
 
-{{/* Groups a map of keys to verbs into PolicyRules. Inputs: . (map) */}}
+{{/* Inputs: . (map of keys to verbs) */}}
 {{- define "collectors.rbac.groupRules" -}}
 {{- $groups := dict }}
 {{- range $key, $verbs := . }}
@@ -99,15 +97,18 @@
 {{- $rules | toYaml }}
 {{- end }}
 
-{{/* Inputs: name, namespace, labels, serviceAccountName, roles ({namespace: rules}) */}}
+{{/* Inputs: name (instance fullname), namespace, labels, serviceAccountName, roles ({namespace: rules}) */}}
 {{- define "collectors.rbac.render" }}
 {{- $subjects := list (dict "kind" "ServiceAccount" "name" .serviceAccountName "namespace" .namespace) }}
 {{- range $namespace, $rules := .roles }}
+{{- $name := printf "%s-rbac" $.name }}
+{{- /* Releases with the same name in different namespaces can share a Secret namespace. */}}
+{{- if ne $namespace $.namespace }}{{ $name = printf "%s-%s-rbac" $.name $.namespace }}{{ end }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ $.name }}
+  name: {{ $name }}
   namespace: {{ $namespace }}
   labels:
     {{- toYaml $.labels | nindent 4 }}
@@ -117,14 +118,14 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ $.name }}
+  name: {{ $name }}
   namespace: {{ $namespace }}
   labels:
     {{- toYaml $.labels | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: {{ $.name }}
+  name: {{ $name }}
 subjects:
   {{- toYaml $subjects | nindent 2 }}
 {{- end }}
@@ -139,6 +140,6 @@ subjects:
     {{- $_ := set $roles $namespace (include "collectors.rbac.groupRules" $rules | fromYamlArray) }}
   {{- end }}
   {{- $labels := merge (dict "app.kubernetes.io/component" "rbac" "app.kubernetes.io/instance" .name) .labels }}
-  {{- include "collectors.rbac.render" (dict "name" (printf "%s-rbac" .name) "namespace" .namespace "labels" $labels "serviceAccountName" .serviceAccountName "roles" $roles) }}
+  {{- include "collectors.rbac.render" (dict "name" .name "namespace" .namespace "labels" $labels "serviceAccountName" .serviceAccountName "roles" $roles) }}
 {{- end }}
 {{- end }}

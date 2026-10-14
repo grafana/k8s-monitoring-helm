@@ -47,6 +47,27 @@ tests:
             - {apiGroups: [""], resourceNames: [loki-credentials], resources: [secrets], verbs: [get]}
         template: alloy-config.yaml
       - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'monitoring')].kind"
+          value: Role
+        equal:
+          path: metadata.name
+          value: test-alloy-singleton-rbac
+        template: alloy-config.yaml
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'secrets')].kind"
+          value: Role
+        equal:
+          path: metadata.name
+          value: test-alloy-singleton-monitoring-rbac
+        template: alloy-config.yaml
+      - documentSelector:
+          path: "$[?(@.kind == 'RoleBinding' && @.metadata.namespace == 'secrets')].kind"
+          value: RoleBinding
+        isSubset:
+          path: roleRef
+          content: {kind: Role, name: test-alloy-singleton-monitoring-rbac}
+        template: alloy-config.yaml
+      - documentSelector:
           path: "$[?(@.kind == 'RoleBinding' && @.metadata.namespace == 'secrets')].kind"
           value: RoleBinding
         equal:
@@ -91,7 +112,7 @@ tests:
       - documentSelector: {path: kind, value: Role}
         isSubset:
           path: metadata
-          content: {name: test-tempo-sampler-rbac, namespace: secrets}
+          content: {name: test-tempo-sampler-monitoring-rbac, namespace: secrets}
         template: alloy-sampler.yaml
       - documentSelector: {path: kind, value: RoleBinding}
         equal:

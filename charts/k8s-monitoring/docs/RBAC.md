@@ -37,7 +37,9 @@ In `minimal` mode, the chart knows which destinations run on each collector, so 
 *   A destination whose credentials are in a Kubernetes Secret gets `get` on that one Secret, in its namespace.
 *   The Roles show up in `helm template` output, so they can be reviewed.
 
-The objects are named `<collector full name>-rbac`. They are bound to the collector's ServiceAccount, which the Alloy
+The objects are named `<collector full name>-rbac`. Roles outside the release namespace, such as the one for a
+destination's Secret in another namespace, are named `<collector full name>-<release namespace>-rbac`, so releases with
+the same name in different namespaces don't collide. They are bound to the collector's ServiceAccount, which the Alloy
 Operator still creates. The `Alloy` resource gets `rbac.create: false`, so the operator doesn't create its own RBAC.
 
 ## What collectors are granted

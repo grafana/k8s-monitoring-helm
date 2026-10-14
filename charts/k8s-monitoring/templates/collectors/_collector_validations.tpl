@@ -185,13 +185,13 @@
 
 {{/* Inputs: name (collector name), collectorValues (merged collector values), valuesPath (where the collector values are set) */}}
 {{- define "collectors.validate.rbac" }}
-  {{- $mode := dig "rbac" "mode" "alloy" .collectorValues }}
+  {{- $mode := include "collector.alloy.rbacMode" .collectorValues }}
   {{- if not (has $mode (list "alloy" "minimal")) }}
     {{- $msg := list "" (printf "The %s collector has an unknown RBAC mode: %q" .name $mode) }}
     {{- $msg = append $msg "Please set rbac.mode to \"alloy\" or \"minimal\"." }}
     {{- fail (join "\n" $msg) }}
   {{- end }}
-  {{- if eq (include "collector.alloy.rbacMode" .collectorValues) "minimal" }}
+  {{- if eq $mode "minimal" }}
     {{- if dig "remoteConfig" "enabled" false .collectorValues }}
       {{- $msg := list "" (printf "The %s collector uses rbac.mode: minimal with remote configuration, which can run any component, so its RBAC can't be computed." .name) }}
       {{- $msg = append $msg (printf "Please set %s.rbac.mode to \"alloy\", or disable remoteConfig." (.valuesPath | default (printf "collectors.%s" .name))) }}

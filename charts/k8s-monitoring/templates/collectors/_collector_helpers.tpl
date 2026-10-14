@@ -86,8 +86,12 @@
 {{- end }}
 
 {{/* Inputs: Values (all values), collectorName (collector name), collectorValues (collector values, if not inside `.Values.collectors` map) */}}
+{{/* Inputs: . (root with collectorName), alloyValues (optional, the collector.alloy.values result) */}}
 {{- define "collector.alloy.serviceAccountName" }}
-{{- $collectorValues := include "collector.alloy.values" . | fromYaml }}
+{{- $collectorValues := .alloyValues }}
+{{- if not $collectorValues }}
+  {{- $collectorValues = include "collector.alloy.values" . | fromYaml }}
+{{- end }}
 {{- if dig "serviceAccount" "create" true $collectorValues }}
   {{- dig "serviceAccount" "name" "" $collectorValues | default (include "collector.alloy.fullname" .) }}
 {{- else }}
