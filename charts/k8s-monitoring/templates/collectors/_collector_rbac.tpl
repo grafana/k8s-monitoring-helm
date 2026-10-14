@@ -1,3 +1,12 @@
+{{/* Inputs: . (map). Output: "true" if any value is true */}}
+{{- define "collectors.rbac.anyEnabled" -}}
+{{- $found := false -}}
+{{- range $_, $value := (. | default dict) -}}
+  {{- if and (kindIs "bool" $value) $value }}{{ $found = true }}{{ end -}}
+{{- end -}}
+{{- $found -}}
+{{- end }}
+
 {{/* Inputs: . (root with collectorName), featureKeys, destinationNames, alloyValues (optional) */}}
 {{- define "collectors.rbac.entries" -}}
 {{- $featuresWithRules := list "annotationAutodiscovery" "autoInstrumentation" "clusterMetrics" "costMetrics" "hostMetrics_energyMetrics" "hostMetrics_linuxHosts" "hostMetrics_windowsHosts" "integrations" "profiling" "prometheusOperatorObjects" }}
