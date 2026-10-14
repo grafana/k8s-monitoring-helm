@@ -182,123 +182,6 @@ tests:
           count: 1
         template: alloy-config.yaml
 
-  - it: adds rbac.rules and rbac.clusterRules to the ClusterRole
-    set:
-      collectors:
-        alloy-singleton:
-          presets: [singleton]
-          rbac:
-            mode: minimal
-            rules:
-              - {apiGroups: [""], resources: [configmaps], verbs: [get, list]}
-            clusterRules:
-              - {nonResourceURLs: [/healthz], verbs: [get]}
-    asserts:
-      - documentSelector: {path: kind, value: ClusterRole}
-        equal:
-          path: rules
-          value:
-            - {apiGroups: [""], resources: [configmaps], verbs: [get, list]}
-            - {nonResourceURLs: [/healthz], verbs: [get]}
-        template: alloy-config.yaml
-
-  - it: merges verbs for the same resource
-    set:
-      collectors:
-        alloy-singleton:
-          presets: [singleton]
-          rbac:
-            mode: minimal
-            rules:
-              - {apiGroups: [""], resources: [events], verbs: [get, list]}
-              - {apiGroups: [""], resources: [events], verbs: [watch, list]}
-    asserts:
-      - documentSelector: {path: kind, value: ClusterRole}
-        equal:
-          path: rules
-          value:
-            - {apiGroups: [""], resources: [events], verbs: [get, list, watch]}
-        template: alloy-config.yaml
-
-  - it: puts the rules in Roles and drops cluster-scoped rules with rbac.namespaces
-    set:
-      collectors:
-        alloy-singleton:
-          presets: [singleton]
-          rbac:
-            mode: minimal
-            namespaces: [team-a, team-b]
-            rules:
-              - {apiGroups: [""], resources: [configmaps], verbs: [get]}
-            clusterRules:
-              - {nonResourceURLs: [/healthz], verbs: [get]}
-    asserts:
-      - notExists:
-          path: spec.rbac.namespaces
-        template: alloy.yaml
-      - hasDocuments:
-          count: 7
-        template: alloy-config.yaml
-      - documentSelector:
-          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'team-a')].kind"
-          value: Role
-        equal:
-          path: rules
-          value:
-            - {apiGroups: [""], resources: [configmaps], verbs: [get]}
-        template: alloy-config.yaml
-      - documentSelector:
-          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'team-a')].kind"
-          value: Role
-        equal:
-          path: metadata.annotations
-          value:
-            k8s.grafana.com/rbac-dropped: rbac.clusterRules
-        template: alloy-config.yaml
-      - documentSelector:
-          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'monitoring')].kind"
-          value: Role
-        equal:
-          path: rules
-          value:
-            - {apiGroups: [""], resourceNames: [loki-test-k8s-monitoring], resources: [secrets], verbs: [get]}
-        template: alloy-config.yaml
-      - documentSelector:
-          path: "$[?(@.kind == 'RoleBinding' && @.metadata.namespace == 'team-b')].kind"
-          value: RoleBinding
-        equal:
-          path: roleRef
-          value: {apiGroup: rbac.authorization.k8s.io, kind: Role, name: test-alloy-singleton-rbac}
-        template: alloy-config.yaml
-
-  - it: carries the dropped permissions on an empty Role when nothing else is rendered
-    set:
-      destinations: null
-      collectors:
-        alloy-singleton:
-          presets: [singleton]
-          includeDestinations: []
-          rbac:
-            mode: minimal
-            namespaces: [team-a]
-            clusterRules:
-              - {nonResourceURLs: [/healthz], verbs: [get]}
-    asserts:
-      - hasDocuments:
-          count: 3
-        template: alloy-config.yaml
-      - documentSelector: {path: kind, value: Role}
-        equal:
-          path: rules
-          value: []
-        template: alloy-config.yaml
-      - documentSelector: {path: kind, value: Role}
-        equal:
-          path: metadata.annotations
-          value:
-            k8s.grafana.com/rbac-dropped: rbac.clusterRules
-        template: alloy-config.yaml
-
   - it: fails when no ServiceAccount is created or named
     set:
       collectors:
@@ -354,3 +237,42 @@ tests:
           path: rules
           content: {apiGroups: [""], resources: [configmaps], verbs: [create, get, update]}
         template: alloy-config.yaml
+
+  - it: fails when rbac.rules is set in minimal mode
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac:
+            mode: minimal
+            rules: [{apiGroups: [""], resources: [configmaps], verbs: [get]}]
+    asserts:
+      - failedTemplate:
+          errorPattern: 'The alloy-singleton collector sets rbac.rules, which only applies with rbac.mode: alloy for now.'
+        template: validations.yaml
+
+  - it: fails when rbac.clusterRules is set in minimal mode
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac:
+            mode: minimal
+            clusterRules: [{nonResourceURLs: [/healthz], verbs: [get]}]
+    asserts:
+      - failedTemplate:
+          errorPattern: 'The alloy-singleton collector sets rbac.clusterRules, which only applies with rbac.mode: alloy for now.'
+        template: validations.yaml
+
+  - it: fails when rbac.namespaces is set in minimal mode
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac:
+            mode: minimal
+            namespaces: [team-a]
+    asserts:
+      - failedTemplate:
+          errorPattern: 'The alloy-singleton collector sets rbac.namespaces, which only applies with rbac.mode: alloy for now.'
+        template: validations.yaml

@@ -77,12 +77,10 @@
 {{- end }}
 {{- end }}
 
-{{/* Expands entries into rules per scope. Inputs: catalog, entries, restrictTo (rbac.namespaces). Output: {cluster, namespaced, dropped} */}}
+{{/* Expands entries into rules per scope. Inputs: catalog, entries. Output: {cluster, namespaced} */}}
 {{- define "collectors.rbac.expand" -}}
 {{- $clusterScopedResources := list "nodes" "nodes/metrics" "nodes/pods" "nodes/proxy" "namespaces" "infrastructures" "infrastructures/status" }}
-{{- $restrictTo := .restrictTo | default (list) }}
 {{- $state := dict "cluster" (dict) "namespaced" (dict) }}
-{{- $dropped := list }}
 {{- range $entry := .entries }}
   {{- $bundle := get $.catalog $entry.bundle }}
   {{- if not $bundle }}
@@ -91,29 +89,17 @@
   {{- range $rule := $bundle.rules }}
     {{- $names := $rule.resourceNames | default ($entry.resourceNames | default (list "")) }}
     {{- if $rule.nonResourceURLs }}
-      {{- if $restrictTo }}
-        {{- $dropped = append $dropped $entry.bundle }}
-      {{- else }}
-        {{- $_ := include "collectors.rbac.addPolicyRule" (dict "state" $state "scopes" (list "") "rule" $rule) }}
-      {{- end }}
+      {{- $_ := include "collectors.rbac.addPolicyRule" (dict "state" $state "scopes" (list "") "rule" $rule) }}
     {{- end }}
     {{- range $resource := $rule.resources | default (list) }}
       {{- $scopes := list "" }}
-      {{- if or $bundle.clusterOnly (has $resource $clusterScopedResources) }}
-        {{- if $restrictTo }}
-          {{- $scopes = list }}
-          {{- $dropped = append $dropped $entry.bundle }}
-        {{- end }}
-      {{- else if $entry.namespaces }}
+      {{- if and $entry.namespaces (not $bundle.clusterOnly) (not (has $resource $clusterScopedResources)) }}
         {{- $scopes = $entry.namespaces }}
-      {{- else if $restrictTo }}
-        {{- $scopes = $restrictTo }}
       {{- end }}
       {{- $_ := include "collectors.rbac.addPolicyRule" (dict "state" $state "scopes" $scopes "rule" (dict "apiGroups" $rule.apiGroups "resources" (list $resource) "resourceNames" (compact $names) "verbs" $rule.verbs)) }}
     {{- end }}
   {{- end }}
 {{- end }}
-{{- $_ := set $state "dropped" $dropped }}
 {{- $state | toYaml }}
 {{- end }}
 
@@ -176,29 +162,9 @@
 {{- $rules | toYaml }}
 {{- end }}
 
-{{/* Inputs: catalog, entries, rules (rbac.rules), clusterRules (rbac.clusterRules), namespaces (rbac.namespaces). Output: {cluster, namespaced, dropped} */}}
+{{/* Turns RBAC entries into the rules for a ClusterRole and per-namespace Roles. Inputs: catalog, entries. Output: {cluster, namespaced} */}}
 {{- define "collectors.rbac.resolve" -}}
-{{- $restrictTo := .namespaces | default (list) }}
-{{- $state := include "collectors.rbac.expand" (dict "catalog" .catalog "entries" .entries "restrictTo" $restrictTo) | fromYaml }}
-{{- $dropped := $state.dropped | default list }}
-{{- range $rule := .rules | default (list) }}
-  {{- $_ := include "collectors.rbac.addPolicyRule" (dict "state" $state "scopes" ($restrictTo | default (list "")) "rule" (omit $rule "nonResourceURLs")) }}
-  {{- if $rule.nonResourceURLs }}
-    {{- if $restrictTo }}
-      {{- $dropped = append $dropped "rbac.rules" }}
-    {{- else }}
-      {{- $_ := include "collectors.rbac.addPolicyRule" (dict "state" $state "scopes" (list "") "rule" (pick $rule "nonResourceURLs" "verbs")) }}
-    {{- end }}
-  {{- end }}
-{{- end }}
-{{- if and .clusterRules $restrictTo }}
-  {{- $dropped = append $dropped "rbac.clusterRules" }}
-{{- else }}
-  {{- range $rule := .clusterRules | default (list) }}
-    {{- $_ := include "collectors.rbac.addPolicyRule" (dict "state" $state "scopes" (list "") "rule" $rule) }}
-  {{- end }}
-{{- end }}
-
+{{- $state := include "collectors.rbac.expand" (dict "catalog" .catalog "entries" .entries) | fromYaml }}
 {{- $cluster := dict }}
 {{- range $key, $verbs := $state.cluster }}
   {{- if ne (include "collectors.rbac.coveredBy" (dict "rules" $state.cluster "key" $key "verbs" $verbs "sameScope" true)) "true" }}
@@ -219,30 +185,12 @@
     {{- $_ := set $namespaced $namespace (include "collectors.rbac.groupRules" $kept | fromYamlArray) }}
   {{- end }}
 {{- end }}
-{{- if and $dropped (not $cluster) (not $namespaced) }}
-  {{- $_ := set $namespaced (first $restrictTo) (list) }}
-{{- end }}
-{{- dict "cluster" (include "collectors.rbac.groupRules" $cluster | fromYamlArray) "namespaced" $namespaced "dropped" ($dropped | uniq | sortAlpha) | toYaml }}
+{{- dict "cluster" (include "collectors.rbac.groupRules" $cluster | fromYamlArray) "namespaced" $namespaced | toYaml }}
 {{- end }}
 
-{{/* Inputs: annotations (map of lists) */}}
-{{- define "collectors.rbac.annotations" -}}
-{{- $annotations := dict }}
-{{- range $name, $values := .annotations }}
-  {{- if $values }}{{ $_ := set $annotations (printf "k8s.grafana.com/%s" $name) (join "; " $values) }}{{ end }}
-{{- end }}
-{{- with $annotations }}
-annotations:
-  {{- range $name, $value := . }}
-  {{ $name }}: {{ $value | quote }}
-  {{- end }}
-{{- end }}
-{{- end }}
-
-{{/* Inputs: name, namespace, labels, serviceAccountName, resolved, annotations */}}
+{{/* Inputs: name, namespace, labels, serviceAccountName, resolved */}}
 {{- define "collectors.rbac.render" }}
 {{- $subjects := list (dict "kind" "ServiceAccount" "name" .serviceAccountName "namespace" .namespace) }}
-{{- $annotations := include "collectors.rbac.annotations" . | trim }}
 {{- if .resolved.cluster }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -251,7 +199,6 @@ metadata:
   name: {{ .name }}
   labels:
     {{- toYaml .labels | nindent 4 }}
-  {{- with $annotations }}{{ . | nindent 2 }}{{ end }}
 rules:
   {{- toYaml .resolved.cluster | nindent 2 }}
 ---
@@ -277,7 +224,6 @@ metadata:
   namespace: {{ $namespace }}
   labels:
     {{- toYaml $.labels | nindent 4 }}
-  {{- with $annotations }}{{ . | nindent 2 }}{{ end }}
 rules:
   {{- toYaml $rules | nindent 2 }}
 ---
@@ -297,12 +243,10 @@ subjects:
 {{- end }}
 {{- end }}
 
-{{/* Inputs: Files, collectorValues, entries. Output: {resolved} */}}
+{{/* Inputs: Files, entries. Output: {resolved} */}}
 {{- define "collectors.rbac.compute" -}}
 {{- $catalog := .Files.Get "collectors/rbac-bundles.yaml" | fromYaml }}
-{{- $rbac := .collectorValues.rbac | default dict }}
-{{- $resolved := include "collectors.rbac.resolve" (dict "catalog" $catalog "entries" .entries "rules" $rbac.rules "clusterRules" $rbac.clusterRules "namespaces" $rbac.namespaces) | fromYaml }}
-{{- dict "resolved" $resolved | toYaml }}
+{{- dict "resolved" (include "collectors.rbac.resolve" (dict "catalog" $catalog "entries" .entries) | fromYaml) | toYaml }}
 {{- end }}
 
 {{/* Inputs: Files, collectorValues, entries, name (instance fullname), namespace, labels, serviceAccountName */}}
@@ -310,7 +254,6 @@ subjects:
 {{- if dig "rbac" "create" true .collectorValues }}
   {{- $computed := include "collectors.rbac.compute" . | fromYaml }}
   {{- $labels := merge (dict "app.kubernetes.io/component" "rbac" "app.kubernetes.io/instance" .name) .labels }}
-  {{- $annotations := dict "rbac-dropped" $computed.resolved.dropped }}
-  {{- include "collectors.rbac.render" (dict "name" (printf "%s-rbac" .name) "namespace" .namespace "labels" $labels "serviceAccountName" .serviceAccountName "resolved" $computed.resolved "annotations" $annotations) }}
+  {{- include "collectors.rbac.render" (dict "name" (printf "%s-rbac" .name) "namespace" .namespace "labels" $labels "serviceAccountName" .serviceAccountName "resolved" $computed.resolved) }}
 {{- end }}
 {{- end }}

@@ -56,46 +56,11 @@ Rules from other sources:
 *   **The SDK Injector**: `get`, `create`, and `update` on ConfigMaps in the release namespace, for the collectors listed
     in `telemetryServices.sdkInjector.allowedConfigMapWriters`.
 
-## Adding rules
+## Other RBAC settings
 
-In minimal mode, `rbac.rules` and `rbac.clusterRules` add to the computed rules, instead of replacing them:
-
-```yaml
-collectors:
-  alloy-metrics:
-    rbac:
-      mode: minimal
-      rules:  # Added to the ClusterRole, or to the Roles in rbac.namespaces when set
-        - apiGroups: [""]
-          resources: [configmaps]
-          verbs: [get, list, watch]
-      clusterRules:  # Added to the ClusterRole
-        - nonResourceURLs: [/healthz]
-          verbs: [get]
-```
-
-## Avoiding ClusterRoles
-
-Set `rbac.namespaces` to limit a collector to some namespaces:
-
-```yaml
-collectors:
-  alloy-logs:
-    rbac:
-      mode: minimal
-      namespaces: [team-a, team-b]
-```
-
-*   Rules that would be cluster-wide are put in Roles in these namespaces instead.
-*   Rules the chart already scopes to a namespace, such as a destination's Secret, stay in that namespace.
-*   Rules for cluster-scoped resources, such as Nodes and Namespaces, and `rbac.clusterRules`, are dropped. The
-    `k8s.grafana.com/rbac-dropped` annotation on the Roles lists them, because the components that need them won't find
-    any data.
-
-Roles are only created in the release namespace and in namespaces named in the values. Those namespaces must exist
-before installing the chart.
-
-To create no RBAC at all for a collector, set `rbac.create: false`.
+In minimal mode, `rbac.rules`, `rbac.clusterRules`, and `rbac.namespaces` aren't supported yet, and setting them fails
+validation. They still work as before with `rbac.mode: alloy`. To create no RBAC at all for a collector, set
+`rbac.create: false`.
 
 ## Remote configuration
 

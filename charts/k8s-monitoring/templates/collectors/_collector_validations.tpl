@@ -192,6 +192,13 @@
     {{- fail (join "\n" $msg) }}
   {{- end }}
   {{- if eq (include "collector.alloy.rbacMode" .collectorValues) "minimal" }}
+    {{- range $setting := list "rules" "clusterRules" "namespaces" }}
+      {{- if dig "rbac" $setting nil $.collectorValues }}
+        {{- $msg := list "" (printf "The %s collector sets rbac.%s, which only applies with rbac.mode: alloy for now." $.name $setting) }}
+        {{- $msg = append $msg (printf "Please remove %s.rbac.%s, or set rbac.mode: alloy." ($.valuesPath | default (printf "collectors.%s" $.name)) $setting) }}
+        {{- fail (join "\n" $msg) }}
+      {{- end }}
+    {{- end }}
     {{- if and (not (dig "serviceAccount" "create" true .collectorValues)) (not (dig "serviceAccount" "name" "" .collectorValues)) }}
       {{- $msg := list "" (printf "The %s collector uses rbac.mode: minimal, but does not create a ServiceAccount or name one." .name) }}
       {{- $msg = append $msg "Its RBAC would be granted to the namespace's \"default\" ServiceAccount." }}
