@@ -1,5 +1,5 @@
 {{- define "feature.clusterMetrics.apiServer.alloy" }}
-{{- if eq (include "feature.clusterMetrics.apiServer.enabled" .) "true" }}
+{{- if eq (include "feature.clusterMetrics.controlPlaneSource.enabled" (dict "Values" .Values "source" "apiServer")) "true" }}
 {{- $metricAllowList := .Values.apiServer.metricsTuning.includeMetrics }}
 {{- $metricDenyList := .Values.apiServer.metricsTuning.excludeMetrics }}
 

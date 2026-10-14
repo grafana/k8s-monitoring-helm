@@ -93,7 +93,7 @@ prometheus.relabel "node_exporter" {
 {{- end }}
 
 {{- define "feature.hostMetrics.linuxHosts.discovery.viaNodeExporter" }}
-{{- $namespace := include "feature.hostMetrics.linuxHosts.namespace" . }}
+{{- $namespace := include "feature.hostMetrics.discoveryNamespace" (dict "namespace" .Values.linuxHosts.namespace "service" "node-exporter" "overridable" true "telemetryServices" .telemetryServices "Release" .Release) }}
 {{- $labelSelectors := list }}
 {{- if .Values.linuxHosts.labelMatchers }}
   {{- range $label, $value := .Values.linuxHosts.labelMatchers }}
