@@ -308,12 +308,12 @@ otelcol.processor.batch "tempo" {
   send_batch_max_size = 0
 
   output {
-    traces = [otelcol.exporter.otlp.tempo.input]
+    traces = [otelcol.exporter.otlphttp.tempo.input]
   }
 } // otelcol.processor.batch "tempo"
-otelcol.exporter.otlp "tempo" {
+otelcol.exporter.otlphttp "tempo" {
   client {
-    endpoint = "tempo.tempo.svc:4317"
+    endpoint = "http://tempo.tempo.svc:4318"
     auth = otelcol.auth.bearer.tempo.handler
     tls {
       insecure = true
@@ -331,7 +331,7 @@ otelcol.exporter.otlp "tempo" {
   sending_queue {
     enabled = true
   }
-} // otelcol.exporter.otlp "tempo"
+} // otelcol.exporter.otlphttp "tempo"
 
 otelcol.auth.bearer "tempo" {
   token = remote.kubernetes.secret.tempo.data["bearerToken"]
