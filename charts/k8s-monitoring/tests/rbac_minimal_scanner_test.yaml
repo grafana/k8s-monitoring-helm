@@ -1,0 +1,358 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:braces rule:commas
+suite: RBAC - Minimal mode - User-supplied configuration and notes
+release:
+  name: test
+  namespace: monitoring
+templates:
+  - alloy-config.yaml
+  - collectors/test/rbac.yaml
+  - NOTES.txt
+set:
+  cluster: {name: test-cluster}
+  selfReporting: {enabled: false}
+tests:
+  - it: grants what the components in extraConfig need
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            discovery.kubernetes "services" {
+              role = "service"
+            }
+            remote.kubernetes.secret "credentials" {
+              name      = "credentials"
+              namespace = "apps"
+            }
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [services], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: metadata.annotations
+          value:
+            k8s.grafana.com/rbac-user-config: discovery.kubernetes from extraConfig (services); remote.kubernetes.secret from extraConfig (secret credentials in apps)
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: Role}
+        isSubset:
+          path: metadata
+          content: {name: test-alloy-singleton-monitoring-rbac, namespace: apps}
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resourceNames: [credentials], resources: [secrets], verbs: [get]}
+        template: alloy-config.yaml
+      - matchRegexRaw:
+          pattern: 'k8s.grafana.com/rbac-user-config annotation'
+        template: NOTES.txt
+
+  - it: grants get on the named Secret in every namespace when the namespace isn't a literal string
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            remote.kubernetes.secret "credentials" {
+              name      = "credentials"
+              namespace = sys.env("SECRET_NAMESPACE")
+            }
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resourceNames: [credentials], resources: [secrets], verbs: [get]}
+        template: alloy-config.yaml
+
+  - it: grants get on every Secret in the namespace when the name isn't a literal string
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            remote.kubernetes.secret "credentials" {
+              name      = "db-" + sys.env("ENVIRONMENT")
+              namespace = "apps"
+            }
+    asserts:
+      - hasDocuments:
+          count: 3
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [secrets], verbs: [get]}
+        template: alloy-config.yaml
+
+  - it: finds components that have nested blocks
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            remote.kubernetes.secret "credentials" {
+              name      = "credentials"
+              namespace = "apps"
+              client {
+                tls_config {
+                  insecure_skip_verify = true
+                }
+              }
+            }
+    asserts:
+      - documentSelector: {path: kind, value: Role}
+        isSubset:
+          path: metadata
+          content: {namespace: apps}
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resourceNames: [credentials], resources: [secrets], verbs: [get]}
+        template: alloy-config.yaml
+
+  - it: scopes discovery to the namespaces in its configuration
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            discovery.kubernetes "pods" {
+              role = "pod"
+              namespaces {
+                names = ["team-a"]
+              }
+            }
+    asserts:
+      - hasDocuments:
+          count: 3
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: Role}
+        isSubset:
+          path: metadata
+          content: {namespace: team-a}
+        template: alloy-config.yaml
+
+  - it: grants what a replaced component needs
+    set:
+      clusterEvents: {enabled: true}
+      destinations:
+        loki: {type: loki, url: http://loki.loki.svc:3100/loki/api/v1/push}
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+      replaceComponent:
+        - type: loki.source.kubernetes_events
+          module: cluster_events
+          name: cluster_events
+          content: |-
+            forward_to = [loki.process.cluster_events.receiver]
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [events], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: metadata.annotations["k8s.grafana.com/rbac-user-config"]
+          value: loki.source.kubernetes_events from replaceComponent (events)
+        template: alloy-config.yaml
+
+  - it: only grants a replaced component's access to the collectors it was replaced on
+    set:
+      clusterEvents: {enabled: true, collector: alloy-singleton}
+      destinations:
+        loki: {type: loki, url: http://loki.loki.svc:3100/loki/api/v1/push}
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+        alloy-other:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: " "
+      replaceComponent:
+        - type: loki.source.kubernetes_events
+          module: cluster_events
+          name: cluster_events
+          content: |-
+            forward_to = [loki.process.cluster_events.receiver]
+    asserts:
+      - documentSelector:
+          path: "$[?(@.kind == 'ClusterRole' && @.metadata.name == 'test-alloy-singleton-rbac')].kind"
+          value: ClusterRole
+        equal:
+          path: metadata.annotations["k8s.grafana.com/rbac-user-config"]
+          value: loki.source.kubernetes_events from replaceComponent (events)
+        template: alloy-config.yaml
+      - containsDocument:
+          kind: ClusterRole
+          apiVersion: rbac.authorization.k8s.io/v1
+          name: test-alloy-other-rbac
+          any: true
+        not: true
+        template: alloy-config.yaml
+
+  - it: ignores custom data processor blocks that a collector doesn't render
+    set:
+      clusterEvents: {enabled: true, dataProcessors: [label]}
+      destinations:
+        loki: {type: loki, url: http://loki.loki.svc:3100/loki/api/v1/push}
+      dataProcessors:
+        label:
+          type: custom
+          logs:
+            loki:
+              enabled: true
+              input: loki.process.label.receiver
+              config: |-
+                loki.process "label" {
+                  forward_to = [loki.process.label_out_logs_loki.receiver]
+                }
+          metrics:
+            prometheus:
+              enabled: false
+              input: prometheus.relabel.label.receiver
+              config: |-
+                discovery.kubernetes "pods" {
+                  role = "pod"
+                }
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        notExists:
+          path: metadata.annotations["k8s.grafana.com/rbac-user-config"]
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [events], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
+  - it: grants what a custom destination's configuration needs
+    set:
+      clusterEvents: {enabled: true, namespaces: [team-a]}
+      destinations:
+        custom-loki:
+          type: custom
+          logs: {enabled: true}
+          ecosystem: loki
+          config: |-
+            remote.kubernetes.configmap "settings" {
+              name      = "settings"
+              namespace = "config"
+            }
+            loki.write "custom_loki" {
+              endpoint {
+                url = convert.nonsensitive(remote.kubernetes.configmap.settings.data["url"])
+              }
+            }
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+    asserts:
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'config')].kind"
+          value: Role
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resourceNames: [settings], resources: [configmaps], verbs: [get]}
+        template: alloy-config.yaml
+
+  - it: infers rules for components that the computed rules miss, in their scope, and flags them
+    set:
+      testing: true
+      collectors:
+        alloy-singleton: {extraConfig: " "}
+    asserts:
+      - equal:
+          path: data.driftGuard
+          value: '{"inferred":["discovery.kubernetes (nodes)","discovery.kubernetes (pods)","remote.kubernetes.configmap (configMap settings)","remote.kubernetes.secret (secret creds in apps)"],"resolved":{"cluster":[{"apiGroups":[""],"resources":["nodes","pods"],"verbs":["get","list","watch"]},{"apiGroups":[""],"resourceNames":["settings"],"resources":["configmaps"],"verbs":["get"]}],"namespaced":{"apps":[{"apiGroups":[""],"resourceNames":["creds"],"resources":["secrets"],"verbs":["get"]}]}},"userConfig":[]}'
+        template: collectors/test/rbac.yaml
+      - equal:
+          path: data.userConfig
+          value: '{"inferred":[],"resolved":{"cluster":[{"apiGroups":[""],"resources":["nodes","pods"],"verbs":["get","list","watch"]},{"apiGroups":[""],"resourceNames":["settings"],"resources":["configmaps"],"verbs":["get"]}],"namespaced":{"apps":[{"apiGroups":[""],"resourceNames":["creds"],"resources":["secrets"],"verbs":["get"]}]}},"userConfig":["discovery.kubernetes from extraConfig (pods in a)","discovery.kubernetes from extraConfig (pods)","discovery.kubernetes from extraConfig (nodes)","remote.kubernetes.secret from extraConfig (secret creds in apps)","remote.kubernetes.configmap from extraConfig (configMap settings)"]}'
+        template: collectors/test/rbac.yaml
+
+  - it: finds components with blocks nested several levels deep
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            otelcol.exporter.loadbalancing "traces" {
+              resolver {
+                kubernetes {
+                  service = "sampler"
+                }
+              }
+              protocol {
+                otlp {
+                  client {
+                    tls {
+                      insecure = true
+                    }
+                  }
+                }
+              }
+            }
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [discovery.k8s.io], resources: [endpointslices], verbs: [get, list, watch]}
+            - {apiGroups: [""], resources: [endpoints], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
+  - it: scopes discovery to namespaces listed across several lines
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            discovery.kubernetes "pods" {
+              role = "pod"
+              namespaces {
+                names = [
+                  "team-a",
+                  "team-b",
+                ]
+              }
+            }
+    asserts:
+      - hasDocuments:
+          count: 5
+        template: alloy-config.yaml
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'team-b')].kind"
+          value: Role
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
+        template: alloy-config.yaml

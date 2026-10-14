@@ -32,10 +32,13 @@ In `alloy` mode, every collector gets the Alloy chart's default ClusterRole, wha
 read access to every Secret and ConfigMap. The RBAC is created by the Alloy Operator at runtime, so it doesn't appear in
 `helm template` output.
 
-In `minimal` mode, the chart knows which destinations run on each collector, so it renders only the rules they need:
+In `minimal` mode, the chart knows which destinations run on each collector, and it scans user-supplied configuration,
+so it renders only the rules they need:
 
+*   Rules are put in Roles when the configuration limits a component to some namespaces, and in a ClusterRole
+    otherwise.
 *   A destination whose credentials are in a Kubernetes Secret gets `get` on that one Secret, in its namespace.
-*   The Roles show up in `helm template` output, so they can be reviewed.
+*   The ClusterRole and Roles show up in `helm template` output, so they can be reviewed.
 
 The objects are named `<collector full name>-rbac`. Roles outside the release namespace, such as the one for a
 destination's Secret in another namespace, are named `<collector full name>-<release namespace>-rbac`, so releases with
@@ -51,6 +54,27 @@ The rules come from the bundles in
 *   **The SDK Injector**: `get`, `create`, and `update` on ConfigMaps in the release namespace, for the collectors listed
     in `telemetryServices.sdkInjector.allowedConfigMapWriters`.
 
+### User-supplied configuration
+
+The chart can't know what `extraConfig`, `replaceComponent`, custom destinations, and custom data processors do, so it
+scans them for the components listed in
+[collectors/alloy-kubernetes-api.yaml](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/collectors/alloy-kubernetes-api.yaml),
+and grants what those components need:
+
+*   A component limited to namespaces listed as string literals, such as `namespaces { names = ["team-a"] }` in
+    `discovery.kubernetes`, gets Roles in those namespaces. Otherwise, it gets a ClusterRole.
+*   `remote.kubernetes.secret` and `remote.kubernetes.configmap` get `get` on the object they name. If the `namespace`
+    isn't a string literal, that name is readable in every namespace. If the `name` isn't a string literal, every
+    object in the namespace is readable. Use string literals to keep this access small.
+*   Only the replaced components and custom data processor blocks that a collector renders are scanned.
+
+The `k8s.grafana.com/rbac-user-config` annotation on the ClusterRole and Roles lists what was added.
+
+The chart also scans the final configuration. If a component that uses the Kubernetes API isn't covered by the rules
+above, it's granted what it needs and listed in the `k8s.grafana.com/rbac-inferred` annotation on the ClusterRole and
+Roles. That annotation means the chart's rules are missing something, so please
+[open an issue](https://github.com/grafana/k8s-monitoring-helm/issues) if you see it.
+
 ## Other RBAC settings
 
 In minimal mode, `rbac.rules`, `rbac.clusterRules`, and `rbac.namespaces` aren't supported yet, and setting them fails
@@ -65,7 +89,7 @@ can't compute the rules it needs, and setting `rbac.mode: minimal` on such a col
 ## Switching modes
 
 Helm creates RBAC objects before custom resources, so switching a collector from `alloy` to `minimal` creates the new
-Roles before the Alloy Operator removes its own. Permissions add up, so the collector keeps working
+ClusterRole and Roles before the Alloy Operator removes its own. Permissions add up, so the collector keeps working
 during the switch.
 
 Switching from `minimal` back to `alloy` removes the chart's RBAC objects right away, but the Alloy Operator only

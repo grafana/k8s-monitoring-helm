@@ -1,0 +1,90 @@
+---
+cluster:
+  name: rbac-minimal-extra-config
+
+destinations:
+  prometheus:
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+    auth:
+      type: basic
+      username: promuser
+      password: prometheuspassword
+
+clusterMetrics:
+  enabled: true
+  collector: alloy-metrics
+  kubelet:
+    enabled: false
+  kubeletResource:
+    enabled: false
+  cadvisor:
+    enabled: false
+
+# Discover kube-state-metrics Pods in every namespace, instead of its Endpoints in the release namespace.
+replaceComponent:
+  - type: discovery.kubernetes
+    module: cluster_metrics
+    name: kube_state_metrics
+    content: |-
+      role = "pod"
+      selectors {
+        role  = "pod"
+        label = "app.kubernetes.io/name=kube-state-metrics"
+      }
+
+collectorCommon:
+  alloy:
+    rbac:
+      mode: minimal
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-custom:
+    presets: [singleton]
+    extraConfig: |-
+      discovery.kubernetes "self" {
+        role = "pod"
+        selectors {
+          role  = "pod"
+          label = "app.kubernetes.io/instance=k8smon-alloy-custom"
+        }
+      }
+
+      discovery.relabel "self" {
+        targets = discovery.kubernetes.self.targets
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_port_name"]
+          regex         = "http-metrics"
+          action        = "keep"
+        }
+      }
+
+      remote.kubernetes.secret "prometheus_credentials" {
+        name      = "prometheus-credentials"
+        namespace = "credentials"
+      }
+
+      prometheus.scrape "self" {
+        targets    = discovery.relabel.self.output
+        job_name   = "extra-config"
+        forward_to = [prometheus.remote_write.extra_config.receiver]
+      }
+
+      prometheus.remote_write "extra_config" {
+        endpoint {
+          url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
+          basic_auth {
+            username = convert.nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["username"])
+            password = remote.kubernetes.secret.prometheus_credentials.data["password"]
+          }
+        }
+        external_labels = {
+          cluster = "rbac-minimal-extra-config",
+        }
+      }
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true

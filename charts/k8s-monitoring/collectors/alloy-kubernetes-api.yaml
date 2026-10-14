@@ -1,0 +1,80 @@
+---
+# Alloy components that use the Kubernetes API, and the rbac-bundles.yaml bundles they need. See docs/RBAC.md.
+- component: discovery.kubernetes
+  scope: namespacesBlock
+  roles:
+    pod: [pods]
+    service: [services]
+    endpoints: [endpoints]
+    endpointslice: [endpointslices]
+    ingress: [ingresses]
+    node: [nodes]
+- component: discovery.kubernetes
+  pattern: 'attach_metadata\s*\{[^{}]*\bnode\s*=\s*true'
+  bundles: [nodes]
+- component: discovery.kubernetes
+  pattern: 'attach_metadata\s*\{[^{}]*\bnamespace\s*=\s*true'
+  bundles: [namespaces]
+- component: discovery.kubernetes
+  pattern: 'selectors\s*\{[^{}]*\brole\s*=\s*"node"'
+  bundles: [nodes]
+- component: discovery.kubelet
+  bundles: [nodes, kubeletPods]
+- component: loki.source.kubernetes
+  scope: unknown
+  bundles: [podLogs]
+- component: loki.source.kubernetes_events
+  scope: namespacesAttribute
+  bundles: [events]
+- component: loki.source.podlogs
+  bundles: [podLogsObjects]
+- component: prometheus.operator.podmonitors
+  scope: namespacesAttribute
+  bundles: [promOperator.podmonitors, promOperatorCredentials]
+  clusterBundles: [pods, nodes]
+  requires: [promOperator.podmonitors]
+- component: prometheus.operator.servicemonitors
+  scope: namespacesAttribute
+  bundles: [promOperator.servicemonitors, promOperatorCredentials]
+  clusterBundles: [endpoints, endpointslices, nodes]
+  requires: [promOperator.servicemonitors]
+- component: prometheus.operator.probes
+  scope: namespacesAttribute
+  bundles: [promOperator.probes, promOperatorCredentials]
+  clusterBundles: [ingresses]
+  requires: [promOperator.probes]
+- component: prometheus.operator.scrapeconfigs
+  scope: namespacesAttribute
+  bundles: [promOperator.scrapeconfigs, promOperatorCredentials]
+  requires: [promOperator.scrapeconfigs]
+- component: mimir.rules.kubernetes
+  bundles: [prometheusRules]
+- component: loki.rules.kubernetes
+  bundles: [prometheusRules]
+- component: mimir.alerts.kubernetes
+  bundles: [alertmanagerConfigs]
+- component: remote.kubernetes.secret
+  namedObject: secret
+- component: remote.kubernetes.configmap
+  namedObject: configMap
+- component: otelcol.processor.k8sattributes
+  scope: filterNamespace
+  bundles: [k8sattributes]
+  clusterBundles: [namespaces, nodes]
+  requires: [k8sattributes]
+- component: otelcol.processor.resourcedetection
+  match: 'detectors\s*=\s*\[[^\]]*"kubernetes_node"'
+  bundles: [nodeGet]
+- component: otelcol.processor.resourcedetection
+  match: 'detectors\s*=\s*\[[^\]]*"kubeadm"'
+  bundles: [kubeadmConfig]
+  namespaces: [kube-system]
+- component: otelcol.processor.resourcedetection
+  match: 'detectors\s*=\s*\[[^\]]*"openshift"'
+  bundles: [openshiftInfrastructures]
+- component: otelcol.exporter.loadbalancing
+  scope: unknown
+  match: 'resolver\s*\{\s*kubernetes\s*\{'
+  bundles: [loadBalancer]
+- component: beyla.ebpf
+  bundles: [pods, services, nodes, replicasets]

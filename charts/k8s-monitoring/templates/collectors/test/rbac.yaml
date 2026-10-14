@@ -1,0 +1,37 @@
+{{- if eq (((index .Values "testing") | default false) | toString) "true" }}
+{{- $config := `discovery.kubernetes "scoped_pods" {
+  role = "pod"
+  namespaces {
+    names = ["a"]
+  }
+}
+discovery.kubernetes "all_pods" {
+  role = "pod"
+}
+discovery.kubernetes "nodes" {
+  namespaces {
+    names = coalesce(argument.namespaces.value, [])
+  }
+  role = "node"
+}
+remote.kubernetes.secret "creds" {
+  name      = "creds"
+  namespace = "apps"
+  client {
+    insecure_skip_verify = true
+  }
+}
+remote.kubernetes.configmap "settings" {
+  name      = "settings"
+  namespace = sys.env("NAMESPACE")
+}` }}
+{{- $declared := list (dict "bundle" "pods" "namespaces" (list "a")) }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-collectors-rbac-compute
+data:
+  driftGuard: {{ include "collectors.rbac.compute" (dict "Files" .Files "entries" $declared "userConfig" (list) "config" $config "releaseNamespace" "monitoring") | fromYaml | toJson | quote }}
+  userConfig: {{ include "collectors.rbac.compute" (dict "Files" .Files "entries" (list) "userConfig" (list (dict "source" "extraConfig" "text" $config)) "config" "" "releaseNamespace" "monitoring") | fromYaml | toJson | quote }}
+{{- end }}

@@ -35,18 +35,21 @@
 {{- $alloyConfig = cat $alloyConfig (include "collectors.logging.alloy" $collectorValues | trim | nindent 0) }}
 {{- $alloyConfig = cat $alloyConfig (include "collectors.liveDebugging.alloy" $collectorValues | trim | nindent 0) }}
 {{- $alloyConfig = cat $alloyConfig (include "collectors.remoteConfig.alloy" $values | trim | nindent 0) }}
-{{- $alloyConfig = cat $alloyConfig (include "collectors.extraConfig.alloy" $values | trim | nindent 0) }}
+{{- $extraConfig := include "collectors.extraConfig.alloy" $values | trim }}
+{{- $alloyConfig = cat $alloyConfig ($extraConfig | nindent 0) }}
 {{- /* Append the write rules and component bodies for the collector's destinations. */}}
 {{- $alloyConfig = cat $alloyConfig (include "destinations.alloy.rules" (deepCopy $ | merge (dict "collectorName" $collectorName)) | trim | nindent 0) }}
 {{- $alloyConfig = cat $alloyConfig (include "destinations.alloy.config" (deepCopy $ | merge (dict "destinationNames" $destinationNames)) | trim | nindent 0) }}
 
 {{- /* Apply any component replacements and record which ones matched. */}}
+{{- $matchedReplacements := list }}
 {{- range $replacement := $.Values.replaceComponent }}
   {{- $before := $alloyConfig }}
   {{- $alloyConfig = include "replaceComponent.apply" (dict "config" $alloyConfig "replacement" $replacement) }}
   {{- /* A changed config means the replacement matched — the marker apply inserts guarantees the change. */ -}}
   {{- if ne $alloyConfig $before }}
     {{- $_ := set $replacementsUsed (include "replaceComponent.key" $replacement) true }}
+    {{- $matchedReplacements = append $matchedReplacements (printf "%s \"%s\" {\n%s\n}" $replacement.type $replacement.name $replacement.content) }}
   {{- end }}
 {{- end }}
 
@@ -65,10 +68,10 @@ metadata:
 data:
   config.alloy: |{{ $alloyConfig | trim | nindent 4 }}
 
-{{- /* With rbac.mode: minimal, the collector's RBAC objects follow as separate documents. */}}
+{{- /* With rbac.mode: minimal, the collector's RBAC objects follow as separate documents, computed from the config above. */}}
 {{- if eq (include "collector.alloy.rbacMode" $collectorValues) "minimal" }}
-{{- $rbacContext := merge (dict "destinationNames" $destinationNames "alloyValues" $collectorValues) $values }}
-{{- include "collectors.rbac.instance" (dict "root" $ "values" $values "alloyValues" $collectorValues "entries" (include "collectors.rbac.entries" $rbacContext | fromYamlArray)) }}
+{{- $rbacContext := merge (dict "featureKeys" $featureKeys "destinationNames" $destinationNames "extraConfig" $extraConfig "replacements" $matchedReplacements "config" $alloyConfig "alloyValues" $collectorValues) $values }}
+{{- include "collectors.rbac.instance" (dict "root" $ "values" $values "alloyValues" $collectorValues "entries" (include "collectors.rbac.entries" $rbacContext | fromYamlArray) "userConfig" (include "collectors.rbac.userConfig" $rbacContext | fromYamlArray) "config" $alloyConfig) }}
 {{- end }}
 {{- end }}
 {{- /*

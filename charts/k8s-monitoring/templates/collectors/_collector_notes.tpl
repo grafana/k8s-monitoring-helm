@@ -15,6 +15,31 @@
 {{- define "collectors.notes.warnings" }}
 {{- include "collectors.notes.istio" . }}
 {{- include "collectors.notes.remoteConfigInferredAuth" . }}
+{{- include "collectors.notes.rbac" . }}
+{{- end }}
+
+{{/* Points collectors with rbac.mode "minimal" to the annotations that explain their RBAC. */}}
+{{- define "collectors.notes.rbac" }}
+{{- $userConfig := or .Values.replaceComponent }}
+{{- range $_, $destination := .Values.destinations | default dict }}
+  {{- if eq (dig "type" "" $destination) "custom" }}{{ $userConfig = true }}{{ end }}
+{{- end }}
+{{- range $_, $processor := .Values.dataProcessors | default dict }}
+  {{- if eq (dig "type" "" $processor) "custom" }}{{ $userConfig = true }}{{ end }}
+{{- end }}
+{{- $minimal := list }}
+{{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
+  {{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
+  {{- if and (eq (include "collector.alloy.rbacMode" $collectorValues) "minimal") (dig "rbac" "create" true $collectorValues) }}
+    {{- $minimal = append $minimal $collectorName }}
+    {{- if $collectorValues.extraConfig }}{{ $userConfig = true }}{{ end }}
+  {{- end }}
+{{- end }}
+{{- if and $minimal $userConfig }}
+
+Collectors with rbac.mode "minimal" are granted RBAC for the Kubernetes components in user-supplied configuration. The
+k8s.grafana.com/rbac-user-config annotation on their ClusterRole and Roles lists those grants.
+{{- end }}
 {{- end }}
 
 {{/* Warns when a collector's remote configuration authentication type is being inferred as "basic". */}}

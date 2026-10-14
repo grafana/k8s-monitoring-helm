@@ -70,7 +70,8 @@
     {{- $alloyConfig = cat $alloyConfig (include "collectors.logging.alloy" $alloyValues | trim | nindent 0) }}
     {{- $alloyConfig = cat $alloyConfig (include "collectors.liveDebugging.alloy" $alloyValues | trim | nindent 0) }}
     {{- $alloyConfig = cat $alloyConfig (include "collectors.remoteConfig.alloy" $values | trim | nindent 0) }}
-    {{- $alloyConfig = cat $alloyConfig (include "collectors.extraConfig.alloy" $values | trim | nindent 0) }}
+    {{- $extraConfig := include "collectors.extraConfig.alloy" $values | trim }}
+    {{- $alloyConfig = cat $alloyConfig ($extraConfig | nindent 0) }}
     {{- $alloyConfig = cat $alloyConfig $destinationConfigComponents }}
     {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" | trim }}
 
@@ -98,7 +99,7 @@ spec:{{ $alloySpec | trim | nindent 2 }}
 {{- /* With rbac.mode: minimal, the service graph instance's RBAC objects follow as separate documents. */}}
 {{- if eq (include "collector.alloy.rbacMode" $alloyValues) "minimal" }}
 {{- $rbacEntries := include "collectors.rbac.secretEntries" (merge (dict "destinationNames" $metricsDestinationNames) $) | fromYamlArray }}
-{{- include "collectors.rbac.instance" (dict "root" $ "values" $values "alloyValues" $alloyValues "entries" $rbacEntries) }}
+{{- include "collectors.rbac.instance" (dict "root" $ "values" $values "alloyValues" $alloyValues "entries" $rbacEntries "userConfig" (include "collectors.rbac.userConfig" (dict "extraConfig" $extraConfig) | fromYamlArray) "config" $alloyConfig) }}
 {{- end }}
 {{- end }}
 {{- end }}
