@@ -48,7 +48,7 @@ SWEEP_TYPES: list[tuple[str, list[str]]] = [
     # routers intentionally omitted: they can't carry a keep label, and deleting a standing
     # custom-network Cloud NAT router would remove egress. OKD routers are named <infra>-* and
     # handled by openshift-install destroy / the kept-cluster skip instead.
-    ("subnetworks", ["--filter=name!=default"]),
+    ("networks subnets", ["--filter=name!=default"]),
     ("networks", ["--filter=name!=default"]),
 ]
 
@@ -250,7 +250,7 @@ class Cleanup:
                 self._sweep_compute(rtype, extra)
 
     def _sweep_compute(self, rtype: str, extra: list[str]) -> None:
-        for r in gcloud_json(["compute", rtype, "list", *extra]):
+        for r in gcloud_json(["compute", *rtype.split(), "list", *extra]):
             name = r.get("name", "")
             if not name:
                 continue
@@ -269,7 +269,7 @@ class Cleanup:
                 log(f"Keeping {rtype}/{name} (newer than {MAX_AGE_HOURS}h or unknown age).")
                 continue
             log(f"Deleting {rtype}/{name}.")
-            base = ["gcloud", "compute", rtype, "delete", name]
+            base = ["gcloud", "compute", *rtype.split(), "delete", name]
             tail = [f"--project={PROJECT}", "--quiet"]
             if r.get("zone"):
                 do_delete(base + ["--zone", basename(r["zone"])] + tail)
