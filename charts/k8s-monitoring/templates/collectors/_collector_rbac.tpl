@@ -17,6 +17,215 @@
 {{- $entries | toYaml }}
 {{- end }}
 
+{{/* Reads the raw value of a block's top-level attribute, joining a list that spans several lines onto one line. Inputs: body, name. Output: the top-level attribute value, or "" if it isn't set */}}
+{{- define "collectors.rbac.attribute" -}}
+{{- $list := regexFind (printf `(?m)^\s*%s\s*=\s*\[[^\]]*\]` .name) .body }}
+{{- $line := regexFind (printf `(?m)^\s*%s\s*=.*$` .name) .body }}
+{{- if $list }}
+  {{- regexReplaceAll (printf `(?s)^\s*%s\s*=\s*` .name) $list "" | replace "\n" " " }}
+{{- else if $line }}
+  {{- regexReplaceAll (printf `^\s*%s\s*=\s*(.*?)\s*$` .name) $line "${1}" }}
+{{- end }}
+{{- end }}
+
+{{/* Unquotes a single string literal. The scanner only trusts literals for names and namespaces, because anything else is only known when Alloy runs. Inputs: value (raw attribute value). Output: the string, or "" if the value isn't a single string literal */}}
+{{- define "collectors.rbac.literal" -}}
+{{- if regexMatch `^"[^"\\]*"$` .value }}{{ trimAll "\"" .value }}{{ end }}
+{{- end }}
+
+{{/* Strips a block's header and closing brace, and empties its nested blocks, so attribute lookups only see the block's own attributes. Inputs: block (a block's text). Output: the block's body with nested blocks emptied */}}
+{{- define "collectors.rbac.body" -}}
+{{- $body := regexReplaceAll `^[^{]*\{` (trimSuffix "}" .block) "" }}
+{{- range $_ := until 8 }}
+  {{- $body = regexReplaceAll `\{[^{}]*\}` $body "{}" }}
+{{- end }}
+{{- $body }}
+{{- end }}
+
+{{/* Builds the regular expression for whole blocks with a name, including blocks nested up to the depth of nested, without matching the end of a longer name. Inputs: name (a regular expression for the block name), nested. Output: a regular expression for those blocks */}}
+{{- define "collectors.rbac.blockPattern" -}}
+{{- printf `(?:^|[^A-Za-z0-9_.])%s\s+"[^"]*"\s*\{%s\}` .name .nested }}
+{{- end }}
+
+{{/* Fails the render for configuration that minimal mode can't compute RBAC for, and says to set the collector's rbac.mode to alloy. Inputs: collectorName, valuesPath, problem. Fails the render. */}}
+{{- define "collectors.rbac.unsupported" -}}
+{{- $msg := list "" (printf "The %s collector %s, so rbac.mode: minimal can't compute its RBAC." .collectorName .problem) }}
+{{- $msg = append $msg (printf "Please set %s.rbac.mode to \"alloy\"." (.valuesPath | default (printf "collectors.%s" .collectorName))) }}
+{{- fail (join "\n" $msg) }}
+{{- end }}
+
+{{/* Splits a configuration into the top level and its declare blocks, nested ones included, so the scanner knows which module a component is in and can follow its module arguments. Fails when a declare block can't be read. Inputs: text, nested, context (for errors). Output: [{name, parent, text}], where text excludes nested declare blocks */}}
+{{- define "collectors.rbac.scopes" -}}
+{{- $scopes := list (dict "name" "" "parent" -1 "text" .text) }}
+{{- $frontier := list 0 }}
+{{- range $_ := until 8 }}
+  {{- $next := list }}
+  {{- range $index := $frontier }}
+    {{- $scope := index $scopes $index }}
+    {{- $own := $scope.text }}
+    {{- range $block := regexFindAll (include "collectors.rbac.blockPattern" (dict "name" "declare" "nested" $.nested)) $scope.text -1 }}
+      {{- $own = replace $block "\n" $own }}
+      {{- $next = append $next (len $scopes) }}
+      {{- $scopes = append $scopes (dict "name" (regexReplaceAll `^[^"]*"([^"]*)"(?s:.*)$` $block "${1}") "parent" $index "text" (regexReplaceAll `^[^{]*\{` (trimSuffix "}" $block) "")) }}
+    {{- end }}
+    {{- if regexMatch `(?:^|[^A-Za-z0-9_.])declare\s+"[^"]*"\s*\{` $own }}
+      {{- include "collectors.rbac.unsupported" (merge (dict "problem" "has a declare block that can't be read, for example because of unbalanced braces") $.context) }}
+    {{- end }}
+    {{- $_ := set $scope "text" $own }}
+  {{- end }}
+  {{- $frontier = $next }}
+{{- end }}
+{{- $scopes | toYaml }}
+{{- end }}
+
+{{/* Lists the scopes that can call a module: the scope that declares it, and the scopes nested in that one, except a scope that declares its own module with the same name, which shadows it. Inputs: scopes, scope (the module's index). Output: scope indexes */}}
+{{- define "collectors.rbac.callerScopes" -}}
+{{- $module := index .scopes (int .scope) }}
+{{- $shadowing := list }}
+{{- range $candidate := .scopes }}
+  {{- if eq $candidate.name $module.name }}{{ $shadowing = append $shadowing (int $candidate.parent) }}{{ end }}
+{{- end }}
+{{- $callers := list (int $module.parent) }}
+{{- $frontier := $callers }}
+{{- range $_ := until 8 }}
+  {{- $next := list }}
+  {{- range $index, $candidate := $.scopes }}
+    {{- if and (has (int $candidate.parent) $frontier) (ne $candidate.name $module.name) (not (has $index $shadowing)) }}
+      {{- $next = append $next $index }}
+    {{- end }}
+  {{- end }}
+  {{- $callers = concat $callers $next }}
+  {{- $frontier = $next }}
+{{- end }}
+{{- $callers | toYaml }}
+{{- end }}
+
+{{/* Follows a value that comes from a module argument, like argument.namespaces.value or coalesce(argument.namespaces.value, []), to the value that each call of the module passes, from any scope that can call it, through nested modules. A call that doesn't pass the argument gets the coalesce default. Inputs: value (raw attribute value), scopes, scope (index), nested, depth. Output: the possible values, with "?" for one that can't be found */}}
+{{- define "collectors.rbac.argumentValues" -}}
+{{- $values := list .value }}
+{{- $pattern := `^(?:coalesce\(\s*)?argument\.([A-Za-z_][A-Za-z0-9_]*)\.value\s*(?:,\s*(?s:(.*?))\s*\))?$` }}
+{{- if regexMatch $pattern .value }}
+  {{- $argument := regexReplaceAll $pattern .value "${1}" }}
+  {{- $default := ternary (regexReplaceAll $pattern .value "${2}") "null" (hasPrefix "coalesce(" .value) }}
+  {{- $scope := index .scopes (int .scope) }}
+  {{- $values = list "?" }}
+  {{- if and (ge (int $scope.parent) 0) (lt (int .depth) 8) }}
+    {{- $callPattern := include "collectors.rbac.blockPattern" (dict "name" (regexQuoteMeta $scope.name) "nested" .nested) }}
+    {{- $found := list }}
+    {{- range $caller := include "collectors.rbac.callerScopes" (dict "scopes" .scopes "scope" .scope) | fromYamlArray }}
+      {{- range $call := regexFindAll $callPattern (index $.scopes (int $caller)).text -1 }}
+        {{- $value := include "collectors.rbac.attribute" (dict "body" (include "collectors.rbac.body" (dict "block" $call)) "name" $argument) }}
+        {{- if or (not $value) (and (regexMatch `^\[\s*\]$` $value) (ne $default "null")) }}{{ $value = $default }}{{ end }}
+        {{- $found = concat $found (include "collectors.rbac.argumentValues" (dict "value" $value "scopes" $.scopes "scope" $caller "nested" $.nested "depth" (add1 (int $.depth))) | fromYamlArray) }}
+      {{- end }}
+    {{- end }}
+    {{- if $found }}{{ $values = $found }}{{ end }}
+  {{- end }}
+{{- end }}
+{{- $values | toYaml }}
+{{- end }}
+
+{{/* Combines list values into the namespaces a component reads: a list of string literals adds its namespaces, plus own for discovery.kubernetes' own_namespace, and an empty list or any other value means every namespace. Inputs: values (raw list values), own (a namespace to add to each list). Output: the namespaces, or [] for every namespace */}}
+{{- define "collectors.rbac.namespaceLists" -}}
+{{- $namespaces := list }}
+{{- $all := not .values }}
+{{- range $value := .values }}
+  {{- $list := list }}
+  {{- if regexMatch `^\[\s*("[^"\\]*"\s*,\s*)*("[^"\\]*"\s*,?\s*)?\]$` $value }}
+    {{- range $item := regexFindAll `"[^"\\]*"` $value -1 }}
+      {{- $list = append $list (trimAll "\"" $item) }}
+    {{- end }}
+    {{- with $.own }}{{ $list = append $list . }}{{ end }}
+  {{- end }}
+  {{- if $list }}{{ $namespaces = concat $namespaces $list }}{{ else }}{{ $all = true }}{{ end }}
+{{- end }}
+{{- ternary (list) $namespaces $all | uniq | toYaml }}
+{{- end }}
+
+{{/* Reads the namespaces that a component is limited to, the way its catalog entry's scope says to read them. Inputs: scope ("namespacesBlock" or "namespacesAttribute"), block, releaseNamespace, scopes, scopeIndex, nested. Output: the namespaces, or [] for every namespace */}}
+{{- define "collectors.rbac.scope" -}}
+{{- $context := dict "scopes" .scopes "scope" .scopeIndex "nested" .nested "depth" 0 }}
+{{- $body := include "collectors.rbac.body" (dict "block" .block) }}
+{{- $namespaces := list }}
+{{- if eq .scope "namespacesBlock" }}
+  {{- with regexFind `namespaces\s*\{[^{}]*\}` (regexReplaceAll `^[^{]*\{` .block "") }}
+    {{- $blockBody := trimSuffix "}" (regexReplaceAll `^namespaces\s*\{` . "") }}
+    {{- $own := ternary $.releaseNamespace "" (regexMatch `own_namespace\s*=\s*true` $blockBody) }}
+    {{- with include "collectors.rbac.attribute" (dict "body" $blockBody "name" "names") }}
+      {{- $namespaces = include "collectors.rbac.namespaceLists" (dict "values" (include "collectors.rbac.argumentValues" (merge (dict "value" .) $context) | fromYamlArray) "own" $own) | fromYamlArray }}
+    {{- else }}
+      {{- $namespaces = compact (list $own) }}
+    {{- end }}
+  {{- end }}
+{{- else if eq .scope "namespacesAttribute" }}
+  {{- with include "collectors.rbac.attribute" (dict "body" $body "name" "namespaces") }}
+    {{- $namespaces = include "collectors.rbac.namespaceLists" (dict "values" (include "collectors.rbac.argumentValues" (merge (dict "value" .) $context) | fromYamlArray)) | fromYamlArray }}
+  {{- end }}
+{{- end }}
+{{- $namespaces | uniq | toYaml }}
+{{- end }}
+
+{{/* Finds the catalog's components in a final config, one declare scope at a time, and returns the bundles they need, with the namespaces and object names they're limited to. Comments are removed first, and braces in strings are masked so they don't count as blocks. Inputs: components (collectors/alloy-kubernetes-api.yaml), text (final config), releaseNamespace, collectorName, valuesPath. Output: [{bundle, namespaces, resourceNames}] */}}
+{{- define "collectors.rbac.scan" -}}
+{{- $entries := list }}
+{{- $tick := printf "%c" 96 }}
+{{- $strings := printf `"(?:[^"\\]|\\.)*"|%s[^%s]*%s` $tick $tick $tick }}
+{{- $text := regexReplaceAll (printf `(%s)|//[^\n]*|/\*(?s:.*?)\*/` $strings) .text "${1}" }}
+{{- range $literal := regexFindAll $strings $text -1 }}
+  {{- if regexMatch `[{}]` $literal }}
+    {{- $text = replace $literal ($literal | replace "{" "(" | replace "}" ")") $text }}
+  {{- end }}
+{{- end }}
+{{- $nested := `[^{}]*` }}
+{{- range $_ := until 8 }}
+  {{- $nested = printf `(?:[^{}]|\{%s\})*` $nested }}
+{{- end }}
+{{- $context := dict "collectorName" .collectorName "valuesPath" .valuesPath }}
+{{- $scopes := include "collectors.rbac.scopes" (dict "text" $text "nested" $nested "context" $context) | fromYamlArray }}
+{{- range $scopeIndex, $scope := $scopes }}
+  {{- range $item := $.components }}
+    {{- $name := regexQuoteMeta $item.component }}
+    {{- $blocks := regexFindAll (include "collectors.rbac.blockPattern" (dict "name" $name "nested" $nested)) $scope.text -1 }}
+    {{- if gt (len (regexFindAll (printf `(?:^|[^A-Za-z0-9_.])%s\s+"[^"]*"\s*\{` $name) $scope.text -1)) (len $blocks) }}
+      {{- include "collectors.rbac.unsupported" (merge (dict "problem" (printf "has a %s block that can't be read, for example because of unbalanced braces" $item.component)) $context) }}
+    {{- end }}
+    {{- range $block := $blocks }}
+      {{- $block = regexReplaceAll `^[^A-Za-z_]+` $block "" }}
+      {{- $inner := regexReplaceAll `^[^{]*\{` $block "" }}
+      {{- if regexMatch (printf "(?s)%s" ($item.match | default "")) $inner }}
+        {{- $body := include "collectors.rbac.body" (dict "block" $block) }}
+        {{- if $item.namedObject }}
+          {{- $objectName := include "collectors.rbac.literal" (dict "value" (include "collectors.rbac.attribute" (dict "body" $body "name" "name"))) }}
+          {{- $namespace := include "collectors.rbac.literal" (dict "value" (include "collectors.rbac.attribute" (dict "body" $body "name" "namespace"))) }}
+          {{- $entries = append $entries (dict "bundle" $item.namedObject "namespaces" (compact (list $namespace)) "resourceNames" (compact (list $objectName))) }}
+        {{- else }}
+          {{- $namespaces := $item.namespaces | default list }}
+          {{- if and $item.scope (not $item.namespaces) }}
+            {{- $namespaces = include "collectors.rbac.scope" (dict "scope" $item.scope "block" $block "releaseNamespace" $.releaseNamespace "scopes" $scopes "scopeIndex" $scopeIndex "nested" $nested) | fromYamlArray }}
+          {{- end }}
+          {{- $bundles := $item.bundles | default list }}
+          {{- if $item.roles }}
+            {{- $role := include "collectors.rbac.attribute" (dict "body" $body "name" "role") }}
+            {{- $bundles = get $item.roles (include "collectors.rbac.literal" (dict "value" $role)) | default list }}
+            {{- if and $role (not $bundles) }}
+              {{- range $_, $roleBundles := $item.roles }}{{ $bundles = concat $bundles $roleBundles }}{{ end }}
+              {{- $namespaces = list }}
+            {{- end }}
+          {{- end }}
+          {{- range $bundle := $bundles | uniq }}
+            {{- $entries = append $entries (dict "bundle" $bundle "namespaces" $namespaces) }}
+          {{- end }}
+          {{- range $bundle := $item.clusterBundles | default list }}
+            {{- $entries = append $entries (dict "bundle" $bundle) }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- $entries | toYaml }}
+{{- end }}
+
 {{/* Expands entries into grants: every rule of an entry's bundle becomes "apiGroup|resource|name" keys with verbs, in each of the entry's namespaces, or cluster-wide when it has none. clusterScoped rules and nonResourceURLs are always cluster-wide. Inputs: catalog, entries. Output: {cluster, namespaced}, mapping "apiGroup|resource|name" or a URL to verbs */}}
 {{- define "collectors.rbac.expand" -}}
 {{- $state := dict "cluster" (dict) "namespaced" (dict) }}
@@ -194,19 +403,21 @@ subjects:
 {{- end }}
 {{- end }}
 
-{{/* Computes an instance's resolved rules from the bundle catalog and its entries. Inputs: Files, entries (rules from values). Output: {cluster, namespaced} */}}
+{{/* Computes an instance's resolved rules: the entries from scanning its final config, plus the rules from values. Inputs: Files, config (final config), entries (rules from values), releaseNamespace, collectorName, valuesPath. Output: {cluster, namespaced} */}}
 {{- define "collectors.rbac.compute" -}}
 {{- $catalog := .Files.Get "collectors/rbac-bundles.yaml" | fromYaml }}
-{{- include "collectors.rbac.resolve" (dict "catalog" $catalog "entries" (.entries | default list)) }}
+{{- $components := .Files.Get "collectors/alloy-kubernetes-api.yaml" | fromYamlArray }}
+{{- $scanned := include "collectors.rbac.scan" (dict "components" $components "text" .config "releaseNamespace" .releaseNamespace "collectorName" .collectorName "valuesPath" .valuesPath) | fromYamlArray }}
+{{- include "collectors.rbac.resolve" (dict "catalog" $catalog "entries" (concat (.entries | default list) $scanned)) }}
 {{- end }}
 
-{{/* Renders the RBAC objects of one collector, sampler, or service graph instance in minimal mode, unless its rbac.create is false. Inputs: root, values (root-like with collectorName), alloyValues (the collector.alloy.values result), entries (optional, rules from values) */}}
+{{/* Renders the RBAC objects of one collector, sampler, or service graph instance in minimal mode, from its final config, unless its rbac.create is false. Inputs: root, values (root-like with collectorName), alloyValues (the collector.alloy.values result), config (final config), entries (optional, rules from values), valuesPath (optional) */}}
 {{- define "collectors.rbac.instance" }}
 {{- if dig "rbac" "create" true .alloyValues }}
   {{- $name := include "collector.alloy.fullname" .values }}
   {{- $namespace := include "helper.namespace" .root }}
   {{- $serviceAccountName := include "collector.alloy.serviceAccountName" (merge (dict "alloyValues" .alloyValues) .values) }}
-  {{- $resolved := include "collectors.rbac.compute" (dict "Files" .root.Files "entries" .entries) | fromYaml }}
+  {{- $resolved := include "collectors.rbac.compute" (dict "Files" .root.Files "config" .config "entries" .entries "releaseNamespace" $namespace "collectorName" .values.collectorName "valuesPath" .valuesPath) | fromYaml }}
   {{- $labels := merge (dict "app.kubernetes.io/component" "rbac" "app.kubernetes.io/instance" $name) (include "collector.alloy.labels" .root | fromYaml) }}
   {{- include "collectors.rbac.render" (dict "name" $name "namespace" $namespace "labels" $labels "serviceAccountName" $serviceAccountName "resolved" $resolved) }}
 {{- end }}

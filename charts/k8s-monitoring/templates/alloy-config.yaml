@@ -65,9 +65,9 @@ metadata:
 data:
   config.alloy: |{{ $alloyConfig | trim | nindent 4 }}
 
-{{- /* With rbac.mode: minimal, the collector's RBAC objects follow as separate documents. */}}
+{{- /* With rbac.mode: minimal, the collector's RBAC objects follow as separate documents, computed from the config above. */}}
 {{- if eq (include "collector.alloy.rbacMode" $collectorValues) "minimal" }}
-{{- include "collectors.rbac.instance" (dict "root" $ "values" $values "alloyValues" $collectorValues "entries" (include "collectors.rbac.sdkInjectorEntries" $values | fromYamlArray)) }}
+{{- include "collectors.rbac.instance" (dict "root" $ "values" $values "alloyValues" $collectorValues "config" $alloyConfig "entries" (include "collectors.rbac.sdkInjectorEntries" $values | fromYamlArray)) }}
 {{- end }}
 {{- end }}
 {{- /*

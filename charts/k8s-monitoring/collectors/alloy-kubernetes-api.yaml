@@ -1,0 +1,42 @@
+---
+# Alloy components that use the Kubernetes API, and the rbac-bundles.yaml bundles they need. See docs/RBAC.md.
+#
+# A block is one use of a component in a collector's Alloy config, like `discovery.kubernetes "pods" { ... }`.
+# A component can have several entries. For each block of the component, the scanner grants the bundles of every entry
+# that matches that block. For example, discovery.kubernetes's first entry grants its role's resources, and the
+# attach_metadata entries add nodes or namespaces on top.
+#
+# Fields:
+#   component:     The Alloy component name, like discovery.kubernetes. Required.
+#   match:          A regular expression run against the Alloy config text inside the block's braces, nested blocks
+#                   included and comments removed. The entry applies only if it matches. Default: every block.
+#   bundles:        Bundles to grant, limited to the namespaces that scope or namespaces give.
+#   roles:          A map from the block's role attribute to bundles, used instead of bundles. A role that isn't a string
+#                   literal, or isn't in the map, gets every role's bundles, cluster-wide.
+#   scope:          Where the block limits its namespaces. namespacesBlock reads names and own_namespace from a
+#                   namespaces block, and namespacesAttribute reads a namespaces list attribute. Default: cluster-wide.
+#   namespaces:     A fixed list of namespaces for bundles, used instead of scope.
+#   clusterBundles: Bundles to always grant cluster-wide.
+#   namedObject:    A bundle to grant only for the object that the block's name and namespace attributes name. Entries
+#                   with namedObject ignore every other field.
+- component: discovery.kubernetes
+  scope: namespacesBlock
+  roles:
+    pod: [pods]
+    service: [services]
+    endpoints: [endpoints]
+    endpointslice: [endpointslices]
+    ingress: [ingresses]
+    node: [nodes]
+- component: discovery.kubernetes
+  match: 'attach_metadata\s*\{[^{}]*\bnode\s*='
+  bundles: [nodes]
+- component: discovery.kubernetes
+  match: 'attach_metadata\s*\{[^{}]*\bnamespace\s*='
+  bundles: [namespaces]
+- component: discovery.kubelet
+  bundles: [kubeletPods]
+- component: remote.kubernetes.secret
+  namedObject: secret
+- component: remote.kubernetes.configmap
+  namedObject: configMap
