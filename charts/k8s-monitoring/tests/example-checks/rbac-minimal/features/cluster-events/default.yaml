@@ -1,0 +1,28 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: k8smon-alloy-singleton-rbac
+  namespace: default
+rules:
+  - apiGroups:
+      - ""
+    resourceNames:
+      - loki-k8smon-k8s-monitoring
+    resources:
+      - secrets
+    verbs:
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: k8smon-alloy-singleton-rbac
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: k8smon-alloy-singleton-rbac
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-alloy-singleton
+    namespace: default

@@ -73,6 +73,9 @@ The SDK Injector's ConfigMap writes don't appear in the configuration, so they c
 and `update` on ConfigMaps in the release namespace, for the collectors listed in
 `telemetryServices.sdkInjector.allowedConfigMapWriters`.
 
+To see what each example is granted, see its file in
+[tests/example-checks/rbac-minimal](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/tests/example-checks/rbac-minimal).
+
 ## Configuration that minimal mode fails on
 
 The render fails, and says to use `rbac.mode: alloy` for that collector, when:
