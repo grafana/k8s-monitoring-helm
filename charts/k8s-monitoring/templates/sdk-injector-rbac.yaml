@@ -14,10 +14,14 @@ Do not use Alloy `spec.rbac.rules` for this temporary permission. Without
 `spec.rbac.namespaces` would scope every Alloy RBAC rule, not just this SDK
 Injector ConfigMap writer rule. Rendering a separate Role/RoleBinding keeps only
 this permission scoped to the namespace where the Alloy collector is deployed.
+
+Collectors with `rbac.mode: minimal` get this permission from their own Role instead.
 */}}
 {{- if .Values.telemetryServices.sdkInjector.deploy }}
 {{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
 {{- $values := dict "Values" $.Values "Files" $.Files "Release" $.Release "Chart" $.Chart "collectorName" $collectorName }}
+{{- $_ := set $values "alloyValues" (include "collector.alloy.values" $values | fromYaml) }}
+{{- if ne (include "collector.alloy.rbacMode" $values.alloyValues) "minimal" }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -46,5 +50,6 @@ subjects:
   - kind: ServiceAccount
     name: {{ include "collector.alloy.serviceAccountName" $values }}
     namespace: {{ include "helper.namespace" $ }}
+{{- end }}
 {{- end }}
 {{- end }}

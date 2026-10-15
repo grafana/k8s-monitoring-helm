@@ -85,9 +85,12 @@
   {{- end }}
 {{- end }}
 
-{{/* Inputs: Values (all values), collectorName (collector name), collectorValues (collector values, if not inside `.Values.collectors` map) */}}
+{{/* Inputs: Values (all values), collectorName (collector name), collectorValues (collector values, if not inside `.Values.collectors` map), alloyValues (optional, the collector.alloy.values result) */}}
 {{- define "collector.alloy.serviceAccountName" }}
-{{- $collectorValues := include "collector.alloy.values" . | fromYaml }}
+{{- $collectorValues := .alloyValues }}
+{{- if not $collectorValues }}
+  {{- $collectorValues = include "collector.alloy.values" . | fromYaml }}
+{{- end }}
 {{- if dig "serviceAccount" "create" true $collectorValues }}
   {{- dig "serviceAccount" "name" "" $collectorValues | default (include "collector.alloy.fullname" .) }}
 {{- else }}
@@ -229,7 +232,22 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
     {{- $_ := set $cleanValues $key $val }}
   {{- end }}
 {{- end }}
+{{- if eq (include "collector.alloy.rbacMode" .) "minimal" }}
+  {{- $_ := set $cleanValues "rbac" (dict "create" false) }}
+{{- else if kindIs "map" $cleanValues.rbac }}
+  {{- $rbac := omit $cleanValues.rbac "mode" }}
+  {{- if $rbac }}
+    {{- $_ := set $cleanValues "rbac" $rbac }}
+  {{- else }}
+    {{- $_ := unset $cleanValues "rbac" }}
+  {{- end }}
+{{- end }}
 {{ $cleanValues | toYaml }}
+{{- end }}
+
+{{/* Inputs: . (merged collector values) */}}
+{{- define "collector.alloy.rbacMode" -}}
+{{- dig "rbac" "mode" "alloy" . -}}
 {{- end }}
 
 {{/* Lists the fields that are not a part of Alloy itself, and should be removed before creating an Alloy instance. */}}

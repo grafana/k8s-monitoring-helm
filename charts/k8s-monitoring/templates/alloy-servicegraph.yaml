@@ -19,6 +19,7 @@
     {{- end }}
     {{- $values := dict "Values" $.Values "Files" $.Files "Capabilities" $.Capabilities "collectorName" $collectorName "collectorValues" $collectorValues }}
     {{- $alloyValues := include "collector.alloy.values" $values | fromYaml }}
+    {{- include "collectors.validate.rbac" (dict "name" $collectorName "collectorValues" $alloyValues "valuesPath" (printf "destinations.%s.processors.serviceGraphMetrics.collector" $destinationName)) }}
 
     {{- /* Destination components*/}}
     {{- $metricsDestinationNames := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "otlp" "filter" $destination.processors.serviceGraphMetrics.destinations) | fromYamlArray -}}
@@ -93,6 +94,11 @@ metadata:
   {{- end }}
   {{- end }}
 spec:{{ $alloySpec | trim | nindent 2 }}
+
+{{- /* With rbac.mode: minimal, the service graph instance's RBAC objects follow as separate documents. */}}
+{{- if eq (include "collector.alloy.rbacMode" $alloyValues) "minimal" }}
+{{- include "collectors.rbac.instance" (dict "root" $ "values" $values "alloyValues" $alloyValues) }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

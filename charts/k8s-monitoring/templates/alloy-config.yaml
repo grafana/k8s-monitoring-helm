@@ -64,6 +64,11 @@ metadata:
   namespace: {{ include "helper.namespace" $ }}
 data:
   config.alloy: |{{ $alloyConfig | trim | nindent 4 }}
+
+{{- /* With rbac.mode: minimal, the collector's RBAC objects follow as separate documents. */}}
+{{- if eq (include "collector.alloy.rbacMode" $collectorValues) "minimal" }}
+{{- include "collectors.rbac.instance" (dict "root" $ "values" $values "alloyValues" $collectorValues "entries" (include "collectors.rbac.sdkInjectorEntries" $values | fromYamlArray)) }}
+{{- end }}
 {{- end }}
 {{- /*
 Validate replacements only after every collector has been processed: a replacement may match

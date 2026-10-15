@@ -182,3 +182,34 @@
     {{- end }}
   {{- end }}
 {{- end }}
+
+{{/* Inputs: name (collector name), collectorValues (merged collector values), valuesPath (where the collector values are set) */}}
+{{- define "collectors.validate.rbac" }}
+  {{- $mode := include "collector.alloy.rbacMode" .collectorValues }}
+  {{- $path := .valuesPath | default (printf "collectors.%s" .name) }}
+  {{- if not (has $mode (list "alloy" "minimal")) }}
+    {{- $msg := list "" (printf "The %s collector has an unknown RBAC mode: %q" .name $mode) }}
+    {{- $msg = append $msg "Please set rbac.mode to \"alloy\" or \"minimal\"." }}
+    {{- fail (join "\n" $msg) }}
+  {{- end }}
+  {{- if eq $mode "minimal" }}
+    {{- if dig "remoteConfig" "enabled" false .collectorValues }}
+      {{- $msg := list "" (printf "The %s collector uses rbac.mode: minimal with remote configuration, which can run any component, so its RBAC can't be computed." .name) }}
+      {{- $msg = append $msg (printf "Please set %s.rbac.mode to \"alloy\", or disable remoteConfig." $path) }}
+      {{- fail (join "\n" $msg) }}
+    {{- end }}
+    {{- range $setting := list "rules" "clusterRules" "namespaces" }}
+      {{- if dig "rbac" $setting nil $.collectorValues }}
+        {{- $msg := list "" (printf "The %s collector sets rbac.%s, which only applies with rbac.mode: alloy for now." $.name $setting) }}
+        {{- $msg = append $msg (printf "Please remove %s.rbac.%s, or set rbac.mode: alloy." $path $setting) }}
+        {{- fail (join "\n" $msg) }}
+      {{- end }}
+    {{- end }}
+    {{- if and (not (dig "serviceAccount" "create" true .collectorValues)) (not (dig "serviceAccount" "name" "" .collectorValues)) }}
+      {{- $msg := list "" (printf "The %s collector uses rbac.mode: minimal, but does not create a ServiceAccount or name one." .name) }}
+      {{- $msg = append $msg "Its RBAC would be granted to the namespace's \"default\" ServiceAccount." }}
+      {{- $msg = append $msg (printf "Please set %s.serviceAccount.name to the ServiceAccount that the collector runs as." $path) }}
+      {{- fail (join "\n" $msg) }}
+    {{- end }}
+  {{- end }}
+{{- end }}

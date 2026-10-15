@@ -62,6 +62,12 @@ Settings for each primary Alloy instance come from several potential sources, in
 | logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
 | logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
 
+### RBAC
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| rbac.mode | string | `"alloy"` | How the collector's RBAC is created. `alloy` lets the Alloy Operator create the Alloy chart's default RBAC objects. `minimal` makes this chart render RBAC objects that only grant what the collector's configuration needs. With `minimal`, `rbac.rules`, `rbac.clusterRules`, and `rbac.namespaces` aren't supported yet. `minimal` can't be used with `remoteConfig.enabled`. See [RBAC](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/RBAC.md). |
+
 ### Remote Configuration: Authentication
 
 | Key | Type | Default | Description |
