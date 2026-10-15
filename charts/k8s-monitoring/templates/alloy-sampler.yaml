@@ -17,6 +17,7 @@
     {{- end }}
     {{- $values := (dict "Values" $.Values "Files" $.Files "Capabilities" $.Capabilities "collectorName" $collectorName "collectorValues" $collectorValues) }}
     {{- $alloyValues := include "collector.alloy.values" $values | fromYaml }}
+    {{- include "collectors.validate.rbac" (dict "name" $collectorName "collectorValues" $alloyValues "valuesPath" (printf "destinations.%s.processors.tailSampling.collector" $destinationName)) }}
 
     {{- /* Sampler config components */}}
     {{- $destinationTarget := include "destinations.otlp.alloy.exporter.target" (dict "destination" $destination "destinationName" $destinationName) }}
@@ -66,20 +67,21 @@ metadata:
   {{- end }}
   {{- end }}
 spec:{{ $alloySpec | trim | nindent 2 }}
-{{- include "collectors.validate.rbac" (dict "name" $collectorName "collectorValues" $alloyValues "valuesPath" (printf "destinations.%s.processors.tailSampling.collector" $destinationName)) }}
+
+{{- /* With rbac.mode: minimal, the sampler's RBAC objects follow as separate documents. */}}
 {{- if eq (include "collector.alloy.rbacMode" $alloyValues) "minimal" }}
-  {{- $rbacEntries := list }}
-  {{- if eq (include "secrets.usesKubernetesSecret" $destination) "true" }}
-    {{- $rbacEntries = append $rbacEntries (include "collectors.rbac.secretEntry" (merge (dict "destination" $destination "destinationName" $destinationName) $) | fromYaml) }}
-  {{- end }}
-  {{- include "collectors.rbac.instance" (dict
-    "Files" $.Files
-    "collectorValues" $alloyValues
-    "entries" $rbacEntries
-    "name" $collectorName
-    "namespace" (include "helper.namespace" $)
-    "labels" (include "collector.alloy.labels" $ | fromYaml)
-    "serviceAccountName" (include "collector.alloy.serviceAccountName" (merge (dict "alloyValues" $alloyValues) $values))) }}
+{{- $rbacEntries := list }}
+{{- if eq (include "secrets.usesKubernetesSecret" $destination) "true" }}
+  {{- $rbacEntries = append $rbacEntries (include "collectors.rbac.secretEntry" (merge (dict "destination" $destination "destinationName" $destinationName) $) | fromYaml) }}
+{{- end }}
+{{- include "collectors.rbac.instance" (dict
+  "Files" $.Files
+  "collectorValues" $alloyValues
+  "entries" $rbacEntries
+  "name" $collectorName
+  "namespace" (include "helper.namespace" $)
+  "labels" (include "collector.alloy.labels" $ | fromYaml)
+  "serviceAccountName" (include "collector.alloy.serviceAccountName" (merge (dict "alloyValues" $alloyValues) $values))) }}
 {{- end }}
 {{- end }}
 {{- end }}
