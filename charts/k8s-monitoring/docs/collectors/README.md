@@ -16,6 +16,11 @@ Each collector is defined under the `collectors` key, with a name you choose. Fe
 collectors by name (for example, `clusterEvents.collector: alloy-singleton`), so the collector must exist before a
 feature can use it.
 
+If you define exactly one collector, enabled features that omit `collector` use that collector. If you define more
+than one collector, each enabled feature must set `collector` to one of those names. In v3, features such as
+Auto-Instrumentation defaulted `collector` to `alloy-metrics`; that default is no longer applied. See
+[UPGRADING.md](../../UPGRADING.md#feature-collector-assignment).
+
 ```yaml
 collectors:
   <collector name>:
