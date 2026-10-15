@@ -142,7 +142,7 @@
 {{- ternary (list) $namespaces $all | uniq | toYaml }}
 {{- end }}
 
-{{/* Inputs: value (raw string value), context (for argumentValues). Output: the namespaces, or [] for every namespace */}}
+{{/* Reads the one namespace that a component is limited to, like a k8sattributes filter's, from a string that can come from a module argument. Inputs: value (raw string value), context (for argumentValues). Output: the namespaces, or [] for every namespace */}}
 {{- define "collectors.rbac.namespaceString" -}}
 {{- $lists := list }}
 {{- range $value := include "collectors.rbac.argumentValues" (merge (dict "value" .value) .context) | fromYamlArray }}
