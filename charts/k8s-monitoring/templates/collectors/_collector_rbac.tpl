@@ -237,7 +237,7 @@
 {{- $sources | toYaml }}
 {{- end }}
 
-{{/* Finds the catalog's components in a final config, one declare scope at a time, and returns the bundles they need, with the namespaces and object names they're limited to. Comments are removed first, and braces in strings are masked so they don't count as blocks. Inputs: components (collectors/alloy-kubernetes-api.yaml), text (final config), releaseNamespace, collectorName, valuesPath. Output: [{bundle, namespaces, resourceNames}] */}}
+{{/* Finds the catalog's components in a final config, one declare scope at a time, and returns the bundles they need, with the namespaces and object names they're limited to. Comments are removed first, and braces in strings are masked so they don't count as blocks. Fails the render on import blocks, on components with Kubernetes-like names that the catalog doesn't list, and on components that use the ServiceAccount token that no entry covers. Inputs: components (collectors/alloy-kubernetes-api.yaml), text (final config), releaseNamespace, collectorName, valuesPath. Output: [{bundle, namespaces, resourceNames}] */}}
 {{- define "collectors.rbac.scan" -}}
 {{- $entries := list }}
 {{- $tick := printf "%c" 96 }}
