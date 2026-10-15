@@ -46,3 +46,15 @@ Input: dict with "namespace", "labelMatchers", and "serviceName".
 {{- end }}
 {{- end }}
 {{- end -}}
+
+{{/* The namespace a telemetry service is discovered in, or empty for every namespace. Inputs: namespace, service, overridable, telemetryServices, Release */}}
+{{- define "feature.costMetrics.discoveryNamespace" -}}
+{{- $namespace := .namespace -}}
+{{- if dig .service "deploy" false (.telemetryServices | default dict) -}}
+  {{- $namespace = .Release.Namespace -}}
+  {{- if .overridable -}}
+    {{- $namespace = dig .service "namespaceOverride" "" (.telemetryServices | default dict) | default .Release.Namespace -}}
+  {{- end -}}
+{{- end -}}
+{{- $namespace | default "" -}}
+{{- end }}

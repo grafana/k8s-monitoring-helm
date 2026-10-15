@@ -1,0 +1,57 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:braces rule:commas
+suite: Feature - Host Metrics - discovery namespaces
+release:
+  namespace: monitoring
+templates:
+  - test/configmap.yaml
+tests:
+  - it: discovers Node Exporter in every namespace when the namespace is null
+    set:
+      testing: {enabled: true}
+      linuxHosts:
+        enabled: true
+        namespace: null
+        labelMatchers: {app.kubernetes.io/name: node-exporter}
+    asserts:
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'names = \[""\]'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: '(?s)discovery\.kubernetes "node_exporter" \{[^}]*namespaces \{'
+
+  - it: discovers a deployed Node Exporter in its namespace override
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          node-exporter: {deploy: true, namespaceOverride: exporters}
+      linuxHosts: {enabled: true}
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '(?s)discovery\.kubernetes "node_exporter" \{.*?names = \["exporters"\]'
+
+  - it: discovers a deployed Windows Exporter in the release namespace
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          windows-exporter: {deploy: true}
+      windowsHosts: {enabled: true}
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '(?s)discovery\.kubernetes "windows_exporter_pods" \{.*?names = \["monitoring"\]'
+
+  - it: discovers a deployed Kepler in the release namespace, ignoring a namespace override
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          kepler: {deploy: true, namespaceOverride: ignored}
+      energyMetrics: {enabled: true}
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: '(?s)discovery\.kubernetes "kepler" \{.*?names = \["monitoring"\]'

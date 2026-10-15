@@ -1,0 +1,72 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:braces rule:commas
+suite: Feature - Cluster Metrics - discovery namespaces and control plane sources
+release:
+  namespace: monitoring
+templates:
+  - test/configmap.yaml
+tests:
+  - it: discovers kube-state-metrics in every namespace when the namespace is null
+    set:
+      testing: {enabled: true}
+      kube-state-metrics:
+        namespace: null
+        labelMatchers: {app.kubernetes.io/name: kube-state-metrics}
+    asserts:
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'names = \[""\]'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: '(?s)discovery\.kubernetes "kube_state_metrics" \{[^}]*namespaces \{'
+
+  - it: discovers kube-state-metrics in its configured namespace
+    set:
+      testing: {enabled: true}
+      kube-state-metrics:
+        namespace: ksm
+        labelMatchers: {app.kubernetes.io/name: kube-state-metrics}
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'names = \["ksm"\]'
+
+  - it: discovers a deployed kube-state-metrics in its namespace override
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          kube-state-metrics: {deploy: true, namespaceOverride: ksm-override}
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'names = \["ksm-override"\]'
+
+  - it: discovers a deployed kube-state-metrics in the release namespace
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          kube-state-metrics: {deploy: true}
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'names = \["monitoring"\]'
+
+  - it: enables control plane sources with controlPlane.enabled unless they are explicitly disabled
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          kube-state-metrics: {deploy: true}
+      controlPlane: {enabled: true}
+      kubeScheduler: {enabled: false}
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'discovery\.kubernetes "apiserver"'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'discovery\.kubernetes "kube_controller_manager"'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'kube_scheduler'

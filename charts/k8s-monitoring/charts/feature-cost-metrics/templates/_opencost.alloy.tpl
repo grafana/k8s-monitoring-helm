@@ -10,10 +10,7 @@
 {{ end }}
 
 {{- define "feature.costMetrics.opencost.alloy" }}
-{{- $namespace := .Values.opencost.namespace }}
-{{- if dig "opencost" "deploy" false (.telemetryServices | default dict) }}
-  {{- $namespace = (dig "opencost" "namespaceOverride" false (.telemetryServices | default dict) | default .Release.Namespace) }}
-{{- end }}
+{{- $namespace := include "feature.costMetrics.discoveryNamespace" (dict "namespace" .Values.opencost.namespace "service" "opencost" "overridable" true "telemetryServices" .telemetryServices "Release" .Release) }}
 {{- $metricAllowList := include "feature.costMetrics.opencost.allowList" . | fromYamlArray }}
 {{- $metricDenyList := .Values.opencost.metricsTuning.excludeMetrics }}
 {{- $labelSelectors := list }}

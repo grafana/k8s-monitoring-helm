@@ -46,3 +46,20 @@ Input: dict with "namespace", "labelMatchers", and "serviceName".
 {{- end }}
 {{- end }}
 {{- end -}}
+
+{{- define "feature.clusterMetrics.controlPlaneSource.enabled" -}}
+{{- $source := index .Values .source -}}
+{{- if or $source.enabled (and .Values.controlPlane.enabled (not (eq $source.enabled false))) }}true{{ else }}false{{ end -}}
+{{- end }}
+
+{{/* The namespace a telemetry service is discovered in, or empty for every namespace. Inputs: namespace, service, overridable, telemetryServices, Release */}}
+{{- define "feature.clusterMetrics.discoveryNamespace" -}}
+{{- $namespace := .namespace -}}
+{{- if dig .service "deploy" false (.telemetryServices | default dict) -}}
+  {{- $namespace = .Release.Namespace -}}
+  {{- if .overridable -}}
+    {{- $namespace = dig .service "namespaceOverride" "" (.telemetryServices | default dict) | default .Release.Namespace -}}
+  {{- end -}}
+{{- end -}}
+{{- $namespace | default "" -}}
+{{- end }}

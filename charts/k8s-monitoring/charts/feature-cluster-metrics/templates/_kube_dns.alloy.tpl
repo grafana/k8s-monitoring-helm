@@ -1,5 +1,5 @@
 {{- define "feature.clusterMetrics.kubeDNS.alloy" }}
-{{- if or .Values.kubeDNS.enabled (and .Values.controlPlane.enabled (not (eq .Values.kubeDNS.enabled false))) }}
+{{- if eq (include "feature.clusterMetrics.controlPlaneSource.enabled" (dict "Values" .Values "source" "kubeDNS")) "true" }}
 {{- $metricAllowList := .Values.kubeDNS.metricsTuning.includeMetrics }}
 {{- $metricDenyList := .Values.kubeDNS.metricsTuning.excludeMetrics }}
 
