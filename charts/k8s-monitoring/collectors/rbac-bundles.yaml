@@ -97,6 +97,19 @@ alertmanagerConfigs:
     - {apiGroups: [monitoring.coreos.com], resources: [alertmanagerconfigs], verbs: [get, list, watch]}
     - {apiGroups: [""], resources: [namespaces], verbs: [get, list, watch], clusterScoped: true}
     - {apiGroups: [""], resources: [secrets, configmaps], verbs: [get]}
+nodeGet:
+  rules:
+    - {apiGroups: [""], resources: [nodes], verbs: [get], clusterScoped: true}
+kubeadmConfig:
+  rules:
+    - {apiGroups: [""], resources: [configmaps], resourceNames: [kubeadm-config], verbs: [get]}
+    - {apiGroups: [""], resources: [namespaces], resourceNames: [kube-system], verbs: [get], clusterScoped: true}
+openshiftInfrastructures:
+  rules:
+    - {apiGroups: [config.openshift.io], resources: [infrastructures/status], resourceNames: [cluster], verbs: [get], clusterScoped: true}
+loadBalancer:
+  rules:
+    - {apiGroups: [discovery.k8s.io], resources: [endpointslices], verbs: [get, list, watch]}
 secret:
   rules:
     - {apiGroups: [""], resources: [secrets], verbs: [get]}

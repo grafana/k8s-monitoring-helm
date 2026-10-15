@@ -1,0 +1,102 @@
+---
+cluster:
+  name: rbac-minimal-app-o11y
+
+destinations:
+  prometheus:
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+    auth:
+      type: basic
+      username: promuser
+      password: prometheuspassword
+  tempo:
+    type: otlp
+    protocol: http
+    url: http://tempo.tempo.svc:4318
+    tls:
+      insecure: true
+      insecureSkipVerify: true
+    # Tempo doesn't check this token. It makes the sampler read a Secret.
+    auth:
+      type: bearerToken
+      bearerToken: not-checked
+    metrics: {enabled: false}
+    logs: {enabled: false}
+    traces: {enabled: true}
+    processors:
+      tailSampling:
+        enabled: true
+        collector:
+          controller:
+            replicas: 2
+        policies:
+          - name: always
+            type: always_sample
+      serviceGraphMetrics:
+        enabled: true
+        destinations: [prometheus]
+        collector:
+          controller:
+            replicas: 2
+
+applicationObservability:
+  enabled: true
+  collector: alloy-receiver
+  logs: {enabled: false}
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+  processors:
+    k8sattributes:
+      metadata:
+        - k8s.namespace.name
+        - k8s.pod.name
+        - k8s.deployment.name
+        - k8s.deployment.uid
+        - k8s.statefulset.name
+        - k8s.daemonset.name
+        - k8s.cronjob.name
+        - k8s.job.name
+        - k8s.node.name
+        - k8s.pod.uid
+        - k8s.pod.start_time
+        - k8s.cluster.uid
+      # Each workload kind is watched only when something is extracted from it.
+      labels:
+        - {from: deployment, key: app.kubernetes.io/instance, tag_name: deployment_instance}
+        - {from: statefulset, key: app.kubernetes.io/name, tag_name: statefulset_name}
+        - {from: daemonset, key: app.kubernetes.io/name, tag_name: daemonset_name}
+        - {from: job, key: app.kubernetes.io/name, tag_name: job_name}
+        - {from: cronjob, key: app.kubernetes.io/name, tag_name: cronjob_name}
+      filters:
+        byNamespace: alloy
+    resourceDetection:
+      kubernetesNode:
+        enabled: true
+      # There's no OpenShift API on Kind, but the request is authorized before it fails with 404, so a missing rule is still forbidden.
+      openshift:
+        enabled: true
+
+integrations:
+  collector: alloy-metrics
+  alloy:
+    instances:
+      - name: alloy-receiver
+        labelSelectors:
+          app.kubernetes.io/instance: k8smon-alloy-receiver
+        metrics:
+          tuning:
+            includeMetrics: [otelcol_loadbalancer_.*]
+
+collectorCommon:
+  alloy:
+    rbac:
+      mode: minimal
+
+collectors:
+  alloy-receiver:
+    presets: [deployment]
+  alloy-metrics:
+    presets: [clustered, statefulset]

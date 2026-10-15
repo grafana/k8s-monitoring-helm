@@ -1,0 +1,108 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: rbac-minimal-app-o11y
+
+subject:
+  releaseName: k8smon
+  path: ../../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: ../../tail-sampling/dependencies/alloy-instrumented.yaml
+  - file: ../dependencies/collector-logs.yaml
+  - preset: prometheus
+  - preset: loki
+  - preset: tempo
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              uid: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+            - name: Tempo
+              type: tempo
+              url: http://tempo.tempo.svc:3200
+
+tests:
+  - type: kubernetes-objects-test
+    values:
+      checks:
+        - {kind: ClusterRole, name: k8smon-alloy-receiver-default-rbac}
+        - {kind: Role, name: k8smon-alloy-receiver-rbac, namespace: default}
+        - {kind: Role, name: k8smon-alloy-receiver-default-rbac, namespace: alloy}
+        - {kind: Role, name: k8smon-tempo-sampler-rbac, namespace: default}
+        - {kind: Role, name: k8smon-tempo-servicegraph-rbac, namespace: default}
+        - {kind: ClusterRole, name: k8smon-tempo-sampler-default-rbac, expect: {count: 0}}
+        - {kind: ClusterRole, name: k8smon-tempo-servicegraph-default-rbac, expect: {count: 0}}
+        - {kind: ClusterRole, name: k8smon-alloy-receiver, expect: {count: 0}}
+        - {kind: ClusterRole, name: k8smon-tempo-sampler, expect: {count: 0}}
+        - {kind: ClusterRole, name: k8smon-tempo-servicegraph, expect: {count: 0}}
+
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: rbac-minimal-app-o11y
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            PROMETHEUS_USER: promuser
+            PROMETHEUS_PASS: prometheuspassword
+            TEMPO_URL: http://tempo.tempo.svc:3200/api/search
+          queries:
+            # k8sattributes sets the Deployment name, and the trace went through the sampler, which read its Secret
+            - query: '{resource.cluster="$CLUSTER" && resource.k8s.deployment.name="alloy-app"}'
+              type: traceql
+            # k8sattributes reads the Deployment's label, through its ReplicaSet, in the alloy namespace
+            - query: '{resource.cluster="$CLUSTER" && resource.deployment_instance="alloy-app"}'
+              type: traceql
+            # k8sattributes reads the ReplicaSet for the Deployment UID
+            - query: '{resource.cluster="$CLUSTER" && resource.k8s.deployment.uid != nil}'
+              type: traceql
+            # k8sattributes reads the kube-system Namespace for the cluster UID
+            - query: '{resource.cluster="$CLUSTER" && resource.k8s.cluster.uid != nil}'
+              type: traceql
+            # The kubernetes_node resource detector gets its Node
+            - query: '{resource.cluster="$CLUSTER" && resource.k8s.node.uid != nil}'
+              type: traceql
+            # The load balancers can read EndpointSlices, and every sampler and service graph Pod is ready
+            - query: otelcol_loadbalancer_num_backends{component_id="otelcol.exporter.loadbalancing.tempo_sampler", cluster="$CLUSTER"}
+              type: promql
+              expect:
+                value: 2
+                operator: ==
+            - query: otelcol_loadbalancer_num_backends{component_id="otelcol.exporter.loadbalancing.tempo_servicegraph", cluster="$CLUSTER"}
+              type: promql
+              expect:
+                value: 2
+                operator: ==
+            # Forbidden scrapes are only logged at debug level, so check that every target is up
+            - query: up{cluster="$CLUSTER"} == 0
+              type: promql
+              expect:
+                count: 0
+
+        # Runs after the queries above pass, so every collector has already called the Kubernetes API.
+        - env:
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query_range
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+          queries:
+            # Every collector's logs arrive, so the empty result below means no errors rather than no logs
+            - query: sum by (instance) (count_over_time({job="collector-logs"}[1h]))
+              type: logql
+              expect:
+                count: 4
+            # Also covers the StatefulSet, DaemonSet, Job, and CronJob watches, and the openshift resource detector
+            - query: '{job="collector-logs"} |~ `(?i)forbidden`'
+              type: logql
+              expect:
+                count: 0

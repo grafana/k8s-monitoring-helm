@@ -262,6 +262,42 @@ tests:
             - {apiGroups: [""], resourceNames: [settings], resources: [configmaps], verbs: [get]}
         template: alloy-config.yaml
 
+  - it: finds components with blocks nested several levels deep
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            otelcol.exporter.loadbalancing "traces" {
+              resolver {
+                kubernetes {
+                  service = "sampler"
+                }
+              }
+              protocol {
+                otlp {
+                  client {
+                    tls {
+                      insecure = true
+                    }
+                  }
+                }
+              }
+            }
+    asserts:
+      - documentSelector: {path: kind, value: Role}
+        isSubset:
+          path: metadata
+          content: {name: test-alloy-singleton-rbac, namespace: monitoring}
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [discovery.k8s.io], resources: [endpointslices], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
   - it: scopes discovery to namespaces listed across several lines
     set:
       collectors:
@@ -805,6 +841,32 @@ tests:
             - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
         template: alloy-config.yaml
 
+  - it: scopes the load balancer to the namespace in its service name
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            otelcol.exporter.loadbalancing "traces" {
+              resolver {
+                kubernetes {
+                  service = "sampler.tracing"
+                }
+              }
+              protocol {
+                otlp {
+                  client { }
+                }
+              }
+            }
+    asserts:
+      - documentSelector: {path: kind, value: Role}
+        isSubset:
+          path: metadata
+          content: {name: test-alloy-singleton-monitoring-rbac, namespace: tracing}
+        template: alloy-config.yaml
+
   - it: grants the k8sattributes processor only Pods for the default metadata, in its filter namespace
     set:
       collectors:
@@ -982,6 +1044,62 @@ tests:
             - {apiGroups: [monitoring.coreos.com], resources: [servicemonitors], verbs: [get, list, watch]}
             - {apiGroups: [""], resources: [configmaps, secrets], verbs: [get]}
             - {apiGroups: [""], resources: [endpoints, nodes, pods, services], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
+  - it: grants resource detectors only when they use the ServiceAccount
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            otelcol.processor.resourcedetection "default" {
+              detectors = ["env", "kubernetes_node", "kubeadm"]
+              kubernetes_node {
+                auth_type = "serviceAccount"
+              }
+              output { }
+            }
+            otelcol.processor.resourcedetection "cloud" {
+              detectors = ["eks", "openshift"]
+              output { }
+            }
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [nodes], verbs: [get]}
+            - {apiGroups: [config.openshift.io], resources: [infrastructures/status], resourceNames: [cluster], verbs: [get]}
+        template: alloy-config.yaml
+
+  - it: grants Beyla its metadata informers, and ConfigMap writes for the injector webhook
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            beyla.ebpf "default" {
+              injector {
+                webhook {
+                  external_deployment_name = "beyla-injector"
+                }
+              }
+              output { }
+            }
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [nodes, pods, services], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [configmaps], verbs: [create, get, update]}
         template: alloy-config.yaml
 
   - it: grants kubelet Pod discovery nodes/pods

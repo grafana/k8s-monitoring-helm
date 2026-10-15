@@ -103,6 +103,21 @@ rules:
       - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: k8smon-alloy-receiver-rbac
+  namespace: default
+rules:
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: k8smon-alloy-metrics-rbac
@@ -114,4 +129,18 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-metrics
+    namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: k8smon-alloy-receiver-rbac
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: k8smon-alloy-receiver-rbac
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-alloy-receiver
     namespace: default
