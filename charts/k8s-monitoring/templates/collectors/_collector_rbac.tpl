@@ -165,7 +165,7 @@
 {{- $namespaces | uniq | toYaml }}
 {{- end }}
 
-{{/* Follows a component's targets back through discovery.relabel blocks. Inputs: block, text (the scope's text), nested. Output: [{block, path}] for each source of targets: the source block (or "" if it can't be followed), and the text of every block on the way */}}
+{{/* Follows a component's targets back through discovery.relabel blocks to the discovery components or static targets they come from, so a scrape that sends the ServiceAccount token can be matched to what it scrapes, by the discovery role and the relabel rules on the way. Inputs: block, text (the scope's text), nested. Output: [{block, path}] for each source of targets: the source block (or "" if it can't be followed), and the text of every block on the way */}}
 {{- define "collectors.rbac.targetSources" -}}
 {{- $sources := list }}
 {{- $frontier := list (dict "block" .block "path" .block) }}
