@@ -132,7 +132,7 @@ lint-yaml: ## Lint yaml files
 
 .PHONY: lint-alex
 # renovate: datasource=docker depName=pipelinecomponents/alex
-ALEX_VERSION = 0.24.31
+ALEX_VERSION = 0.24.39
 ALEX_FILES = $(shell find . -type f -name "*.md" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./.context/*" ! -path "./CODE_OF_CONDUCT.md" ! -name "CHANGELOG.md")
 lint-alex: ## Check for insensitive language
 	@if command -v alex &> /dev/null; then \
