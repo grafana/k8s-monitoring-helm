@@ -394,6 +394,67 @@ tests:
             - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
         template: alloy-config.yaml
 
+  - it: follows module calls in nested modules, and skips modules that shadow the name
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            declare "pods" {
+              argument "namespaces" { }
+              discovery.kubernetes "pods" {
+                role = "pod"
+                namespaces {
+                  names = argument.namespaces.value
+                }
+              }
+            }
+            pods "team_a" {
+              namespaces = ["team-a"]
+            }
+            declare "wrapper" {
+              pods "team_b" {
+                namespaces = ["team-b"]
+              }
+            }
+            wrapper "w" { }
+            declare "shadow" {
+              declare "pods" {
+                argument "namespaces" { }
+                discovery.kubernetes "services" {
+                  role = "service"
+                  namespaces {
+                    names = argument.namespaces.value
+                  }
+                }
+              }
+              pods "team_c" {
+                namespaces = ["team-c"]
+              }
+            }
+            shadow "s" { }
+    asserts:
+      - hasDocuments:
+          count: 7
+        template: alloy-config.yaml
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'team-b')].kind"
+          value: Role
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'team-c')].kind"
+          value: Role
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [services], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
   - it: fails when a declare block can't be read
     set:
       collectors:
@@ -407,6 +468,28 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: 'has a declare block that can.t be read'
+        template: alloy-config.yaml
+
+  - it: grants Nodes and Namespaces when attach_metadata sets them to a value that isn't a literal
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            discovery.kubernetes "services" {
+              role = "service"
+              attach_metadata {
+                node      = sys.env("ATTACH_NODE") == "true"
+                namespace = sys.env("ATTACH_NAMESPACE") == "true"
+              }
+            }
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [namespaces, nodes, services], verbs: [get, list, watch]}
         template: alloy-config.yaml
 
   - it: grants kubelet Pod discovery nodes/pods

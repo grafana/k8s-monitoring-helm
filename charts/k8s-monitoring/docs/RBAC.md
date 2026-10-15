@@ -61,9 +61,10 @@ That file maps each component to the bundles it needs, and
 defines each bundle as RBAC rules.
 
 *   `discovery.kubernetes` gets the resources for its `role`, in the namespaces from its `namespaces` block. A `role`
-    that isn't a string literal gets every role's resources, cluster-wide.
+    that isn't a string literal gets every role's resources, cluster-wide. Setting `node` or `namespace` in its
+    `attach_metadata` block to any value also grants read access to Nodes or Namespaces.
 *   A component in a module (`declare`) that gets its namespaces from a module argument, like the integrations do, gets
-    the namespaces that the module's callers pass.
+    the namespaces that the module's callers pass, including callers in nested modules.
 *   `remote.kubernetes.secret` and `remote.kubernetes.configmap` get `get` on the object they name. If the `namespace`
     isn't a string literal, that name is readable in every namespace. If the `name` isn't a string literal, every
     object in the namespace is readable. Use string literals to keep this access small.

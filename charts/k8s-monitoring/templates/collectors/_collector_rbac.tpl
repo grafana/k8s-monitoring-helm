@@ -78,7 +78,29 @@
 {{- $scopes | toYaml }}
 {{- end }}
 
-{{/* Follows a value that comes from a module argument, like argument.namespaces.value or coalesce(argument.namespaces.value, []), to the value that each call of the module passes, through nested modules. A call that doesn't pass the argument gets the coalesce default. Inputs: value (raw attribute value), scopes, scope (index), nested, depth. Output: the possible values, with "?" for one that can't be found */}}
+{{/* Lists the scopes that can call a module: the scope that declares it, and the scopes nested in that one, except a scope that declares its own module with the same name, which shadows it. Inputs: scopes, scope (the module's index). Output: scope indexes */}}
+{{- define "collectors.rbac.callerScopes" -}}
+{{- $module := index .scopes (int .scope) }}
+{{- $shadowing := list }}
+{{- range $candidate := .scopes }}
+  {{- if eq $candidate.name $module.name }}{{ $shadowing = append $shadowing (int $candidate.parent) }}{{ end }}
+{{- end }}
+{{- $callers := list (int $module.parent) }}
+{{- $frontier := $callers }}
+{{- range $_ := until 8 }}
+  {{- $next := list }}
+  {{- range $index, $candidate := $.scopes }}
+    {{- if and (has (int $candidate.parent) $frontier) (ne $candidate.name $module.name) (not (has $index $shadowing)) }}
+      {{- $next = append $next $index }}
+    {{- end }}
+  {{- end }}
+  {{- $callers = concat $callers $next }}
+  {{- $frontier = $next }}
+{{- end }}
+{{- $callers | toYaml }}
+{{- end }}
+
+{{/* Follows a value that comes from a module argument, like argument.namespaces.value or coalesce(argument.namespaces.value, []), to the value that each call of the module passes, from any scope that can call it, through nested modules. A call that doesn't pass the argument gets the coalesce default. Inputs: value (raw attribute value), scopes, scope (index), nested, depth. Output: the possible values, with "?" for one that can't be found */}}
 {{- define "collectors.rbac.argumentValues" -}}
 {{- $values := list .value }}
 {{- $pattern := `^(?:coalesce\(\s*)?argument\.([A-Za-z_][A-Za-z0-9_]*)\.value\s*(?:,\s*(?s:(.*?))\s*\))?$` }}
@@ -88,14 +110,16 @@
   {{- $scope := index .scopes (int .scope) }}
   {{- $values = list "?" }}
   {{- if and (ge (int $scope.parent) 0) (lt (int .depth) 8) }}
-    {{- $parent := index .scopes (int $scope.parent) }}
-    {{- $calls := regexFindAll (include "collectors.rbac.blockPattern" (dict "name" (regexQuoteMeta $scope.name) "nested" .nested)) $parent.text -1 }}
-    {{- if $calls }}{{ $values = list }}{{ end }}
-    {{- range $call := $calls }}
-      {{- $value := include "collectors.rbac.attribute" (dict "body" (include "collectors.rbac.body" (dict "block" $call)) "name" $argument) }}
-      {{- if or (not $value) (and (regexMatch `^\[\s*\]$` $value) (ne $default "null")) }}{{ $value = $default }}{{ end }}
-      {{- $values = concat $values (include "collectors.rbac.argumentValues" (dict "value" $value "scopes" $.scopes "scope" $scope.parent "nested" $.nested "depth" (add1 (int $.depth))) | fromYamlArray) }}
+    {{- $callPattern := include "collectors.rbac.blockPattern" (dict "name" (regexQuoteMeta $scope.name) "nested" .nested) }}
+    {{- $found := list }}
+    {{- range $caller := include "collectors.rbac.callerScopes" (dict "scopes" .scopes "scope" .scope) | fromYamlArray }}
+      {{- range $call := regexFindAll $callPattern (index $.scopes (int $caller)).text -1 }}
+        {{- $value := include "collectors.rbac.attribute" (dict "body" (include "collectors.rbac.body" (dict "block" $call)) "name" $argument) }}
+        {{- if or (not $value) (and (regexMatch `^\[\s*\]$` $value) (ne $default "null")) }}{{ $value = $default }}{{ end }}
+        {{- $found = concat $found (include "collectors.rbac.argumentValues" (dict "value" $value "scopes" $.scopes "scope" $caller "nested" $.nested "depth" (add1 (int $.depth))) | fromYamlArray) }}
+      {{- end }}
     {{- end }}
+    {{- if $found }}{{ $values = $found }}{{ end }}
   {{- end }}
 {{- end }}
 {{- $values | toYaml }}
