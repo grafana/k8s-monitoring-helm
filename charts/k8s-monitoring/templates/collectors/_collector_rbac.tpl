@@ -191,6 +191,8 @@
     {{- if not $references }}
       {{- $static := regexMatch `^\[` (include "collectors.rbac.attribute" (dict "body" $body "name" "targets")) }}
       {{- $sources = append $sources (dict "block" (ternary $item.block "" $static) "path" (ternary $item.path "" $static)) }}
+    {{- else if regexMatch `[\[,(]\s*\{` $body }}
+      {{- $sources = append $sources (dict "block" $item.block "path" $item.path) }}
     {{- end }}
   {{- end }}
   {{- $frontier = $next }}

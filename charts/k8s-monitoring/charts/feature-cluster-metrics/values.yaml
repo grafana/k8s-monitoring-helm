@@ -378,8 +378,9 @@ kubeControllerManager:
   # -- How to discover and scrape the Kube Controller Manager. Options are "pod" (find the component's Pod via the
   # `selectorLabel` in `kube-system`) or "eks-proxy" (scrape the [EKS Control Plane Metrics API](https://docs.aws.amazon.com/eks/latest/userguide/view-raw-metrics.html) on the Kubernetes API server,
   # used by Amazon EKS where the control plane is managed by AWS and has no discoverable Pods). `eks-proxy` requires
-  # Kubernetes 1.28+ and additional RBAC, which collectors with `rbac.mode: minimal` get automatically. See
-  # [RBAC](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/RBAC.md).
+  # Kubernetes 1.28+ and additional RBAC, which collectors with `rbac.mode: minimal` get automatically. With
+  # `rbac.mode: alloy`, add `{apiGroups: [metrics.eks.amazonaws.com], resources: [kcm/metrics], verbs: [get]}` to the
+  # collector's `rbac.clusterRules`.
   # @section -- Kube Controller Manager
   discoveryMode: pod
 
@@ -555,8 +556,9 @@ kubeScheduler:
   # -- How to discover and scrape the Kube Scheduler. Options are "pod" (find the component's Pod via the
   # `selectorLabel` in `kube-system`) or "eks-proxy" (scrape the [EKS Control Plane Metrics API](https://docs.aws.amazon.com/eks/latest/userguide/view-raw-metrics.html) on the Kubernetes API server,
   # used by Amazon EKS where the control plane is managed by AWS and has no discoverable Pods). `eks-proxy` requires
-  # Kubernetes 1.28+ and additional RBAC, which collectors with `rbac.mode: minimal` get automatically. See
-  # [RBAC](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/RBAC.md).
+  # Kubernetes 1.28+ and additional RBAC, which collectors with `rbac.mode: minimal` get automatically. With
+  # `rbac.mode: alloy`, add `{apiGroups: [metrics.eks.amazonaws.com], resources: [ksh/metrics, ksh/resourcemetrics], verbs: [get]}` to the
+  # collector's `rbac.clusterRules`.
   # @section -- Kube Scheduler
   discoveryMode: pod
 

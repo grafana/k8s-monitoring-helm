@@ -71,7 +71,10 @@ defines each bundle as RBAC rules.
 *   A scrape that sends the collector's ServiceAccount token gets what its targets check, based on where its targets
     come from: `get` on `nodes/metrics` for the kubelet, `get` on `nodes/proxy` through the API server's Node proxy
     (cluster metrics with `nodeAddressFormat: proxy`), the EKS Control Plane Metrics API (`discoveryMode: eks-proxy`),
-    and `get` on `/metrics` for anything else, such as the API server.
+    and `get` on `/metrics` for anything else, such as the API server. Scrapes at other paths only get `/metrics`, so
+    they can fail with `forbidden` errors.
+*   Annotation autodiscovery sends the ServiceAccount token by default, so its collector gets `get` on `/metrics`. Set
+    `annotationAutodiscovery.bearerToken.enabled: false` to remove it.
 
 The SDK Injector's ConfigMap writes don't appear in the configuration, so they come from values instead: `get`, `create`,
 and `update` on ConfigMaps in the release namespace, for the collectors listed in

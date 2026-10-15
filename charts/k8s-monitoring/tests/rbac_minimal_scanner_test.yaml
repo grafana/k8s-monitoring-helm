@@ -550,6 +550,34 @@ tests:
             - {nonResourceURLs: [/metrics], verbs: [get]}
         template: alloy-config.yaml
 
+  - it: grants static targets that are mixed with discovered targets
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            discovery.kubernetes "nodes" {
+              role = "node"
+            }
+            prometheus.scrape "mixed" {
+              targets = array.concat(
+                [{"__address__" = "kubernetes.default.svc:443"}],
+                discovery.kubernetes.nodes.targets,
+              )
+              bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+              forward_to        = []
+            }
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [nodes/metrics], verbs: [get]}
+            - {apiGroups: [""], resources: [nodes], verbs: [get, list, watch]}
+            - {nonResourceURLs: [/metrics], verbs: [get]}
+        template: alloy-config.yaml
+
   - it: fails when a scrape that sends the ServiceAccount token gets its targets from a module argument
     set:
       collectors:
