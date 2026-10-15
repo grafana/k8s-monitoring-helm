@@ -1,0 +1,117 @@
+// Feature: Cluster Metrics
+declare "cluster_metrics" {
+  argument "metrics_destinations" {
+    comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+  }
+  discovery.kubernetes "kube_state_metrics" {
+// This component was replaced by the chart's `replaceComponent` setting.
+role = "pod"
+selectors {
+  role  = "pod"
+  label = "app.kubernetes.io/name=kube-state-metrics"
+}
+} // discovery.kubernetes "kube_state_metrics"
+
+  discovery.relabel "kube_state_metrics" {
+    targets = discovery.kubernetes.kube_state_metrics.targets
+
+    rule {
+      action = "replace"
+      replacement = "kubernetes"
+      target_label = "source"
+    }
+
+  } // discovery.relabel "kube_state_metrics"
+
+  prometheus.scrape "kube_state_metrics" {
+    targets = discovery.relabel.kube_state_metrics.output
+    job_name = "integrations/kubernetes/kube-state-metrics"
+    scrape_interval = "60s"
+    scrape_timeout = "10s"
+    scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+    scrape_classic_histograms = false
+    scrape_native_histograms = false
+    convert_classic_histograms_to_nhcb = false
+    scheme = "http"
+    bearer_token_file = ""
+    tls_config {
+      insecure_skip_verify = true
+    }
+
+    clustering {
+      enabled = true
+    }
+    forward_to = [prometheus.relabel.kube_state_metrics.receiver]
+  } // prometheus.scrape "kube_state_metrics"
+
+  prometheus.relabel "kube_state_metrics" {
+    max_cache_size = 100000
+    rule {
+      source_labels = ["__name__"]
+      regex = "up|scrape_samples_scraped|kube_configmap_info|kube_configmap_metadata_resource_version|kube_cronjob.*|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_condition|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolume_status_phase|kube_persistentvolumeclaim_access_mode|kube_persistentvolumeclaim_info|kube_persistentvolumeclaim_labels|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_persistentvolumeclaim_status_phase|kube_pod_completion_time|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_last_terminated_timestamp|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_restart_policy|kube_pod_spec_volumes_persistentvolumeclaims_info|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_ready|kube_pod_status_reason|kube_pod_init_.*|kube_poddisruptionbudget_status_current_healthy|kube_poddisruptionbudget_status_desired_healthy|kube_replicaset.*|kube_resourcequota|kube_secret_metadata_resource_version|kube_statefulset.*"
+      action = "keep"
+    }
+    forward_to = argument.metrics_destinations.value
+  } // prometheus.relabel "kube_state_metrics"
+} // declare "cluster_metrics"
+cluster_metrics "feature" {
+  metrics_destinations = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+}
+
+
+
+
+
+// Destination: prometheus (prometheus)
+otelcol.exporter.prometheus "prometheus" {
+  add_metric_suffixes = true
+  resource_to_telemetry_conversion = false
+  keep_identifying_resource_attributes = true
+  forward_to = [prometheus.remote_write.prometheus.receiver]
+} // otelcol.exporter.prometheus "prometheus"
+
+prometheus.remote_write "prometheus" {
+  endpoint {
+    url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
+    headers = {
+    }
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["username"])
+      password = remote.kubernetes.secret.prometheus.data["password"]
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    send_native_histograms = false
+
+    queue_config {
+      capacity = 10000
+      min_shards = 1
+      max_shards = 50
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "30ms"
+      max_backoff = "5s"
+      retry_on_http_429 = true
+      sample_age_limit = "0s"
+    }
+  }
+
+  wal {
+    truncate_frequency = "2h"
+    min_keepalive_time = "5m"
+    max_keepalive_time = "8h"
+  }
+  external_labels = {
+    "cluster" = "rbac-minimal-extra-config",
+    "k8s_cluster_name" = "rbac-minimal-extra-config",
+  }
+} // prometheus.remote_write "prometheus"
+
+remote.kubernetes.secret "prometheus" {
+  name      = "prometheus-k8smon-k8s-monitoring"
+  namespace = "default"
+} // remote.kubernetes.secret "prometheus"
+

@@ -1,0 +1,91 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: rbac-minimal-extra-config
+
+subject:
+  releaseName: k8smon
+  path: ../../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: dependencies/credentials.yaml
+  - file: ../dependencies/collector-logs.yaml
+  - preset: prometheus
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+
+tests:
+  - type: kubernetes-objects-test
+    values:
+      checks:
+        - {kind: ClusterRole, name: k8smon-alloy-metrics-default-rbac}
+        - {kind: ClusterRole, name: k8smon-alloy-custom-default-rbac}
+        - {kind: Role, name: k8smon-alloy-custom-default-rbac, namespace: credentials}
+        - {kind: ClusterRole, name: k8smon-alloy-metrics, expect: {count: 0}}
+        - {kind: ClusterRole, name: k8smon-alloy-custom, expect: {count: 0}}
+
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: rbac-minimal-extra-config
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            PROMETHEUS_USER: promuser
+            PROMETHEUS_PASS: prometheuspassword
+          queries:
+            # The replaced component lists Pods in every namespace
+            - query: kube_node_info{cluster="$CLUSTER"}
+              type: promql
+            # extraConfig discovers Pods, and reads the remote_write credentials from a Secret by name
+            - query: alloy_build_info{cluster="$CLUSTER", job="extra-config"}
+              type: promql
+            # remote.kubernetes.configmap reads a ConfigMap by name
+            - query: alloy_build_info{cluster="$CLUSTER", job="extra-config", config_source="configmap"}
+              type: promql
+            # discovery.kubelet reads Pods from the kubelet with nodes/pods
+            - query: alloy_build_info{cluster="$CLUSTER", job="discovery-variants", source="kubelet"}
+              type: promql
+            # attach_metadata watches Nodes and Namespaces
+            - query: alloy_build_info{cluster="$CLUSTER", job="discovery-variants", source="attach-metadata", node_os="linux", namespace_name="default"}
+              type: promql
+            # EndpointSlice discovery in the release namespace
+            - query: alloy_build_info{cluster="$CLUSTER", job="discovery-variants", source="endpointslice"}
+              type: promql
+            # Ingress discovery in the credentials namespace
+            - query: alloy_build_info{cluster="$CLUSTER", job="discovery-variants", source="ingress"}
+              type: promql
+            # Forbidden scrapes are only logged at debug level, so check that every target is up
+            - query: up{cluster="$CLUSTER"} == 0
+              type: promql
+              expect:
+                count: 0
+
+        # Runs after the queries above pass, so every collector has already called the Kubernetes API.
+        - env:
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query_range
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+          queries:
+            # Every collector's logs arrive, so the empty result below means no errors rather than no logs
+            - query: sum by (instance) (count_over_time({job="collector-logs"}[1h]))
+              type: logql
+              expect:
+                count: 2
+            - query: '{job="collector-logs"} |~ `(?i)forbidden`'
+              type: logql
+              expect:
+                count: 0

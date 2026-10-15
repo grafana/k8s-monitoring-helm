@@ -252,9 +252,12 @@
 {{- range $_ := until 8 }}
   {{- $nested = printf `(?:[^{}]|\{%s\})*` $nested }}
 {{- end }}
+{{- $known := dict }}
+{{- range $item := .components }}{{ $_ := set $known $item.component true }}{{ end }}
 {{- $context := dict "collectorName" .collectorName "valuesPath" .valuesPath }}
 {{- $scopes := include "collectors.rbac.scopes" (dict "text" $text "nested" $nested "context" $context) | fromYamlArray }}
 {{- range $scopeIndex, $scope := $scopes }}
+  {{- $matched := dict }}
   {{- range $item := $.components }}
     {{- $name := regexQuoteMeta $item.component }}
     {{- $blocks := regexFindAll (include "collectors.rbac.blockPattern" (dict "name" $name "nested" $nested)) $scope.text -1 }}
@@ -269,6 +272,7 @@
         {{- if not (regexMatch (printf "(?s)%s" $pattern) $inner) }}{{ $applies = false }}{{ end }}
       {{- end }}
       {{- if $applies }}
+        {{- $_ := set $matched $block true }}
         {{- $body := include "collectors.rbac.body" (dict "block" $block) }}
         {{- if $item.namedObject }}
           {{- $objectName := include "collectors.rbac.literal" (dict "value" (include "collectors.rbac.attribute" (dict "body" $body "name" "name"))) }}
@@ -312,6 +316,19 @@
           {{- end }}
         {{- end }}
       {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- range $block := regexFindAll (include "collectors.rbac.blockPattern" (dict "name" `[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+` "nested" $nested)) $scope.text -1 }}
+    {{- $block = regexReplaceAll `^[^A-Za-z_]+` $block "" }}
+    {{- $component := regexReplaceAll `^([A-Za-z0-9_.]+)(?s:.*)$` $block "${1}" }}
+    {{- if hasPrefix "import." $component }}
+      {{- include "collectors.rbac.unsupported" (merge (dict "problem" (printf "uses %s, which loads configuration that can't be scanned" $component)) $context) }}
+    {{- end }}
+    {{- if and (regexMatch `kubernetes|kubelet|k8s` $component) (not (hasKey $known $component)) }}
+      {{- include "collectors.rbac.unsupported" (merge (dict "problem" (printf "uses %s, which minimal RBAC doesn't know about" $component)) $context) }}
+    {{- end }}
+    {{- if and (contains "/var/run/secrets/kubernetes.io/serviceaccount/token" $block) (not (hasKey $matched $block)) }}
+      {{- include "collectors.rbac.unsupported" (merge (dict "problem" (printf "has a %s block that uses the ServiceAccount token" $component)) $context) }}
     {{- end }}
   {{- end }}
 {{- end }}
