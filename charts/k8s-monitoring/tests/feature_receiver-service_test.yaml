@@ -149,6 +149,125 @@ tests:
               protocol: TCP
               appProtocol: grpc
 
+  - it: inherits externalTrafficPolicy from the collector's service
+    capabilities:
+      majorVersion: 1
+      minorVersion: 26
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-receiver:
+          extraConfig: " "
+          extraService:
+            enabled: true
+          service:
+            type: LoadBalancer
+            externalTrafficPolicy: Local
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: spec.externalTrafficPolicy
+          value: Local
+
+  - it: does not set externalTrafficPolicy for a ClusterIP Service
+    capabilities:
+      majorVersion: 1
+      minorVersion: 26
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-receiver:
+          extraConfig: " "
+          extraService:
+            enabled: true
+          service:
+            externalTrafficPolicy: Local
+    asserts:
+      - hasDocuments:
+          count: 1
+      - notExists:
+          path: spec.externalTrafficPolicy
+
+  - it: inherits trafficDistribution from the collector's service
+    capabilities:
+      majorVersion: 1
+      minorVersion: 34
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-receiver:
+          extraConfig: " "
+          extraService:
+            enabled: true
+          service:
+            trafficDistribution: PreferSameZone
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: spec.trafficDistribution
+          value: PreferSameZone
+
+  - it: does not set trafficDistribution before Kubernetes 1.34
+    capabilities:
+      majorVersion: 1
+      minorVersion: 33
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-receiver:
+          extraConfig: " "
+          extraService:
+            enabled: true
+          service:
+            trafficDistribution: PreferSameZone
+    asserts:
+      - hasDocuments:
+          count: 1
+      - notExists:
+          path: spec.trafficDistribution
+
+  - it: sets the nodePort of extraPorts for a NodePort Service
+    capabilities:
+      majorVersion: 1
+      minorVersion: 26
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-receiver:
+          extraConfig: " "
+          extraService:
+            enabled: true
+          service:
+            type: NodePort
+          alloy:
+            extraPorts:
+              - name: tcp-ingest
+                port: 1515
+                targetPort: 1515
+                nodePort: 31515
+                protocol: TCP
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: spec.ports
+          value:
+            - name: http-metrics
+              nodePort: 31128
+              port: 12345
+              targetPort: 12345
+              protocol: TCP
+            - name: tcp-ingest
+              nodePort: 31515
+              port: 1515
+              targetPort: 1515
+              protocol: TCP
+      - equal:
+          path: spec.externalTrafficPolicy
+          value: Cluster
+
   - it: has the right selectors
     set:
       cluster: {name: test-cluster}

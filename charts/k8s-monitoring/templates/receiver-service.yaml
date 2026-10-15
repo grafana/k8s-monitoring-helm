@@ -25,6 +25,14 @@ spec:
   selector:{{ include "collector.alloy.selectorLabels" $values | nindent 4 }}
   {{- if semverCompare ">=1.26-0" $.Capabilities.KubeVersion.Version }}
   internalTrafficPolicy: {{ $collectorValues.service.internalTrafficPolicy}}
+  {{- if or (eq $collectorValues.service.type "LoadBalancer") (eq $collectorValues.service.type "NodePort") }}
+  externalTrafficPolicy: {{ $collectorValues.service.externalTrafficPolicy }}
+  {{- end }}
+  {{- end }}
+  {{- if semverCompare ">=1.34-0" $.Capabilities.KubeVersion.Version }}
+  {{- with $collectorValues.service.trafficDistribution }}
+  trafficDistribution: {{ . }}
+  {{- end }}
   {{- end }}
   ports:
     - name: http-metrics
@@ -36,6 +44,9 @@ spec:
       protocol: "TCP"
 {{- range $portMap := $collectorValues.alloy.extraPorts }}
     - name: {{ $portMap.name }}
+      {{- if eq $collectorValues.service.type "NodePort" }}
+      nodePort: {{ $portMap.nodePort }}
+      {{- end }}
       port: {{ $portMap.port }}
       targetPort: {{ $portMap.targetPort }}
       protocol: {{ coalesce $portMap.protocol "TCP" }}
