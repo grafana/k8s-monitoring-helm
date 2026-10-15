@@ -1,0 +1,23 @@
+---
+# Alloy components that use the Kubernetes API, and the rbac-bundles.yaml bundles they need. See docs/RBAC.md.
+- component: discovery.kubernetes
+  scope: namespacesBlock
+  roles:
+    pod: [pods]
+    service: [services]
+    endpoints: [endpoints]
+    endpointslice: [endpointslices]
+    ingress: [ingresses]
+    node: [nodes]
+- component: discovery.kubernetes
+  match: 'attach_metadata\s*\{[^{}]*\bnode\s*=\s*true'
+  bundles: [nodes]
+- component: discovery.kubernetes
+  match: 'attach_metadata\s*\{[^{}]*\bnamespace\s*=\s*true'
+  bundles: [namespaces]
+- component: discovery.kubelet
+  bundles: [kubeletPods]
+- component: remote.kubernetes.secret
+  namedObject: secret
+- component: remote.kubernetes.configmap
+  namedObject: configMap

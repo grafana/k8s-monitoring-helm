@@ -296,7 +296,7 @@ HELM_TEMPLATE_DEPS := Chart.yaml Chart.lock values.yaml values.schema.json \
 	$(COLLECTOR_VALUES_FILES) \
 	collectors/upstream/alloy-values.yaml \
 	default-remove-lists/resource-attributes.yaml \
-	collectors/rbac-bundles.yaml \
+	collectors/rbac-bundles.yaml collectors/alloy-kubernetes-api.yaml \
 	$(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
 
 %/output.yaml: %/values.yaml $(HELM_TEMPLATE_DEPS) | build-features

@@ -97,7 +97,7 @@ spec:{{ $alloySpec | trim | nindent 2 }}
 
 {{- /* With rbac.mode: minimal, the service graph instance's RBAC objects follow as separate documents. */}}
 {{- if eq (include "collector.alloy.rbacMode" $alloyValues) "minimal" }}
-{{- include "collectors.rbac.instance" (dict "root" $ "values" $values "alloyValues" $alloyValues) }}
+{{- include "collectors.rbac.instance" (dict "root" $ "values" $values "alloyValues" $alloyValues "config" $alloyConfig "valuesPath" (printf "destinations.%s.processors.serviceGraphMetrics.collector" $destinationName)) }}
 {{- end }}
 {{- end }}
 {{- end }}

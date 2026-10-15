@@ -53,8 +53,24 @@ chart. `--create-namespace` only creates the release namespace.
 
 ## How the rules are computed
 
-The SDK Injector's ConfigMap writes come from values: `get`, `create`, and `update` on ConfigMaps in the release
-namespace, for the collectors listed in `telemetryServices.sdkInjector.allowedConfigMapWriters`.
+The chart scans each collector's final configuration, including `extraConfig`, `replaceComponent`, custom destinations,
+and custom data processors, for the components listed in
+[collectors/alloy-kubernetes-api.yaml](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/collectors/alloy-kubernetes-api.yaml).
+That file maps each component to the bundles it needs, and
+[collectors/rbac-bundles.yaml](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/collectors/rbac-bundles.yaml)
+defines each bundle as RBAC rules.
+
+*   `discovery.kubernetes` gets the resources for its `role`, in the namespaces from its `namespaces` block. A `role`
+    that isn't a string literal gets every role's resources, cluster-wide.
+*   A component in a module (`declare`) that gets its namespaces from a module argument, like the integrations do, gets
+    the namespaces that the module's callers pass.
+*   `remote.kubernetes.secret` and `remote.kubernetes.configmap` get `get` on the object they name. If the `namespace`
+    isn't a string literal, that name is readable in every namespace. If the `name` isn't a string literal, every
+    object in the namespace is readable. Use string literals to keep this access small.
+
+The SDK Injector's ConfigMap writes don't appear in the configuration, so they come from values instead: `get`, `create`,
+and `update` on ConfigMaps in the release namespace, for the collectors listed in
+`telemetryServices.sdkInjector.allowedConfigMapWriters`.
 
 ## Configuration that minimal mode fails on
 
@@ -69,6 +85,7 @@ The render fails, and says to use `rbac.mode: alloy` for that collector, when:
 *   `image.tag` is set to a different Alloy version than the one this chart uses by default, or `image.digest` is set.
     Minimal mode's rules are only verified against the default version, so it can't guarantee correct RBAC for another
     one. Variants of the default version, like the Windows image that the `windows` preset sets, are allowed.
+*   A component block can't be read, for example because of unbalanced braces.
 
 If minimal mode fails on configuration that it should support, please
 [open an issue](https://github.com/grafana/k8s-monitoring-helm/issues).

@@ -1,4 +1,35 @@
 ---
+pods:
+  rules:
+    - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
+services:
+  rules:
+    - {apiGroups: [""], resources: [services], verbs: [get, list, watch]}
+endpoints:
+  rules:
+    - {apiGroups: [""], resources: [endpoints, services, pods], verbs: [get, list, watch]}
+endpointslices:
+  rules:
+    - {apiGroups: [discovery.k8s.io], resources: [endpointslices], verbs: [get, list, watch]}
+    - {apiGroups: [""], resources: [services, pods], verbs: [get, list, watch]}
+ingresses:
+  rules:
+    - {apiGroups: [networking.k8s.io], resources: [ingresses], verbs: [get, list, watch]}
+nodes:
+  rules:
+    - {apiGroups: [""], resources: [nodes], verbs: [get, list, watch], clusterScoped: true}
+namespaces:
+  rules:
+    - {apiGroups: [""], resources: [namespaces], verbs: [get, list, watch], clusterScoped: true}
+kubeletPods:
+  rules:
+    - {apiGroups: [""], resources: [nodes/pods], verbs: [get], clusterScoped: true}
+secret:
+  rules:
+    - {apiGroups: [""], resources: [secrets], verbs: [get]}
+configMap:
+  rules:
+    - {apiGroups: [""], resources: [configmaps], verbs: [get]}
 configMapWriter:
   rules:
     - {apiGroups: [""], resources: [configmaps], verbs: [get, create, update]}
