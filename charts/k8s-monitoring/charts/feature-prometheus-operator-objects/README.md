@@ -50,6 +50,16 @@ Be sure perform actual integration testing in a live environment in the main [k8
 <!-- markdownlint-enable no-bare-urls -->
 ## Values
 
+### Prometheus Operator Objects
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| convertClassicHistogramsToNhcb | string | `nil` | Override `global.convertClassicHistogramsToNhcb` for operator-object scrapes only. |
+| nativeHistogramBucketLimit | string | `nil` | Override `global.nativeHistogramBucketLimit` for operator-object scrapes only. |
+| nativeHistogramMinBucketFactor | string | `nil` | Override `global.nativeHistogramMinBucketFactor` for operator-object scrapes only. |
+| scrapeClassicHistograms | string | `nil` | Override `global.scrapeClassicHistograms` for operator-object scrapes only. |
+| scrapeNativeHistograms | string | `nil` | Override `global.scrapeNativeHistograms` for operator-object scrapes only. |
+
 ### Global Settings
 
 | Key | Type | Default | Description |

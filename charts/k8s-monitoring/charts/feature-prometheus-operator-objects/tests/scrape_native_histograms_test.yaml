@@ -59,6 +59,38 @@ tests:
           path: data["module.alloy"]
           pattern: native_histogram_min_bucket_factor = 1\.1
 
+  - it: renders a large nativeHistogramBucketLimit without truncating it to zero
+    # Large numbers are parsed as float64 by Helm and stringify to scientific
+    # notation (e.g. "1e+06"); the template must coerce through float64 before int
+    # so the value survives instead of silently rendering as 0.
+    set:
+      testing: {enabled: true}
+      global:
+        scrapeNativeHistograms: true
+        nativeHistogramBucketLimit: 1000000
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: native_histogram_bucket_limit = 1000000
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: native_histogram_bucket_limit = 0
+
+  - it: honors a large per-feature nativeHistogramBucketLimit override
+    set:
+      testing: {enabled: true}
+      global:
+        nativeHistogramBucketLimit: 100
+      nativeHistogramBucketLimit: 2000000
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: native_histogram_bucket_limit = 2000000
+
   - it: disables histogram bucket merging options by default
     set:
       testing: {enabled: true}
