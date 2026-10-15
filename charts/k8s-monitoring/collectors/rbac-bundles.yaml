@@ -22,9 +22,24 @@ nodes:
 namespaces:
   rules:
     - {apiGroups: [""], resources: [namespaces], verbs: [get, list, watch], clusterScoped: true}
+kubeletMetrics:
+  rules:
+    - {apiGroups: [""], resources: [nodes/metrics], verbs: [get], clusterScoped: true}
+kubeletProxy:
+  rules:
+    - {apiGroups: [""], resources: [nodes/proxy], verbs: [get], clusterScoped: true}
 kubeletPods:
   rules:
     - {apiGroups: [""], resources: [nodes/pods], verbs: [get], clusterScoped: true}
+metricsEndpoint:
+  rules:
+    - {nonResourceURLs: [/metrics], verbs: [get]}
+eksKubeControllerManagerMetrics:
+  rules:
+    - {apiGroups: [metrics.eks.amazonaws.com], resources: [kcm/metrics], verbs: [get], clusterScoped: true}
+eksKubeSchedulerMetrics:
+  rules:
+    - {apiGroups: [metrics.eks.amazonaws.com], resources: [ksh/metrics, ksh/resourcemetrics], verbs: [get], clusterScoped: true}
 secret:
   rules:
     - {apiGroups: [""], resources: [secrets], verbs: [get]}

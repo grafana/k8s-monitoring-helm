@@ -1,0 +1,47 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:braces rule:commas
+suite: RBAC - Minimal mode - Notes
+release:
+  name: test
+  namespace: monitoring
+templates:
+  - alloy-config.yaml
+  - NOTES.txt
+set:
+  cluster: {name: test-cluster}
+  selfReporting: {enabled: false}
+tests:
+  - it: warns about the nodes/proxy grant
+    set:
+      clusterMetrics:
+        enabled: true
+        kubelet: {nodeAddressFormat: proxy}
+        kube-state-metrics: {enabled: false}
+      destinations:
+        prometheus: {type: prometheus, url: http://prometheus.prometheus.svc:9090/api/v1/write}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+          rbac: {mode: minimal}
+    asserts:
+      - matchRegexRaw:
+          pattern: 'so they were granted\s+"get" on nodes/proxy'
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: '\* alloy-metrics: clusterMetrics.kubelet'
+        template: NOTES.txt
+
+  - it: adds no RBAC notes in alloy mode
+    set:
+      clusterMetrics:
+        enabled: true
+        kubelet: {nodeAddressFormat: proxy}
+        kube-state-metrics: {enabled: false}
+      destinations:
+        prometheus: {type: prometheus, url: http://prometheus.prometheus.svc:9090/api/v1/write}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, statefulset]
+    asserts:
+      - notMatchRegexRaw:
+          pattern: 'nodes/proxy|rbac-'
+        template: NOTES.txt

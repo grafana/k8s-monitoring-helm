@@ -455,6 +455,121 @@ tests:
             - {apiGroups: [""], resources: [services], verbs: [get, list, watch]}
         template: alloy-config.yaml
 
+  - it: grants nodes/metrics to scrapes of Node targets that send the ServiceAccount token
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            discovery.kubernetes "nodes" {
+              role = "node"
+            }
+            discovery.relabel "kubelet" {
+              targets = discovery.kubernetes.nodes.targets
+            }
+            prometheus.scrape "kubelet" {
+              targets           = discovery.relabel.kubelet.output
+              scheme            = "https"
+              bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+              forward_to        = []
+            }
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [nodes/metrics], verbs: [get]}
+            - {apiGroups: [""], resources: [nodes], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
+  - it: grants nodes/proxy to scrapes through the API server's Node proxy
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            discovery.kubernetes "nodes" {
+              role = "node"
+            }
+            discovery.relabel "kubelet" {
+              targets = discovery.kubernetes.nodes.targets
+              rule {
+                target_label = "__address__"
+                replacement  = "kubernetes.default.svc:443"
+              }
+              rule {
+                source_labels = ["__meta_kubernetes_node_name"]
+                replacement   = "/api/v1/nodes/${1}/proxy/metrics"
+                target_label  = "__metrics_path__"
+              }
+            }
+            prometheus.scrape "kubelet" {
+              targets           = discovery.relabel.kubelet.output
+              scheme            = "https"
+              bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+              forward_to        = []
+            }
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [nodes/proxy], verbs: [get]}
+            - {apiGroups: [""], resources: [nodes], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
+  - it: grants /metrics to other scrapes that send the ServiceAccount token, following every source of targets
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            discovery.kubernetes "pods" {
+              role = "pod"
+            }
+            discovery.kubernetes "services" {
+              role = "service"
+            }
+            prometheus.scrape "secure" {
+              targets = array.concat(
+                discovery.kubernetes.pods.targets,
+                discovery.kubernetes.services.targets,
+              )
+              bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+              forward_to        = []
+            }
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [pods, services], verbs: [get, list, watch]}
+            - {nonResourceURLs: [/metrics], verbs: [get]}
+        template: alloy-config.yaml
+
+  - it: fails when a scrape that sends the ServiceAccount token gets its targets from a module argument
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            declare "scrape" {
+              argument "targets" { }
+              prometheus.scrape "default" {
+                targets           = argument.targets.value
+                bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+                forward_to        = []
+              }
+            }
+    asserts:
+      - failedTemplate:
+          errorPattern: 'has a prometheus.scrape block that uses the ServiceAccount token, and where its targets come from can.t be followed'
+        template: alloy-config.yaml
+
   - it: fails when a declare block can't be read
     set:
       collectors:

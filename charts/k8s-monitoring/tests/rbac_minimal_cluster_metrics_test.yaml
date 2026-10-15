@@ -1,0 +1,149 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:braces rule:commas
+suite: RBAC - Minimal mode - Cluster metrics
+release:
+  name: test
+  namespace: monitoring
+templates:
+  - alloy-config.yaml
+set:
+  cluster: {name: test-cluster}
+  destinations:
+    prometheus: {type: prometheus, url: http://prometheus.prometheus.svc:9090/api/v1/write}
+  clusterMetrics: {enabled: true}
+  collectors:
+    alloy-metrics:
+      presets: [clustered, statefulset]
+      rbac: {mode: minimal}
+tests:
+  - it: grants node and kubelet access, and kube-state-metrics discovery in its namespace
+    set:
+      telemetryServices:
+        kube-state-metrics: {deploy: true}
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [nodes/metrics], verbs: [get]}
+            - {apiGroups: [""], resources: [nodes], verbs: [get, list, watch]}
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: metadata.namespace
+          value: monitoring
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [endpoints, pods, services], verbs: [get, list, watch]}
+
+  - it: grants nodes/proxy instead of nodes/metrics for nodeAddressFormat proxy
+    set:
+      clusterMetrics:
+        kubelet: {nodeAddressFormat: proxy}
+        cadvisor: {enabled: false}
+        kubeletResource: {enabled: false}
+        kube-state-metrics: {enabled: false}
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [nodes/proxy], verbs: [get]}
+            - {apiGroups: [""], resources: [nodes], verbs: [get, list, watch]}
+
+  - it: grants control plane discovery in default and kube-system
+    set:
+      clusterMetrics:
+        controlPlane: {enabled: true}
+        kube-state-metrics: {enabled: false}
+    asserts:
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'default')].kind"
+          value: Role
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [discovery.k8s.io], resources: [endpointslices], verbs: [get, list, watch]}
+            - {apiGroups: [""], resources: [pods, services], verbs: [get, list, watch]}
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'kube-system')].kind"
+          value: Role
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [discovery.k8s.io], resources: [endpointslices], verbs: [get, list, watch]}
+            - {apiGroups: [""], resources: [pods, services], verbs: [get, list, watch]}
+      - documentSelector: {path: kind, value: ClusterRole}
+        contains:
+          path: rules
+          content: {nonResourceURLs: [/metrics], verbs: [get]}
+
+  - it: grants the EKS Control Plane Metrics API for eks-proxy
+    set:
+      clusterMetrics:
+        kubelet: {enabled: false}
+        cadvisor: {enabled: false}
+        kubeletResource: {enabled: false}
+        kube-state-metrics: {enabled: false}
+        kubeControllerManager: {enabled: true, discoveryMode: eks-proxy}
+        kubeScheduler: {enabled: true, discoveryMode: eks-proxy}
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [metrics.eks.amazonaws.com], resources: [kcm/metrics, ksh/metrics, ksh/resourcemetrics], verbs: [get]}
+
+  - it: grants /metrics when kube-state-metrics is scraped with the ServiceAccount token
+    set:
+      clusterMetrics:
+        kubelet: {enabled: false}
+        cadvisor: {enabled: false}
+        kubeletResource: {enabled: false}
+        kube-state-metrics:
+          namespace: openshift-monitoring
+          labelMatchers: {app.kubernetes.io/name: kube-state-metrics}
+          bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+          service: {scheme: https}
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {nonResourceURLs: [/metrics], verbs: [get]}
+
+  - it: only grants the EKS Control Plane Metrics API for the components it scrapes
+    set:
+      clusterMetrics:
+        kubelet: {enabled: false}
+        cadvisor: {enabled: false}
+        kubeletResource: {enabled: false}
+        kube-state-metrics: {enabled: false}
+        kubeControllerManager: {enabled: true, discoveryMode: eks-proxy}
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [metrics.eks.amazonaws.com], resources: [kcm/metrics], verbs: [get]}
+
+  - it: uses the kube-state-metrics discovery type and namespace
+    set:
+      clusterMetrics:
+        kubelet: {enabled: false}
+        cadvisor: {enabled: false}
+        kubeletResource: {enabled: false}
+        kube-state-metrics:
+          namespace: ksm
+          discoveryType: service
+          labelMatchers: {app.kubernetes.io/name: kube-state-metrics}
+    asserts:
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: metadata.namespace
+          value: ksm
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [services], verbs: [get, list, watch]}
