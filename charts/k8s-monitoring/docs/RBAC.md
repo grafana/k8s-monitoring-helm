@@ -55,8 +55,7 @@ namespace, for the collectors listed in `telemetryServices.sdkInjector.allowedCo
 
 ## Configuration that minimal mode fails on
 
-Minimal mode never installs a collector that's missing permissions. Instead, the render fails and says to use
-`rbac.mode: alloy` for that collector, when:
+The render fails, and says to use `rbac.mode: alloy` for that collector, when:
 
 *   `remoteConfig.enabled` is set. Remote configuration can run any component, so the chart can't compute its rules.
 *   `rbac.rules`, `rbac.clusterRules`, or `rbac.namespaces` is set. These aren't supported in minimal mode yet. They
