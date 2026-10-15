@@ -137,16 +137,16 @@
 {{- dict "cluster" (include "collectors.rbac.groupRules" $cluster | fromYamlArray) "namespaced" $namespaced | toYaml }}
 {{- end }}
 
-{{/* Renders the ClusterRole, a Role per namespace, and their bindings to the instance's ServiceAccount, skipping the ClusterRole when it has no rules. Inputs: name (instance fullname), namespace, labels, serviceAccountName, resolved */}}
+{{/* Renders the ClusterRole, a Role per namespace, and their bindings to the instance's ServiceAccount, skipping the ClusterRole when it has no rules. The ClusterRole and Roles outside the release namespace include the release namespace in their names, so releases with the same name in different namespaces don't collide. Inputs: name (instance fullname), namespace, labels, serviceAccountName, resolved */}}
 {{- define "collectors.rbac.render" }}
 {{- $subjects := list (dict "kind" "ServiceAccount" "name" .serviceAccountName "namespace" .namespace) }}
-{{- $clusterName := printf "%s-rbac" .name }}
+{{- $qualifiedName := printf "%s-%s-rbac" .name .namespace }}
 {{- if .resolved.cluster }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ $clusterName }}
+  name: {{ $qualifiedName }}
   labels:
     {{- toYaml .labels | nindent 4 }}
 rules:
@@ -155,20 +155,18 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ $clusterName }}
+  name: {{ $qualifiedName }}
   labels:
     {{- toYaml .labels | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ $clusterName }}
+  name: {{ $qualifiedName }}
 subjects:
   {{- toYaml $subjects | nindent 2 }}
 {{- end }}
 {{- range $namespace, $rules := .resolved.namespaced }}
-{{- $name := $clusterName }}
-{{- /* Releases with the same name in different namespaces can share a Secret namespace. */}}
-{{- if ne $namespace $.namespace }}{{ $name = printf "%s-%s-rbac" $.name $.namespace }}{{ end }}
+{{- $name := ternary (printf "%s-rbac" $.name) $qualifiedName (eq $namespace $.namespace) }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role

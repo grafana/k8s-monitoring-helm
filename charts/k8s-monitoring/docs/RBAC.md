@@ -8,6 +8,8 @@ Each collector needs Kubernetes RBAC permissions to discover targets and read th
 | `alloy` (default)  | The Alloy Operator, using the Alloy chart | The same broad ClusterRole for every collector                            |
 | `minimal`          | This chart                               | Only what the collector's configuration needs, scoped to namespaces where possible |
 
+`minimal` is experimental, so how it works can change in later releases.
+
 To use minimal RBAC for every collector, set it once:
 
 ```yaml
@@ -40,10 +42,11 @@ In `minimal` mode, the chart reads each collector's final Alloy configuration an
     that object only.
 *   The ClusterRole and Roles show up in `helm template` output, so they can be reviewed.
 
-The objects are named `<collector full name>-rbac`. Roles outside the release namespace, such as the one for a
-destination's Secret in another namespace, are named `<collector full name>-<release namespace>-rbac`, so releases with
-the same name in different namespaces don't collide. They are bound to the collector's ServiceAccount, which the Alloy
-Operator still creates. The `Alloy` resource gets `rbac.create: false`, so the operator doesn't create its own RBAC.
+The ClusterRole, its binding, and Roles outside the release namespace, such as the one for a destination's Secret in
+another namespace, are named `<collector full name>-<release namespace>-rbac`, so releases with the same name in
+different namespaces don't collide. Roles in the release namespace are named `<collector full name>-rbac`. They are
+bound to the collector's ServiceAccount, which the Alloy Operator still creates. The `Alloy` resource gets
+`rbac.create: false`, so the operator doesn't create its own RBAC.
 
 Roles are created in the namespaces that the configuration names, so those namespaces must exist before you install the
 chart. `--create-namespace` only creates the release namespace.
@@ -67,7 +70,8 @@ If minimal mode fails on configuration that it should support, please
 
 ## Other RBAC settings
 
-To create no RBAC at all for a collector, set `rbac.create: false`.
+To create no RBAC objects for a collector, set `rbac.create: false`. In `alloy` mode, the SDK Injector's ConfigMap Role
+from `sdk-injector-rbac.yaml` still renders when the SDK Injector is deployed.
 
 ## Switching modes
 
@@ -77,6 +81,10 @@ during the switch.
 
 Switching from `minimal` back to `alloy` removes the chart's RBAC objects right away, but the Alloy Operator only
 recreates its own when it reconciles the `Alloy` resource. The collector may lack permissions for a short time.
+
+When the SDK Injector is deployed, `alloy` mode lets every enabled collector write ConfigMaps in the release namespace.
+`minimal` mode only lets the collectors listed in `telemetryServices.sdkInjector.allowedConfigMapWriters` write them, so
+a collector that isn't listed loses that permission when it switches to `minimal`.
 
 ## The Alloy Operator's permissions
 

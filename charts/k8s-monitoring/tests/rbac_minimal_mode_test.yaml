@@ -190,14 +190,13 @@ tests:
           errorPattern: 'The alloy-singleton collector uses rbac.mode: minimal, but does not create a ServiceAccount or name one'
         template: validations.yaml
 
-  - it: fails on an unknown mode
+  - it: rejects an unknown mode in the schema
     set:
       collectors:
         alloy-singleton: {presets: [singleton], rbac: {mode: tiny}}
     asserts:
       - failedTemplate:
-          errorPattern: 'The alloy-singleton collector has an unknown RBAC mode: "tiny"'
-        template: validations.yaml
+          errorPattern: 'collectors.alloy-singleton.rbac.mode must be one of the following: "alloy", "minimal"'
 
   - it: replaces the SDK Injector shim with a Role for listed ConfigMap writers
     set:
