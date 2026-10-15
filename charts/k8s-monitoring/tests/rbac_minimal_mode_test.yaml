@@ -191,6 +191,40 @@ tests:
           errorPattern: 'The alloy-singleton collector uses rbac.mode: minimal with its own configuration ConfigMap'
         template: validations.yaml
 
+  - it: fails for collectors that run a different Alloy version
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          image: {tag: v1.19.0}
+    asserts:
+      - failedTemplate:
+          errorPattern: 'The alloy-singleton collector uses rbac.mode: minimal with Alloy image tag "v1.19.0", but minimal mode.s RBAC is only verified for Alloy v'
+        template: validations.yaml
+
+  - it: fails for collectors with an image digest
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          image: {digest: "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"}
+    asserts:
+      - failedTemplate:
+          errorPattern: 'The alloy-singleton collector uses rbac.mode: minimal with an image digest'
+        template: validations.yaml
+
+  - it: allows the Windows build of the default Alloy version
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton, windows]
+          rbac: {mode: minimal}
+    asserts:
+      - notFailedTemplate: {}
+        template: validations.yaml
+
   - it: fails when no ServiceAccount is created or named
     set:
       collectors:

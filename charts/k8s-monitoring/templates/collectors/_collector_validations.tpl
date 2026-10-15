@@ -205,6 +205,18 @@
         {{- fail (join "\n" $msg) }}
       {{- end }}
     {{- end }}
+    {{- $pinnedTag := include "collector.alloy.pinnedImageTag" . }}
+    {{- $tag := dig "image" "tag" "" .collectorValues | toString }}
+    {{- if dig "image" "digest" "" .collectorValues }}
+      {{- $msg := list "" (printf "The %s collector uses rbac.mode: minimal with an image digest. Minimal mode's RBAC is only verified for Alloy %s, and a digest can't be checked against it." .name $pinnedTag) }}
+      {{- $msg = append $msg (printf "Please remove %s.image.digest, or set %s.rbac.mode to \"alloy\"." $path $path) }}
+      {{- fail (join "\n" $msg) }}
+    {{- end }}
+    {{- if and $tag (ne $tag $pinnedTag) (not (hasPrefix (printf "%s-" $pinnedTag) $tag)) }}
+      {{- $msg := list "" (printf "The %s collector uses rbac.mode: minimal with Alloy image tag %q, but minimal mode's RBAC is only verified for Alloy %s." .name $tag $pinnedTag) }}
+      {{- $msg = append $msg (printf "Please remove %s.image.tag, or set %s.rbac.mode to \"alloy\"." $path $path) }}
+      {{- fail (join "\n" $msg) }}
+    {{- end }}
     {{- if and (not (dig "serviceAccount" "create" true .collectorValues)) (not (dig "serviceAccount" "name" "" .collectorValues)) }}
       {{- $msg := list "" (printf "The %s collector uses rbac.mode: minimal, but does not create a ServiceAccount or name one." .name) }}
       {{- $msg = append $msg "Its RBAC would be granted to the namespace's \"default\" ServiceAccount." }}

@@ -66,6 +66,9 @@ The render fails, and says to use `rbac.mode: alloy` for that collector, when:
 *   `rbac.rules`, `rbac.clusterRules`, or `rbac.namespaces` is set. These aren't supported in minimal mode yet. They
     still work as before with `rbac.mode: alloy`.
 *   The collector doesn't create a ServiceAccount or name one.
+*   `image.tag` is set to a different Alloy version than the one this chart uses by default, or `image.digest` is set.
+    Minimal mode's rules are only verified against the default version, so it can't guarantee correct RBAC for another
+    one. Variants of the default version, like the Windows image that the `windows` preset sets, are allowed.
 
 If minimal mode fails on configuration that it should support, please
 [open an issue](https://github.com/grafana/k8s-monitoring-helm/issues).
