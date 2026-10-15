@@ -70,18 +70,8 @@ spec:{{ $alloySpec | trim | nindent 2 }}
 
 {{- /* With rbac.mode: minimal, the sampler's RBAC objects follow as separate documents. */}}
 {{- if eq (include "collector.alloy.rbacMode" $alloyValues) "minimal" }}
-{{- $rbacEntries := list }}
-{{- if eq (include "secrets.usesKubernetesSecret" $destination) "true" }}
-  {{- $rbacEntries = append $rbacEntries (include "collectors.rbac.secretEntry" (merge (dict "destination" $destination "destinationName" $destinationName) $) | fromYaml) }}
-{{- end }}
-{{- include "collectors.rbac.instance" (dict
-  "Files" $.Files
-  "collectorValues" $alloyValues
-  "entries" $rbacEntries
-  "name" $collectorName
-  "namespace" (include "helper.namespace" $)
-  "labels" (include "collector.alloy.labels" $ | fromYaml)
-  "serviceAccountName" (include "collector.alloy.serviceAccountName" (merge (dict "alloyValues" $alloyValues) $values))) }}
+{{- $rbacEntries := include "collectors.rbac.secretEntries" (merge (dict "destinationNames" (list $destinationName)) $) | fromYamlArray }}
+{{- include "collectors.rbac.instance" (dict "root" $ "values" $values "alloyValues" $alloyValues "entries" $rbacEntries) }}
 {{- end }}
 {{- end }}
 {{- end }}

@@ -68,14 +68,7 @@ data:
 {{- /* With rbac.mode: minimal, the collector's RBAC objects follow as separate documents. */}}
 {{- if eq (include "collector.alloy.rbacMode" $collectorValues) "minimal" }}
 {{- $rbacContext := merge (dict "destinationNames" $destinationNames "alloyValues" $collectorValues) $values }}
-{{- include "collectors.rbac.instance" (dict
-  "Files" $.Files
-  "collectorValues" $collectorValues
-  "entries" (include "collectors.rbac.entries" $rbacContext | fromYamlArray)
-  "name" (include "collector.alloy.fullname" $values)
-  "namespace" (include "helper.namespace" $)
-  "labels" (include "collector.alloy.labels" $values | fromYaml)
-  "serviceAccountName" (include "collector.alloy.serviceAccountName" $rbacContext)) }}
+{{- include "collectors.rbac.instance" (dict "root" $ "values" $values "alloyValues" $collectorValues "entries" (include "collectors.rbac.entries" $rbacContext | fromYamlArray)) }}
 {{- end }}
 {{- end }}
 {{- /*

@@ -85,8 +85,7 @@
   {{- end }}
 {{- end }}
 
-{{/* Inputs: Values (all values), collectorName (collector name), collectorValues (collector values, if not inside `.Values.collectors` map) */}}
-{{/* Inputs: . (root with collectorName), alloyValues (optional, the collector.alloy.values result) */}}
+{{/* Inputs: Values (all values), collectorName (collector name), collectorValues (collector values, if not inside `.Values.collectors` map), alloyValues (optional, the collector.alloy.values result) */}}
 {{- define "collector.alloy.serviceAccountName" }}
 {{- $collectorValues := .alloyValues }}
 {{- if not $collectorValues }}

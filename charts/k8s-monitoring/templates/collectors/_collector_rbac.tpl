@@ -1,6 +1,6 @@
 {{/* Inputs: . (root with collectorName), destinationNames, alloyValues (optional) */}}
 {{- define "collectors.rbac.entries" -}}
-{{- $entries := include "collectors.rbac.destinationEntries" $ | fromYamlArray }}
+{{- $entries := include "collectors.rbac.secretEntries" $ | fromYamlArray }}
 {{- $entries = concat $entries (include "collectors.rbac.sdkInjectorEntries" $ | fromYamlArray) }}
 {{- $entries | toYaml }}
 {{- end }}
@@ -11,8 +11,8 @@
 {{- dict "bundle" "secret" "namespaces" (list (include "secrets.kubernetesSecretNamespace" $secretArgs)) "resourceNames" (list (include "secrets.kubernetesSecretName" $secretArgs)) | toYaml }}
 {{- end }}
 
-{{/* Inputs: . (root with collectorName), destinationNames */}}
-{{- define "collectors.rbac.destinationEntries" -}}
+{{/* Inputs: . (root), destinationNames */}}
+{{- define "collectors.rbac.secretEntries" -}}
 {{- $entries := list }}
 {{- range $destinationName := .destinationNames }}
   {{- $destination := get $.Values.destinations $destinationName }}
@@ -131,15 +131,18 @@ subjects:
 {{- end }}
 {{- end }}
 
-{{/* Inputs: Files, collectorValues, entries, name (instance fullname), namespace, labels, serviceAccountName */}}
+{{/* Inputs: root, values (root-like with collectorName), alloyValues (the collector.alloy.values result), entries */}}
 {{- define "collectors.rbac.instance" }}
-{{- if dig "rbac" "create" true .collectorValues }}
-  {{- $catalog := .Files.Get "collectors/rbac-bundles.yaml" | fromYaml }}
+{{- if dig "rbac" "create" true .alloyValues }}
+  {{- $name := include "collector.alloy.fullname" .values }}
+  {{- $namespace := include "helper.namespace" .root }}
+  {{- $serviceAccountName := include "collector.alloy.serviceAccountName" (merge (dict "alloyValues" .alloyValues) .values) }}
+  {{- $catalog := .root.Files.Get "collectors/rbac-bundles.yaml" | fromYaml }}
   {{- $roles := dict }}
   {{- range $namespace, $rules := include "collectors.rbac.expand" (dict "catalog" $catalog "entries" .entries) | fromYaml }}
     {{- $_ := set $roles $namespace (include "collectors.rbac.groupRules" $rules | fromYamlArray) }}
   {{- end }}
-  {{- $labels := merge (dict "app.kubernetes.io/component" "rbac" "app.kubernetes.io/instance" .name) .labels }}
-  {{- include "collectors.rbac.render" (dict "name" .name "namespace" .namespace "labels" $labels "serviceAccountName" .serviceAccountName "roles" $roles) }}
+  {{- $labels := merge (dict "app.kubernetes.io/component" "rbac" "app.kubernetes.io/instance" $name) (include "collector.alloy.labels" .root | fromYaml) }}
+  {{- include "collectors.rbac.render" (dict "name" $name "namespace" $namespace "labels" $labels "serviceAccountName" $serviceAccountName "roles" $roles) }}
 {{- end }}
 {{- end }}

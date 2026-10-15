@@ -24,7 +24,6 @@
     {{- /* Destination components*/}}
     {{- $metricsDestinationNames := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "otlp" "filter" $destination.processors.serviceGraphMetrics.destinations) | fromYamlArray -}}
     {{- $destinationTargets := list }}
-    {{- $rbacEntries := list }}
     {{- $destinationConfigComponents := "" }}
     {{- range $metricsDestinationName := $metricsDestinationNames }}
       {{- $dest := get $.Values.destinations $metricsDestinationName }}
@@ -40,7 +39,6 @@
         {{- $destinationConfigComponents = cat $destinationConfigComponents ((include "destinations.prometheus.alloy" (deepCopy $ | merge (dict "destination" $destWithDefaults "destinationName" $metricsDestinationName))) | trim | nindent 0) }}
         {{- if eq (include "secrets.usesKubernetesSecret" $destWithDefaults) "true" }}
           {{- $destinationConfigComponents = cat $destinationConfigComponents (include "secret.alloy" (deepCopy $ | merge (dict "object" $destWithDefaults "name" $metricsDestinationName)) | nindent 0) }}
-          {{- $rbacEntries = append $rbacEntries (include "collectors.rbac.secretEntry" (merge (dict "destination" $destWithDefaults "destinationName" $metricsDestinationName) $) | fromYaml) }}
         {{- end }}
       {{- else }}
         {{- $defaultValues := "destinations/otlp-values.yaml" | $.Files.Get | fromYaml }}
@@ -52,7 +50,6 @@
         {{- $destinationConfigComponents = cat $destinationConfigComponents ((include "destinations.otlp.alloy.exporter" (dict "destination" $destWithDefaults "destinationName" $metricsDestinationName)) | trim | nindent 0) }}
         {{- if eq (include "secrets.usesKubernetesSecret" $destWithDefaults) "true" }}
           {{- $destinationConfigComponents = cat $destinationConfigComponents (include "secret.alloy" (deepCopy $ | merge (dict "object" $destWithDefaults "name" $metricsDestinationName)) | nindent 0) }}
-          {{- $rbacEntries = append $rbacEntries (include "collectors.rbac.secretEntry" (merge (dict "destination" $destWithDefaults "destinationName" $metricsDestinationName) $) | fromYaml) }}
         {{- end }}
       {{- end }}
     {{- end }}
@@ -100,14 +97,8 @@ spec:{{ $alloySpec | trim | nindent 2 }}
 
 {{- /* With rbac.mode: minimal, the service graph instance's RBAC objects follow as separate documents. */}}
 {{- if eq (include "collector.alloy.rbacMode" $alloyValues) "minimal" }}
-{{- include "collectors.rbac.instance" (dict
-  "Files" $.Files
-  "collectorValues" $alloyValues
-  "entries" $rbacEntries
-  "name" $collectorName
-  "namespace" (include "helper.namespace" $)
-  "labels" (include "collector.alloy.labels" $ | fromYaml)
-  "serviceAccountName" (include "collector.alloy.serviceAccountName" (merge (dict "alloyValues" $alloyValues) $values))) }}
+{{- $rbacEntries := include "collectors.rbac.secretEntries" (merge (dict "destinationNames" $metricsDestinationNames) $) | fromYamlArray }}
+{{- include "collectors.rbac.instance" (dict "root" $ "values" $values "alloyValues" $alloyValues "entries" $rbacEntries) }}
 {{- end }}
 {{- end }}
 {{- end }}
