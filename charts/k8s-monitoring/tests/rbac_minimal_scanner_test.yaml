@@ -356,3 +356,131 @@ tests:
           value:
             - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
         template: alloy-config.yaml
+
+  - it: scopes discovery to the release namespace and the listed namespaces with own_namespace
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            discovery.kubernetes "pods" {
+              role = "pod"
+              namespaces {
+                own_namespace = true
+                names         = ["team-a"]
+              }
+            }
+    asserts:
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'monitoring')].kind"
+          value: Role
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'team-a')].kind"
+          value: Role
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+      - hasDocuments:
+          count: 5
+        template: alloy-config.yaml
+
+  - it: grants every discovery role cluster-wide when the role isn't a literal string
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            discovery.kubernetes "dynamic" {
+              role = sys.env("ROLE")
+              namespaces {
+                names = ["team-a"]
+              }
+            }
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [discovery.k8s.io], resources: [endpointslices], verbs: [get, list, watch]}
+            - {apiGroups: [networking.k8s.io], resources: [ingresses], verbs: [get, list, watch]}
+            - {apiGroups: [""], resources: [endpoints, nodes, pods, services], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
+  - it: ignores braces inside strings and comments
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            // A comment with a stray { brace
+            discovery.kubernetes "brace" {
+              role = "service"
+              selectors {
+                role  = "service"
+                label = "a={b"
+              }
+            }
+            discovery.kubernetes "raw" {
+              role = "pod"
+              selectors {
+                role  = "pod"
+                field = `metadata.name={x`
+              }
+            }
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [pods, services], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
+  - it: keeps cluster-scoped resources in the ClusterRole when a component is limited to namespaces
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            discovery.kubernetes "nodes" {
+              role = "node"
+              namespaces {
+                names = ["team-a"]
+              }
+            }
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [nodes], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+      - hasDocuments:
+          count: 3
+        template: alloy-config.yaml
+
+  - it: fails when a component block can't be read
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            discovery.kubernetes "deep" {
+              role = "pod"
+              a { b { c { d { e { f { g { h { i { } } } } } } } } }
+            }
+    asserts:
+      - failedTemplate:
+          errorPattern: 'Could not read a discovery.kubernetes block to compute its RBAC'
+        template: alloy-config.yaml

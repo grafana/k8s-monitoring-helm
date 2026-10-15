@@ -284,8 +284,8 @@ PLATFORM_TEST_ALLOY_FILES := $(call alloy_rendered_files,$(PLATFORM_TEST_VALUES_
 PLATFORM_TEST_README_FILES := $(patsubst %/values.yaml,%/README.md,$(shell find tests/platform -name values.yaml))
 
 # Everything `helm template` reads while rendering the parent chart, so editing any of these re-renders the outputs.
-# Files pulled in with .Files.Get (the collector values, the extracted upstream alloy values, the collector presets, and
-# the OTLP resource-attributes remove-list) and the generated *.tpl files must be listed explicitly: the
+# Files pulled in with .Files.Get (the collector values, the extracted upstream alloy values, the collector presets, the
+# OTLP resource-attributes remove-list, and the RBAC catalogs) and the generated *.tpl files must be listed explicitly: the
 # $(CHART_TEMPLATE_FILES)/$(CHART_YAML_FILES) wildcards only cover templates/ and are evaluated (by find, at parse time)
 # before generated files exist.
 HELM_TEMPLATE_DEPS := Chart.yaml Chart.lock values.yaml values.schema.json \
@@ -296,6 +296,7 @@ HELM_TEMPLATE_DEPS := Chart.yaml Chart.lock values.yaml values.schema.json \
 	$(COLLECTOR_VALUES_FILES) \
 	collectors/upstream/alloy-values.yaml \
 	default-remove-lists/resource-attributes.yaml \
+	collectors/rbac-bundles.yaml collectors/alloy-kubernetes-api.yaml \
 	$(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
 
 %/output.yaml: %/values.yaml $(HELM_TEMPLATE_DEPS) | build-features
@@ -337,8 +338,7 @@ examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES)
 check-alloy-closures: $(EXAMPLE_ALLOY_FILES) $(INTEGRATION_TEST_ALLOY_FILES) $(PLATFORM_TEST_ALLOY_FILES)
 	awk -f ../../scripts/check-alloy-closures.awk $(EXAMPLE_ALLOY_FILES) $(INTEGRATION_TEST_ALLOY_FILES) $(PLATFORM_TEST_ALLOY_FILES)
 
-# Every example rendered with rbac.mode: minimal, for the RBAC drift check in tests/example-checks.
-# These examples use remoteConfig or rbac.namespaces, which minimal mode rejects.
+# Examples rendered with rbac.mode: minimal for the RBAC drift check, minus those using settings minimal mode rejects.
 RBAC_MINIMAL_UNSUPPORTED_EXAMPLE_VALUES_FILES := docs/examples/auth/external-secrets/values.yaml docs/examples/instrumentation-hub/values.yaml docs/examples/rbac-no-cluster-roles/values.yaml docs/examples/remote-config/values.yaml
 RBAC_MINIMAL_EXAMPLE_VALUES_FILES := $(filter-out $(RBAC_MINIMAL_UNSUPPORTED_EXAMPLE_VALUES_FILES),$(EXAMPLE_VALUES_FILES))
 RBAC_MINIMAL_OUTPUT_FILES := $(RBAC_MINIMAL_EXAMPLE_VALUES_FILES:docs/examples/%/values.yaml=tests/example-checks/.rendered/rbac-minimal/%.yaml)

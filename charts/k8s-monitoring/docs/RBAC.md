@@ -45,6 +45,9 @@ destination's Secret in another namespace, are named `<collector full name>-<rel
 the same name in different namespaces don't collide. They are bound to the collector's ServiceAccount, which the Alloy
 Operator still creates. The `Alloy` resource gets `rbac.create: false`, so the operator doesn't create its own RBAC.
 
+Roles are created in the namespaces that the configuration names, so those namespaces must exist before you install the
+chart. `--create-namespace` only creates the release namespace.
+
 ## What collectors are granted
 
 The rules come from the bundles in

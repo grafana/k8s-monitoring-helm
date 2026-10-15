@@ -115,11 +115,12 @@
 {{- $list := "" }}
 {{- if eq .item.scope "namespacesBlock" }}
   {{- $nested := regexFind `namespaces\s*\{[^{}]*\}` .block }}
-  {{- if regexMatch `own_namespace\s*=\s*true` $nested }}
-    {{- $namespaces = list .releaseNamespace }}
-  {{- else if $nested }}
+  {{- if $nested }}
+    {{- if regexMatch `own_namespace\s*=\s*true` $nested }}
+      {{- $namespaces = list .releaseNamespace }}
+    {{- end }}
     {{- $list = include "collectors.rbac.attribute" (dict "body" (trimSuffix "}" (regexReplaceAll `^namespaces\s*\{` $nested "")) "name" "names") }}
-    {{- if not $list }}{{ $unknown = true }}{{ end }}
+    {{- if not (or $list $namespaces) }}{{ $unknown = true }}{{ end }}
   {{- end }}
 {{- else if eq .item.scope "namespacesAttribute" }}
   {{- $list = include "collectors.rbac.attribute" (dict "body" .body "name" "namespaces") }}
@@ -140,19 +141,26 @@
     {{- $unknown = true }}
   {{- end }}
 {{- end }}
-{{- dict "namespaces" $namespaces "unknown" $unknown | toYaml }}
+{{- dict "namespaces" ($namespaces | uniq) "unknown" $unknown | toYaml }}
 {{- end }}
 
 {{/* Inputs: components (collectors/alloy-kubernetes-api.yaml), text, releaseNamespace. Output: [{component, entries, requires, anyScope}] */}}
 {{- define "collectors.rbac.scan" -}}
 {{- $matches := list }}
+{{- $text := .text }}
+{{- $tick := printf "%c" 96 }}
+{{- range $literal := regexFindAll (printf `"(?:[^"\\]|\\.)*"|%s[^%s]*%s|//[^\n]*|/\*(?s:.*?)\*/` $tick $tick $tick) .text -1 }}
+  {{- if regexMatch `[{}]` $literal }}
+    {{- $text = replace $literal ($literal | replace "{" "(" | replace "}" ")") $text }}
+  {{- end }}
+{{- end }}
 {{- $nested := `[^{}]*` }}
 {{- range $_ := until 8 }}
   {{- $nested = printf `(?:[^{}]|\{%s\})*` $nested }}
 {{- end }}
 {{- range $item := .components }}
   {{- if $item.pattern }}
-    {{- if regexMatch (printf "(?s)%s" $item.pattern) $.text }}
+    {{- if regexMatch (printf "(?s)%s" $item.pattern) $text }}
       {{- $entries := list }}
       {{- range $bundle := $item.bundles }}
         {{- $entries = append $entries (dict "bundle" $bundle) }}
@@ -160,7 +168,12 @@
       {{- $matches = append $matches (dict "component" $item.component "entries" $entries "requires" $entries) }}
     {{- end }}
   {{- else }}
-    {{- range $block := regexFindAll (printf `%s\s+"[^"]*"\s*\{%s\}` ($item.component | replace "." `\.`) $nested) $.text -1 }}
+    {{- $component := $item.component | replace "." `\.` }}
+    {{- $blocks := regexFindAll (printf `%s\s+"[^"]*"\s*\{%s\}` $component $nested) $text -1 }}
+    {{- if gt (len (regexFindAll (printf `%s\s+"[^"]*"\s*\{` $component) $text -1)) (len $blocks) }}
+      {{- fail (printf "\nCould not read a %s block to compute its RBAC for rbac.mode: minimal.\nPlease check that its braces are balanced, or set rbac.mode: alloy for this collector." $item.component) }}
+    {{- end }}
+    {{- range $block := $blocks }}
       {{- $inner := regexReplaceAll `^[^{]*\{` (trimSuffix "}" $block) "" }}
       {{- $body := $inner }}
       {{- range $_ := until 8 }}
@@ -176,14 +189,23 @@
           {{- $scope := include "collectors.rbac.scope" (dict "item" $item "block" $inner "body" $body "releaseNamespace" $.releaseNamespace) | fromYaml }}
           {{- $namespaces := $item.namespaces | default $scope.namespaces }}
           {{- $bundles := $item.bundles | default list }}
+          {{- $unknown := $scope.unknown }}
           {{- if $item.roles }}
-            {{- $role := include "collectors.rbac.literal" (dict "value" (include "collectors.rbac.attribute" (dict "body" $body "name" "role"))) }}
-            {{- $bundles = get $item.roles $role | default list }}
+            {{- $roleValue := include "collectors.rbac.attribute" (dict "body" $body "name" "role") }}
+            {{- $role := include "collectors.rbac.literal" (dict "value" $roleValue) }}
+            {{- if $role }}
+              {{- $bundles = get $item.roles $role | default list }}
+            {{- else if $roleValue }}
+              {{- $bundles = list }}
+              {{- range $_, $roleBundles := $item.roles }}{{ $bundles = concat $bundles $roleBundles }}{{ end }}
+              {{- $bundles = $bundles | uniq | sortAlpha }}
+              {{- $unknown = true }}
+            {{- end }}
           {{- end }}
           {{- $entries := list }}
           {{- $requires := list }}
           {{- range $bundle := $bundles }}
-            {{- $entries = append $entries (dict "bundle" $bundle "namespaces" (ternary (list) $namespaces $scope.unknown)) }}
+            {{- $entries = append $entries (dict "bundle" $bundle "namespaces" (ternary (list) $namespaces $unknown)) }}
             {{- if or (not $item.requires) (has $bundle $item.requires) }}
               {{- $requires = append $requires (dict "bundle" $bundle "namespaces" $namespaces) }}
             {{- end }}
@@ -192,7 +214,7 @@
             {{- $entries = append $entries (dict "bundle" $bundle) }}
           {{- end }}
           {{- if $entries }}
-            {{- $matches = append $matches (dict "component" $item.component "entries" $entries "requires" $requires "anyScope" $scope.unknown) }}
+            {{- $matches = append $matches (dict "component" $item.component "entries" $entries "requires" $requires "anyScope" $unknown) }}
           {{- end }}
         {{- end }}
       {{- end }}
@@ -216,7 +238,6 @@
 
 {{/* Inputs: catalog, entries. Output: {cluster, namespaced}, mapping "apiGroup|resource|name" to verbs */}}
 {{- define "collectors.rbac.expand" -}}
-{{- $clusterScopedResources := list "nodes" "nodes/pods" "namespaces" "infrastructures" "infrastructures/status" }}
 {{- $state := dict "cluster" (dict) "namespaced" (dict) }}
 {{- range $entry := .entries }}
   {{- $bundle := get $.catalog $entry.bundle }}
@@ -226,7 +247,7 @@
   {{- range $rule := $bundle.rules }}
     {{- range $resource := $rule.resources }}
       {{- $scopes := list "" }}
-      {{- if and $entry.namespaces (not (has $resource $clusterScopedResources)) }}
+      {{- if and $entry.namespaces (not $rule.clusterScoped) }}
         {{- $scopes = $entry.namespaces }}
       {{- end }}
       {{- range $scope := $scopes }}

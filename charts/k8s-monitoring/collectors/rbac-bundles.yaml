@@ -20,13 +20,13 @@ replicasets:
     - {apiGroups: [apps], resources: [replicasets], verbs: [get, list, watch]}
 nodes:
   rules:
-    - {apiGroups: [""], resources: [nodes], verbs: [get, list, watch]}
+    - {apiGroups: [""], resources: [nodes], verbs: [get, list, watch], clusterScoped: true}
 namespaces:
   rules:
-    - {apiGroups: [""], resources: [namespaces], verbs: [get, list, watch]}
+    - {apiGroups: [""], resources: [namespaces], verbs: [get, list, watch], clusterScoped: true}
 kubeletPods:
   rules:
-    - {apiGroups: [""], resources: [nodes/pods], verbs: [get]}
+    - {apiGroups: [""], resources: [nodes/pods], verbs: [get], clusterScoped: true}
 podLogs:
   rules:
     - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
@@ -37,7 +37,8 @@ events:
 podLogsObjects:
   rules:
     - {apiGroups: [monitoring.grafana.com], resources: [podlogs], verbs: [get, list, watch]}
-    - {apiGroups: [""], resources: [pods, namespaces], verbs: [get, list, watch]}
+    - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
+    - {apiGroups: [""], resources: [namespaces], verbs: [get, list, watch], clusterScoped: true}
     - {apiGroups: [""], resources: [pods/log], verbs: [get]}
 promOperator.podmonitors:
   rules:
@@ -57,11 +58,11 @@ promOperatorCredentials:
 prometheusRules:
   rules:
     - {apiGroups: [monitoring.coreos.com], resources: [prometheusrules], verbs: [get, list, watch]}
-    - {apiGroups: [""], resources: [namespaces], verbs: [get, list, watch]}
+    - {apiGroups: [""], resources: [namespaces], verbs: [get, list, watch], clusterScoped: true}
 alertmanagerConfigs:
   rules:
     - {apiGroups: [monitoring.coreos.com], resources: [alertmanagerconfigs], verbs: [get, list, watch]}
-    - {apiGroups: [""], resources: [namespaces], verbs: [get, list, watch]}
+    - {apiGroups: [""], resources: [namespaces], verbs: [get, list, watch], clusterScoped: true}
     - {apiGroups: [""], resources: [secrets, configmaps], verbs: [get]}
 k8sattributes:
   rules:
@@ -69,14 +70,14 @@ k8sattributes:
     - {apiGroups: [apps], resources: [replicasets], verbs: [get, list, watch]}
 nodeGet:
   rules:
-    - {apiGroups: [""], resources: [nodes], verbs: [get, list]}
+    - {apiGroups: [""], resources: [nodes], verbs: [get, list], clusterScoped: true}
 kubeadmConfig:
   rules:
     - {apiGroups: [""], resources: [configmaps], resourceNames: [kubeadm-config], verbs: [get]}
-    - {apiGroups: [""], resources: [namespaces], resourceNames: [kube-system], verbs: [get]}
+    - {apiGroups: [""], resources: [namespaces], resourceNames: [kube-system], verbs: [get], clusterScoped: true}
 openshiftInfrastructures:
   rules:
-    - {apiGroups: [config.openshift.io], resources: [infrastructures, infrastructures/status], verbs: [get, list, watch]}
+    - {apiGroups: [config.openshift.io], resources: [infrastructures, infrastructures/status], verbs: [get, list, watch], clusterScoped: true}
 loadBalancer:
   rules:
     - {apiGroups: [discovery.k8s.io], resources: [endpointslices], verbs: [get, list, watch]}
