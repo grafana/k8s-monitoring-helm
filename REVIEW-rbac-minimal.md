@@ -10,8 +10,8 @@ added in `2-mode` and extended by the branches after it.
 |-----|-------------------------------------------|------------------------------------------------------------------------------|
 | 0   | `rbac-minimal-v2/0-review-doc`            | This file                                                                    |
 | 1   | `rbac-minimal-v2/1-refactor`              | Shared feature/destination lists and subchart namespace helpers. No output change. |
-| 2   | `rbac-minimal-v2/2-mode`                  | `rbac.mode`, rendering, the validations of values, the SDK Injector rule     |
-| 3   | `rbac-minimal-v2/3-scanner`               | The scanner and both catalogs, with `discovery.kubernetes`, `discovery.kubelet`, and `remote.kubernetes.*` |
+| 2   | `rbac-minimal-v2/2-mode`                  | `rbac.mode`, rendering, the validations of values, the SDK Injector rule and its bundle |
+| 3   | `rbac-minimal-v2/3-scanner`               | The scanner and the component catalog, with `discovery.kubernetes`, `discovery.kubelet`, and `remote.kubernetes.*` |
 | 4   | `rbac-minimal-v2/4-checks`                | Golden files, the upstream Alloy RBAC snapshot, the catalogs' Alloy version check |
 | 5   | `rbac-minimal-v2/5-cluster-metrics`       | Scrapes that send the ServiceAccount token, the `nodes/proxy` NOTES warning  |
 | 6   | `rbac-minimal-v2/6-metrics-features`      | The Prometheus Operator, rule and alert sync, and profiling components, the `forbidden` log check |
@@ -20,8 +20,8 @@ added in `2-mode` and extended by the branches after it.
 | 9   | `rbac-minimal-v2/9-validations`           | Failing on what the catalog can't cover. Deletes this file.                  |
 
 Each branch from 5 to 8 adds a group of catalog entries with their unit tests, and regenerates the golden files, so its
-diff shows exactly what those entries grant in every example. Integration tests land in the first branch where
-everything they exercise is granted.
+diff shows exactly what those entries grant in every example. CI runs every integration test on every PR, so each
+suite lands in a branch where everything it exercises is already granted.
 
 The stack targets `release-4.6` and only ships as a whole.
 
@@ -55,9 +55,12 @@ Both files are in `charts/k8s-monitoring/collectors/`. One describes Alloy, the 
 
 *   **`alloy-kubernetes-api.yaml`** lists the Alloy components that use the Kubernetes API. For each one it says which
     bundles the component needs and how to read its scope from the config: a `namespaces` block, a `namespaces`
-    attribute, a k8sattributes `filter`, or a named object, like the Secret a `remote.kubernetes.secret` reads. Some
-    entries depend on a setting, like `discovery.kubernetes`, whose bundles depend on `role`. This is the file to
-    update when Alloy adds or changes a component.
+    attribute, a k8sattributes `filter`, the namespace in a load balancer's `service`, the discovery blocks its
+    `targets` come from, the release namespace, a fixed namespace, or a named object, like the Secret a
+    `remote.kubernetes.secret` reads. Some entries depend on the config: `discovery.kubernetes` bundles depend on
+    `role`, `match` and `unless` patterns limit an entry to the blocks that need it, and a scrape that sends the
+    ServiceAccount token gets the bundles of the first `targets` rule that matches where its targets come from.
+    `clusterBundles` always go to the ClusterRole. This is the file to update when Alloy adds or changes a component.
 *   **`rbac-bundles.yaml`** defines each bundle as Kubernetes RBAC rules: API groups, resources, verbs, and whether a
     rule is cluster-scoped. Bundles are shared, so `pods` is used by pod discovery, Beyla, and the Prometheus Operator
     components. This is the file to read to see exactly what gets granted.
@@ -67,8 +70,7 @@ and `rbac-bundles.yaml` defines `pods` as `get`, `list`, and `watch` on Pods.
 
 ## Validation
 
-Minimal mode never installs a collector that's missing permissions. Instead, the render fails and says to use
-`rbac.mode: alloy` for that collector, when:
+The render fails, and says to use `rbac.mode: alloy` for that collector, when:
 
 *   `remoteConfig.enabled` is set, because the config isn't known.
 *   `rbac.rules`, `rbac.clusterRules`, or `rbac.namespaces` is set. These only work in alloy mode for now.
@@ -77,9 +79,10 @@ Minimal mode never installs a collector that's missing permissions. Instead, the
 *   The config has an `import` block, which loads configuration the scanner can't see.
 *   The config has a component whose name looks like it uses Kubernetes (`kubernetes`, `kubelet`, `k8s`) but isn't in
     the catalog.
-*   A component authenticates with the ServiceAccount token
-    (`/var/run/secrets/kubernetes.io/serviceaccount/token`) and no catalog entry covers it, like a kubelet scrape the
-    catalog doesn't recognize.
+*   A component uses the ServiceAccount token (`/var/run/secrets/kubernetes.io/serviceaccount/token`) and no catalog
+    entry covers it, like a `prometheus.remote_write` that sends it. A scrape that sends the token also fails when its
+    targets can't be followed, for example when they come from a module argument, or when they match none of its
+    entry's `targets` rules, like a `pyroscope.scrape` of Nodes.
 
 ## Keeping the catalogs current with Alloy
 
@@ -95,8 +98,9 @@ Alloy source and docs for Alloy v1.20.0. These checks make sure an Alloy update 
     recheck.
 3.  **Unknown components.** The validation above fails on Kubernetes components the catalog doesn't know, so a new
     Alloy component can't run with missing permissions.
-4.  **Runtime coverage.** Every catalog entry is exercised by a minimal-mode integration test, and the tests fail on
-    `forbidden` errors in the Alloy logs. Alloy update PRs run them.
+4.  **Runtime coverage.** The minimal-mode integration tests exercise the catalog entries that can run on kind, and
+    fail on `forbidden` errors in the Alloy logs. Alloy update PRs run them. [Testing](#testing) lists what they don't
+    cover.
 
 ## Design decisions
 
@@ -128,7 +132,8 @@ Alloy source and docs for Alloy v1.20.0. These checks make sure an Alloy update 
     `tests/example-checks/rbac-minimal/<example>.yaml`. CI renders them again and fails on any difference, so every
     change to what gets granted shows up as a diff in review.
 *   **Integration tests:** each suite in `tests/integration/rbac-minimal/` checks the expected RBAC objects exist, the
-    operator's ClusterRole doesn't, data arrives, every scrape target is up, and Alloy logs no `forbidden` errors.
+    operator's ClusterRole doesn't, data arrives, every scrape target is up in the suites that scrape metrics, and
+    Alloy logs no `forbidden` errors. The `rbac-minimal` example's test plan, added in branch 7, has the same checks.
 
 | Suite                         | Branch | Covers                                                                   |
 |-------------------------------|--------|--------------------------------------------------------------------------|
@@ -140,7 +145,13 @@ Alloy source and docs for Alloy v1.20.0. These checks make sure an Alloy update 
 | `extra-config`                | 9      | `extraConfig`, `replaceComponent`, a Secret and a ConfigMap read by name, kubelet discovery, attached metadata, EndpointSlice and Ingress discovery |
 
 Each suite also deploys a small Alloy that ships the collectors' own logs to Loki, so the `forbidden` check sees startup
-errors too. EKS control plane metrics, and the `kubeadm` and `eks` resource detectors, aren't covered on kind.
+errors too. These aren't covered:
+
+*   EKS control plane metrics and the `eks` resource detector, which need EKS.
+*   The `kubeadm` resource detector, because the chart doesn't render its `auth_type`, so it never uses the
+    ServiceAccount.
+*   `beyla.ebpf`, which the chart never renders.
+*   ServiceMonitors with the default Endpoints role, because the chart always sets `kubernetes_role = "endpointslice"`.
 
 ## Known limitations
 
@@ -149,3 +160,8 @@ errors too. EKS control plane metrics, and the `kubeadm` and `eks` resource dete
 *   Config the catalog can't account for fails validation, so those collectors have to use `rbac.mode: alloy`.
 *   `discovery.kubelet` gets `nodes/pods`, which kubelets only accept with fine-grained kubelet authorization
     (Kubernetes 1.33 or later).
+*   The unknown-component validation only checks names with `kubernetes`, `kubelet`, or `k8s`. A new Alloy component
+    that uses the Kubernetes API under another name, like a new `prometheus.operator.*` component, isn't caught until
+    the catalog is reviewed for that Alloy version.
+*   The `nodes/proxy` NOTES warning comes from the `clusterMetrics` values, not from the scan, so it doesn't mention
+    proxy scrapes in user-supplied configuration.
