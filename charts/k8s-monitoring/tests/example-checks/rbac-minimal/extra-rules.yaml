@@ -76,6 +76,21 @@ rules:
       - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: k8smon-alloy-singleton-default-rbac
+  namespace: production
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: k8smon-alloy-metrics-rbac
@@ -87,4 +102,18 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-metrics
+    namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: k8smon-alloy-singleton-default-rbac
+  namespace: production
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: k8smon-alloy-singleton-default-rbac
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-alloy-singleton
     namespace: default

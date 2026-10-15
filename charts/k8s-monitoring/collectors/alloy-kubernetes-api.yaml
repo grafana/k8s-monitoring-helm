@@ -16,7 +16,9 @@
 #   roles:          A map from the block's role attribute to bundles, used instead of bundles. A role that isn't a string
 #                   literal, or isn't in the map, gets every role's bundles, cluster-wide.
 #   scope:          Where the block limits its namespaces. namespacesBlock reads names and own_namespace from a
-#                   namespaces block, and namespacesAttribute reads a namespaces list attribute. Default: cluster-wide.
+#                   namespaces block, namespacesAttribute reads a namespaces list attribute, filterNamespace reads the
+#                   namespace attribute of a filter block, and targets uses the namespaces of the discovery.kubernetes
+#                   blocks that the block's targets come from. Default: cluster-wide.
 #   namespaces:     A fixed list of namespaces for bundles, used instead of scope.
 #   clusterBundles: Bundles to always grant cluster-wide.
 #   namedObject:    A bundle to grant only for the object that the block's name and namespace attributes name. Entries
@@ -42,6 +44,14 @@
   bundles: [namespaces]
 - component: discovery.kubelet
   bundles: [kubeletPods]
+- component: loki.source.kubernetes
+  scope: targets
+  bundles: [podLogs]
+- component: loki.source.kubernetes_events
+  scope: namespacesAttribute
+  bundles: [events]
+- component: loki.source.podlogs
+  bundles: [podLogsObjects]
 - component: prometheus.operator.podmonitors
   scope: namespacesAttribute
   bundles: [promOperator.podmonitors, promOperatorCredentials]
@@ -74,6 +84,52 @@
   namedObject: secret
 - component: remote.kubernetes.configmap
   namedObject: configMap
+- component: otelcol.processor.k8sattributes
+  scope: filterNamespace
+  unless: 'passthrough\s*=\s*true'
+  bundles: [pods]
+- component: otelcol.processor.k8sattributes
+  unless: 'passthrough\s*=\s*true'
+  match: 'from\s*=\s*"namespace"'
+  bundles: [namespaces]
+- component: otelcol.processor.k8sattributes
+  unless: 'passthrough\s*=\s*true'
+  match: 'k8s\.cluster\.uid'
+  bundles: [kubeSystemNamespace]
+- component: otelcol.processor.k8sattributes
+  unless: 'passthrough\s*=\s*true'
+  match: 'from\s*=\s*"node"|k8s\.node\.uid'
+  bundles: [nodes]
+- component: otelcol.processor.k8sattributes
+  unless: 'passthrough\s*=\s*true'
+  scope: filterNamespace
+  match: 'k8s\.deployment\.uid|from\s*=\s*"(deployment|replicaset)"'
+  bundles: [replicasets]
+- component: otelcol.processor.k8sattributes
+  unless: 'passthrough\s*=\s*true'
+  scope: filterNamespace
+  match: 'from\s*=\s*"deployment"'
+  bundles: [deployments]
+- component: otelcol.processor.k8sattributes
+  unless: 'passthrough\s*=\s*true'
+  scope: filterNamespace
+  match: 'from\s*=\s*"statefulset"'
+  bundles: [statefulsets]
+- component: otelcol.processor.k8sattributes
+  unless: 'passthrough\s*=\s*true'
+  scope: filterNamespace
+  match: 'from\s*=\s*"daemonset"'
+  bundles: [daemonsets]
+- component: otelcol.processor.k8sattributes
+  unless: 'passthrough\s*=\s*true'
+  scope: filterNamespace
+  match: 'k8s\.cronjob\.uid|from\s*=\s*"(job|cronjob)"'
+  bundles: [jobs]
+- component: otelcol.processor.k8sattributes
+  unless: 'passthrough\s*=\s*true'
+  scope: filterNamespace
+  match: 'from\s*=\s*"cronjob"'
+  bundles: [cronjobs]
 - component: prometheus.scrape
   match: '/var/run/secrets/kubernetes\.io/serviceaccount/token'
   targets:

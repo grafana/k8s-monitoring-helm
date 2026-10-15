@@ -1,0 +1,79 @@
+---
+cluster:
+  name: rbac-minimal-logs
+
+destinations:
+  loki:
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+  loki-otlp:
+    type: otlp
+    protocol: http
+    url: http://loki.loki.svc:3100/otlp
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+    metrics: {enabled: false}
+    logs: {enabled: true}
+    traces: {enabled: false}
+
+podLogsViaKubernetesApi:
+  enabled: true
+  collector: alloy-logs-api
+  destinations: [loki]
+  namespaces: [logs-api]
+
+podLogsViaOpenTelemetry:
+  enabled: true
+  collector: alloy-logs-otel
+  destinations: [loki-otlp]
+  namespaces: [logs-otel]
+  namespaceLabels:
+    color: color
+  nodeLabels:
+    node_os: kubernetes.io/os
+
+podLogsObjects:
+  enabled: true
+  collector: alloy-podlogs
+  destinations: [loki]
+
+kubernetesManifests:
+  enabled: true
+  collector: alloy-singleton
+  destinations: [loki]
+
+selfReporting:
+  enabled: false
+
+collectorCommon:
+  alloy:
+    rbac:
+      mode: minimal
+
+collectors:
+  alloy-logs-api:
+    presets: [clustered, statefulset]
+  alloy-logs-otel:
+    presets: [filesystem-log-reader, daemonset]
+    alloy:
+      stabilityLevel: public-preview
+  alloy-podlogs:
+    presets: [clustered, statefulset]
+  alloy-singleton:
+    presets: [singleton]
+
+telemetryServices:
+  k8s-manifest-tail:
+    deploy: true
+    config:
+      objects:
+        - apiVersion: v1
+          kind: Pod

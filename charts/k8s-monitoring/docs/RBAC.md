@@ -65,6 +65,12 @@ defines each bundle as RBAC rules.
     `attach_metadata` block to any value also grants read access to Nodes or Namespaces.
 *   A component in a module (`declare`) that gets its namespaces from a module argument, like the integrations do, gets
     the namespaces that the module's callers pass, including callers in nested modules.
+*   `loki.source.kubernetes` gets Pods and `get` on `pods/log` in the namespaces its targets are discovered in.
+*   `otelcol.processor.k8sattributes` gets Pods, in the namespace of its `filter` block's `namespace`, or cluster-wide
+    without one. It also gets Namespaces when a `label` or `annotation` reads from `namespace`, the `kube-system`
+    Namespace for `k8s.cluster.uid`, and Nodes for `k8s.node.uid` or `from = "node"`. Workload objects (ReplicaSets,
+    Deployments, StatefulSets, DaemonSets, Jobs, and CronJobs) follow the same namespace as Pods, only when its
+    metadata or labels need them. With `passthrough = true`, it gets nothing.
 *   `remote.kubernetes.secret` and `remote.kubernetes.configmap` get `get` on the object they name. If the `namespace`
     isn't a string literal, that name is readable in every namespace. If the `name` isn't a string literal, every
     object in the namespace is readable. Use string literals to keep this access small.

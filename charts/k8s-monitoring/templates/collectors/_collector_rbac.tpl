@@ -142,7 +142,17 @@
 {{- ternary (list) $namespaces $all | uniq | toYaml }}
 {{- end }}
 
-{{/* Reads the namespaces that a component is limited to, the way its catalog entry's scope says to read them. Inputs: scope ("namespacesBlock" or "namespacesAttribute"), block, releaseNamespace, scopes, scopeIndex, nested. Output: the namespaces, or [] for every namespace */}}
+{{/* Inputs: value (raw string value), context (for argumentValues). Output: the namespaces, or [] for every namespace */}}
+{{- define "collectors.rbac.namespaceString" -}}
+{{- $lists := list }}
+{{- range $value := include "collectors.rbac.argumentValues" (merge (dict "value" .value) .context) | fromYamlArray }}
+  {{- $namespace := include "collectors.rbac.literal" (dict "value" $value) }}
+  {{- $lists = append $lists (ternary (printf "[%q]" $namespace) "" (ne $namespace "")) }}
+{{- end }}
+{{- include "collectors.rbac.namespaceLists" (dict "values" $lists) }}
+{{- end }}
+
+{{/* Reads the namespaces that a component is limited to, the way its catalog entry's scope says to read them. Inputs: scope ("namespacesBlock", "namespacesAttribute", "filterNamespace", or "targets"), block, releaseNamespace, scopes, scopeIndex, scopeText, nested. Output: the namespaces, or [] for every namespace */}}
 {{- define "collectors.rbac.scope" -}}
 {{- $context := dict "scopes" .scopes "scope" .scopeIndex "nested" .nested "depth" 0 }}
 {{- $body := include "collectors.rbac.body" (dict "block" .block) }}
@@ -161,6 +171,22 @@
   {{- with include "collectors.rbac.attribute" (dict "body" $body "name" "namespaces") }}
     {{- $namespaces = include "collectors.rbac.namespaceLists" (dict "values" (include "collectors.rbac.argumentValues" (merge (dict "value" .) $context) | fromYamlArray)) | fromYamlArray }}
   {{- end }}
+{{- else if eq .scope "filterNamespace" }}
+  {{- $filter := regexFind `filter\s*\{(?:[^{}]|\{[^{}]*\})*\}` .block }}
+  {{- $filterBody := regexReplaceAll `\{[^{}]*\}` (trimSuffix "}" (regexReplaceAll `^filter\s*\{` $filter "")) "{}" }}
+  {{- with include "collectors.rbac.attribute" (dict "body" $filterBody "name" "namespace") }}
+    {{- $namespaces = include "collectors.rbac.namespaceString" (dict "value" . "context" $context) | fromYamlArray }}
+  {{- end }}
+{{- else if eq .scope "targets" }}
+  {{- $all := false }}
+  {{- range $source := include "collectors.rbac.targetSources" (dict "block" .block "text" .scopeText "nested" .nested) | fromYamlArray }}
+    {{- $sourceNamespaces := list }}
+    {{- if hasPrefix "discovery.kubernetes" $source.block }}
+      {{- $sourceNamespaces = include "collectors.rbac.scope" (merge (dict "scope" "namespacesBlock" "block" $source.block) $) | fromYamlArray }}
+    {{- end }}
+    {{- if $sourceNamespaces }}{{ $namespaces = concat $namespaces $sourceNamespaces }}{{ else }}{{ $all = true }}{{ end }}
+  {{- end }}
+  {{- if $all }}{{ $namespaces = list }}{{ end }}
 {{- end }}
 {{- $namespaces | uniq | toYaml }}
 {{- end }}
@@ -237,7 +263,7 @@
         {{- else }}
           {{- $namespaces := $item.namespaces | default list }}
           {{- if and $item.scope (not $item.namespaces) }}
-            {{- $namespaces = include "collectors.rbac.scope" (dict "scope" $item.scope "block" $block "releaseNamespace" $.releaseNamespace "scopes" $scopes "scopeIndex" $scopeIndex "nested" $nested) | fromYamlArray }}
+            {{- $namespaces = include "collectors.rbac.scope" (dict "scope" $item.scope "block" $block "releaseNamespace" $.releaseNamespace "scopes" $scopes "scopeIndex" $scopeIndex "scopeText" $scope.text "nested" $nested) | fromYamlArray }}
           {{- end }}
           {{- $bundles := $item.bundles | default list }}
           {{- if $item.roles }}

@@ -1,0 +1,12 @@
+# RBAC: Minimal
+
+This example sets `rbac.mode: minimal` for every collector. Instead of the Alloy Operator creating the same broad
+ClusterRole for each collector, this chart renders RBAC objects that only grant what each collector's configuration
+needs:
+
+*   `alloy-metrics` gets a ClusterRole to discover Nodes and scrape the kubelet, plus a Role in the release namespace to
+    discover kube-state-metrics and Node Exporter, and to read the Prometheus credentials Secret.
+*   `alloy-singleton` gets a ClusterRole to read Events, plus a Role to read the destination credentials Secrets.
+*   `alloy-logs` gets a ClusterRole to discover Pods, plus a Role to read the Loki credentials Secret.
+
+For more information, see [RBAC](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/RBAC.md).

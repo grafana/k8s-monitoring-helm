@@ -16,6 +16,9 @@ endpointslices:
 ingresses:
   rules:
     - {apiGroups: [networking.k8s.io], resources: [ingresses], verbs: [get, list, watch]}
+replicasets:
+  rules:
+    - {apiGroups: [apps], resources: [replicasets], verbs: [get, list, watch]}
 nodes:
   rules:
     - {apiGroups: [""], resources: [nodes], verbs: [get, list, watch], clusterScoped: true}
@@ -31,6 +34,24 @@ kubeletProxy:
 kubeletPods:
   rules:
     - {apiGroups: [""], resources: [nodes/pods], verbs: [get], clusterScoped: true}
+kubeSystemNamespace:
+  rules:
+    - {apiGroups: [""], resources: [namespaces], resourceNames: [kube-system], verbs: [get, list, watch], clusterScoped: true}
+deployments:
+  rules:
+    - {apiGroups: [apps], resources: [deployments], verbs: [get, list, watch]}
+statefulsets:
+  rules:
+    - {apiGroups: [apps], resources: [statefulsets], verbs: [get, list, watch]}
+daemonsets:
+  rules:
+    - {apiGroups: [apps], resources: [daemonsets], verbs: [get, list, watch]}
+jobs:
+  rules:
+    - {apiGroups: [batch], resources: [jobs], verbs: [get, list, watch]}
+cronjobs:
+  rules:
+    - {apiGroups: [batch], resources: [cronjobs], verbs: [get, list, watch]}
 metricsEndpoint:
   rules:
     - {nonResourceURLs: [/metrics], verbs: [get]}
@@ -40,6 +61,18 @@ eksKubeControllerManagerMetrics:
 eksKubeSchedulerMetrics:
   rules:
     - {apiGroups: [metrics.eks.amazonaws.com], resources: [ksh/metrics, ksh/resourcemetrics], verbs: [get], clusterScoped: true}
+podLogs:
+  rules:
+    - {apiGroups: [""], resources: [pods, pods/log], verbs: [get]}
+events:
+  rules:
+    - {apiGroups: [""], resources: [events], verbs: [get, list, watch]}
+podLogsObjects:
+  rules:
+    - {apiGroups: [monitoring.grafana.com], resources: [podlogs], verbs: [get, list, watch]}
+    - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
+    - {apiGroups: [""], resources: [namespaces], verbs: [get, list, watch], clusterScoped: true}
+    - {apiGroups: [""], resources: [pods/log], verbs: [get]}
 promOperator.podmonitors:
   rules:
     - {apiGroups: [monitoring.coreos.com], resources: [podmonitors], verbs: [get, list, watch]}

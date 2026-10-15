@@ -135,6 +135,101 @@ tests:
           content: {namespace: team-a}
         template: alloy-config.yaml
 
+  - it: grants what a replaced component needs
+    set:
+      clusterEvents: {enabled: true}
+      destinations:
+        loki: {type: loki, url: http://loki.loki.svc:3100/loki/api/v1/push}
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+      replaceComponent:
+        - type: loki.source.kubernetes_events
+          module: cluster_events
+          name: cluster_events
+          content: |-
+            forward_to = [loki.process.cluster_events.receiver]
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [events], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
+  - it: only grants a replaced component's access to the collectors it was replaced on
+    set:
+      clusterEvents: {enabled: true, collector: alloy-singleton}
+      destinations:
+        loki: {type: loki, url: http://loki.loki.svc:3100/loki/api/v1/push}
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+        alloy-other:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: " "
+      replaceComponent:
+        - type: loki.source.kubernetes_events
+          module: cluster_events
+          name: cluster_events
+          content: |-
+            forward_to = [loki.process.cluster_events.receiver]
+    asserts:
+      - documentSelector:
+          path: "$[?(@.kind == 'ClusterRole' && @.metadata.name == 'test-alloy-singleton-monitoring-rbac')].kind"
+          value: ClusterRole
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [events], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+      - containsDocument:
+          kind: ClusterRole
+          apiVersion: rbac.authorization.k8s.io/v1
+          name: test-alloy-other-monitoring-rbac
+          any: true
+        not: true
+        template: alloy-config.yaml
+
+  - it: ignores custom data processor blocks that a collector doesn't render
+    set:
+      clusterEvents: {enabled: true, dataProcessors: [label]}
+      destinations:
+        loki: {type: loki, url: http://loki.loki.svc:3100/loki/api/v1/push}
+      dataProcessors:
+        label:
+          type: custom
+          logs:
+            loki:
+              enabled: true
+              input: loki.process.label.receiver
+              config: |-
+                loki.process "label" {
+                  forward_to = [loki.process.label_out_logs_loki.receiver]
+                }
+          metrics:
+            prometheus:
+              enabled: false
+              input: prometheus.relabel.label.receiver
+              config: |-
+                discovery.kubernetes "pods" {
+                  role = "pod"
+                }
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [events], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
   - it: grants what a custom destination's configuration needs
     set:
       clusterEvents: {enabled: true, namespaces: [team-a]}
@@ -676,6 +771,126 @@ tests:
           path: rules
           value:
             - {apiGroups: [""], resources: [namespaces, nodes, services], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
+  - it: scopes Kubernetes API pod logs to the namespaces their targets are discovered in
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            discovery.kubernetes "pods" {
+              role = "pod"
+              namespaces {
+                names = ["team-a"]
+              }
+            }
+            discovery.relabel "pods" {
+              targets = discovery.kubernetes.pods.targets
+            }
+            loki.source.kubernetes "pods" {
+              targets    = discovery.relabel.pods.output
+              forward_to = []
+            }
+    asserts:
+      - hasDocuments:
+          count: 3
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [pods/log], verbs: [get]}
+            - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
+  - it: grants the k8sattributes processor only Pods for the default metadata, in its filter namespace
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            otelcol.processor.k8sattributes "default" {
+              filter {
+                namespace = "team-a"
+              }
+              extract {
+                metadata = ["k8s.namespace.name", "k8s.pod.name", "k8s.deployment.name", "k8s.node.name"]
+              }
+              output { }
+            }
+    asserts:
+      - hasDocuments:
+          count: 3
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: Role}
+        isSubset:
+          path: metadata
+          content: {namespace: team-a}
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
+  - it: grants the k8sattributes processor what its metadata and label sources need
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            otelcol.processor.k8sattributes "default" {
+              extract {
+                metadata = ["k8s.deployment.uid", "k8s.node.uid", "k8s.cluster.uid"]
+                label {
+                  from     = "namespace"
+                  key      = "team"
+                  tag_name = "team"
+                }
+                label {
+                  from     = "statefulset"
+                  key      = "app"
+                  tag_name = "app"
+                }
+              }
+              output { }
+            }
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [apps], resources: [replicasets, statefulsets], verbs: [get, list, watch]}
+            - {apiGroups: [""], resources: [namespaces, nodes, pods], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
+  - it: grants the k8sattributes processor nothing in passthrough mode
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            otelcol.processor.k8sattributes "default" {
+              passthrough = true
+              extract {
+                metadata = ["k8s.deployment.uid", "k8s.node.uid", "k8s.cluster.uid"]
+                label {
+                  from     = "namespace"
+                  key      = "team"
+                  tag_name = "team"
+                }
+              }
+              output { }
+            }
+    asserts:
+      - hasDocuments:
+          count: 1
         template: alloy-config.yaml
 
   - it: grants ServiceMonitor target discovery for the kubernetes_role it uses
