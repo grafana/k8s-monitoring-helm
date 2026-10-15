@@ -1,0 +1,28 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: k8smon-alloy-metrics-default-rbac
+  namespace: monitoring
+rules:
+  - apiGroups:
+      - ""
+    resourceNames:
+      - timescale-db
+    resources:
+      - secrets
+    verbs:
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: k8smon-alloy-metrics-default-rbac
+  namespace: monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: k8smon-alloy-metrics-default-rbac
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-alloy-metrics
+    namespace: default

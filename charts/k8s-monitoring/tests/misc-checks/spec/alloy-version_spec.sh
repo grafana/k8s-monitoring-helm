@@ -67,4 +67,19 @@ Describe 'Alloy version consistency'
       The output should equal "$(pinned_tag | sed 's/^v//')"
     End
   End
+
+  Describe 'rbac.mode: minimal catalogs'
+    # The catalogs are hand-written, so this keeps an Alloy bump from landing before someone reviews them.
+    verified_alloy_version() {
+      sed -n 's/^# Verified against Alloy \(.*\)\.$/\1/p' "${chart_root}/$1"
+    }
+    Parameters
+      collectors/alloy-kubernetes-api.yaml
+      collectors/rbac-bundles.yaml
+    End
+    It "$1 is verified against the pinned Alloy version. After bumping Alloy, review $1 against the new Alloy version and the collectors/upstream/alloy-rbac.yaml diff, then update its 'Verified against Alloy' line"
+      When call verified_alloy_version "$1"
+      The output should equal "$(pinned_tag)"
+    End
+  End
 End

@@ -1,0 +1,57 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: metric-collector-default-rbac
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: metric-collector-default-rbac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: metric-collector-default-rbac
+subjects:
+  - kind: ServiceAccount
+    name: metric-collector
+    namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: metric-collector-rbac
+  namespace: default
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - endpoints
+      - pods
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: metric-collector-rbac
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: metric-collector-rbac
+subjects:
+  - kind: ServiceAccount
+    name: metric-collector
+    namespace: default
