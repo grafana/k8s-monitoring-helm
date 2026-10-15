@@ -1,0 +1,278 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:braces rule:commas
+suite: RBAC - Minimal mode - Metrics features
+release:
+  name: test
+  namespace: monitoring
+templates:
+  - alloy-config.yaml
+set:
+  cluster: {name: test-cluster}
+  destinations:
+    prometheus: {type: prometheus, url: http://prometheus.prometheus.svc:9090/api/v1/write}
+  collectors:
+    alloy-metrics:
+      presets: [clustered, statefulset]
+      rbac: {mode: minimal}
+tests:
+  - it: grants host metrics pod discovery in the exporter namespace, and nodes for node labels
+    set:
+      hostMetrics:
+        enabled: true
+        linuxHosts: {enabled: true}
+        nodeLabels: {nodePool: true}
+      telemetryServices:
+        node-exporter: {deploy: true}
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [nodes], verbs: [get, list, watch]}
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: metadata.namespace
+          value: monitoring
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
+
+  - it: grants cost metrics pod discovery in the OpenCost namespace
+    set:
+      clusterMetrics:
+        enabled: true
+        kubelet: {enabled: false}
+        cadvisor: {enabled: false}
+        kubeletResource: {enabled: false}
+        kube-state-metrics: {enabled: false}
+      costMetrics:
+        enabled: true
+        opencost: {namespace: opencost, labelMatchers: {app.kubernetes.io/name: opencost}}
+    asserts:
+      - hasDocuments:
+          count: 3
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: metadata.namespace
+          value: opencost
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
+
+  - it: scopes annotation autodiscovery to its namespaces
+    set:
+      annotationAutodiscovery:
+        enabled: true
+        namespaces: [team-a, team-b]
+        attachNamespaceMetadata: true
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [namespaces], verbs: [get, list, watch]}
+            - {nonResourceURLs: [/metrics], verbs: [get]}
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'team-a')].kind"
+          value: Role
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [pods, services], verbs: [get, list, watch]}
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'team-b')].kind"
+          value: Role
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [pods, services], verbs: [get, list, watch]}
+
+  - it: makes annotation autodiscovery cluster-wide when namespaces has a regular expression
+    set:
+      annotationAutodiscovery:
+        enabled: true
+        namespaces: [team-.*]
+        bearerToken: {enabled: false}
+    asserts:
+      - hasDocuments:
+          count: 3
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [pods, services], verbs: [get, list, watch]}
+
+  - it: scopes Prometheus Operator objects and credentials to their namespaces, with cluster-wide target discovery
+    set:
+      prometheusOperatorObjects:
+        enabled: true
+        serviceMonitors: {namespaces: [apps]}
+        podMonitors: {enabled: false}
+        probes: {enabled: false}
+        scrapeConfigs: {enabled: false}
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [discovery.k8s.io], resources: [endpointslices], verbs: [get, list, watch]}
+            - {apiGroups: [""], resources: [nodes, pods, services], verbs: [get, list, watch]}
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: metadata.namespace
+          value: apps
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [monitoring.coreos.com], resources: [servicemonitors], verbs: [get, list, watch]}
+            - {apiGroups: [""], resources: [configmaps, secrets], verbs: [get]}
+
+  - it: grants every Prometheus Operator object type when they are all enabled
+    set:
+      prometheusOperatorObjects:
+        enabled: true
+        podMonitors: {enabled: true}
+        probes: {enabled: true}
+        scrapeConfigs: {enabled: true}
+        serviceMonitors: {enabled: true}
+      collectors:
+        alloy-metrics:
+          alloy: {stabilityLevel: experimental}
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        contains:
+          path: rules
+          content: {apiGroups: [monitoring.coreos.com], resources: [podmonitors, probes, scrapeconfigs, servicemonitors], verbs: [get, list, watch]}
+      - documentSelector: {path: kind, value: ClusterRole}
+        contains:
+          path: rules
+          content: {apiGroups: [networking.k8s.io], resources: [ingresses], verbs: [get, list, watch]}
+
+  - it: grants integrations their discovery and credentials
+    set:
+      integrations:
+        collector: alloy-metrics
+        alloy:
+          instances:
+            - name: alloy-in-namespace
+              namespaces: [o11y]
+              labelSelectors: {app.kubernetes.io/name: alloy}
+        mysql:
+          instances:
+            - name: db
+              logs: {enabled: false}
+              exporter: {dataSource: {host: db.mysql.svc, auth: {username: user, password: pass}}}
+    asserts:
+      - hasDocuments:
+          count: 5
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'o11y')].kind"
+          value: Role
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'monitoring')].kind"
+          value: Role
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resourceNames: [db-test-integrations], resources: [secrets], verbs: [get]}
+
+  - it: grants Istio pods cluster-wide and istiod EndpointSlices in its namespace
+    set:
+      integrations:
+        collector: alloy-metrics
+        istio:
+          instances:
+            - name: istio
+              sidecarMetrics: {enabled: false}
+              istiodMetrics: {namespace: istio-system}
+    asserts:
+      - hasDocuments:
+          count: 3
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: metadata.namespace
+          value: istio-system
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [discovery.k8s.io], resources: [endpointslices], verbs: [get, list, watch]}
+            - {apiGroups: [""], resources: [pods, services], verbs: [get, list, watch]}
+
+  - it: only grants integrations that run on the collector
+    set:
+      integrations:
+        alloy:
+          instances:
+            - name: on-metrics
+              collector: alloy-metrics
+              namespaces: [a]
+              labelSelectors: {app.kubernetes.io/name: alloy}
+            - name: on-other
+              collector: alloy-other
+              namespaces: [b]
+              labelSelectors: {app.kubernetes.io/name: alloy}
+      collectors:
+        alloy-other:
+          presets: [clustered, statefulset]
+          rbac: {mode: minimal}
+    asserts:
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.name == 'test-alloy-metrics-monitoring-rbac')].metadata.namespace"
+          value: a
+        isKind:
+          of: Role
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.name == 'test-alloy-other-monitoring-rbac')].metadata.namespace"
+          value: b
+        isKind:
+          of: Role
+      - hasDocuments:
+          count: 6
+
+  - it: grants profiling pod discovery per profiling type
+    set:
+      destinations:
+        pyroscope: {type: pyroscope, url: http://pyroscope.pyroscope.svc:4040}
+      profiling:
+        enabled: true
+        collector: alloy-metrics
+        ebpf: {enabled: true, namespaces: [apps]}
+        java: {enabled: false}
+        pprof: {enabled: false}
+      collectors:
+        alloy-metrics:
+          presets: [clustered, daemonset]
+    asserts:
+      - hasDocuments:
+          count: 3
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: metadata.namespace
+          value: apps
+
+  - it: grants auto-instrumentation pod discovery in the release namespace
+    set:
+      autoInstrumentation: {enabled: true}
+      telemetryServices:
+        beyla: {deploy: true}
+    asserts:
+      - hasDocuments:
+          count: 3
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: metadata.namespace
+          value: monitoring
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}

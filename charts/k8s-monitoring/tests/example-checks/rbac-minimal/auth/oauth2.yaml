@@ -18,9 +18,37 @@ metadata:
   name: k8smon-alloy-metrics-default-rbac
 rules:
   - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - monitoring.coreos.com
+    resources:
+      - podmonitors
+      - probes
+      - servicemonitors
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
       - ""
     resources:
+      - configmaps
       - nodes/metrics
+      - secrets
     verbs:
       - get
   - apiGroups:
@@ -93,14 +121,6 @@ rules:
       - get
       - list
       - watch
-  - apiGroups:
-      - ""
-    resourceNames:
-      - otel-endpoint-k8smon-k8s-monitoring
-    resources:
-      - secrets
-    verbs:
-      - get
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role

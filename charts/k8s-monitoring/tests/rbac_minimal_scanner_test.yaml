@@ -578,6 +578,49 @@ tests:
             - {nonResourceURLs: [/metrics], verbs: [get]}
         template: alloy-config.yaml
 
+  - it: grants nothing more to profile scrapes of Pods that send the ServiceAccount token
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            discovery.kubernetes "pods" {
+              role = "pod"
+            }
+            pyroscope.scrape "pods" {
+              targets           = discovery.kubernetes.pods.targets
+              bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+              forward_to        = []
+            }
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
+  - it: fails when a profile scrape sends the ServiceAccount token to Nodes
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            discovery.kubernetes "nodes" {
+              role = "node"
+            }
+            pyroscope.scrape "nodes" {
+              targets           = discovery.kubernetes.nodes.targets
+              bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+              forward_to        = []
+            }
+    asserts:
+      - failedTemplate:
+          errorPattern: 'has a pyroscope.scrape block that sends the ServiceAccount token to targets that minimal RBAC doesn.t support'
+        template: alloy-config.yaml
+
   - it: fails when a scrape that sends the ServiceAccount token gets its targets from a module argument
     set:
       collectors:
@@ -633,6 +676,97 @@ tests:
           path: rules
           value:
             - {apiGroups: [""], resources: [namespaces, nodes, services], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
+  - it: grants ServiceMonitor target discovery for the kubernetes_role it uses
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            prometheus.operator.servicemonitors "slices" {
+              kubernetes_role = "endpointslice"
+              namespaces      = ["apps"]
+              forward_to      = []
+            }
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [discovery.k8s.io], resources: [endpointslices], verbs: [get, list, watch]}
+            - {apiGroups: [""], resources: [nodes, pods, services], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [monitoring.coreos.com], resources: [servicemonitors], verbs: [get, list, watch]}
+            - {apiGroups: [""], resources: [configmaps, secrets], verbs: [get]}
+        template: alloy-config.yaml
+
+  - it: grants ServiceMonitor Endpoints discovery by default
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            prometheus.operator.servicemonitors "default" {
+              forward_to = []
+            }
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [monitoring.coreos.com], resources: [servicemonitors], verbs: [get, list, watch]}
+            - {apiGroups: [""], resources: [configmaps, secrets], verbs: [get]}
+            - {apiGroups: [""], resources: [endpoints, nodes, pods, services], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
+  - it: grants ServiceMonitor Endpoints discovery for an explicit endpoints kubernetes_role
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            prometheus.operator.servicemonitors "endpoints" {
+              kubernetes_role = "endpoints"
+              forward_to      = []
+            }
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [monitoring.coreos.com], resources: [servicemonitors], verbs: [get, list, watch]}
+            - {apiGroups: [""], resources: [configmaps, secrets], verbs: [get]}
+            - {apiGroups: [""], resources: [endpoints, nodes, pods, services], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
+  - it: grants ServiceMonitor Endpoints and EndpointSlices discovery when the kubernetes_role isn't a literal
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            prometheus.operator.servicemonitors "dynamic" {
+              kubernetes_role = sys.env("SERVICEMONITOR_ROLE")
+              forward_to      = []
+            }
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [discovery.k8s.io], resources: [endpointslices], verbs: [get, list, watch]}
+            - {apiGroups: [monitoring.coreos.com], resources: [servicemonitors], verbs: [get, list, watch]}
+            - {apiGroups: [""], resources: [configmaps, secrets], verbs: [get]}
+            - {apiGroups: [""], resources: [endpoints, nodes, pods, services], verbs: [get, list, watch]}
         template: alloy-config.yaml
 
   - it: grants kubelet Pod discovery nodes/pods

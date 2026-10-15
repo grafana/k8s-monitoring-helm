@@ -68,11 +68,22 @@ defines each bundle as RBAC rules.
 *   `remote.kubernetes.secret` and `remote.kubernetes.configmap` get `get` on the object they name. If the `namespace`
     isn't a string literal, that name is readable in every namespace. If the `name` isn't a string literal, every
     object in the namespace is readable. Use string literals to keep this access small.
+*   The Prometheus Operator components get their object type, and `get` on Secrets and ConfigMaps for credentials, in
+    their `namespaces`. Without `namespaces`, that's every Secret and ConfigMap in the cluster. Their target discovery
+    and Nodes are cluster-wide, because a monitor's `namespaceSelector` and `attachMetadata` are only known at runtime.
+*   Rule and alert sync is cluster-wide. `mimir.rules.kubernetes`, which a Prometheus destination's `rules` settings
+    render, and `loki.rules.kubernetes` get PrometheusRules and Namespaces. `mimir.alerts.kubernetes` gets
+    AlertmanagerConfigs and Namespaces, and `get` on every Secret and ConfigMap for the credentials they reference. The
+    chart doesn't render `loki.rules.kubernetes` or `mimir.alerts.kubernetes`, so they only come from your own
+    configuration, such as `extraConfig`.
 *   A scrape that sends the collector's ServiceAccount token gets what its targets check, based on where its targets
     come from: `get` on `nodes/metrics` for the kubelet, `get` on `nodes/proxy` through the API server's Node proxy
     (cluster metrics with `nodeAddressFormat: proxy`), the EKS Control Plane Metrics API (`discoveryMode: eks-proxy`),
     and `get` on `/metrics` for anything else, such as the API server. Scrapes at other paths only get `/metrics`, so
     they can fail with `forbidden` errors.
+*   A `pyroscope.scrape` that sends the ServiceAccount token gets nothing extra, because it can only scrape targets from
+    Pod, Service, Endpoints, or EndpointSlice discovery. A profiling endpoint behind a proxy that checks the token, such
+    as kube-rbac-proxy, fails with `forbidden` errors.
 *   Annotation autodiscovery sends the ServiceAccount token by default, so its collector gets `get` on `/metrics`. Set
     `annotationAutodiscovery.bearerToken.enabled: false` to remove it.
 
@@ -97,6 +108,9 @@ The render fails, and says to use `rbac.mode: alloy` for that collector, when:
     Minimal mode's rules are only verified against the default version, so it can't guarantee correct RBAC for another
     one. Variants of the default version, like the Windows image that the `windows` preset sets, are allowed.
 *   A component block can't be read, for example because of unbalanced braces.
+*   A scrape that sends the ServiceAccount token gets its targets from somewhere the chart can't follow, like a module
+    argument, or a `pyroscope.scrape` sends it to targets that don't come from Pod, Service, Endpoints, or EndpointSlice
+    discovery, like static targets or `discovery.kubelet`.
 
 If minimal mode fails on configuration that it should support, please
 [open an issue](https://github.com/grafana/k8s-monitoring-helm/issues).

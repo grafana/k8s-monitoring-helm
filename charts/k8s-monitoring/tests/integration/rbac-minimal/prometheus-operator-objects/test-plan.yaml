@@ -1,0 +1,109 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: rbac-minimal-prom-operator
+
+subject:
+  releaseName: k8smon
+  path: ../../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: dependencies/prometheus-operator-crds.yaml
+    verb: create
+  - file: ../../prometheus-operator-objects/dependencies/black-box-exporter.yaml
+  - file: ../../prometheus-operator-objects/dependencies/nginx-static-metrics.yaml
+  - file: ../../prometheus-operator-objects/dependencies/scrapeconfig.yaml
+  - file: dependencies/authenticated-podmonitor.yaml
+  - file: dependencies/rules-and-alerts.yaml
+  - file: ../dependencies/collector-logs.yaml
+  - preset: prometheus
+  - preset: loki
+  - preset: grafana
+    overrides:
+      serviceMonitor:
+        enabled: true
+        interval: 60s
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+  - file: ../../prometheus-operator-objects/dependencies/bad-grafana-servicemonitor.yaml
+  - file: ../../prometheus-operator-objects/dependencies/probe.yaml
+  - file: dependencies/ingress-probe.yaml
+
+tests:
+  - type: kubernetes-objects-test
+    values:
+      checks:
+        - {kind: ClusterRole, name: k8smon-alloy-metrics-default-rbac}
+        - {kind: Role, name: k8smon-alloy-metrics-default-rbac, namespace: grafana}
+        - {kind: Role, name: k8smon-alloy-metrics-default-rbac, namespace: nginx}
+        - {kind: Role, name: k8smon-alloy-metrics-rbac, namespace: default}
+        - {kind: ClusterRole, name: k8smon-alloy-rules-default-rbac}
+        - {kind: ClusterRole, name: k8smon-alloy-metrics, expect: {count: 0}}
+        - {kind: ClusterRole, name: k8smon-alloy-rules, expect: {count: 0}}
+
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: rbac-minimal-prom-operator-objects
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+          queries:
+            # ServiceMonitor in grafana, with cluster-wide EndpointSlice discovery
+            - query: grafana_build_info{cluster="$CLUSTER"}
+              type: promql
+            # ServiceMonitors outside of the namespaces list aren't used
+            - query: count(grafana_build_info{cluster="$CLUSTER", whoami="bad-service-monitor"}) or vector(0)
+              type: promql
+              expect:
+                value: 0
+            # PodMonitor in nginx
+            - query: static_metric{cluster="$CLUSTER", job="nginx/nginx-static-metrics"}
+              type: promql
+            # PodMonitor whose credentials are in a Secret in nginx
+            - query: static_metric{cluster="$CLUSTER", job="nginx/nginx-static-metrics-auth"}
+              type: promql
+            # The same PodMonitor's attachMetadata watches Nodes
+            - query: static_metric{cluster="$CLUSTER", job="nginx/nginx-static-metrics-auth", node_os="linux"}
+              type: promql
+            # Probe in grafana
+            - query: probe_duration_seconds{cluster="$CLUSTER", job="probe/grafana/grafana-probe"}
+              type: promql
+            # Probe of an Ingress in grafana, with cluster-wide Ingress discovery
+            - query: probe_success{cluster="$CLUSTER", job="probe/grafana/grafana-ingress-probe"}
+              type: promql
+            # ScrapeConfig in default
+            - query: helm_operator_build_info{cluster="$CLUSTER", job="alloy-operator", source="scrapeconfig"}
+              type: promql
+            # Forbidden scrapes are only logged at debug level, so check that every target is up
+            - query: up{cluster="$CLUSTER"} == 0
+              type: promql
+              expect:
+                count: 0
+
+        # Runs after the queries above pass, so every collector has already called the Kubernetes API.
+        - env:
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query_range
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+          queries:
+            # Every collector's logs arrive, so the empty result below means no errors rather than no logs
+            - query: sum by (instance) (count_over_time({job="collector-logs"}[1h]))
+              type: logql
+              expect:
+                count: 2
+            # alloy-rules also covers the rule and alert sync components, which nothing else checks
+            - query: '{job="collector-logs"} |~ `(?i)forbidden`'
+              type: logql
+              expect:
+                count: 0

@@ -23,6 +23,22 @@ metadata:
   name: k8smon-alloy-metrics-default-rbac
 rules:
   - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
       - ""
     resources:
       - nodes/metrics
@@ -32,6 +48,8 @@ rules:
       - ""
     resources:
       - nodes
+      - pods
+      - services
     verbs:
       - get
       - list
@@ -134,14 +152,22 @@ metadata:
   namespace: alpha
 rules:
   - apiGroups:
-      - ""
+      - monitoring.coreos.com
     resources:
-      - pods
-      - services
+      - podmonitors
+      - probes
+      - servicemonitors
     verbs:
       - get
       - list
       - watch
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - secrets
+    verbs:
+      - get
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -150,14 +176,22 @@ metadata:
   namespace: bravo
 rules:
   - apiGroups:
-      - ""
+      - monitoring.coreos.com
     resources:
-      - pods
-      - services
+      - podmonitors
+      - probes
+      - servicemonitors
     verbs:
       - get
       - list
       - watch
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - secrets
+    verbs:
+      - get
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -169,8 +203,6 @@ rules:
       - ""
     resources:
       - endpoints
-      - pods
-      - services
     verbs:
       - get
       - list
@@ -183,14 +215,22 @@ metadata:
   namespace: delta
 rules:
   - apiGroups:
-      - ""
+      - monitoring.coreos.com
     resources:
-      - pods
-      - services
+      - podmonitors
+      - probes
+      - servicemonitors
     verbs:
       - get
       - list
       - watch
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - secrets
+    verbs:
+      - get
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role

@@ -40,6 +40,30 @@ eksKubeControllerManagerMetrics:
 eksKubeSchedulerMetrics:
   rules:
     - {apiGroups: [metrics.eks.amazonaws.com], resources: [ksh/metrics, ksh/resourcemetrics], verbs: [get], clusterScoped: true}
+promOperator.podmonitors:
+  rules:
+    - {apiGroups: [monitoring.coreos.com], resources: [podmonitors], verbs: [get, list, watch]}
+promOperator.servicemonitors:
+  rules:
+    - {apiGroups: [monitoring.coreos.com], resources: [servicemonitors], verbs: [get, list, watch]}
+promOperator.probes:
+  rules:
+    - {apiGroups: [monitoring.coreos.com], resources: [probes], verbs: [get, list, watch]}
+promOperator.scrapeconfigs:
+  rules:
+    - {apiGroups: [monitoring.coreos.com], resources: [scrapeconfigs], verbs: [get, list, watch]}
+promOperatorCredentials:
+  rules:
+    - {apiGroups: [""], resources: [secrets, configmaps], verbs: [get]}
+prometheusRules:
+  rules:
+    - {apiGroups: [monitoring.coreos.com], resources: [prometheusrules], verbs: [get, list, watch]}
+    - {apiGroups: [""], resources: [namespaces], verbs: [get, list, watch], clusterScoped: true}
+alertmanagerConfigs:
+  rules:
+    - {apiGroups: [monitoring.coreos.com], resources: [alertmanagerconfigs], verbs: [get, list, watch]}
+    - {apiGroups: [""], resources: [namespaces], verbs: [get, list, watch], clusterScoped: true}
+    - {apiGroups: [""], resources: [secrets, configmaps], verbs: [get]}
 secret:
   rules:
     - {apiGroups: [""], resources: [secrets], verbs: [get]}

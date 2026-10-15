@@ -11,6 +11,7 @@
 #   component:     The Alloy component name, like discovery.kubernetes. Required.
 #   match:          A regular expression run against the Alloy config text inside the block's braces, nested blocks
 #                   included and comments removed. The entry applies only if it matches. Default: every block.
+#   unless:         A regular expression like match. The entry doesn't apply if it matches. Default: none.
 #   bundles:        Bundles to grant, limited to the namespaces that scope or namespaces give.
 #   roles:          A map from the block's role attribute to bundles, used instead of bundles. A role that isn't a string
 #                   literal, or isn't in the map, gets every role's bundles, cluster-wide.
@@ -20,6 +21,10 @@
 #   clusterBundles: Bundles to always grant cluster-wide.
 #   namedObject:    A bundle to grant only for the object that the block's name and namespace attributes name. Entries
 #                   with namedObject ignore every other field.
+#   targets:        For components that send the ServiceAccount token, a list of {match, bundles}. Each source of the
+#                   block's targets gets the bundles of the first item whose match fits the text on the way from the
+#                   source to the block. An item without match fits every source. A source that no item fits, or that
+#                   can't be followed, fails the render.
 - component: discovery.kubernetes
   scope: namespacesBlock
   roles:
@@ -37,6 +42,34 @@
   bundles: [namespaces]
 - component: discovery.kubelet
   bundles: [kubeletPods]
+- component: prometheus.operator.podmonitors
+  scope: namespacesAttribute
+  bundles: [promOperator.podmonitors, promOperatorCredentials]
+  clusterBundles: [pods, nodes]
+- component: prometheus.operator.servicemonitors
+  scope: namespacesAttribute
+  bundles: [promOperator.servicemonitors, promOperatorCredentials]
+  clusterBundles: [nodes]
+- component: prometheus.operator.servicemonitors
+  match: 'kubernetes_role\s*='
+  unless: 'kubernetes_role\s*=\s*"endpoints"'
+  clusterBundles: [endpointslices]
+- component: prometheus.operator.servicemonitors
+  unless: 'kubernetes_role\s*=\s*"endpointslice"'
+  clusterBundles: [endpoints]
+- component: prometheus.operator.probes
+  scope: namespacesAttribute
+  bundles: [promOperator.probes, promOperatorCredentials]
+  clusterBundles: [ingresses]
+- component: prometheus.operator.scrapeconfigs
+  scope: namespacesAttribute
+  bundles: [promOperator.scrapeconfigs, promOperatorCredentials]
+- component: mimir.rules.kubernetes
+  bundles: [prometheusRules]
+- component: loki.rules.kubernetes
+  bundles: [prometheusRules]
+- component: mimir.alerts.kubernetes
+  bundles: [alertmanagerConfigs]
 - component: remote.kubernetes.secret
   namedObject: secret
 - component: remote.kubernetes.configmap
@@ -49,3 +82,7 @@
     - {match: '/apis/metrics\.eks\.amazonaws\.com/v1/ksh/', bundles: [eksKubeSchedulerMetrics]}
     - {match: 'role\s*=\s*"node"', bundles: [kubeletMetrics]}
     - {bundles: [metricsEndpoint]}
+- component: pyroscope.scrape
+  match: '/var/run/secrets/kubernetes\.io/serviceaccount/token'
+  targets:
+    - {match: 'role\s*=\s*"(pod|service|endpoints|endpointslice)"', bundles: []}
