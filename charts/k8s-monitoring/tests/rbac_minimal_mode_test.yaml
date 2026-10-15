@@ -1,0 +1,343 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:braces rule:commas
+suite: RBAC - Minimal mode
+release:
+  name: test
+  namespace: monitoring
+templates:
+  - alloy.yaml
+  - alloy-config.yaml
+  - alloy-sampler.yaml
+  - sdk-injector-rbac.yaml
+  - validations.yaml
+set:
+  cluster: {name: test-cluster}
+  selfReporting: {enabled: false}
+  telemetryServices:
+    sdkInjector:
+      deploy: true
+      allowedConfigMapWriters: system:serviceaccount:$(POD_NAMESPACE):test-alloy-singleton,system:serviceaccount:$(POD_NAMESPACE):my-sa
+  collectors:
+    alloy-singleton:
+      extraConfig: " "
+tests:
+  - it: leaves the Alloy spec without rbac in alloy mode
+    set:
+      collectors:
+        alloy-singleton: {presets: [singleton]}
+    asserts:
+      - notExists:
+          path: spec.rbac
+        template: alloy.yaml
+      - hasDocuments:
+          count: 1
+        template: alloy-config.yaml
+
+  - it: passes the other rbac settings to the Alloy spec in alloy mode
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac:
+            mode: alloy
+            namespaces: [a]
+    asserts:
+      - equal:
+          path: spec.rbac
+          value: {namespaces: [a]}
+        template: alloy.yaml
+
+  - it: disables the operator's RBAC and renders its own in minimal mode
+    set:
+      collectors:
+        alloy-singleton: {presets: [singleton], rbac: {mode: minimal}}
+    asserts:
+      - equal:
+          path: spec.rbac
+          value: {create: false}
+        template: alloy.yaml
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'monitoring')].kind"
+          value: Role
+        containsDocument:
+          kind: Role
+          apiVersion: rbac.authorization.k8s.io/v1
+          name: test-alloy-singleton-rbac
+          namespace: monitoring
+        template: alloy-config.yaml
+      - documentSelector:
+          path: "$[?(@.kind == 'RoleBinding' && @.metadata.namespace == 'monitoring')].kind"
+          value: RoleBinding
+        containsDocument:
+          kind: RoleBinding
+          apiVersion: rbac.authorization.k8s.io/v1
+          name: test-alloy-singleton-rbac
+          namespace: monitoring
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [configmaps], verbs: [create, get, update]}
+        template: alloy-config.yaml
+
+  - it: names, labels, and binds the RBAC objects to the collector's ServiceAccount
+    set:
+      collectors:
+        alloy-singleton: {presets: [singleton], rbac: {mode: minimal}}
+    asserts:
+      - documentSelector: {path: kind, value: Role}
+        isSubset:
+          path: metadata.labels
+          content:
+            app.kubernetes.io/component: rbac
+            app.kubernetes.io/instance: test-alloy-singleton
+            app.kubernetes.io/managed-by: Helm
+            app.kubernetes.io/part-of: alloy
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: Role}
+        notExists:
+          path: metadata.annotations
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: RoleBinding}
+        equal:
+          path: roleRef
+          value: {apiGroup: rbac.authorization.k8s.io, kind: Role, name: test-alloy-singleton-rbac}
+        template: alloy-config.yaml
+      - documentSelector: {path: kind, value: RoleBinding}
+        equal:
+          path: subjects
+          value:
+            - {kind: ServiceAccount, name: test-alloy-singleton, namespace: monitoring}
+        template: alloy-config.yaml
+
+  - it: binds to a named ServiceAccount
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          serviceAccount: {create: false, name: my-sa}
+    asserts:
+      - documentSelector: {path: kind, value: RoleBinding}
+        equal:
+          path: subjects
+          value:
+            - {kind: ServiceAccount, name: my-sa, namespace: monitoring}
+        template: alloy-config.yaml
+
+  - it: applies collectorCommon to every collector
+    set:
+      collectorCommon:
+        alloy:
+          rbac: {mode: minimal}
+      collectors:
+        alloy-singleton: {presets: [singleton]}
+    asserts:
+      - equal:
+          path: spec.rbac
+          value: {create: false}
+        template: alloy.yaml
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'monitoring')].kind"
+          value: Role
+        containsDocument:
+          kind: Role
+          apiVersion: rbac.authorization.k8s.io/v1
+          name: test-alloy-singleton-rbac
+          namespace: monitoring
+        template: alloy-config.yaml
+
+  - it: renders no RBAC with rbac.create false
+    set:
+      collectors:
+        alloy-singleton: {presets: [singleton], rbac: {mode: minimal, create: false}}
+    asserts:
+      - equal:
+          path: spec.rbac
+          value: {create: false}
+        template: alloy.yaml
+      - hasDocuments:
+          count: 1
+        template: alloy-config.yaml
+
+  - it: fails for collectors with remote configuration
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          remoteConfig:
+            enabled: true
+            url: https://fleet-management-prod-001.grafana.net
+            auth:
+              type: basic
+              username: 123456
+              password: "It's a secret to everyone"
+    asserts:
+      - failedTemplate:
+          errorPattern: 'The alloy-singleton collector uses rbac.mode: minimal with remote configuration'
+        template: validations.yaml
+
+  - it: fails for collectors that use their own configuration ConfigMap
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          alloy:
+            configMap: {name: my-own-config}
+    asserts:
+      - failedTemplate:
+          errorPattern: 'The alloy-singleton collector uses rbac.mode: minimal with its own configuration ConfigMap'
+        template: validations.yaml
+
+  - it: fails for collectors that run a different Alloy version
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          image: {tag: v1.19.0}
+    asserts:
+      - failedTemplate:
+          errorPattern: 'The alloy-singleton collector uses rbac.mode: minimal with Alloy image tag "v1.19.0", but minimal mode.s RBAC is only verified for Alloy v'
+        template: validations.yaml
+
+  - it: fails for collectors with an image digest
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          image: {digest: "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"}
+    asserts:
+      - failedTemplate:
+          errorPattern: 'The alloy-singleton collector uses rbac.mode: minimal with an image digest'
+        template: validations.yaml
+
+  - it: allows the Windows build of the default Alloy version
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton, windows]
+          rbac: {mode: minimal}
+    asserts:
+      - notFailedTemplate: {}
+        template: validations.yaml
+
+  - it: fails when no ServiceAccount is created or named
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          serviceAccount: {create: false}
+    asserts:
+      - failedTemplate:
+          errorPattern: 'The alloy-singleton collector uses rbac.mode: minimal, but does not create a ServiceAccount or name one'
+        template: validations.yaml
+
+  - it: rejects an unknown mode in the schema
+    set:
+      collectors:
+        alloy-singleton: {presets: [singleton], rbac: {mode: tiny}}
+    asserts:
+      - failedTemplate:
+          errorPattern: 'collectors.alloy-singleton.rbac.mode must be one of the following: "alloy", "minimal"'
+
+  - it: replaces the SDK Injector shim with a Role for listed ConfigMap writers
+    set:
+      collectors:
+        alloy-singleton: {presets: [singleton], rbac: {mode: minimal}}
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: sdk-injector-rbac.yaml
+      - documentSelector:
+          path: "$[?(@.kind == 'Role' && @.metadata.namespace == 'monitoring')].kind"
+          value: Role
+        contains:
+          path: rules
+          content: {apiGroups: [""], resources: [configmaps], verbs: [create, get, update]}
+        template: alloy-config.yaml
+
+  - it: does not grant ConfigMap writes to collectors that aren't listed
+    set:
+      telemetryServices:
+        sdkInjector:
+          deploy: true
+          allowedConfigMapWriters: system:serviceaccount:monitoring:someone-else
+      collectors:
+        alloy-singleton: {presets: [singleton], rbac: {mode: minimal}}
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: alloy-config.yaml
+
+  - it: fails when rbac.rules is set in minimal mode
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac:
+            mode: minimal
+            rules: [{apiGroups: [""], resources: [configmaps], verbs: [get]}]
+    asserts:
+      - failedTemplate:
+          errorPattern: 'The alloy-singleton collector sets rbac.rules, which only applies with rbac.mode: alloy for now.'
+        template: validations.yaml
+
+  - it: fails when rbac.clusterRules is set in minimal mode
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac:
+            mode: minimal
+            clusterRules: [{nonResourceURLs: [/healthz], verbs: [get]}]
+    asserts:
+      - failedTemplate:
+          errorPattern: 'The alloy-singleton collector sets rbac.clusterRules, which only applies with rbac.mode: alloy for now.'
+        template: validations.yaml
+
+  - it: fails when rbac.namespaces is set in minimal mode
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac:
+            mode: minimal
+            namespaces: [team-a]
+    asserts:
+      - failedTemplate:
+          errorPattern: 'The alloy-singleton collector sets rbac.namespaces, which only applies with rbac.mode: alloy for now.'
+        template: validations.yaml
+
+  - it: fails on an unknown RBAC mode for a sampler collector
+    set:
+      destinations:
+        tempo:
+          type: otlp
+          url: http://tempo.tempo.svc:4317
+          metrics: {enabled: false}
+          logs: {enabled: false}
+          processors:
+            tailSampling:
+              enabled: true
+              collector:
+                rbac: {mode: bogus}
+      applicationObservability:
+        enabled: true
+        collector: alloy-receiver
+        receivers: {otlp: {grpc: {enabled: true}}}
+        logs: {enabled: false}
+        metrics: {enabled: false}
+      collectorCommon:
+        alloy:
+          rbac: {mode: alloy}
+      collectors:
+        alloy-receiver: {presets: [deployment, otel-receiver]}
+    asserts:
+      - failedTemplate:
+          errorPattern: 'has an unknown RBAC mode: "bogus"'
+        template: alloy-sampler.yaml
