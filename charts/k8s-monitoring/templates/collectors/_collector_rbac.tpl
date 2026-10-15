@@ -1,4 +1,4 @@
-{{/* The SDK Injector only accepts ConfigMaps from the users in allowedConfigMapWriters. Inputs: . (root with collectorName) */}}
+{{/* The one rule minimal mode takes from values, because it isn't in the config: the SDK Injector only accepts ConfigMaps from the users in allowedConfigMapWriters, so a collector whose ServiceAccount is listed there can write ConfigMaps in the release namespace. Inputs: . (root with collectorName). Output: [{bundle, namespaces}] */}}
 {{- define "collectors.rbac.sdkInjectorEntries" -}}
 {{- $entries := list }}
 {{- if .Values.telemetryServices.sdkInjector.deploy }}
@@ -17,7 +17,7 @@
 {{- $entries | toYaml }}
 {{- end }}
 
-{{/* Inputs: catalog, entries. Output: {cluster, namespaced}, mapping "apiGroup|resource|name" or a URL to verbs */}}
+{{/* Expands entries into grants: every rule of an entry's bundle becomes "apiGroup|resource|name" keys with verbs, in each of the entry's namespaces, or cluster-wide when it has none. clusterScoped rules and nonResourceURLs are always cluster-wide. Inputs: catalog, entries. Output: {cluster, namespaced}, mapping "apiGroup|resource|name" or a URL to verbs */}}
 {{- define "collectors.rbac.expand" -}}
 {{- $state := dict "cluster" (dict) "namespaced" (dict) }}
 {{- range $entry := .entries }}
@@ -53,7 +53,7 @@
 {{- $state | toYaml }}
 {{- end }}
 
-{{/* Inputs: rules, key, verbs, sameScope */}}
+{{/* Whether rules already grant all of a key's verbs, for the key itself or, when the key names an object, for every object of that resource. With sameScope, the key itself doesn't count, so a grant doesn't cover itself. Inputs: rules, key, verbs, sameScope. Output: "true" or "false" */}}
 {{- define "collectors.rbac.coveredBy" -}}
 {{- $parts := splitList "|" .key }}
 {{- $candidates := list }}
@@ -79,7 +79,7 @@
 {{- $covered }}
 {{- end }}
 
-{{/* Inputs: . (map of keys to verbs) */}}
+{{/* Turns grants into RBAC rules in a stable order: resources with the same API group and verbs share a rule, named objects share a rule per resource, and URLs share a rule per verbs. Inputs: . (map of keys to verbs). Output: [rules] */}}
 {{- define "collectors.rbac.groupRules" -}}
 {{- $groups := dict }}
 {{- range $key, $verbs := . }}
@@ -111,7 +111,7 @@
 {{- $rules | toYaml }}
 {{- end }}
 
-{{/* Inputs: catalog, entries. Output: {cluster, namespaced} */}}
+{{/* Computes an instance's rules from its entries: expands them, drops grants that the ClusterRole or a broader grant in the same namespace already covers, and groups the rest into ClusterRole rules and rules for each namespace's Role. Inputs: catalog, entries. Output: {cluster, namespaced} */}}
 {{- define "collectors.rbac.resolve" -}}
 {{- $state := include "collectors.rbac.expand" (dict "catalog" .catalog "entries" .entries) | fromYaml }}
 {{- $cluster := dict }}
@@ -137,7 +137,7 @@
 {{- dict "cluster" (include "collectors.rbac.groupRules" $cluster | fromYamlArray) "namespaced" $namespaced | toYaml }}
 {{- end }}
 
-{{/* Inputs: name (instance fullname), namespace, labels, serviceAccountName, resolved */}}
+{{/* Renders the ClusterRole, a Role per namespace, and their bindings to the instance's ServiceAccount, skipping the ClusterRole when it has no rules. Inputs: name (instance fullname), namespace, labels, serviceAccountName, resolved */}}
 {{- define "collectors.rbac.render" }}
 {{- $subjects := list (dict "kind" "ServiceAccount" "name" .serviceAccountName "namespace" .namespace) }}
 {{- $clusterName := printf "%s-rbac" .name }}
@@ -196,13 +196,13 @@ subjects:
 {{- end }}
 {{- end }}
 
-{{/* Inputs: Files, entries (rules from values). Output: {cluster, namespaced} */}}
+{{/* Computes an instance's resolved rules from the bundle catalog and its entries. Inputs: Files, entries (rules from values). Output: {cluster, namespaced} */}}
 {{- define "collectors.rbac.compute" -}}
 {{- $catalog := .Files.Get "collectors/rbac-bundles.yaml" | fromYaml }}
 {{- include "collectors.rbac.resolve" (dict "catalog" $catalog "entries" (.entries | default list)) }}
 {{- end }}
 
-{{/* Inputs: root, values (root-like with collectorName), alloyValues (the collector.alloy.values result), entries (optional, rules from values) */}}
+{{/* Renders the RBAC objects of one collector, sampler, or service graph instance in minimal mode, unless its rbac.create is false. Inputs: root, values (root-like with collectorName), alloyValues (the collector.alloy.values result), entries (optional, rules from values) */}}
 {{- define "collectors.rbac.instance" }}
 {{- if dig "rbac" "create" true .alloyValues }}
   {{- $name := include "collector.alloy.fullname" .values }}
