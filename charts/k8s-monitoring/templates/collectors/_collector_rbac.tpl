@@ -165,6 +165,42 @@
 {{- $namespaces | uniq | toYaml }}
 {{- end }}
 
+{{/* Follows a component's targets back through discovery.relabel blocks to the discovery components or static targets they come from, so a scrape that sends the ServiceAccount token can be matched to what it scrapes, by the discovery role and the relabel rules on the way. Inputs: block, text (the scope's text), nested. Output: [{block, path}] for each source of targets: the source block (or "" if it can't be followed), and the text of every block on the way */}}
+{{- define "collectors.rbac.targetSources" -}}
+{{- $sources := list }}
+{{- $frontier := list (dict "block" .block "path" .block) }}
+{{- range $_ := until 8 }}
+  {{- $next := list }}
+  {{- range $item := $frontier }}
+    {{- $body := include "collectors.rbac.body" (dict "block" $item.block) }}
+    {{- $references := regexFindAll `[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*\.(?:output|targets)\b` $body -1 }}
+    {{- range $reference := $references }}
+      {{- $kind := regexReplaceAll `\.[A-Za-z0-9_]+\.(?:output|targets)$` $reference "" }}
+      {{- $label := regexReplaceAll `^.*\.([A-Za-z0-9_]+)\.(?:output|targets)$` $reference "${1}" }}
+      {{- $source := "" }}
+      {{- if regexMatch `^(discovery|prometheus\.exporter)\.` $kind }}
+        {{- $source = regexFind (printf `(?:^|[^A-Za-z0-9_.])%s\s+"%s"\s*\{%s\}` (regexQuoteMeta $kind) $label $.nested) $.text }}
+        {{- $source = regexReplaceAll `^[^A-Za-z_]+` $source "" }}
+      {{- end }}
+      {{- if and $source (eq $kind "discovery.relabel") }}
+        {{- $next = append $next (dict "block" $source "path" (printf "%s\n%s" $item.path $source)) }}
+      {{- else }}
+        {{- $sources = append $sources (dict "block" $source "path" (ternary (printf "%s\n%s" $item.path (include "collectors.rbac.body" (dict "block" $source))) "" (ne $source ""))) }}
+      {{- end }}
+    {{- end }}
+    {{- if not $references }}
+      {{- $static := regexMatch `^\[` (include "collectors.rbac.attribute" (dict "body" $body "name" "targets")) }}
+      {{- $sources = append $sources (dict "block" (ternary $item.block "" $static) "path" (ternary $item.path "" $static)) }}
+    {{- else if regexMatch `[\[,(]\s*\{` $body }}
+      {{- $sources = append $sources (dict "block" $item.block "path" $item.path) }}
+    {{- end }}
+  {{- end }}
+  {{- $frontier = $next }}
+{{- end }}
+{{- range $_ := $frontier }}{{ $sources = append $sources (dict "block" "" "path" "") }}{{ end }}
+{{- $sources | toYaml }}
+{{- end }}
+
 {{/* Finds the catalog's components in a final config, one declare scope at a time, and returns the bundles they need, with the namespaces and object names they're limited to. Comments are removed first, and braces in strings are masked so they don't count as blocks. Inputs: components (collectors/alloy-kubernetes-api.yaml), text (final config), releaseNamespace, collectorName, valuesPath. Output: [{bundle, namespaces, resourceNames}] */}}
 {{- define "collectors.rbac.scan" -}}
 {{- $entries := list }}
@@ -217,6 +253,22 @@
           {{- end }}
           {{- range $bundle := $item.clusterBundles | default list }}
             {{- $entries = append $entries (dict "bundle" $bundle) }}
+          {{- end }}
+          {{- if $item.targets }}
+            {{- range $source := include "collectors.rbac.targetSources" (dict "block" $block "text" $scope.text "nested" $nested) | fromYamlArray }}
+              {{- $rule := dict }}
+              {{- range $candidate := $item.targets }}
+                {{- if and $source.path (not $rule) (or (not $candidate.match) (regexMatch (printf "(?s)%s" ($candidate.match | default "")) $source.path)) }}{{ $rule = $candidate }}{{ end }}
+              {{- end }}
+              {{- if not $source.path }}
+                {{- include "collectors.rbac.unsupported" (merge (dict "problem" (printf "has a %s block that uses the ServiceAccount token, and where its targets come from can't be followed" $item.component)) $context) }}
+              {{- else if not $rule }}
+                {{- include "collectors.rbac.unsupported" (merge (dict "problem" (printf "has a %s block that sends the ServiceAccount token to targets that minimal RBAC doesn't support" $item.component)) $context) }}
+              {{- end }}
+              {{- range $bundle := $rule.bundles | default list }}
+                {{- $entries = append $entries (dict "bundle" $bundle) }}
+              {{- end }}
+            {{- end }}
           {{- end }}
         {{- end }}
       {{- end }}

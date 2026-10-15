@@ -15,6 +15,34 @@
 {{- define "collectors.notes.warnings" }}
 {{- include "collectors.notes.istio" . }}
 {{- include "collectors.notes.remoteConfigInferredAuth" . }}
+{{- include "collectors.notes.rbac" . }}
+{{- end }}
+
+{{/* Warns about collectors with rbac.mode "minimal" that were granted nodes/proxy. */}}
+{{- define "collectors.notes.rbac" }}
+{{- $kubeletProxy := list }}
+{{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
+  {{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
+  {{- if and (eq (include "collector.alloy.rbacMode" $collectorValues) "minimal") (dig "rbac" "create" true $collectorValues) }}
+    {{- if and $.Values.clusterMetrics.enabled (eq (include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" "clusterMetrics") | trim) $collectorName) }}
+      {{- range $source := list "kubelet" "kubeletResource" "kubeletProbes" "cadvisor" }}
+        {{- $sourceValues := index $.Values.clusterMetrics $source }}
+        {{- if and $sourceValues.enabled (eq $sourceValues.nodeAddressFormat "proxy") }}
+          {{- $kubeletProxy = append $kubeletProxy (printf "%s: clusterMetrics.%s" $collectorName $source) }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- if $kubeletProxy }}
+
+⚠️ These collectors scrape the kubelet through the API server proxy (nodeAddressFormat: proxy), so they were granted
+"get" on nodes/proxy. That permission gives access to the whole kubelet API on every Node. Use
+nodeAddressFormat: direct unless the collector can't reach the kubelet directly:
+{{- range $kubeletProxy }}
+* {{ . }}
+{{- end }}
+{{- end }}
 {{- end }}
 
 {{/* Warns when a collector's remote configuration authentication type is being inferred as "basic". */}}

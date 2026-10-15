@@ -41,3 +41,11 @@
   namedObject: secret
 - component: remote.kubernetes.configmap
   namedObject: configMap
+- component: prometheus.scrape
+  match: '/var/run/secrets/kubernetes\.io/serviceaccount/token'
+  targets:
+    - {match: '/api/v1/nodes/[^"]*/proxy/', bundles: [kubeletProxy]}
+    - {match: '/apis/metrics\.eks\.amazonaws\.com/v1/kcm/', bundles: [eksKubeControllerManagerMetrics]}
+    - {match: '/apis/metrics\.eks\.amazonaws\.com/v1/ksh/', bundles: [eksKubeSchedulerMetrics]}
+    - {match: 'role\s*=\s*"node"', bundles: [kubeletMetrics]}
+    - {bundles: [metricsEndpoint]}
