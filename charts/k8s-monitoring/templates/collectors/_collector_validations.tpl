@@ -213,3 +213,14 @@
     {{- end }}
   {{- end }}
 {{- end }}
+
+{{/* Inputs: name (collector name), collectorValues (merged collector values) */}}
+{{- define "collectors.validate.rbacConfigMap" }}
+  {{- if eq (include "collector.alloy.rbacMode" .collectorValues) "minimal" }}
+    {{- if or (dig "alloy" "configMap" "create" false .collectorValues) (dig "alloy" "configMap" "name" "" .collectorValues) }}
+      {{- $msg := list "" (printf "The %s collector uses rbac.mode: minimal with its own configuration ConfigMap, so its RBAC can't be computed." .name) }}
+      {{- $msg = append $msg (printf "Please set collectors.%s.rbac.mode to \"alloy\", or remove collectors.%s.alloy.configMap." .name .name) }}
+      {{- fail (join "\n" $msg) }}
+    {{- end }}
+  {{- end }}
+{{- end }}

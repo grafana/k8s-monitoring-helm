@@ -178,6 +178,19 @@ tests:
           errorPattern: 'The alloy-singleton collector uses rbac.mode: minimal with remote configuration'
         template: validations.yaml
 
+  - it: fails for collectors that use their own configuration ConfigMap
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          alloy:
+            configMap: {name: my-own-config}
+    asserts:
+      - failedTemplate:
+          errorPattern: 'The alloy-singleton collector uses rbac.mode: minimal with its own configuration ConfigMap'
+        template: validations.yaml
+
   - it: fails when no ServiceAccount is created or named
     set:
       collectors:

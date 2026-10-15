@@ -61,6 +61,8 @@ namespace, for the collectors listed in `telemetryServices.sdkInjector.allowedCo
 The render fails, and says to use `rbac.mode: alloy` for that collector, when:
 
 *   `remoteConfig.enabled` is set. Remote configuration can run any component, so the chart can't compute its rules.
+*   `alloy.configMap` sets `name`, or `create: true`. The collector then runs a configuration that the chart doesn't
+    build.
 *   `rbac.rules`, `rbac.clusterRules`, or `rbac.namespaces` is set. These aren't supported in minimal mode yet. They
     still work as before with `rbac.mode: alloy`.
 *   The collector doesn't create a ServiceAccount or name one.
