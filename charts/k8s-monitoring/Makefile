@@ -338,7 +338,7 @@ examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES)
 check-alloy-closures: $(EXAMPLE_ALLOY_FILES) $(INTEGRATION_TEST_ALLOY_FILES) $(PLATFORM_TEST_ALLOY_FILES)
 	awk -f ../../scripts/check-alloy-closures.awk $(EXAMPLE_ALLOY_FILES) $(INTEGRATION_TEST_ALLOY_FILES) $(PLATFORM_TEST_ALLOY_FILES)
 
-# Examples rendered with rbac.mode: minimal for the RBAC drift check, minus those using settings minimal mode rejects.
+# Examples rendered with rbac.mode: minimal for the inferred RBAC check, minus those using settings minimal mode rejects.
 RBAC_MINIMAL_UNSUPPORTED_EXAMPLE_VALUES_FILES := docs/examples/auth/external-secrets/values.yaml docs/examples/instrumentation-hub/values.yaml docs/examples/rbac-no-cluster-roles/values.yaml docs/examples/remote-config/values.yaml
 RBAC_MINIMAL_EXAMPLE_VALUES_FILES := $(filter-out $(RBAC_MINIMAL_UNSUPPORTED_EXAMPLE_VALUES_FILES),$(EXAMPLE_VALUES_FILES))
 RBAC_MINIMAL_OUTPUT_FILES := $(RBAC_MINIMAL_EXAMPLE_VALUES_FILES:docs/examples/%/values.yaml=tests/example-checks/.rendered/rbac-minimal/%.yaml)
