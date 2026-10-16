@@ -237,7 +237,7 @@
 {{- $sources | toYaml }}
 {{- end }}
 
-{{/* Finds the catalog's components in a final config, one declare scope at a time, and returns the bundles they need, with the namespaces and object names they're limited to. Comments are removed first, and braces in strings are masked so they don't count as blocks. Fails the render on import blocks, and on components that use the ServiceAccount token that no entry covers. Inputs: components (collectors/alloy-kubernetes-api.yaml), text (final config), releaseNamespace, collectorName, valuesPath. Output: [{bundle, namespaces, resourceNames}] */}}
+{{/* Finds the catalog's components in a final config, one declare scope at a time, and returns the bundles they need, with the namespaces and object names they're limited to. Comments are removed first, and braces in strings are masked so they don't count as blocks. Fails the render on import and remotecfg blocks, and on components that use the ServiceAccount token that no entry covers. Inputs: components (collectors/alloy-kubernetes-api.yaml), text (final config), releaseNamespace, collectorName, valuesPath. Output: [{bundle, namespaces, resourceNames}] */}}
 {{- define "collectors.rbac.scan" -}}
 {{- $entries := list }}
 {{- $tick := printf "%c" 96 }}
@@ -315,6 +315,9 @@
         {{- end }}
       {{- end }}
     {{- end }}
+  {{- end }}
+  {{- if regexMatch `(?:^|[^A-Za-z0-9_.])remotecfg\s*\{` $scope.text }}
+    {{- include "collectors.rbac.unsupported" (merge (dict "problem" "has a remotecfg block, which loads configuration that can't be scanned") $context) }}
   {{- end }}
   {{- range $block := regexFindAll (include "collectors.rbac.blockPattern" (dict "name" `[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+` "nested" $nested)) $scope.text -1 }}
     {{- $block = regexReplaceAll `^[^A-Za-z_]+` $block "" }}

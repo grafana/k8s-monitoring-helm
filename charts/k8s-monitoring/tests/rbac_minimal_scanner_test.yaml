@@ -807,6 +807,21 @@ tests:
           errorPattern: 'uses import.git, which loads configuration that can.t be scanned'
         template: alloy-config.yaml
 
+  - it: fails on remote configuration in a remotecfg block
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            remotecfg {
+              url = "https://fleet-management.example.com"
+            }
+    asserts:
+      - failedTemplate:
+          errorPattern: 'has a remotecfg block, which loads configuration that can.t be scanned'
+        template: alloy-config.yaml
+
   - it: fails when a declare block can't be read
     set:
       collectors:
