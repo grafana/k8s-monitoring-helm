@@ -142,17 +142,20 @@
 {{- ternary (list) $namespaces $all | uniq | toYaml }}
 {{- end }}
 
-{{/* Reads the one namespace that a component is limited to, like a k8sattributes filter's, from a string that can come from a module argument. Inputs: value (raw string value), context (for argumentValues). Output: the namespaces, or [] for every namespace */}}
+{{/* Reads the one namespace that a component is limited to, from a string that can come from a module argument: a k8sattributes filter's namespace, or the namespace in a load balancer's "<service>.<namespace>", which defaults to the release namespace. Inputs: value (raw string value), context (for argumentValues), service (read the namespace from "<service>.<namespace>"), releaseNamespace. Output: the namespaces, or [] for every namespace */}}
 {{- define "collectors.rbac.namespaceString" -}}
 {{- $lists := list }}
 {{- range $value := include "collectors.rbac.argumentValues" (merge (dict "value" .value) .context) | fromYamlArray }}
   {{- $namespace := include "collectors.rbac.literal" (dict "value" $value) }}
+  {{- if and $.service $namespace }}
+    {{- $namespace = ternary (regexReplaceAll `^[^.]*\.([^.]+).*$` $namespace "${1}") $.releaseNamespace (regexMatch `^[^.]*\.[^.]+` $namespace) }}
+  {{- end }}
   {{- $lists = append $lists (ternary (printf "[%q]" $namespace) "" (ne $namespace "")) }}
 {{- end }}
 {{- include "collectors.rbac.namespaceLists" (dict "values" $lists) }}
 {{- end }}
 
-{{/* Reads the namespaces that a component is limited to, the way its catalog entry's scope says to read them. Inputs: scope ("namespacesBlock", "namespacesAttribute", "filterNamespace", or "targets"), block, releaseNamespace, scopes, scopeIndex, scopeText, nested. Output: the namespaces, or [] for every namespace */}}
+{{/* Reads the namespaces that a component is limited to, the way its catalog entry's scope says to read them. Inputs: scope ("namespacesBlock", "namespacesAttribute", "filterNamespace", "kubernetesService", "ownNamespace", or "targets"), block, releaseNamespace, scopes, scopeIndex, scopeText, nested. Output: the namespaces, or [] for every namespace */}}
 {{- define "collectors.rbac.scope" -}}
 {{- $context := dict "scopes" .scopes "scope" .scopeIndex "nested" .nested "depth" 0 }}
 {{- $body := include "collectors.rbac.body" (dict "block" .block) }}
@@ -177,6 +180,13 @@
   {{- with include "collectors.rbac.attribute" (dict "body" $filterBody "name" "namespace") }}
     {{- $namespaces = include "collectors.rbac.namespaceString" (dict "value" . "context" $context) | fromYamlArray }}
   {{- end }}
+{{- else if eq .scope "kubernetesService" }}
+  {{- $kubernetes := regexFind `kubernetes\s*\{[^{}]*\}` (regexFind `resolver\s*\{(?:[^{}]|\{[^{}]*\})*\}` .block) }}
+  {{- with include "collectors.rbac.attribute" (dict "body" (trimSuffix "}" (regexReplaceAll `^kubernetes\s*\{` $kubernetes "")) "name" "service") }}
+    {{- $namespaces = include "collectors.rbac.namespaceString" (dict "value" . "context" $context "service" true "releaseNamespace" $.releaseNamespace) | fromYamlArray }}
+  {{- end }}
+{{- else if eq .scope "ownNamespace" }}
+  {{- $namespaces = list .releaseNamespace }}
 {{- else if eq .scope "targets" }}
   {{- $all := false }}
   {{- range $source := include "collectors.rbac.targetSources" (dict "block" .block "text" .scopeText "nested" .nested) | fromYamlArray }}
@@ -254,7 +264,11 @@
     {{- range $block := $blocks }}
       {{- $block = regexReplaceAll `^[^A-Za-z_]+` $block "" }}
       {{- $inner := regexReplaceAll `^[^{]*\{` $block "" }}
-      {{- if and (regexMatch (printf "(?s)%s" ($item.match | default "")) $inner) (not (and $item.unless (regexMatch (printf "(?s)%s" $item.unless) $inner))) }}
+      {{- $applies := not (and $item.unless (regexMatch (printf "(?s)%s" $item.unless) $inner)) }}
+      {{- range $pattern := ternary $item.match (list ($item.match | default "")) (kindIs "slice" $item.match) }}
+        {{- if not (regexMatch (printf "(?s)%s" $pattern) $inner) }}{{ $applies = false }}{{ end }}
+      {{- end }}
+      {{- if $applies }}
         {{- $body := include "collectors.rbac.body" (dict "block" $block) }}
         {{- if $item.namedObject }}
           {{- $objectName := include "collectors.rbac.literal" (dict "value" (include "collectors.rbac.attribute" (dict "body" $body "name" "name"))) }}

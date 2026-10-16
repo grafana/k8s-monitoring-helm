@@ -10,15 +10,18 @@
 # Fields:
 #   component:     The Alloy component name, like discovery.kubernetes. Required.
 #   match:          A regular expression run against the Alloy config text inside the block's braces, nested blocks
-#                   included and comments removed. The entry applies only if it matches. Default: every block.
+#                   included and comments removed. The entry applies only if it matches. A list of regular expressions
+#                   must all match. Default: every block.
 #   unless:         A regular expression like match. The entry doesn't apply if it matches. Default: none.
 #   bundles:        Bundles to grant, limited to the namespaces that scope or namespaces give.
 #   roles:          A map from the block's role attribute to bundles, used instead of bundles. A role that isn't a string
 #                   literal, or isn't in the map, gets every role's bundles, cluster-wide.
 #   scope:          Where the block limits its namespaces. namespacesBlock reads names and own_namespace from a
 #                   namespaces block, namespacesAttribute reads a namespaces list attribute, filterNamespace reads the
-#                   namespace attribute of a filter block, and targets uses the namespaces of the discovery.kubernetes
-#                   blocks that the block's targets come from. Default: cluster-wide.
+#                   namespace attribute of a filter block, kubernetesService reads the namespace from a resolver's
+#                   kubernetes service ("<service>.<namespace>", or the release namespace without one), ownNamespace
+#                   is the release namespace, and targets uses the namespaces of the discovery.kubernetes blocks that
+#                   the block's targets come from. Default: cluster-wide.
 #   namespaces:     A fixed list of namespaces for bundles, used instead of scope.
 #   clusterBundles: Bundles to always grant cluster-wide.
 #   namedObject:    A bundle to grant only for the object that the block's name and namespace attributes name. Entries
@@ -130,6 +133,30 @@
   scope: filterNamespace
   match: 'from\s*=\s*"cronjob"'
   bundles: [cronjobs]
+- component: otelcol.processor.resourcedetection
+  match: ['detectors\s*=\s*\[[^\]]*"kubernetes_node"', 'kubernetes_node\s*\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\bauth_type\s*=\s*"serviceAccount"']
+  bundles: [nodeGet]
+- component: otelcol.processor.resourcedetection
+  match: ['detectors\s*=\s*\[[^\]]*"kubeadm"', 'kubeadm\s*\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\bauth_type\s*=\s*"serviceAccount"']
+  bundles: [kubeadmConfig]
+  namespaces: [kube-system]
+- component: otelcol.processor.resourcedetection
+  match: 'detectors\s*=\s*\[[^\]]*"openshift"'
+  unless: 'openshift\s*\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\btoken\s*='
+  bundles: [openshiftInfrastructures]
+- component: otelcol.processor.resourcedetection
+  match: 'detectors\s*=\s*\[[^\]]*"eks"'
+  bundles: [nodeGet]
+- component: otelcol.exporter.loadbalancing
+  scope: kubernetesService
+  match: 'resolver\s*\{\s*kubernetes\s*\{'
+  bundles: [loadBalancer]
+- component: beyla.ebpf
+  bundles: [pods, services, nodes]
+- component: beyla.ebpf
+  scope: ownNamespace
+  match: 'external_deployment_name\s*='
+  bundles: [pods, configMapWriter]
 - component: prometheus.scrape
   match: '/var/run/secrets/kubernetes\.io/serviceaccount/token'
   targets:
@@ -142,3 +169,5 @@
   match: '/var/run/secrets/kubernetes\.io/serviceaccount/token'
   targets:
     - {match: 'role\s*=\s*"(pod|service|endpoints|endpointslice)"', bundles: []}
+- component: otelcol.auth.oauth2
+  match: '/var/run/secrets/kubernetes\.io/serviceaccount/token'
