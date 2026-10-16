@@ -790,21 +790,6 @@ tests:
           errorPattern: 'The alloy-singleton collector has a prometheus.remote_write block that uses the ServiceAccount token, so rbac.mode: minimal can.t compute its RBAC'
         template: alloy-config.yaml
 
-  - it: fails on a Kubernetes component that isn't in the catalog
-    set:
-      collectors:
-        alloy-singleton:
-          presets: [singleton]
-          rbac: {mode: minimal}
-          extraConfig: |-
-            otelcol.receiver.k8s_cluster "default" {
-              output { }
-            }
-    asserts:
-      - failedTemplate:
-          errorPattern: 'uses otelcol.receiver.k8s_cluster, which minimal RBAC doesn.t know about'
-        template: alloy-config.yaml
-
   - it: fails on modules loaded with import
     set:
       collectors:

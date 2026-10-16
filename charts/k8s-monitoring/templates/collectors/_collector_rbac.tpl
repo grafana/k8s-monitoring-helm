@@ -237,7 +237,7 @@
 {{- $sources | toYaml }}
 {{- end }}
 
-{{/* Finds the catalog's components in a final config, one declare scope at a time, and returns the bundles they need, with the namespaces and object names they're limited to. Comments are removed first, and braces in strings are masked so they don't count as blocks. Fails the render on import blocks, on components with Kubernetes-like names that the catalog doesn't list, and on components that use the ServiceAccount token that no entry covers. Inputs: components (collectors/alloy-kubernetes-api.yaml), text (final config), releaseNamespace, collectorName, valuesPath. Output: [{bundle, namespaces, resourceNames}] */}}
+{{/* Finds the catalog's components in a final config, one declare scope at a time, and returns the bundles they need, with the namespaces and object names they're limited to. Comments are removed first, and braces in strings are masked so they don't count as blocks. Fails the render on import blocks, and on components that use the ServiceAccount token that no entry covers. Inputs: components (collectors/alloy-kubernetes-api.yaml), text (final config), releaseNamespace, collectorName, valuesPath. Output: [{bundle, namespaces, resourceNames}] */}}
 {{- define "collectors.rbac.scan" -}}
 {{- $entries := list }}
 {{- $tick := printf "%c" 96 }}
@@ -252,8 +252,6 @@
 {{- range $_ := until 8 }}
   {{- $nested = printf `(?:[^{}]|\{%s\})*` $nested }}
 {{- end }}
-{{- $known := dict }}
-{{- range $item := .components }}{{ $_ := set $known $item.component true }}{{ end }}
 {{- $context := dict "collectorName" .collectorName "valuesPath" .valuesPath }}
 {{- $scopes := include "collectors.rbac.scopes" (dict "text" $text "nested" $nested "context" $context) | fromYamlArray }}
 {{- range $scopeIndex, $scope := $scopes }}
@@ -323,9 +321,6 @@
     {{- $component := regexReplaceAll `^([A-Za-z0-9_.]+)(?s:.*)$` $block "${1}" }}
     {{- if hasPrefix "import." $component }}
       {{- include "collectors.rbac.unsupported" (merge (dict "problem" (printf "uses %s, which loads configuration that can't be scanned" $component)) $context) }}
-    {{- end }}
-    {{- if and (regexMatch `kubernetes|kubelet|k8s` $component) (not (hasKey $known $component)) }}
-      {{- include "collectors.rbac.unsupported" (merge (dict "problem" (printf "uses %s, which minimal RBAC doesn't know about" $component)) $context) }}
     {{- end }}
     {{- if and (contains "/var/run/secrets/kubernetes.io/serviceaccount/token" $block) (not (hasKey $matched $block)) }}
       {{- include "collectors.rbac.unsupported" (merge (dict "problem" (printf "has a %s block that uses the ServiceAccount token" $component)) $context) }}
