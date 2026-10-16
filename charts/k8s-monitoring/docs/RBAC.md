@@ -122,6 +122,9 @@ The render fails, and says to use `rbac.mode: alloy` for that collector, when:
 *   `image.tag` is set to a different Alloy version than the one this chart uses by default, or `image.digest` is set.
     Minimal mode's rules are only verified against the default version, so it can't guarantee correct RBAC for another
     one. Variants of the default version, like the Windows image that the `windows` preset sets, are allowed.
+*   The configuration has an `import` or `remotecfg` block, which loads configuration that the chart can't see.
+*   A component sends the ServiceAccount token (`/var/run/secrets/kubernetes.io/serviceaccount/token`) and no catalog
+    entry covers it.
 *   A component block can't be read, for example because of unbalanced braces.
 *   A scrape that sends the ServiceAccount token gets its targets from somewhere the chart can't follow, like a module
     argument, or a `pyroscope.scrape` sends it to targets that don't come from Pod, Service, Endpoints, or EndpointSlice

@@ -772,6 +772,56 @@ tests:
           errorPattern: 'has a prometheus.scrape block that uses the ServiceAccount token, and where its targets come from can.t be followed'
         template: alloy-config.yaml
 
+  - it: fails when a component that the catalog doesn't cover sends the ServiceAccount token
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            prometheus.remote_write "in_cluster" {
+              endpoint {
+                url               = "https://prometheus.monitoring.svc:9091/api/v1/write"
+                bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+              }
+            }
+    asserts:
+      - failedTemplate:
+          errorPattern: 'The alloy-singleton collector has a prometheus.remote_write block that uses the ServiceAccount token, so rbac.mode: minimal can.t compute its RBAC'
+        template: alloy-config.yaml
+
+  - it: fails on modules loaded with import
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            import.git "modules" {
+              repository = "https://github.com/grafana/alloy-modules.git"
+              revision   = "main"
+              path       = "modules/kubernetes/"
+            }
+    asserts:
+      - failedTemplate:
+          errorPattern: 'uses import.git, which loads configuration that can.t be scanned'
+        template: alloy-config.yaml
+
+  - it: fails on remote configuration in a remotecfg block
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            remotecfg {
+              url = "https://fleet-management.example.com"
+            }
+    asserts:
+      - failedTemplate:
+          errorPattern: 'has a remotecfg block, which loads configuration that can.t be scanned'
+        template: alloy-config.yaml
+
   - it: fails when a declare block can't be read
     set:
       collectors:
@@ -807,6 +857,24 @@ tests:
           path: rules
           value:
             - {apiGroups: [""], resources: [namespaces, nodes, services], verbs: [get, list, watch]}
+        template: alloy-config.yaml
+
+  - it: ignores components in comments
+    set:
+      collectors:
+        alloy-singleton:
+          presets: [singleton]
+          rbac: {mode: minimal}
+          extraConfig: |-
+            // otelcol.receiver.k8s_cluster "default" { }
+            /*
+            import.git "modules" {
+              repository = "https://github.com/grafana/alloy-modules.git"
+            }
+            */
+    asserts:
+      - hasDocuments:
+          count: 1
         template: alloy-config.yaml
 
   - it: scopes Kubernetes API pod logs to the namespaces their targets are discovered in

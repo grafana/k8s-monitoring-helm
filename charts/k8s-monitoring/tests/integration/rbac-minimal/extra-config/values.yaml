@@ -1,0 +1,205 @@
+---
+cluster:
+  name: rbac-minimal-extra-config
+
+destinations:
+  prometheus:
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+    auth:
+      type: basic
+      username: promuser
+      password: prometheuspassword
+
+clusterMetrics:
+  enabled: true
+  collector: alloy-metrics
+  kubelet:
+    enabled: false
+  kubeletResource:
+    enabled: false
+  cadvisor:
+    enabled: false
+
+# Discover kube-state-metrics Pods in every namespace, instead of its Endpoints in the release namespace.
+replaceComponent:
+  - type: discovery.kubernetes
+    module: cluster_metrics
+    name: kube_state_metrics
+    content: |-
+      role = "pod"
+      selectors {
+        role  = "pod"
+        label = "app.kubernetes.io/name=kube-state-metrics"
+      }
+
+collectorCommon:
+  alloy:
+    rbac:
+      mode: minimal
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-custom:
+    presets: [singleton]
+    extraConfig: |-
+      discovery.kubernetes "self" {
+        role = "pod"
+        selectors {
+          role  = "pod"
+          label = "app.kubernetes.io/instance=k8smon-alloy-custom"
+        }
+      }
+
+      discovery.relabel "self" {
+        targets = discovery.kubernetes.self.targets
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_port_name"]
+          regex         = "http-metrics"
+          action        = "keep"
+        }
+      }
+
+      remote.kubernetes.secret "prometheus_credentials" {
+        name      = "prometheus-credentials"
+        namespace = "credentials"
+      }
+
+      remote.kubernetes.configmap "settings" {
+        name      = "rbac-settings"
+        namespace = "credentials"
+      }
+
+      prometheus.scrape "self" {
+        targets    = discovery.relabel.self.output
+        job_name   = "extra-config"
+        forward_to = [prometheus.remote_write.extra_config.receiver]
+      }
+
+      discovery.kubelet "self" {
+        url               = "https://" + sys.env("HOSTNAME") + ":10250"
+        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+        tls_config {
+          insecure_skip_verify = true
+        }
+      }
+
+      discovery.kubernetes "self_metadata" {
+        role = "pod"
+        selectors {
+          role  = "pod"
+          label = "app.kubernetes.io/instance=k8smon-alloy-custom"
+        }
+        attach_metadata {
+          node      = true
+          namespace = true
+        }
+      }
+
+      discovery.kubernetes "self_endpointslice" {
+        role = "endpointslice"
+        namespaces {
+          names = ["default"]
+        }
+        selectors {
+          role  = "endpointslice"
+          label = "kubernetes.io/service-name=k8smon-alloy-custom"
+        }
+      }
+
+      discovery.kubernetes "ingresses" {
+        role = "ingress"
+        namespaces {
+          names = ["credentials"]
+        }
+      }
+
+      discovery.relabel "kubelet_self" {
+        targets = discovery.kubelet.self.targets
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance", "__meta_kubernetes_pod_container_port_name"]
+          regex         = "k8smon-alloy-custom;http-metrics"
+          action        = "keep"
+        }
+        rule {
+          target_label = "source"
+          replacement  = "kubelet"
+        }
+      }
+
+      discovery.relabel "metadata_self" {
+        targets = discovery.kubernetes.self_metadata.targets
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_port_name"]
+          regex         = "http-metrics"
+          action        = "keep"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_node_label_kubernetes_io_os"]
+          target_label  = "node_os"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace_label_kubernetes_io_metadata_name"]
+          target_label  = "namespace_name"
+        }
+        rule {
+          target_label = "source"
+          replacement  = "attach-metadata"
+        }
+      }
+
+      discovery.relabel "endpointslice_self" {
+        targets = discovery.kubernetes.self_endpointslice.targets
+        rule {
+          source_labels = ["__meta_kubernetes_endpointslice_port_name"]
+          regex         = "http-metrics"
+          action        = "keep"
+        }
+        rule {
+          target_label = "source"
+          replacement  = "endpointslice"
+        }
+      }
+
+      // An Ingress target is its host, so scrape this collector instead to show that the Ingress was discovered.
+      discovery.relabel "ingress_self" {
+        targets = discovery.kubernetes.ingresses.targets
+        rule {
+          target_label = "__address__"
+          replacement  = "k8smon-alloy-custom.default.svc:12345"
+        }
+        rule {
+          target_label = "source"
+          replacement  = "ingress"
+        }
+      }
+
+      prometheus.scrape "discovery_variants" {
+        targets = array.concat(
+          discovery.relabel.kubelet_self.output,
+          discovery.relabel.metadata_self.output,
+          discovery.relabel.endpointslice_self.output,
+          discovery.relabel.ingress_self.output,
+        )
+        job_name   = "discovery-variants"
+        forward_to = [prometheus.remote_write.extra_config.receiver]
+      }
+
+      prometheus.remote_write "extra_config" {
+        endpoint {
+          url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
+          basic_auth {
+            username = convert.nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["username"])
+            password = remote.kubernetes.secret.prometheus_credentials.data["password"]
+          }
+        }
+        external_labels = {
+          cluster       = "rbac-minimal-extra-config",
+          config_source = remote.kubernetes.configmap.settings.data["source"],
+        }
+      }
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
