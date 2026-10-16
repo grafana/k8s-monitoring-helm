@@ -60,6 +60,20 @@ rules:
       - get
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8smon-alloy-receiver-default-rbac
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: k8smon-beyla
@@ -83,6 +97,19 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-metrics
+    namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-alloy-receiver-default-rbac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-alloy-receiver-default-rbac
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-alloy-receiver
     namespace: default
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -295,6 +322,36 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
+  name: k8smon-alloy-singleton-default-rbac
+  namespace: alpha
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: k8smon-alloy-singleton-default-rbac
+  namespace: bravo
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
   name: k8smon-alloy-singleton-rbac
   namespace: default
 rules:
@@ -306,6 +363,21 @@ rules:
       - secrets
     verbs:
       - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: k8smon-alloy-singleton-default-rbac
+  namespace: delta
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - get
+      - list
+      - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -478,12 +550,54 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
+  name: k8smon-alloy-singleton-default-rbac
+  namespace: alpha
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: k8smon-alloy-singleton-default-rbac
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-alloy-singleton
+    namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: k8smon-alloy-singleton-default-rbac
+  namespace: bravo
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: k8smon-alloy-singleton-default-rbac
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-alloy-singleton
+    namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
   name: k8smon-alloy-singleton-rbac
   namespace: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: k8smon-alloy-singleton-rbac
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-alloy-singleton
+    namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: k8smon-alloy-singleton-default-rbac
+  namespace: delta
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: k8smon-alloy-singleton-default-rbac
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-singleton

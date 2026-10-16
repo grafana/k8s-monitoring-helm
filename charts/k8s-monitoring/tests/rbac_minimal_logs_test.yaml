@@ -1,0 +1,109 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:braces rule:commas
+suite: RBAC - Minimal mode - Logs features
+release:
+  name: test
+  namespace: monitoring
+templates:
+  - alloy-config.yaml
+set:
+  cluster: {name: test-cluster}
+  destinations:
+    loki: {type: loki, url: http://loki.loki.svc:3100/loki/api/v1/push}
+  collectors:
+    alloy-logs:
+      presets: [clustered, statefulset]
+      rbac: {mode: minimal}
+tests:
+  - it: scopes cluster events to their namespaces
+    set:
+      clusterEvents: {enabled: true, namespaces: [team-a]}
+    asserts:
+      - hasDocuments:
+          count: 3
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: metadata.namespace
+          value: team-a
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [events], verbs: [get, list, watch]}
+
+  - it: scopes pod logs via Loki to its namespaces, with node and namespace metadata cluster-wide
+    set:
+      podLogsViaLoki:
+        enabled: true
+        namespaces: [team-a]
+        nodeLabels: {nodePool: true}
+        attachNamespaceMetadata: true
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [namespaces, nodes], verbs: [get, list, watch]}
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: metadata.namespace
+          value: team-a
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
+
+  - it: grants pod logs via the Kubernetes API pods and pods/log in its namespaces
+    set:
+      podLogsViaKubernetesApi: {enabled: true, namespaces: [team-a]}
+    asserts:
+      - hasDocuments:
+          count: 3
+      - documentSelector: {path: kind, value: Role}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [pods/log], verbs: [get]}
+            - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}
+
+  - it: grants pod logs via OpenTelemetry Pods, and Nodes for node labels
+    set:
+      podLogsViaOpenTelemetry:
+        enabled: true
+        nodeLabels: {zone: topology.kubernetes.io/zone}
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+          alloy: {stabilityLevel: public-preview}
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [nodes, pods], verbs: [get, list, watch]}
+
+  - it: grants PodLogs objects cluster-wide access
+    set:
+      podLogsObjects: {enabled: true}
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [monitoring.grafana.com], resources: [podlogs], verbs: [get, list, watch]}
+            - {apiGroups: [""], resources: [pods/log], verbs: [get]}
+            - {apiGroups: [""], resources: [namespaces, pods], verbs: [get, list, watch]}
+
+  - it: grants Kubernetes manifests pod logs cluster-wide
+    set:
+      kubernetesManifests: {enabled: true}
+    asserts:
+      - documentSelector: {path: kind, value: ClusterRole}
+        equal:
+          path: rules
+          value:
+            - {apiGroups: [""], resources: [pods/log], verbs: [get]}
+            - {apiGroups: [""], resources: [pods], verbs: [get, list, watch]}

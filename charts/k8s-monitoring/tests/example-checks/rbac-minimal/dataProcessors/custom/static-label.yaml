@@ -32,6 +32,20 @@ rules:
       - get
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8smon-alloy-receiver-default-rbac
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-logs-default-rbac
@@ -55,6 +69,19 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-metrics
+    namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-alloy-receiver-default-rbac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-alloy-receiver-default-rbac
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-alloy-receiver
     namespace: default
 ---
 apiVersion: rbac.authorization.k8s.io/v1

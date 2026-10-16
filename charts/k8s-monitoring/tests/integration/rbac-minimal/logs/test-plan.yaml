@@ -1,0 +1,93 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: rbac-minimal-logs
+
+subject:
+  releaseName: k8smon
+  path: ../../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: dependencies/podlogs-crd.yaml
+    verb: create
+  - file: dependencies/workloads.yaml
+  - file: ../dependencies/collector-logs.yaml
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Loki
+              type: loki
+              url: http://loki-gateway.loki.svc:8080
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+              isDefault: true
+
+tests:
+  - type: kubernetes-objects-test
+    values:
+      checks:
+        - {kind: Role, name: k8smon-alloy-logs-api-default-rbac, namespace: logs-api}
+        - {kind: ClusterRole, name: k8smon-alloy-logs-api-default-rbac, expect: {count: 0}}
+        - {kind: ClusterRole, name: k8smon-alloy-logs-otel-default-rbac}
+        - {kind: ClusterRole, name: k8smon-alloy-podlogs-default-rbac}
+        - {kind: ClusterRole, name: k8smon-alloy-singleton-default-rbac}
+        - {kind: ClusterRole, name: k8smon-alloy-logs-api, expect: {count: 0}}
+        - {kind: ClusterRole, name: k8smon-alloy-logs-otel, expect: {count: 0}}
+        - {kind: ClusterRole, name: k8smon-alloy-podlogs, expect: {count: 0}}
+        - {kind: ClusterRole, name: k8smon-alloy-singleton, expect: {count: 0}}
+
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: rbac-minimal-logs
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+          queries:
+            # podLogsViaKubernetesApi: pods and pods/log in logs-api
+            - query: count_over_time({cluster="$CLUSTER", namespace="logs-api"}[1h])
+              type: logql
+            # podLogsViaOpenTelemetry: k8sattributes reads the namespace label
+            - query: count_over_time({k8s_cluster_name="$CLUSTER", k8s_namespace_name="logs-otel"} | color = "green"[1h])
+              type: logql
+            # podLogsViaOpenTelemetry: k8sattributes reads the node label
+            - query: count_over_time({k8s_cluster_name="$CLUSTER", k8s_namespace_name="logs-otel"} | node_os = "linux"[1h])
+              type: logql
+            # podLogsObjects: PodLogs objects, pods, and pods/log
+            - query: count_over_time({cluster="$CLUSTER", namespace="logs-objects"}[1h])
+              type: logql
+            # kubernetesManifests: pods and pods/log for k8s-manifest-tail
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/manifests"}[1h])
+              type: logql
+
+        # Runs after the queries above pass, so every collector has already called the Kubernetes API.
+        - env:
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query_range
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+          queries:
+            # Every collector's logs arrive, so the empty result below means no errors rather than no logs
+            - query: sum by (instance) (count_over_time({job="collector-logs"}[1h]))
+              type: logql
+              expect:
+                count: 4
+            - query: '{job="collector-logs"} |~ `(?i)forbidden`'
+              type: logql
+              expect:
+                count: 0
