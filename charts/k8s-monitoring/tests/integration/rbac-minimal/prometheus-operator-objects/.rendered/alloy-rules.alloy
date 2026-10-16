@@ -1,0 +1,91 @@
+// Self Reporting
+prometheus.exporter.static "kubernetes_monitoring_telemetry" {
+  text = `
+
+# HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
+# TYPE grafana_kubernetes_monitoring_build_info gauge
+grafana_kubernetes_monitoring_build_info{version="4.5.3", namespace="default"} 1
+# HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
+# TYPE grafana_kubernetes_monitoring_feature_info gauge
+grafana_kubernetes_monitoring_feature_info{feature="prometheusOperatorObjects", sources="ServiceMonitors,PodMonitors,Probes", version="1.0.0"} 1
+# HELP grafana_kubernetes_monitoring_destination_info_count A metric to report the number of enabled destinations grouped by type and configuration
+# TYPE grafana_kubernetes_monitoring_destination_info_count gauge
+grafana_kubernetes_monitoring_destination_info_count{rules_enabled="true", type="prometheus"} 1
+# HELP grafana_kubernetes_monitoring_collector_info A metric to report the collectors of the Kubernetes Monitoring Helm chart
+# TYPE grafana_kubernetes_monitoring_collector_info gauge
+grafana_kubernetes_monitoring_collector_info{kind="statefulset", name="alloy-metrics", presets="clustered,statefulset", replicas="1", type="alloy"} 1
+grafana_kubernetes_monitoring_collector_info{kind="deployment", name="alloy-rules", presets="singleton", replicas="1", type="alloy"} 1
+# EOF
+  `
+} // prometheus.exporter.static "kubernetes_monitoring_telemetry"
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = prometheus.exporter.static.kubernetes_monitoring_telemetry.targets
+  scrape_interval = "60s"
+  clustering {
+    enabled = true
+  }
+  forward_to = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
+
+
+
+mimir.alerts.kubernetes "default" {
+  address       = "http://prometheus-server.prometheus.svc:9090"
+  global_config = "route:\n  receiver: default\nreceivers:\n  - name: default\n"
+}
+
+loki.rules.kubernetes "default" {
+  address   = "http://loki.loki.svc:3100"
+  tenant_id = "1"
+}
+mimir.rules.kubernetes "prometheus" {
+  address = "http://prometheus-server.prometheus.svc:9090"
+  sync_interval = "5m"
+  mimir_namespace_prefix = "agent"
+} // mimir.rules.kubernetes "prometheus"
+// Destination: prometheus (prometheus)
+otelcol.exporter.prometheus "prometheus" {
+  add_metric_suffixes = true
+  resource_to_telemetry_conversion = false
+  keep_identifying_resource_attributes = true
+  forward_to = [prometheus.remote_write.prometheus.receiver]
+} // otelcol.exporter.prometheus "prometheus"
+
+prometheus.remote_write "prometheus" {
+  endpoint {
+    url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
+    headers = {
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    send_native_histograms = false
+
+    queue_config {
+      capacity = 10000
+      min_shards = 1
+      max_shards = 50
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "30ms"
+      max_backoff = "5s"
+      retry_on_http_429 = true
+      sample_age_limit = "0s"
+    }
+  }
+
+  wal {
+    truncate_frequency = "2h"
+    min_keepalive_time = "5m"
+    max_keepalive_time = "8h"
+  }
+  external_labels = {
+    "cluster" = "rbac-minimal-prom-operator-objects",
+    "k8s_cluster_name" = "rbac-minimal-prom-operator-objects",
+  }
+} // prometheus.remote_write "prometheus"
+

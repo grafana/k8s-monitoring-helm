@@ -1,0 +1,41 @@
+---
+# Objects for rule and alert sync, so the cluster-wide reads, including the Secret that the AlertmanagerConfig references, run against the API server.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: alerting
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alert-webhook
+  namespace: alerting
+stringData:
+  url: http://alert-receiver.alerting.svc:8080/
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: webhook
+  namespace: alerting
+spec:
+  route:
+    receiver: webhook
+  receivers:
+    - name: webhook
+      webhookConfigs:
+        - urlSecret:
+            name: alert-webhook
+            key: url
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: always-firing
+  namespace: alerting
+spec:
+  groups:
+    - name: always-firing
+      rules:
+        - alert: AlwaysFiring
+          expr: vector(1)

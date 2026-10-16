@@ -1,0 +1,57 @@
+---
+cluster:
+  name: rbac-minimal-prom-operator-objects
+
+destinations:
+  prometheus:
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+    # Prometheus has no ruler API, so syncing fails, but the PrometheusRule and Namespace informers still start.
+    rules:
+      enabled: true
+      collector: alloy-rules
+      address: http://prometheus-server.prometheus.svc:9090
+
+prometheusOperatorObjects:
+  enabled: true
+  collector: alloy-metrics
+  serviceMonitors:
+    enabled: true
+    namespaces: [grafana]
+    labelSelectors:
+      app.kubernetes.io/name: grafana
+  podMonitors:
+    enabled: true
+    namespaces: [nginx]
+  probes:
+    enabled: true
+    namespaces: [grafana]
+  scrapeConfigs:
+    enabled: true
+    namespaces: [default]
+
+collectorCommon:
+  alloy:
+    rbac:
+      mode: minimal
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    alloy:
+      stabilityLevel: experimental
+  # Separate from alloy-metrics, because reading AlertmanagerConfig Secrets in every namespace would hide its namespaced Roles.
+  alloy-rules:
+    presets: [singleton]
+    alloy:
+      stabilityLevel: experimental
+    extraConfig: |-
+      mimir.alerts.kubernetes "default" {
+        address       = "http://prometheus-server.prometheus.svc:9090"
+        global_config = "route:\n  receiver: default\nreceivers:\n  - name: default\n"
+      }
+
+      loki.rules.kubernetes "default" {
+        address   = "http://loki.loki.svc:3100"
+        tenant_id = "1"
+      }

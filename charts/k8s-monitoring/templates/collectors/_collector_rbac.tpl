@@ -228,7 +228,7 @@
     {{- range $block := $blocks }}
       {{- $block = regexReplaceAll `^[^A-Za-z_]+` $block "" }}
       {{- $inner := regexReplaceAll `^[^{]*\{` $block "" }}
-      {{- if regexMatch (printf "(?s)%s" ($item.match | default "")) $inner }}
+      {{- if and (regexMatch (printf "(?s)%s" ($item.match | default "")) $inner) (not (and $item.unless (regexMatch (printf "(?s)%s" $item.unless) $inner))) }}
         {{- $body := include "collectors.rbac.body" (dict "block" $block) }}
         {{- if $item.namedObject }}
           {{- $objectName := include "collectors.rbac.literal" (dict "value" (include "collectors.rbac.attribute" (dict "body" $body "name" "name"))) }}
