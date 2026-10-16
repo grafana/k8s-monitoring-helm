@@ -148,7 +148,7 @@
 {{- range $value := include "collectors.rbac.argumentValues" (merge (dict "value" .value) .context) | fromYamlArray }}
   {{- $namespace := include "collectors.rbac.literal" (dict "value" $value) }}
   {{- if and $.service $namespace }}
-    {{- $namespace = ternary (regexReplaceAll `^[^.]*\.([^.]+).*$` $namespace "${1}") $.releaseNamespace (contains "." $namespace) }}
+    {{- $namespace = ternary (regexReplaceAll `^[^.]*\.([^.]+).*$` $namespace "${1}") $.releaseNamespace (regexMatch `^[^.]*\.[^.]+` $namespace) }}
   {{- end }}
   {{- $lists = append $lists (ternary (printf "[%q]" $namespace) "" (ne $namespace "")) }}
 {{- end }}

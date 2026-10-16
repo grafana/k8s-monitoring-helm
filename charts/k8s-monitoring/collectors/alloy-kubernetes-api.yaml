@@ -134,15 +134,15 @@
   match: 'from\s*=\s*"cronjob"'
   bundles: [cronjobs]
 - component: otelcol.processor.resourcedetection
-  match: ['detectors\s*=\s*\[[^\]]*"kubernetes_node"', 'kubernetes_node\s*\{[^{}]*auth_type\s*=\s*"serviceAccount"']
+  match: ['detectors\s*=\s*\[[^\]]*"kubernetes_node"', 'kubernetes_node\s*\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\bauth_type\s*=\s*"serviceAccount"']
   bundles: [nodeGet]
 - component: otelcol.processor.resourcedetection
-  match: ['detectors\s*=\s*\[[^\]]*"kubeadm"', 'kubeadm\s*\{[^{}]*auth_type\s*=\s*"serviceAccount"']
+  match: ['detectors\s*=\s*\[[^\]]*"kubeadm"', 'kubeadm\s*\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\bauth_type\s*=\s*"serviceAccount"']
   bundles: [kubeadmConfig]
   namespaces: [kube-system]
 - component: otelcol.processor.resourcedetection
   match: 'detectors\s*=\s*\[[^\]]*"openshift"'
-  unless: 'openshift\s*\{[^{}]*\btoken\s*='
+  unless: 'openshift\s*\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\btoken\s*='
   bundles: [openshiftInfrastructures]
 - component: otelcol.processor.resourcedetection
   match: 'detectors\s*=\s*\[[^\]]*"eks"'

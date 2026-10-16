@@ -71,6 +71,15 @@ defines each bundle as RBAC rules.
     Namespace for `k8s.cluster.uid`, and Nodes for `k8s.node.uid` or `from = "node"`. Workload objects (ReplicaSets,
     Deployments, StatefulSets, DaemonSets, Jobs, and CronJobs) follow the same namespace as Pods, only when its
     metadata or labels need them. With `passthrough = true`, it gets nothing.
+*   `otelcol.processor.resourcedetection` only gets rules for detectors that call the Kubernetes API: `get` on Nodes
+    for `kubernetes_node` and `eks`, the `kubeadm-config` ConfigMap and the `kube-system` Namespace for `kubeadm`, and
+    the cluster Infrastructure for `openshift` unless it sets its own `token`. `kubernetes_node` and `kubeadm` only get
+    theirs with `auth_type = "serviceAccount"`.
+*   `otelcol.exporter.loadbalancing` with the `kubernetes` resolver gets EndpointSlices in the namespace of its
+    `service` (`<service>.<namespace>`), or the release namespace when the name has no namespace. The `dns` and
+    `static` resolvers get nothing.
+*   `beyla.ebpf` gets Pods, Services, and Nodes for its metadata. With `external_deployment_name` set, it also gets Pods
+    and ConfigMap writes in the release namespace for the SDK Injector's state.
 *   `remote.kubernetes.secret` and `remote.kubernetes.configmap` get `get` on the object they name. If the `namespace`
     isn't a string literal, that name is readable in every namespace. If the `name` isn't a string literal, every
     object in the namespace is readable. Use string literals to keep this access small.
