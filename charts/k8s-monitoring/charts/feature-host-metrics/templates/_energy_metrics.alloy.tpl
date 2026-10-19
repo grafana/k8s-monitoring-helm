@@ -73,7 +73,7 @@ prometheus.scrape "kepler" {
 } // prometheus.scrape "kepler"
 
 prometheus.relabel "kepler" {
-  max_cache_size = {{ .Values.energyMetrics.maxCacheSize | default .Values.global.maxCacheSize | int }}
+  {{- include "helper.relabelCacheArguments" (dict "maxCacheSize" .Values.energyMetrics.maxCacheSize "cacheTTL" .Values.energyMetrics.cacheTTL "global" .Values.global) | nindent 2 }}
 {{- if $metricAllowList }}
   rule {
     source_labels = ["__name__"]

@@ -25,3 +25,82 @@ tests:
       - matchRegex:
           path: data["module.alloy"]
           pattern: max_cache_size = 200000
+
+  - it: should switch every relabel component to TTL mode when global.cacheTTL is set
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          kube-state-metrics:
+            deploy: true
+      global:
+        maxCacheSize: 0
+        cacheTTL: 10m
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: max_cache_size = 0\n\s+cache_ttl = "10m"
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: max_cache_size = [1-9]
+
+  - it: should allow per-source settings to override the global cache mode
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          kube-state-metrics:
+            deploy: true
+      global:
+        maxCacheSize: 0
+        cacheTTL: 10m
+      cadvisor:
+        maxCacheSize: 400000
+      kubelet:
+        cacheTTL: 5m
+    asserts:
+      # cadvisor uses its per-source LRU size instead of the global TTL
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: prometheus.relabel "cadvisor" \{\n\s+max_cache_size = 400000\n
+      # kubelet uses its per-source TTL
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: prometheus.relabel "kubelet" \{\n\s+max_cache_size = 0\n\s+cache_ttl = "5m"
+      # kube-state-metrics has no per-source override, so it falls back to the global TTL
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: prometheus.relabel "kube_state_metrics" \{\n\s+max_cache_size = 0\n\s+cache_ttl = "10m"
+
+  - it: should allow a per-source TTL when the global cache mode is LRU
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          kube-state-metrics:
+            deploy: true
+      cadvisor:
+        cacheTTL: 15m
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: prometheus.relabel "cadvisor" \{\n\s+max_cache_size = 0\n\s+cache_ttl = "15m"
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: prometheus.relabel "kubelet" \{\n\s+max_cache_size = 100000\n
+
+  - it: should fail when both maxCacheSize and cacheTTL are set for the same source
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          kube-state-metrics:
+            deploy: true
+      cadvisor:
+        maxCacheSize: 400000
+        cacheTTL: 10m
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            clusterMetrics.cadvisor.maxCacheSize and clusterMetrics.cadvisor.cacheTTL are mutually exclusive.
+            Please set only one of them.

@@ -20,6 +20,13 @@ global:
   # @section -- Global Settings
   maxCacheSize: 100000
 
+  # -- Sets the cache_ttl for every prometheus.relabel component, which switches the relabeling cache from a fixed-size
+  # LRU cache to one that expires entries after this duration of inactivity (minimum `1m`, `10m` is a reasonable
+  # starting point). Mutually exclusive with `maxCacheSize`, so set `maxCacheSize` to `0` when using this.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
+  # @section -- Global Settings
+  cacheTTL: ""
+
   # -- Whether to scrape a classic histogram that’s also exposed as a native histogram.
   # @section -- Global Settings
   scrapeClassicHistograms: false
@@ -117,6 +124,13 @@ podMonitors:
   # @section -- PodMonitors
   maxCacheSize:
 
+  # -- Sets the cache_ttl for the prometheus.relabel component, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- PodMonitors
+  cacheTTL: ""
+
 # Prometheus Operator Probes
 probes:
   # -- Enable discovery of Prometheus Operator Probe objects.
@@ -186,6 +200,13 @@ probes:
   # @section -- Probes
   maxCacheSize:
 
+  # -- Sets the cache_ttl for the prometheus.relabel component, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- Probes
+  cacheTTL: ""
+
 # Prometheus Operator ScrapeConfigs
 scrapeConfigs:
   # -- Enable discovery of Prometheus Operator ScrapeConfig objects.
@@ -254,6 +275,13 @@ scrapeConfigs:
   # @raw
   # @section -- ScrapeConfigs
   maxCacheSize:
+
+  # -- Sets the cache_ttl for the prometheus.relabel component, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- ScrapeConfigs
+  cacheTTL: ""
 
 # Prometheus Operator ServiceMonitors
 serviceMonitors:
@@ -328,3 +356,10 @@ serviceMonitors:
   # @raw
   # @section -- ServiceMonitors
   maxCacheSize:
+
+  # -- Sets the cache_ttl for the prometheus.relabel component, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- ServiceMonitors
+  cacheTTL: ""

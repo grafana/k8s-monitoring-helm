@@ -134,6 +134,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| energyMetrics.cacheTTL | string | `""` | Sets the cache_ttl for the prometheus.relabel component for Kepler, which switches its relabeling cache to TTL mode. Mutually exclusive with `maxCacheSize`. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.cacheTTL`. |
 | energyMetrics.collector | string | `""` | Which collector to assign the energy metrics to. If empty, the feature-level `hostMetrics.collector` is used. Set this to route energy metrics to a different collector than the Linux or Windows host metrics. |
 | energyMetrics.enabled | bool | `false` | Deploy and scrape energy metrics. |
 | energyMetrics.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Kepler. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
@@ -152,6 +153,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| global.cacheTTL | string | `""` | Sets the cache_ttl for every prometheus.relabel component, which switches the relabeling cache from a fixed-size LRU cache to one that expires entries after this duration of inactivity (minimum `1m`, `10m` is a reasonable starting point). Mutually exclusive with `maxCacheSize`, so set `maxCacheSize` to `0` when using this. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) |
 | global.convertClassicHistogramsToNhcb | bool | `false` | Whether to convert classic histograms to native histograms with custom buckets (NHCB) at scrape time. |
 | global.kubernetesAPIService | string | `""` | The Kubernetes service. Change this if your cluster DNS is configured differently than the default. |
 | global.maxCacheSize | int | `100000` | Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) This should be at least 2x-5x your largest scrape target or samples appended rate. |
@@ -166,6 +168,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | linuxHosts.bearerTokenFile | string | `""` | The bearer token file to use when scraping metrics from Node Exporter. |
+| linuxHosts.cacheTTL | string | `""` | Sets the cache_ttl for the Node Exporter prometheus.relabel component, which switches its relabeling cache to TTL mode. Mutually exclusive with `maxCacheSize`. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.cacheTTL`. |
 | linuxHosts.collector | string | `""` | Which collector to assign the Linux host metrics to. If empty, the feature-level `hostMetrics.collector` is used. Set this to route Linux host metrics to a different collector than the Windows host metrics or energy metrics (for example, a Linux DaemonSet using the Alloy source). |
 | linuxHosts.enabled | bool | `false` | Scrape Linux host metrics. |
 | linuxHosts.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for discovering Node Exporter pods. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
@@ -201,6 +204,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | windowsHosts.bearerTokenFile | string | `""` | The bearer token file to use when scraping metrics from Windows Exporter. |
+| windowsHosts.cacheTTL | string | `""` | Sets the cache_ttl for the Windows Exporter prometheus.relabel component, which switches its relabeling cache to TTL mode. Mutually exclusive with `maxCacheSize`. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.cacheTTL`. |
 | windowsHosts.collector | string | `""` | Which collector to assign the Windows host metrics to. If empty, the feature-level `hostMetrics.collector` is used. Set this to route Windows host metrics to a different collector than the Linux host metrics or energy metrics (for example, a Windows DaemonSet using the Alloy source). |
 | windowsHosts.enabled | bool | `false` | Scrape node metrics |
 | windowsHosts.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Windows Exporter. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |

@@ -57,7 +57,7 @@ prometheus.operator.servicemonitors "service_monitors" {
 } // prometheus.operator.servicemonitors "service_monitors"
 
 prometheus.relabel "servicemonitors" {
-  max_cache_size = {{ .Values.serviceMonitors.maxCacheSize | default .Values.global.maxCacheSize | int }}
+  {{- include "helper.relabelCacheArguments" (dict "maxCacheSize" .Values.serviceMonitors.maxCacheSize "cacheTTL" .Values.serviceMonitors.cacheTTL "global" .Values.global) | nindent 2 }}
 {{- if $metricAllowList }}
   rule {
     source_labels = ["__name__"]
