@@ -2,7 +2,7 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
-# Zero-code nstrumentation with Discovery Rules
+# Zero-code instrumentation with Discovery Rules
 
 This example demonstrates how to enable the zero-code instrumentation feature, which deploys Grafana Beyla to automatically
 instrument your application for metrics collection. It also shows how to set
@@ -34,9 +34,9 @@ autoInstrumentation:
     config:
       data:
         discovery:
-          exclude_services:
+          exclude_instrument:
             - k8s_namespace: kube-system
-          services:
+          instrument:
             - k8s_pod_labels:
                 instrument: beyla
 
