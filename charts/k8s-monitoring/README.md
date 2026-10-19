@@ -305,6 +305,7 @@ details:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| global.cacheTTL | string | `""` | Sets the cache_ttl for every prometheus.relabel component, which switches the relabeling cache from a fixed-size LRU cache to one that expires entries after this duration of inactivity (minimum `1m`, `10m` is a reasonable starting point). Mutually exclusive with `maxCacheSize`, so set `maxCacheSize` to `0` when using this. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) |
 | global.convertClassicHistogramsToNhcb | bool | `false` | Whether to convert classic histograms to native histograms with custom buckets (NHCB) at scrape time. Requires scrapeNativeHistograms to be true, send_native_histograms on the destination, and Remote Write v2 (remoteWriteProtocol: 2). |
 | global.image.pullPolicy | string | `""` | Global image pull policy for the Alloy, Alloy Operator, and Alloy removal hook images. |
 | global.image.pullSecrets | list | `[]` | Global image pull secrets for the Alloy, Alloy Operator, Beyla, and Alloy removal hook images. |

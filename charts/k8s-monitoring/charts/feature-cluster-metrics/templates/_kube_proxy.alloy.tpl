@@ -51,7 +51,7 @@ prometheus.scrape "kube_proxy" {
 } // prometheus.scrape "kube_proxy"
 
 prometheus.relabel "kube_proxy" {
-  max_cache_size = {{ .Values.kubeProxy.maxCacheSize | default .Values.global.maxCacheSize | int }}
+  {{- include "helper.relabelCacheArguments" (dict "maxCacheSize" .Values.kubeProxy.maxCacheSize "cacheTTL" .Values.kubeProxy.cacheTTL "global" .Values.global) | nindent 2 }}
 {{- if $metricAllowList }}
   rule {
     source_labels = ["__name__"]
