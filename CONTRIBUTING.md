@@ -150,7 +150,7 @@ installing them for a better experience:
 
 The `scripts/helm-with-version` helper downloads and caches the requested Helm client version to `~/.helm_cli_cache`
 before executing it with the arguments you supply. This is useful for testing against multiple Helm releases without
-managing the binaries manually.
+managing the binaries manually. Set `HELM_CLI_CACHE_DIR` to use a different cache directory.
 
 ```bash
 scripts/helm-with-version 3.14.4 version
@@ -181,6 +181,10 @@ CI by default. To test another version for the entire Make invocation, including
 ```bash
 make -C charts/k8s-monitoring HELM_VERSION=4.1.3 test
 ```
+
+The `scripts/bin/helm` entry on the Makefiles' `PATH` is a symlink to `scripts/helm-with-version`. When invoked as
+`helm`, the helper uses `HELM_VERSION` and forwards all arguments to that client. It downloads the client only when
+Helm is invoked.
 
 ## Contributor Guides
 

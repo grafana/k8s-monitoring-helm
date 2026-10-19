@@ -70,7 +70,7 @@ lint-alloy: ## Lint Alloy files
 .PHONY: lint-shell
 # renovate: datasource=docker depName=koalaman/shellcheck
 SHELLCHECK_VERSION = v0.11.0
-SHELL_SCRIPTS = scripts/bin/helm $(shell find . -type f -name "*.sh" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -path "./charts/k8s-monitoring-v1/test/spec/*" -o -path "./charts/k8s-monitoring/tests/example-checks/spec/*" -o -path "./charts/k8s-monitoring/tests/misc-checks/spec/*" \))
+SHELL_SCRIPTS = scripts/helm-with-version $(shell find . -type f -name "*.sh" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -path "./charts/k8s-monitoring-v1/test/spec/*" -o -path "./charts/k8s-monitoring/tests/example-checks/spec/*" -o -path "./charts/k8s-monitoring/tests/misc-checks/spec/*" \))
 lint-shell: ## Lint shell scripts
 	@if command -v shellcheck &> /dev/null; then \
 		shellcheck $(SHELL_SCRIPTS); \
