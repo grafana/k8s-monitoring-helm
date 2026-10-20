@@ -5,6 +5,9 @@
 // Prometheus Operator ServiceMonitor objects
 prometheus.operator.servicemonitors "service_monitors" {
   kubernetes_role = "endpointslice"
+{{- if .Values.serviceMonitors.allowArbitraryFileAccess }}
+  allow_arbitrary_file_access = true
+{{- end }}
 {{- if .Values.serviceMonitors.namespaces }}
   namespaces = {{ .Values.serviceMonitors.namespaces | toJson }}
 {{- end }}
