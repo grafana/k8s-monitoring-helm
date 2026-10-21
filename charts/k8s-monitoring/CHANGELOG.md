@@ -5,6 +5,7 @@
 *   Fix `k8s_cluster_name` label values being joined with `;` on Beyla metrics sent through OTLP destinations, by dropping the flat per-series copy when it equals the `k8s.cluster.name` set by the chart. (@mbaykara)
 *   Update Node Exporter to 4.60.0 (@TylerHelmuth)
 *   Update Windows Exporter to 0.12.9 (@TylerHelmuth)
+*   Update the SDK Injector (k8s-injection-controller) to 0.3.0 (@TylerHelmuth)
 
 ## 4.5.3
 
