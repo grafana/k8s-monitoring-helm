@@ -4,6 +4,7 @@
 
 *   Stop adding the container runtime default capabilities (including `NET_RAW` and `MKNOD`) back to the Alloy collectors. The default security context now drops all capabilities and only adds back `NET_BIND_SERVICE`, so collectors pass the `baseline` Pod Security Standard by default. Use the `root` preset or set `collectorCommon.alloy.alloy.securityContext.capabilities.add` if a collector needs more. (#2901) (@TylerHelmuth)
 *   Fix `k8s_cluster_name` label values being joined with `;` on Beyla metrics sent through OTLP destinations, by dropping the flat per-series copy when it equals the `k8s.cluster.name` set by the chart. (@mbaykara)
+*   Set `allowPrivilegeEscalation: false` on the Node Exporter container by default. If you set `privileged: true` or add the `CAP_SYS_ADMIN` capability in `telemetryServices.node-exporter.containerSecurityContext`, also set `allowPrivilegeEscalation: true`, since Kubernetes rejects that combination. The chart now fails with this guidance. (#2898) (@TylerHelmuth)
 
 ## 4.5.3
 
