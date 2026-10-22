@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 4.5.4
 
 *   Add `allowArbitraryFileAccess` to the ServiceMonitors feature to allow opt back into allowing ServiceMonitor objects to reference local files (`bearerTokenFile`, `tlsConfig.caFile`/`certFile`/`keyFile`). (@petewall)
 *   Fix `k8s_cluster_name` label values being joined with `;` on Beyla metrics sent through OTLP destinations, by dropping the flat per-series copy when it equals the `k8s.cluster.name` set by the chart. (@mbaykara)
