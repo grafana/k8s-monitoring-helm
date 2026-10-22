@@ -16,10 +16,9 @@ On top of everything `baseline` forbids, `restricted` requires every container t
 *   drop **all** capabilities and add back at most `NET_BIND_SERVICE`
 *   set `seccompProfile.type` to `RuntimeDefault` or `Localhost`
 
-The chart's default collector security context drops all capabilities but adds several back (such as `CHOWN`, `NET_RAW`,
-and `SYS_CHROOT`) and does not force a non-root user, so the defaults are rejected under `restricted`. This example
-overrides the security context on each Alloy collector to remove the added capabilities, pin a non-root user, and set a
-seccomp profile.
+The chart's default collector security context drops all capabilities and only adds back `NET_BIND_SERVICE`, but it does
+not force a non-root user, so the defaults are rejected under `restricted`. This example overrides the security context
+on each Alloy collector to pin a non-root user, clear the added capabilities, and set a seccomp profile.
 
 As with `baseline`, features that mount `hostPath` volumes cannot run under `restricted`:
 
@@ -73,9 +72,9 @@ destinations:
 #   * drop ALL capabilities and add back at most `NET_BIND_SERVICE`
 #   * set `seccompProfile.type` to `RuntimeDefault` or `Localhost`
 #
-# The chart's default collector security context drops ALL capabilities but adds several
-# back (CHOWN, NET_RAW, SYS_CHROOT, ...) and does not force a non-root user, so it is
-# rejected by `restricted`. The overrides below bring each Alloy collector into
+# The chart's default collector security context drops ALL capabilities and only adds back
+# `NET_BIND_SERVICE`, but it does not force a non-root user, so it is rejected by
+# `restricted`. The overrides below bring each Alloy collector into
 # compliance. kube-state-metrics and the Alloy Operator already ship compliant contexts;
 # the Operator only needs a `seccompProfile` added.
 #
@@ -120,8 +119,7 @@ collectorCommon:
         readOnlyRootFilesystem: false
         capabilities:
           drop: ["ALL"]
-          # Clear the capabilities the chart adds by default; `restricted` permits none
-          # of them (at most NET_BIND_SERVICE, which Alloy does not need here).
+          # `restricted` permits NET_BIND_SERVICE, but Alloy does not need it here.
           add: []
         seccompProfile:
           type: RuntimeDefault
