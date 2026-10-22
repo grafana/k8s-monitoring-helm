@@ -27,4 +27,17 @@ metadata:
 data:
   {{- $destinations := dict "enabledDest" (dict "type" "prometheus") "disabledDest" (dict "type" "prometheus" "disabled" true) }}
   enabledNames: {{ include "destinations.getEnabled" $destinations | fromYaml | keys | sortAlpha | toJson | quote }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-collectors-features-and-destinations
+data:
+  {{- $metrics := dict "Values" .Values "Files" .Files "Subcharts" .Subcharts "Release" .Release "Chart" .Chart "collectorName" "alloy-metrics" }}
+  {{- $logs := dict "Values" .Values "Files" .Files "Subcharts" .Subcharts "Release" .Release "Chart" .Chart "collectorName" "alloy-logs" }}
+  metricsFeatures: {{ include "collectors.features" $metrics | fromYamlArray | toJson | quote }}
+  logsFeatures: {{ include "collectors.features" $logs | fromYamlArray | toJson | quote }}
+  metricsDestinations: {{ include "collectors.destinationNames" $metrics | fromYamlArray | toJson | quote }}
+  logsDestinations: {{ include "collectors.destinationNames" $logs | fromYamlArray | toJson | quote }}
+  logsDestinationsWithoutFeatures: {{ include "collectors.destinationNames" (merge (dict "featureKeys" (list)) $logs) | fromYamlArray | toJson | quote }}
 {{- end }}

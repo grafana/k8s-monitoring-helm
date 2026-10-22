@@ -1,5 +1,5 @@
 {{- define "feature.clusterMetrics.kubeControllerManager.alloy" }}
-{{- if or .Values.kubeControllerManager.enabled (and .Values.controlPlane.enabled (not (eq .Values.kubeControllerManager.enabled false))) }}
+{{- if eq (include "feature.clusterMetrics.controlPlaneSource.enabled" (dict "Values" .Values "source" "kubeControllerManager")) "true" }}
 {{- $metricAllowList := .Values.kubeControllerManager.metricsTuning.includeMetrics }}
 {{- $metricDenyList := .Values.kubeControllerManager.metricsTuning.excludeMetrics }}
 {{- if eq .Values.kubeControllerManager.discoveryMode "eks-proxy" }}
