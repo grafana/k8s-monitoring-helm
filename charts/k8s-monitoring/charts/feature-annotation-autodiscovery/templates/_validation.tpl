@@ -9,4 +9,5 @@
   {{- $msg = append $msg "    enabled: true" }}
   {{- fail (join "\n" $msg) }}
 {{- end }}
+{{- include "helper.validateRelabelCacheSettings" (dict "values" .Values "path" "annotationAutodiscovery") }}
 {{- end }}

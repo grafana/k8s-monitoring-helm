@@ -54,7 +54,7 @@ prometheus.scrape "node_exporter" {
 } // prometheus.scrape "node_exporter"
 
 prometheus.relabel "node_exporter" {
-  max_cache_size = {{ .Values.linuxHosts.maxCacheSize | default .Values.global.maxCacheSize | int }}
+  {{- include "helper.relabelCacheArguments" (dict "maxCacheSize" .Values.linuxHosts.maxCacheSize "cacheTTL" .Values.linuxHosts.cacheTTL "global" .Values.global) | nindent 2 }}
 
 {{- if $metricAllowList }}
   rule {

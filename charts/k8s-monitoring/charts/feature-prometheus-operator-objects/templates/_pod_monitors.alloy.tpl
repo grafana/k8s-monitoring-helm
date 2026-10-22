@@ -53,7 +53,7 @@ prometheus.operator.podmonitors "pod_monitors" {
 } // prometheus.operator.podmonitors "pod_monitors"
 
 prometheus.relabel "podmonitors" {
-  max_cache_size = {{ .Values.podMonitors.maxCacheSize | default .Values.global.maxCacheSize | int }}
+  {{- include "helper.relabelCacheArguments" (dict "maxCacheSize" .Values.podMonitors.maxCacheSize "cacheTTL" .Values.podMonitors.cacheTTL "global" .Values.global) | nindent 2 }}
 {{- if $metricAllowList }}
   rule {
     source_labels = ["__name__"]

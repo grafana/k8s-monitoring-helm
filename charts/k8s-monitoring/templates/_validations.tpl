@@ -2,6 +2,7 @@
   {{- include "validations.checkForV1" . }}
   {{- include "validations.cluster_name" . }}
   {{- include "validations.platform" . }}
+  {{- include "validations.relabelCache" . }}
 
   {{- include "destinations.validate" . -}}
   {{- include "dataProcessors.validate" . -}}
@@ -44,6 +45,18 @@
   {{- $msg = append $msg "" }}
   {{- $msg = append $msg "If you'd like to migrate to version 2.0, see the Migration guide:" }}
   {{- $msg = append $msg "  https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/Migration.md" }}
+  {{- fail (join "\n" $msg) }}
+{{- end }}
+{{- end }}
+
+{{/* Checks that the global relabeling cache settings are not both set */}}
+{{- define "validations.relabelCache" }}
+{{- if and (.Values.global.maxCacheSize | default 0 | int) .Values.global.cacheTTL }}
+  {{- $msg := list "" "global.maxCacheSize and global.cacheTTL are mutually exclusive." }}
+  {{- $msg = append $msg "To use global.cacheTTL, please set:" }}
+  {{- $msg = append $msg "global:" }}
+  {{- $msg = append $msg "  maxCacheSize: 0" }}
+  {{- $msg = append $msg (printf "  cacheTTL: %s" .Values.global.cacheTTL) }}
   {{- fail (join "\n" $msg) }}
 {{- end }}
 {{- end }}
