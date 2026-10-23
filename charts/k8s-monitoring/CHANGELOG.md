@@ -2,10 +2,19 @@
 
 ## Unreleased
 
+*   Add `applicationObservability.processors.resourceDetection.enabled` to allow disabling resource detection when it would add collector host attributes to pass-through telemetry. (#3015) (@Iro-engin)
+*   Update Alloy Operator to 0.9.3 (@TylerHelmuth)
+*   Update Beyla to 1.16.16 (@TylerHelmuth)
+*   Fix the collector `extraService` ignoring `service.externalTrafficPolicy`, `service.trafficDistribution`, and `alloy.extraPorts[].nodePort`. (#3125) (@at-blacknight)
+
+## 4.5.4
+
+*   Add `allowArbitraryFileAccess` to the ServiceMonitors feature to allow opt back into allowing ServiceMonitor objects to reference local files (`bearerTokenFile`, `tlsConfig.caFile`/`certFile`/`keyFile`). (@petewall)
 *   Fix `k8s_cluster_name` label values being joined with `;` on Beyla metrics sent through OTLP destinations, by dropping the flat per-series copy when it equals the `k8s.cluster.name` set by the chart. (@mbaykara)
 *   Update Node Exporter to 4.60.0 (@TylerHelmuth)
 *   Update Windows Exporter to 0.12.9 (@TylerHelmuth)
-*   Fix the collector `extraService` ignoring `service.externalTrafficPolicy`, `service.trafficDistribution`, and `alloy.extraPorts[].nodePort`. (#3125) (@at-blacknight)
+*   Update Alloy Operator to 0.9.2 (@TylerHelmuth)
+*   Update the SDK Injector (k8s-injection-controller) to 0.3.0 (@TylerHelmuth)
 
 ## 4.5.3
 

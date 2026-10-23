@@ -1,0 +1,73 @@
+---
+cluster:
+  name: csi-secrets-store-example-cluster
+
+destinations:
+  prometheus:
+    type: prometheus
+    urlFrom: local.file.prometheus_url.content
+    auth:
+      type: basic
+      usernameFrom: local.file.prometheus_username.content
+      passwordFrom: local.file.password.content
+
+  loki:
+    type: loki
+    urlFrom: local.file.loki_url.content
+    auth:
+      type: basic
+      usernameFrom: local.file.loki_username.content
+      passwordFrom: local.file.password.content
+
+clusterMetrics:
+  enabled: true
+  collector: alloy-metrics
+
+podLogsViaLoki:
+  enabled: true
+  collector: alloy-logs
+
+collectorCommon:
+  alloy:
+    alloy:
+      mounts:
+        extra:
+          - name: secrets-store-inline
+            mountPath: "/var/run/secrets/secrets-store-inline"
+            readOnly: true
+    controller:
+      volumes:
+        extra:
+          - name: secrets-store-inline
+            csi:
+              driver: secrets-store.csi.k8s.io
+              readOnly: true
+              volumeAttributes:
+                secretProviderClass: grafana-cloud-secrets
+    extraConfig: |
+      local.file "loki_url" {
+        filename = "/var/run/secrets/secrets-store-inline/loki-url"
+      }
+      local.file "loki_username" {
+        filename = "/var/run/secrets/secrets-store-inline/loki-username"
+      }
+      local.file "prometheus_url" {
+        filename = "/var/run/secrets/secrets-store-inline/prometheus-url"
+      }
+      local.file "prometheus_username" {
+        filename = "/var/run/secrets/secrets-store-inline/prometheus-username"
+      }
+      local.file "password" {
+        filename  = "/var/run/secrets/secrets-store-inline/password"
+        is_secret = true
+      }
+
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
