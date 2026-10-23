@@ -2,9 +2,13 @@
 {{- if .Values.podMonitors.enabled }}
 {{- $metricAllowList := .Values.podMonitors.metricsTuning.includeMetrics }}
 {{- $metricDenyList := .Values.podMonitors.metricsTuning.excludeMetrics }}
+{{- $namespacesHaveRegex := "" }}
+{{- if .Values.podMonitors.namespaces }}
+  {{- $namespacesHaveRegex = include "feature.prometheusOperatorObjects.namespaces.hasRegex" .Values.podMonitors.namespaces }}
+{{- end }}
 // Prometheus Operator PodMonitor objects
 prometheus.operator.podmonitors "pod_monitors" {
-{{- if .Values.podMonitors.namespaces }}
+{{- if and .Values.podMonitors.namespaces (ne $namespacesHaveRegex "true") }}
   namespaces = {{ .Values.podMonitors.namespaces | toJson }}
 {{- end }}
 {{- if or .Values.podMonitors.labelSelectors .Values.podMonitors.labelExpressions }}
@@ -38,6 +42,13 @@ prometheus.operator.podmonitors "pod_monitors" {
     native_histogram_min_bucket_factor = {{ .Values.global.nativeHistogramMinBucketFactor | float64 }}
   }
 
+{{- if eq $namespacesHaveRegex "true" }}
+  rule {  // namespaces contains a regex, so PodMonitors cannot be pre-filtered by the component; keep only matching namespaces here
+    source_labels = ["job"]
+    regex = "podMonitor/({{ .Values.podMonitors.namespaces | join "|" }})/.*"
+    action = "keep"
+  }
+{{- end }}
 {{- with .Values.podMonitors.excludeNamespaces }}
   rule {
     source_labels = ["job"]

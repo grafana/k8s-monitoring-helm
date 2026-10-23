@@ -1,0 +1,56 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Prometheus Operator Objects - Namespace Filtering
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should pre-filter in the component when all namespaces are exact names
+    set:
+      testing: {enabled: true}
+      podMonitors:
+        namespaces: [default, kube-system]
+      probes:
+        namespaces: [default, kube-system]
+      scrapeConfigs:
+        enabled: true
+        namespaces: [default, kube-system]
+      serviceMonitors:
+        namespaces: [default, kube-system]
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+  - it: should filter via a job regex rule when the namespaces list contains a regex
+    set:
+      testing: {enabled: true}
+      podMonitors:
+        namespaces: [default, "team-.*"]
+      probes:
+        namespaces: [default, "team-.*"]
+      scrapeConfigs:
+        enabled: true
+        namespaces: [default, "team-.*"]
+      serviceMonitors:
+        namespaces: [default, "team-.*"]
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+  - it: should filter excluded namespaces with the correct job prefix for each object type
+    set:
+      testing: {enabled: true}
+      podMonitors:
+        excludeNamespaces: [kube-system]
+      probes:
+        excludeNamespaces: [kube-system]
+      scrapeConfigs:
+        enabled: true
+        excludeNamespaces: [kube-system]
+      serviceMonitors:
+        excludeNamespaces: [kube-system]
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
