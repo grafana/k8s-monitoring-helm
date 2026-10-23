@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Add `applicationObservability.processors.resourceDetection.enabled` to allow disabling resource detection when it would add collector host attributes to pass-through telemetry. (#3015) (@Iro-engin)
+
 ## 4.5.4
 
 *   Add `allowArbitraryFileAccess` to the ServiceMonitors feature to allow opt back into allowing ServiceMonitor objects to reference local files (`bearerTokenFile`, `tlsConfig.caFile`/`certFile`/`keyFile`). (@petewall)
