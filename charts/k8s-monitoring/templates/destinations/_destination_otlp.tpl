@@ -278,6 +278,9 @@ otelcol.processor.transform {{ include "helper.alloy_name" $.destinationName | q
 {{- range $transform := .processors.transform.traces.resourceFrom }}
 {{ $transform | indent 6 }},
 {{- end }}
+      // Injected SDK resource attributes arrive as strings. Normalize the span metrics flag before export.
+      `set(attributes["span.metrics.skip"], true) where attributes["span.metrics.skip"] == "true"`,
+      `set(attributes["span.metrics.skip"], false) where attributes["span.metrics.skip"] == "false"`,
     ]
   }
 {{- if or .processors.transform.traces.span .processors.transform.traces.spanFrom }}

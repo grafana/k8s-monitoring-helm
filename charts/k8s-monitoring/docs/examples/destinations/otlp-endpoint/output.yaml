@@ -501,6 +501,9 @@ data:
           `delete_key(attributes, "os.build_id")`,
           "set(resource.attributes[\"quoted\"], \"quted\")",
           string.format(`set(attributes["from_env"], %q)`, coalesce(sys.env("MY_ENV"), "undefined")),
+          // Injected SDK resource attributes arrive as strings. Normalize the span metrics flag before export.
+          `set(attributes["span.metrics.skip"], true) where attributes["span.metrics.skip"] == "true"`,
+          `set(attributes["span.metrics.skip"], false) where attributes["span.metrics.skip"] == "false"`,
         ]
       }
     
@@ -1319,6 +1322,9 @@ data:
           `delete_key(attributes, "os.build_id")`,
           "set(resource.attributes[\"quoted\"], \"quted\")",
           string.format(`set(attributes["from_env"], %q)`, coalesce(sys.env("MY_ENV"), "undefined")),
+          // Injected SDK resource attributes arrive as strings. Normalize the span metrics flag before export.
+          `set(attributes["span.metrics.skip"], true) where attributes["span.metrics.skip"] == "true"`,
+          `set(attributes["span.metrics.skip"], false) where attributes["span.metrics.skip"] == "false"`,
         ]
       }
     

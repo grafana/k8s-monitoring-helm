@@ -14,5 +14,10 @@ This example wires up the full zero-code SDK injection pipeline:
 4.  The injected SDK sends its telemetry to the Application Observability OTLP receiver, which forwards it to your
     destinations.
 
+The chart's OTLP destinations convert the `span.metrics.skip` resource attribute from the strings `"true"` and `"false"`
+to booleans before exporting traces. This also applies to custom pipelines using those destinations, without requiring
+the `applicationObservability` or `autoInstrumentation` features. IHub pipelines delivered through remote configuration
+must apply this conversion in their remote trace pipeline; local Helm configuration cannot modify that pipeline.
+
 The `annotationAutodiscovery` feature scrapes the controller's own metrics endpoint, so you can observe injection
 results — for example the `beyla_injection_pods` metric, which reports each workload the controller has instrumented.
