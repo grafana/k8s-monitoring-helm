@@ -3,6 +3,7 @@
 ## Unreleased
 
 *   Add `applicationObservability.processors.resourceDetection.enabled` to allow disabling resource detection when it would add collector host attributes to pass-through telemetry. (#3015) (@Iro-engin)
+*   Update Alloy Operator to 0.9.3 (@TylerHelmuth)
 
 ## 4.5.4
 
