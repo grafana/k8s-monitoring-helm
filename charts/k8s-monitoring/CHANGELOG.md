@@ -5,6 +5,7 @@
 *   Add `applicationObservability.processors.resourceDetection.enabled` to allow disabling resource detection when it would add collector host attributes to pass-through telemetry. (#3015) (@Iro-engin)
 *   Update Alloy Operator to 0.9.3 (@TylerHelmuth)
 *   Update Beyla to 1.16.16 (@TylerHelmuth)
+*   Fix the collector `extraService` ignoring `service.externalTrafficPolicy`, `service.trafficDistribution`, and `alloy.extraPorts[].nodePort`. (#3125) (@at-blacknight)
 
 ## 4.5.4
 
