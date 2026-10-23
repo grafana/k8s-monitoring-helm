@@ -7,15 +7,7 @@
 {{- $tracesDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "traces" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray }}
 
 // Feature: Application Observability
-{{- $applicationValues := deepCopy $.Values.applicationObservability }}
-{{- if or $.Values.telemetryServices.sdkInjector.deploy (and $.Values.autoInstrumentation.enabled (dig "injector" "enabled" false $.Values.autoInstrumentation.beyla)) }}
-{{- /* Injected SDK resource attributes arrive as strings. Normalize the span metrics flag before exporting traces. */}}
-{{- $transforms := $applicationValues.traces.transforms.resource }}
-{{- $transforms = append $transforms `set(attributes["span.metrics.skip"], true) where attributes["span.metrics.skip"] == "true"` }}
-{{- $transforms = append $transforms `set(attributes["span.metrics.skip"], false) where attributes["span.metrics.skip"] == "false"` }}
-{{- $_ := set $applicationValues.traces.transforms "resource" $transforms }}
-{{- end }}
-{{- include "feature.applicationObservability.module" (dict "Values" $applicationValues "Files" $.Subcharts.applicationObservability.Files) }}
+{{- include "feature.applicationObservability.module" (dict "Values" $.Values.applicationObservability "Files" $.Subcharts.applicationObservability.Files) }}
 application_observability "feature" {
   metrics_destinations = [
     {{ include "dataProcessors.pipeline.targets.forFeature" (dict "root" $ "featureKey" "applicationObservability" "destinationNames" $metricsDestinations "type" "metrics" "ecosystem" "otlp") | indent 4 | trim }}

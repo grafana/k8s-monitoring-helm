@@ -378,6 +378,9 @@ data:
           `delete_key(attributes, "container.image.repo_digests")`,
           `delete_key(attributes, "os.description")`,
           `delete_key(attributes, "os.build_id")`,
+          // Injected SDK resource attributes arrive as strings. Normalize the span metrics flag before export.
+          `set(attributes["span.metrics.skip"], true) where attributes["span.metrics.skip"] == "true"`,
+          `set(attributes["span.metrics.skip"], false) where attributes["span.metrics.skip"] == "false"`,
         ]
       }
     
