@@ -16,29 +16,39 @@ usage() {
     echo "  eval \"\$(helm-with-version export 3.14.4)\""
 }
 
-if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
-  usage
-  exit 0
-fi
-
 subcommand="run"
-if [[ $# -ge 1 ]]; then
-  case "$1" in
-    run|which|export)
-      subcommand="$1"
-      shift
-      ;;
-  esac
-fi
+if [[ "${0##*/}" == "helm" ]]; then
+  # Tools such as ct invoke the scripts/bin/helm symlink through PATH.
+  # Keep their arguments intact, including Helm's own --help flag.
+  if [[ -z "${HELM_VERSION:-}" ]]; then
+    echo "Set HELM_VERSION when invoking helm through the repository PATH." >&2
+    exit 1
+  fi
+  helmVersion="${HELM_VERSION}"
+else
+  if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+    usage
+    exit 0
+  fi
 
-if [[ $# -lt 1 ]]; then
-  usage
-  exit 1
-fi
+  if [[ $# -ge 1 ]]; then
+    case "$1" in
+      run|which|export)
+        subcommand="$1"
+        shift
+        ;;
+    esac
+  fi
 
-helmVersion=$1
+  if [[ $# -lt 1 ]]; then
+    usage
+    exit 1
+  fi
+
+  helmVersion=$1
+  shift
+fi
 helmVersion=${helmVersion#v}  # Remove leading 'v' if present
-shift
 
 if ! command -v curl >/dev/null 2>&1; then
   echo "Error: curl command not found in PATH" >&2
@@ -63,7 +73,7 @@ case "$(uname -m)" in
     ;;
 esac
 
-cliCacheDir="${HOME}/.helm_cli_cache"
+cliCacheDir="${HELM_CLI_CACHE_DIR:-${HOME}/.helm_cli_cache}"
 helm="${cliCacheDir}/${helmVersion}/${os}-${arch}/helm"
 
 if [[ ! -x "${helm}" ]]; then
@@ -104,7 +114,7 @@ case "${subcommand}" in
     ;;
   export)
     helmDir=$(dirname "${helm}")
-    echo "export PATH=${helmDir}:\$PATH"
+    printf "export PATH=%q:\$PATH\n" "${helmDir}"
     exit 0
     ;;
   run)

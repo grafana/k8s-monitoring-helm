@@ -1,0 +1,9 @@
+PLATFORM_HELM_MK := $(lastword $(MAKEFILE_LIST))
+PLATFORM_HELM_DEFAULT_ROOT := $(abspath $(dir $(PLATFORM_HELM_MK))/../../../..)
+HELM_VERSION_FILE := $(PLATFORM_HELM_DEFAULT_ROOT)/.helm-version
+HELM_VERSION ?= $(shell cat $(HELM_VERSION_FILE))
+ifneq ($(HELM_VERSION),)
+HELM_REPO_ROOT := $(PLATFORM_HELM_DEFAULT_ROOT)
+export HELM_VERSION
+export PATH := $(HELM_REPO_ROOT)/scripts/bin:$(PATH)
+endif
