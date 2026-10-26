@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Update kube-state-metrics to 8.7.1, Node Exporter to 4.60.1, and Windows Exporter to 0.13.0 (@TylerHelmuth)
+
 ## 4.5.5
 
 *   Add `applicationObservability.processors.resourceDetection.enabled` to allow disabling resource detection when it would add collector host attributes to pass-through telemetry. (#3015) (@Iro-engin)
