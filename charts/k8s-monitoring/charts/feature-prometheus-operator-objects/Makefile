@@ -1,8 +1,11 @@
-HELM_VERSION ?=
+HELM_VERSION_FILE := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/../../../../.helm-version)
+HELM_VERSION ?= $(shell cat $(HELM_VERSION_FILE))
 ifeq ($(HELM_VERSION),)
 HELM = helm
 else
 HELM = ../../../../scripts/helm-with-version $(HELM_VERSION)
+export HELM_VERSION
+export PATH := $(abspath $(dir $(word 1,$(HELM)))bin):$(PATH)
 endif
 
 # renovate: datasource=docker depName=ghcr.io/grafana/helm-chart-toolbox-doc-generator
