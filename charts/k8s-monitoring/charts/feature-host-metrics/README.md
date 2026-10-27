@@ -15,8 +15,12 @@ dropped. With [metrics tuning](#metrics-tuning--allow-lists), you can further cu
 ```yaml
 hostMetrics:
   enabled: true
-  node-exporter:
+  linuxHosts:
     enabled: true
+
+telemetryServices:
+  node-exporter:
+    deploy: true
 ```
 
 ## How it works
