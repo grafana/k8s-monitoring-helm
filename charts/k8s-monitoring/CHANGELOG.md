@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Set `allowPrivilegeEscalation: false` on the Node Exporter container by default. If you set `privileged: true` or add the `CAP_SYS_ADMIN` capability in `telemetryServices.node-exporter.containerSecurityContext`, also set `allowPrivilegeEscalation: true`, since Kubernetes rejects that combination. The chart now fails with this guidance. (#2898) (@TylerHelmuth)
 *   Stop adding the container runtime default capabilities (including `NET_RAW` and `MKNOD`) back to the Alloy collectors. The default security context now drops all capabilities and only adds back `NET_BIND_SERVICE`, so collectors pass the `baseline` Pod Security Standard by default. Use the `root` preset or set `collectorCommon.alloy.alloy.securityContext.capabilities.add` if a collector needs more. (#2901) (@TylerHelmuth)
 *   Update kube-state-metrics to 8.7.1, Node Exporter to 4.60.1, and Windows Exporter to 0.13.0 (@TylerHelmuth)
 
