@@ -1,0 +1,77 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: rbac-custom
+
+subject:
+  releaseName: k8smon
+  path: ../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - preset: prometheus
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+            - name: Loki
+              type: loki
+              url: http://loki-gateway.loki.svc:8080
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+
+tests:
+  - type: kubernetes-objects-test
+    values:
+      checks:
+        - {name: k8smon-alloy-metrics, kind: ClusterRole, expect: {count: 1}}
+        - {name: k8smon-alloy-singleton, kind: ClusterRole, expect: {count: 1}}
+        - {name: k8smon-alloy-logs, kind: ClusterRole, expect: {count: 1}}
+        - {name: k8smon-loki-credentials-reader, kind: Role, namespace: default, expect: {count: 1}}
+
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: rbac-custom
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+
+          queries:
+            # alloy-metrics
+            - query: kubernetes_build_info{cluster="$CLUSTER", job="integrations/kubernetes/kubelet"}
+              type: promql
+            - query: machine_memory_bytes{cluster="$CLUSTER", job="integrations/kubernetes/cadvisor"}
+              type: promql
+            - query: node_cpu_usage_seconds_total{cluster="$CLUSTER", job="integrations/kubernetes/resources"}
+              type: promql
+            - query: kube_node_info{cluster="$CLUSTER"}
+              type: promql
+            - query: node_cpu_seconds_total{cluster="$CLUSTER"}
+              type: promql
+
+            # alloy-singleton
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
+
+            # alloy-logs
+            - query: count_over_time({cluster="$CLUSTER", job!="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
