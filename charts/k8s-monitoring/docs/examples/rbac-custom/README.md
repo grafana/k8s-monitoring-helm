@@ -24,8 +24,8 @@ this option.
 
 This option has two limitations:
 
-*   Both lists need at least one rule. If either one is empty, the Alloy chart renders invalid YAML and the Alloy
-    Operator can't create the ClusterRole.
+*   Both lists need at least one rule. If either one is empty, the Alloy chart fails to render the ClusterRole, so the
+    Alloy Operator can't create it.
 *   All the rules go into one ClusterRole, so they apply in every namespace. You can't grant some rules cluster-wide and
     others in a single namespace. If you set `rbac.namespaces`, the Alloy chart creates a Role in each of those
     namespaces instead, and drops `rbac.clusterRules` entirely.

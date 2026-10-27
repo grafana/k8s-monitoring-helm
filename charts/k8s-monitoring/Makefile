@@ -62,7 +62,7 @@ INTEGRATION_VALUES_FILES = $(shell find charts/feature-integrations/integrations
 .SECONDEXPANSION:
 docs/collectors/%.md: collectors/%-values.yaml $$(wildcard docs/collectors/.doc_templates/%.gotmpl)
 	docker run --platform linux/amd64 --rm --volume $(CURDIR):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator:$(DOC_GENERATOR_IMAGE_VERSION) \
-		--file /chart/$< --template /chart/docs/collectors/.doc_templates/$(shell basename -s -values.yaml $<).gotmpl > $@
+		--file /chart/$< --template /chart/docs/collectors/.doc_templates/$(patsubst %-values.yaml,%,$(notdir $<)).gotmpl > $@
 
 docs/collectors/presets/%.md: collectors/presets/%.yaml
 	@echo '<!--' > $@
@@ -82,11 +82,11 @@ docs/collectors/presets/%.md: collectors/presets/%.yaml
 
 docs/destinations/%.md: destinations/%-values.yaml $$(wildcard docs/destinations/.doc_templates/%.gotmpl)
 	docker run --platform linux/amd64 --rm --volume $(CURDIR):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator:$(DOC_GENERATOR_IMAGE_VERSION) \
-		--file /chart/$< --template /chart/docs/destinations/.doc_templates/$(shell basename -s -values.yaml $<).gotmpl > $@
+		--file /chart/$< --template /chart/docs/destinations/.doc_templates/$(patsubst %-values.yaml,%,$(notdir $<)).gotmpl > $@
 
 docs/dataProcessors/%.md: dataProcessors/%-values.yaml $$(wildcard docs/dataProcessors/.doc_templates/%.gotmpl)
 	docker run --platform linux/amd64 --rm --volume $(CURDIR):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator:$(DOC_GENERATOR_IMAGE_VERSION) \
-		--file /chart/$< --template /chart/docs/dataProcessors/.doc_templates/$(shell basename -s -values.yaml $<).gotmpl > $@
+		--file /chart/$< --template /chart/docs/dataProcessors/.doc_templates/$(patsubst %-values.yaml,%,$(notdir $<)).gotmpl > $@
 
 schema-mods/definitions/%-collector.schema.json: collectors/%-values.yaml
 	docker run --rm --platform linux/amd64 --volume $(CURDIR):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator:$(SCHEMA_GENERATOR_IMAGE_VERSION) \
