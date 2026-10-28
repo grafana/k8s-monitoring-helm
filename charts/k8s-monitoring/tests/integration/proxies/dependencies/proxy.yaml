@@ -199,6 +199,16 @@ spec:
       containers:
         - name: proxy-server
           image: kalaksi/tinyproxy@sha256:5a65354cbb5f9c0fdcc8de3d3af8dd1c5ea072b3a1f52e5961a9a5cce6eba227
+          securityContext:
+            runAsUser: 0
+          command:
+            - sh
+            - -c
+            - |
+              apk add --no-cache strace || echo "apk add strace failed"
+              strace -f tinyproxy -d
+              echo "tinyproxy exit: $?"
+              sleep 3600
           ports:
             - containerPort: 8888
           volumeMounts:
