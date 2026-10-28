@@ -199,6 +199,23 @@ spec:
       containers:
         - name: proxy-server
           image: vimagick/tinyproxy@sha256:72b441b95ee1e641af948f68f09492f9f795ead72b73954414e339168c98ad8c
+          command:
+            - sh
+            - -c
+            - |
+              set -x
+              id
+              uname -a
+              cat /proc/self/attr/current
+              grep -E '^Cap(Eff|Bnd)' /proc/self/status
+              grep tinyproxy /proc/self/mountinfo
+              ls -la /etc/tinyproxy
+              ls -laL /etc/tinyproxy
+              head -c 200 /etc/tinyproxy/tinyproxy.conf; echo "cat exit: $?"
+              cp -L /etc/tinyproxy/tinyproxy.conf /etc/tinyproxy/filter /tmp/
+              sed -i 's|/etc/tinyproxy/filter|/tmp/filter|' /tmp/tinyproxy.conf
+              tinyproxy -d -c /etc/tinyproxy/tinyproxy.conf; echo "tinyproxy /etc exit: $?"
+              exec tinyproxy -d -c /tmp/tinyproxy.conf
           ports:
             - containerPort: 8888
           volumeMounts:
