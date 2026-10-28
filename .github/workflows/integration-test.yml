@@ -123,4 +123,27 @@ jobs:
           TARGET_REVISION: ${{ github.event_name == 'pull_request' && format('refs/pull/{0}/merge', github.event.pull_request.number) || github.ref_name }}
           KUBECONFIG: "${{ github.workspace }}/source/charts/k8s-monitoring/${{ matrix.test }}/kubeconfig.yaml"
           TEST_DIRECTORY: "source/charts/k8s-monitoring/${{ matrix.test }}"
-          DELETE_CLUSTER: true
+
+      - name: Collect diagnostics
+        if: failure()
+        run: |
+          if [ ! -f "${KUBECONFIG}" ]; then
+            echo "No kubeconfig found, skipping diagnostics."
+            exit 0
+          fi
+          kubectl get pods --all-namespaces --output wide || true
+          kubectl get events --all-namespaces --sort-by=.lastTimestamp || true
+          kubectl get pods --all-namespaces --no-headers --output custom-columns=NS:.metadata.namespace,NAME:.metadata.name | while read -r namespace pod; do
+            echo "::group::${namespace}/${pod}"
+            kubectl describe pod --namespace "${namespace}" "${pod}" || true
+            kubectl logs --namespace "${namespace}" "${pod}" --all-containers --prefix --tail=200 || true
+            echo "::endgroup::"
+          done
+        env:
+          KUBECONFIG: "${{ github.workspace }}/source/charts/k8s-monitoring/${{ matrix.test }}/kubeconfig.yaml"
+
+      - name: Delete cluster
+        if: always()
+        run: helm-chart-toolbox/tools/helm-test/delete-cluster "${TEST_DIRECTORY}"
+        env:
+          TEST_DIRECTORY: "source/charts/k8s-monitoring/${{ matrix.test }}"
