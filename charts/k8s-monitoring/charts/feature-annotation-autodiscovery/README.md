@@ -137,6 +137,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | pods.enabled | bool | `true` | Enable discovering Pods with annotations. |
 | pods.labelSelectors | object | `{}` | Filter the list of discovered Pods by labels. Example: `labelSelectors: { 'app': 'myapp' }` will only discover Pods with the label `app=myapp`. Example: `labelSelectors: { 'app': ['myapp', 'myotherapp'] }` will only discover Pods with the label `app=myapp` or `app=myotherapp`. |
+| pods.onlyScrapeReadyPods | bool | `true` | Only scrape Pods that are running, ready, and not init containers. Set to `false` to keep scraping a Pod through readiness flaps, such as to continue collecting metrics while a failing readiness probe is reporting the problem. |
 
 ### Pod Metric Processing Settings
 

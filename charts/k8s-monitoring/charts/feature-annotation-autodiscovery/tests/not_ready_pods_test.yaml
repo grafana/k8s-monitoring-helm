@@ -1,0 +1,15 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Annotation Autodiscovery - Not ready Pods
+templates:
+  - test/configmap.yaml
+tests:
+  - it: will keep scraping pods that are not ready
+    set:
+      testing: {enabled: true}
+      pods:
+        onlyScrapeReadyPods: false
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
