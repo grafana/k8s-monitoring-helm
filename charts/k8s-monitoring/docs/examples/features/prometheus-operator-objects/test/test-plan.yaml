@@ -5,8 +5,8 @@ name: prometheus-operator-objects
 
 subject:
   releaseName: k8smon
-  path: ../../..
-  valuesFile: values.yaml
+  path: ../../../../..
+  valuesFile: ../values.yaml
 
 cluster:
   type: kind
@@ -17,6 +17,7 @@ dependencies:
   - file: dependencies/black-box-exporter.yaml
   - file: dependencies/cert-manager.yaml
   - file: dependencies/nginx-static-metrics.yaml
+  - file: dependencies/bad-nginx-podmonitor.yaml
   - file: dependencies/scrapeconfig.yaml
   - preset: prometheus
   - preset: grafana
@@ -68,6 +69,14 @@ tests:
             # Metrics are being scraped from the nginx-static-metrics PodMonitor
             - query: static_metric{cluster="$CLUSTER", job="nginx/nginx-static-metrics"}
               type: promql
+
+            # PodMonitor namespace filtering: a PodMonitor living in a namespace that isn't matched by
+            # podMonitors.namespaces is not scraped, even though it targets the same pods as the
+            # nginx-static-metrics PodMonitor above
+            - query: count(static_metric{cluster="$CLUSTER", whoami="bad-pod-monitor"}) or vector(0)
+              type: promql
+              expect:
+                value: 0
 
             # Metrics are being scraped from the Grafana Probe
             - query: probe_duration_seconds{cluster="$CLUSTER", job="probe/grafana/grafana-probe"}

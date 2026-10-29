@@ -1,0 +1,20 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: nginx-static-metrics
+  namespace: default
+spec:
+  namespaceSelector:
+    matchNames:
+      - nginx
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: static-metrics
+      app.kubernetes.io/instance: nginx-static-metrics
+  podMetricsEndpoints:
+    - portNumber: 8080
+      metricRelabelings:
+        - action: replace
+          targetLabel: whoami
+          replacement: bad-pod-monitor

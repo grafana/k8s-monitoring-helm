@@ -2,7 +2,7 @@ HELM_VERSION ?=
 ifeq ($(HELM_VERSION),)
 HELM = helm
 else
-HELM = ../../../../../scripts/helm-with-version $(HELM_VERSION)
+HELM = ../../../../../../../scripts/helm-with-version $(HELM_VERSION)
 endif
 
 .PHONY: clean all
