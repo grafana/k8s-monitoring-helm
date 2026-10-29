@@ -53,7 +53,7 @@ prometheus.operator.probes "probes" {
 } // prometheus.operator.probes "probes"
 
 prometheus.relabel "probes" {
-  max_cache_size = {{ .Values.probes.maxCacheSize | default .Values.global.maxCacheSize | int }}
+  {{- include "helper.relabelCacheArguments" (dict "maxCacheSize" .Values.probes.maxCacheSize "cacheTTL" .Values.probes.cacheTTL "global" .Values.global) | nindent 2 }}
 {{- if $metricAllowList }}
   rule {
     source_labels = ["__name__"]

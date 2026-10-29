@@ -24,6 +24,7 @@ auto_instrumentation "feature" {
 {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
 {{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}
 {{- include "features.autoInstrumentation.validate.beylaPortConflict" . }}
+{{- include "feature.autoInstrumentation.validate" (dict "Values" $.Values.autoInstrumentation) }}
 {{- end -}}
 {{- end -}}
 

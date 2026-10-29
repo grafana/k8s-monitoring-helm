@@ -49,7 +49,7 @@ prometheus.operator.scrapeconfigs "scrapeConfigs" {
 } // prometheus.operator.scrapeconfigs "scrapeConfigs"
 
 prometheus.relabel "scrapeConfigs" {
-  max_cache_size = {{ .Values.scrapeConfigs.maxCacheSize | default .Values.global.maxCacheSize | int }}
+  {{- include "helper.relabelCacheArguments" (dict "maxCacheSize" .Values.scrapeConfigs.maxCacheSize "cacheTTL" .Values.scrapeConfigs.cacheTTL "global" .Values.global) | nindent 2 }}
 {{- if $metricAllowList }}
   rule {
     source_labels = ["__name__"]
