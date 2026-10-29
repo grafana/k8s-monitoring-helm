@@ -1,0 +1,144 @@
+---
+cluster:
+  name: rbac-custom
+
+destinations:
+  prometheus:
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+  loki:
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: 1
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+    secret:
+      name: loki-credentials
+
+clusterMetrics:
+  enabled: true
+  collector: alloy-metrics
+
+hostMetrics:
+  enabled: true
+  collector: alloy-metrics
+  linuxHosts:
+    enabled: true
+
+clusterEvents:
+  enabled: true
+  collector: alloy-singleton
+
+podLogsViaLoki:
+  enabled: true
+  collector: alloy-logs
+
+collectors:
+  # Option 1: Replace the default rules. The Alloy Operator still creates the RBAC objects.
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    rbac:
+      # Discover kube-state-metrics and Node Exporter. Both lists must be non-empty.
+      rules:
+        - apiGroups: [""]
+          resources: [endpoints, pods, services]
+          verbs: [list, watch]
+      # Discover Nodes and scrape the Kubelet and cAdvisor.
+      clusterRules:
+        - apiGroups: [""]
+          resources: [nodes]
+          verbs: [list, watch]
+        - apiGroups: [""]
+          resources: [nodes/metrics]
+          verbs: [get]
+
+  # Option 2: Bring your own RBAC. The RBAC objects are defined in extraObjects below.
+  alloy-singleton:
+    presets: [singleton]
+    rbac:
+      create: false
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+    rbac:
+      create: false
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+
+extraObjects:
+  # alloy-singleton: watch Kubernetes events in all namespaces.
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: "{{ .Release.Name }}-alloy-singleton"
+    rules:
+      - apiGroups: [""]
+        resources: [events]
+        verbs: [list, watch]
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: "{{ .Release.Name }}-alloy-singleton"
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: "{{ .Release.Name }}-alloy-singleton"
+    subjects:
+      - kind: ServiceAccount
+        name: "{{ .Release.Name }}-alloy-singleton"
+        namespace: "{{ .Release.Namespace }}"
+
+  # alloy-logs: discover Pods in all namespaces.
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: "{{ .Release.Name }}-alloy-logs"
+    rules:
+      - apiGroups: [""]
+        resources: [pods]
+        verbs: [list, watch]
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: "{{ .Release.Name }}-alloy-logs"
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: "{{ .Release.Name }}-alloy-logs"
+    subjects:
+      - kind: ServiceAccount
+        name: "{{ .Release.Name }}-alloy-logs"
+        namespace: "{{ .Release.Namespace }}"
+
+  # alloy-singleton and alloy-logs: read only the Loki destination's Secret.
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: "{{ .Release.Name }}-loki-credentials-reader"
+      namespace: "{{ .Release.Namespace }}"
+    rules:
+      - apiGroups: [""]
+        resources: [secrets]
+        resourceNames: [loki-credentials]
+        verbs: [get]
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: "{{ .Release.Name }}-loki-credentials-reader"
+      namespace: "{{ .Release.Namespace }}"
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: "{{ .Release.Name }}-loki-credentials-reader"
+    subjects:
+      - kind: ServiceAccount
+        name: "{{ .Release.Name }}-alloy-singleton"
+        namespace: "{{ .Release.Namespace }}"
+      - kind: ServiceAccount
+        name: "{{ .Release.Name }}-alloy-logs"
+        namespace: "{{ .Release.Namespace }}"
