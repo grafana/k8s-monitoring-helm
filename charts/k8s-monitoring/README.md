@@ -5,7 +5,7 @@
 
 # k8s-monitoring
 
-![Version: 4.5.5](https://img.shields.io/badge/Version-4.5.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.5.5](https://img.shields.io/badge/AppVersion-4.5.5-informational?style=flat-square)
+![Version: 4.6.0](https://img.shields.io/badge/Version-4.6.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.6.0](https://img.shields.io/badge/AppVersion-4.6.0-informational?style=flat-square)
 Capture all telemetry data from your Kubernetes cluster.
 
 > **Upgrading?** Breaking changes and migration steps for each major version are documented in
@@ -200,7 +200,7 @@ details:
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
 |  | windowsEventLogs(feature-windows-event-logs) | 1.0.0 |
 |  | telemetryServices(telemetry-services) | 1.0.0 |
-| https://grafana.github.io/helm-charts | alloy-operator | 0.9.3 |
+| https://grafana.github.io/helm-charts | alloy-operator | 0.9.4 |
 <!-- markdownlint-enable no-bare-urls -->
 
 <!--alex disable host-hostess-->
@@ -305,6 +305,7 @@ details:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| global.cacheTTL | string | `""` | Sets the cache_ttl for every prometheus.relabel component, which switches the relabeling cache from a fixed-size LRU cache to one that expires entries after this duration of inactivity (minimum `1m`, `10m` is a reasonable starting point). Mutually exclusive with `maxCacheSize`, so set `maxCacheSize` to `0` when using this. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) |
 | global.convertClassicHistogramsToNhcb | bool | `false` | Whether to convert classic histograms to native histograms with custom buckets (NHCB) at scrape time. Requires scrapeNativeHistograms to be true, send_native_histograms on the destination, and Remote Write v2 (remoteWriteProtocol: 2). |
 | global.image.pullPolicy | string | `""` | Global image pull policy for the Alloy, Alloy Operator, and Alloy removal hook images. |
 | global.image.pullSecrets | list | `[]` | Global image pull secrets for the Alloy, Alloy Operator, Beyla, and Alloy removal hook images. |

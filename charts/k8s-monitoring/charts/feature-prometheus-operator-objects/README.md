@@ -54,6 +54,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| global.cacheTTL | string | `""` | Sets the cache_ttl for every prometheus.relabel component, which switches the relabeling cache from a fixed-size LRU cache to one that expires entries after this duration of inactivity (minimum `1m`, `10m` is a reasonable starting point). Mutually exclusive with `maxCacheSize`, so set `maxCacheSize` to `0` when using this. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) |
 | global.convertClassicHistogramsToNhcb | bool | `false` | Whether to convert classic histograms to native histograms with custom buckets (NHCB) at scrape time. |
 | global.maxCacheSize | int | `100000` | Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) This should be at least 2x-5x your largest scrape target or samples appended rate. |
 | global.namespaceOverride | string | `""` | Override the namespace for namespaced resources created by this chart. |
@@ -69,8 +70,9 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| podMonitors.cacheTTL | string | `""` | Sets the cache_ttl for the prometheus.relabel component, which switches its relabeling cache to TTL mode. Mutually exclusive with `maxCacheSize`. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.cacheTTL`. |
 | podMonitors.enabled | bool | `true` | Enable discovery of Prometheus Operator PodMonitor objects. |
-| podMonitors.excludeNamespaces | list | `[]` | Which namespaces to not look for PodMonitor objects. |
+| podMonitors.excludeNamespaces | list | `[]` | Which namespaces to not look for PodMonitor objects. Entries may be exact namespace names or regular expressions. |
 | podMonitors.extraDiscoveryRules | string | `""` | Rule blocks to be added to the prometheus.operator.podmonitors component for PodMonitors. These relabeling rules are applied pre-scrape against the targets from service discovery. The relabelings defined in the PodMonitor object are applied first, then these relabelings are applied. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | podMonitors.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for PodMonitor objects. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
 | podMonitors.labelExpressions | list | `[]` | Complex label selectors to filter which PodMonitor objects to use. Example: `[{key: "app.kubernetes.io/name", operator: "NotIn", values: ["secret-app", "admin-app"]}]` |
@@ -78,7 +80,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | podMonitors.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
 | podMonitors.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | podMonitors.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
-| podMonitors.namespaces | list | `[]` | Which namespaces to look for PodMonitor objects. |
+| podMonitors.namespaces | list | `[]` | Which namespaces to look for PodMonitor objects (`[]` means all namespaces). Entries may be exact namespace names or regular expressions (e.g. `team-.*`), and the two styles can be mixed. Regexes are fully anchored, so they must match the entire namespace name. Note: When every entry is an exact name, the namespace list is passed directly to the component for efficient filtering. If any entry is a regular expression, the component must discover PodMonitors from all namespaces, then filter them internally, which can cause performance issues on large clusters. |
 | podMonitors.scrapeInterval | string | 60s | The default interval between scraping targets. Used as the default if the target resource doesn’t provide a scrape interval. Overrides `global.scrapeInterval`. |
 | podMonitors.scrapeTimeout | string | 10s | The default timeout for scrape requests. Used as the default if the target resource doesn’t provide a scrape timeout. Overrides `global.scrapeTimeout`. |
 
@@ -86,8 +88,9 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| probes.cacheTTL | string | `""` | Sets the cache_ttl for the prometheus.relabel component, which switches its relabeling cache to TTL mode. Mutually exclusive with `maxCacheSize`. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.cacheTTL`. |
 | probes.enabled | bool | `true` | Enable discovery of Prometheus Operator Probe objects. |
-| probes.excludeNamespaces | list | `[]` | Which namespaces to not look for Probe objects. |
+| probes.excludeNamespaces | list | `[]` | Which namespaces to not look for Probe objects. Entries may be exact namespace names or regular expressions. |
 | probes.extraDiscoveryRules | string | `""` | Rule blocks to be added to the prometheus.operator.probes component for Probes. These relabeling rules are applied pre-scrape against the targets from service discovery. The relabelings defined in the PodMonitor object are applied first, then these relabelings are applied. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | probes.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Probe objects. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
 | probes.labelExpressions | list | `[]` | Complex label selectors to filter which Probe objects to use. Example: `[{key: "app.kubernetes.io/name", operator: "NotIn", values: ["secret-app", "admin-app"]}]` |
@@ -95,7 +98,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | probes.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
 | probes.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | probes.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
-| probes.namespaces | list | `[]` | Which namespaces to look for Probe objects. |
+| probes.namespaces | list | `[]` | Which namespaces to look for Probe objects (`[]` means all namespaces). Entries may be exact namespace names or regular expressions (e.g. `team-.*`), and the two styles can be mixed. Regexes are fully anchored, so they must match the entire namespace name. Note: When every entry is an exact name, the namespace list is passed directly to the component for efficient filtering. If any entry is a regular expression, the component must discover Probes from all namespaces, then filter them internally, which can cause performance issues on large clusters. |
 | probes.scrapeInterval | string | 60s | The default interval between scraping targets. Used as the default if the target resource doesn’t provide a scrape interval. Overrides `global.scrapeInterval`. |
 | probes.scrapeTimeout | string | 10s | The default timeout for scrape requests. Used as the default if the target resource doesn’t provide a scrape timeout. Overrides `global.scrapeTimeout`. |
 
@@ -103,8 +106,9 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| scrapeConfigs.cacheTTL | string | `""` | Sets the cache_ttl for the prometheus.relabel component, which switches its relabeling cache to TTL mode. Mutually exclusive with `maxCacheSize`. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.cacheTTL`. |
 | scrapeConfigs.enabled | bool | `false` | Enable discovery of Prometheus Operator ScrapeConfig objects. |
-| scrapeConfigs.excludeNamespaces | list | `[]` | Which namespaces to not look for ScrapeConfig objects. |
+| scrapeConfigs.excludeNamespaces | list | `[]` | Which namespaces to not look for ScrapeConfig objects. Entries may be exact namespace names or regular expressions. |
 | scrapeConfigs.extraDiscoveryRules | string | `""` | Rule blocks to be added to the prometheus.operator.scrapeconfigs component for ScrapeConfigs. These relabeling rules are applied pre-scrape against the targets from service discovery. The relabelings defined in the PodMonitor object are applied first, then these relabelings are applied. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | scrapeConfigs.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for ScrapeConfig objects. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
 | scrapeConfigs.labelExpressions | list | `[]` | Complex label selectors to filter which ScrapeConfig objects to use. Example: `[{key: "app.kubernetes.io/name", operator: "NotIn", values: ["secret-app", "admin-app"]}]` |
@@ -112,7 +116,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | scrapeConfigs.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
 | scrapeConfigs.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | scrapeConfigs.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
-| scrapeConfigs.namespaces | list | `[]` | Which namespaces to look for ScrapeConfig objects. |
+| scrapeConfigs.namespaces | list | `[]` | Which namespaces to look for ScrapeConfig objects (`[]` means all namespaces). Entries may be exact namespace names or regular expressions (e.g. `team-.*`), and the two styles can be mixed. Regexes are fully anchored, so they must match the entire namespace name. Note: When every entry is an exact name, the namespace list is passed directly to the component for efficient filtering. If any entry is a regular expression, the component must discover ScrapeConfigs from all namespaces, then filter them internally, which can cause performance issues on large clusters. |
 | scrapeConfigs.scrapeInterval | string | 60s | The default interval between scraping targets. Used as the default if the target resource doesn’t provide a scrape interval. Overrides `global.scrapeInterval`. |
 | scrapeConfigs.scrapeTimeout | string | 10s | The default timeout for scrape requests. Used as the default if the target resource doesn’t provide a scrape timeout. Overrides `global.scrapeTimeout`. |
 
@@ -121,8 +125,9 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | serviceMonitors.allowArbitraryFileAccess | bool | `false` | Allow ServiceMonitor objects to reference local files on the Alloy host through `bearerTokenFile`, `tlsConfig.caFile`, `tlsConfig.certFile`, or `tlsConfig.keyFile`. |
+| serviceMonitors.cacheTTL | string | `""` | Sets the cache_ttl for the prometheus.relabel component, which switches its relabeling cache to TTL mode. Mutually exclusive with `maxCacheSize`. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.cacheTTL`. |
 | serviceMonitors.enabled | bool | `true` | Enable discovery of Prometheus Operator ServiceMonitor objects. |
-| serviceMonitors.excludeNamespaces | list | `[]` | Which namespaces to not look for ServiceMonitor objects. |
+| serviceMonitors.excludeNamespaces | list | `[]` | Which namespaces to not look for ServiceMonitor objects. Entries may be exact namespace names or regular expressions. |
 | serviceMonitors.extraDiscoveryRules | string | `""` | Rule blocks to be added to the prometheus.operator.probes component for Probes. These relabeling rules are applied pre-scrape against the targets from service discovery. The relabelings defined in the PodMonitor object are applied first, then these relabelings are applied. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | serviceMonitors.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for ServiceMonitor objects. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
 | serviceMonitors.labelExpressions | list | `[]` | Complex label selectors to filter which ServiceMonitor objects to use. Example: `[{key: "app.kubernetes.io/name", operator: "NotIn", values: ["secret-app", "admin-app"]}]` |
@@ -130,6 +135,6 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | serviceMonitors.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
 | serviceMonitors.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | serviceMonitors.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
-| serviceMonitors.namespaces | list | `[]` | Which namespaces to look for ServiceMonitor objects. |
+| serviceMonitors.namespaces | list | `[]` | Which namespaces to look for ServiceMonitor objects (`[]` means all namespaces). Entries may be exact namespace names or regular expressions (e.g. `team-.*`), and the two styles can be mixed. Regexes are fully anchored, so they must match the entire namespace name. Note: When every entry is an exact name, the namespace list is passed directly to the component for efficient filtering. If any entry is a regular expression, the component must discover ServiceMonitors from all namespaces, then filter them internally, which can cause performance issues on large clusters. |
 | serviceMonitors.scrapeInterval | string | 60s | The default interval between scraping targets. Used as the default if the target resource doesn’t provide a scrape interval. Overrides `global.scrapeInterval`. |
 | serviceMonitors.scrapeTimeout | string | 10s | The default timeout for scrape requests. Used as the default if the target resource doesn’t provide a scrape timeout. Overrides `global.scrapeTimeout`. |

@@ -25,6 +25,7 @@
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| metrics.cacheTTL | string | `""` | Sets the cache_ttl for the cert-manager prometheus.relabel component, which switches its relabeling cache to TTL mode. Mutually exclusive with `maxCacheSize`. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.cacheTTL`. |
 | metrics.maxCacheSize | string | `100000` | Sets the max_cache_size for cert-manager prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
 | metrics.tuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | metrics.tuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |

@@ -20,6 +20,13 @@ global:
   # @section -- Global Settings
   maxCacheSize: 100000
 
+  # -- Sets the cache_ttl for every prometheus.relabel component, which switches the relabeling cache from a fixed-size
+  # LRU cache to one that expires entries after this duration of inactivity (minimum `1m`, `10m` is a reasonable
+  # starting point). Mutually exclusive with `maxCacheSize`, so set `maxCacheSize` to `0` when using this.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
+  # @section -- Global Settings
+  cacheTTL: ""
+
   # -- Whether to scrape a classic histogram that’s also exposed as a native histogram.
   # @section -- Global Settings
   scrapeClassicHistograms: false
@@ -54,11 +61,17 @@ podMonitors:
   # @section -- PodMonitors
   enabled: true
 
-  # -- Which namespaces to look for PodMonitor objects.
+  # -- Which namespaces to look for PodMonitor objects (`[]` means all namespaces). Entries may be exact namespace
+  # names or regular expressions (e.g. `team-.*`), and the two styles can be mixed. Regexes are fully anchored, so
+  # they must match the entire namespace name.
+  # Note: When every entry is an exact name, the namespace list is passed directly to the component for efficient
+  # filtering. If any entry is a regular expression, the component must discover PodMonitors from all namespaces,
+  # then filter them internally, which can cause performance issues on large clusters.
   # @section -- PodMonitors
   namespaces: []
 
-  # -- Which namespaces to not look for PodMonitor objects.
+  # -- Which namespaces to not look for PodMonitor objects. Entries may be exact namespace names or regular
+  # expressions.
   # @section -- PodMonitors
   excludeNamespaces: []
 
@@ -117,17 +130,30 @@ podMonitors:
   # @section -- PodMonitors
   maxCacheSize:
 
+  # -- Sets the cache_ttl for the prometheus.relabel component, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- PodMonitors
+  cacheTTL: ""
+
 # Prometheus Operator Probes
 probes:
   # -- Enable discovery of Prometheus Operator Probe objects.
   # @section -- Probes
   enabled: true
 
-  # -- Which namespaces to look for Probe objects.
+  # -- Which namespaces to look for Probe objects (`[]` means all namespaces). Entries may be exact namespace
+  # names or regular expressions (e.g. `team-.*`), and the two styles can be mixed. Regexes are fully anchored, so
+  # they must match the entire namespace name.
+  # Note: When every entry is an exact name, the namespace list is passed directly to the component for efficient
+  # filtering. If any entry is a regular expression, the component must discover Probes from all namespaces,
+  # then filter them internally, which can cause performance issues on large clusters.
   # @section -- Probes
   namespaces: []
 
-  # -- Which namespaces to not look for Probe objects.
+  # -- Which namespaces to not look for Probe objects. Entries may be exact namespace names or regular
+  # expressions.
   # @section -- Probes
   excludeNamespaces: []
 
@@ -186,17 +212,30 @@ probes:
   # @section -- Probes
   maxCacheSize:
 
+  # -- Sets the cache_ttl for the prometheus.relabel component, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- Probes
+  cacheTTL: ""
+
 # Prometheus Operator ScrapeConfigs
 scrapeConfigs:
   # -- Enable discovery of Prometheus Operator ScrapeConfig objects.
   # @section -- ScrapeConfigs
   enabled: false
 
-  # -- Which namespaces to look for ScrapeConfig objects.
+  # -- Which namespaces to look for ScrapeConfig objects (`[]` means all namespaces). Entries may be exact
+  # namespace names or regular expressions (e.g. `team-.*`), and the two styles can be mixed. Regexes are fully
+  # anchored, so they must match the entire namespace name.
+  # Note: When every entry is an exact name, the namespace list is passed directly to the component for efficient
+  # filtering. If any entry is a regular expression, the component must discover ScrapeConfigs from all
+  # namespaces, then filter them internally, which can cause performance issues on large clusters.
   # @section -- ScrapeConfigs
   namespaces: []
 
-  # -- Which namespaces to not look for ScrapeConfig objects.
+  # -- Which namespaces to not look for ScrapeConfig objects. Entries may be exact namespace names or regular
+  # expressions.
   # @section -- ScrapeConfigs
   excludeNamespaces: []
 
@@ -255,6 +294,13 @@ scrapeConfigs:
   # @section -- ScrapeConfigs
   maxCacheSize:
 
+  # -- Sets the cache_ttl for the prometheus.relabel component, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- ScrapeConfigs
+  cacheTTL: ""
+
 # Prometheus Operator ServiceMonitors
 serviceMonitors:
   # -- Enable discovery of Prometheus Operator ServiceMonitor objects.
@@ -266,11 +312,17 @@ serviceMonitors:
   # @section -- ServiceMonitors
   allowArbitraryFileAccess: false
 
-  # -- Which namespaces to look for ServiceMonitor objects.
+  # -- Which namespaces to look for ServiceMonitor objects (`[]` means all namespaces). Entries may be exact
+  # namespace names or regular expressions (e.g. `team-.*`), and the two styles can be mixed. Regexes are fully
+  # anchored, so they must match the entire namespace name.
+  # Note: When every entry is an exact name, the namespace list is passed directly to the component for efficient
+  # filtering. If any entry is a regular expression, the component must discover ServiceMonitors from all
+  # namespaces, then filter them internally, which can cause performance issues on large clusters.
   # @section -- ServiceMonitors
   namespaces: []
 
-  # -- Which namespaces to not look for ServiceMonitor objects.
+  # -- Which namespaces to not look for ServiceMonitor objects. Entries may be exact namespace names or regular
+  # expressions.
   # @section -- ServiceMonitors
   excludeNamespaces: []
 
@@ -328,3 +380,10 @@ serviceMonitors:
   # @raw
   # @section -- ServiceMonitors
   maxCacheSize:
+
+  # -- Sets the cache_ttl for the prometheus.relabel component, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- ServiceMonitors
+  cacheTTL: ""

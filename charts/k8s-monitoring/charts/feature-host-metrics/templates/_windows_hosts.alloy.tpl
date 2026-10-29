@@ -54,7 +54,7 @@ prometheus.scrape "windows_exporter" {
 } // prometheus.scrape "windows_exporter"
 
 prometheus.relabel "windows_exporter" {
-  max_cache_size = {{ .Values.windowsHosts.maxCacheSize | default .Values.global.maxCacheSize | int }}
+  {{- include "helper.relabelCacheArguments" (dict "maxCacheSize" .Values.windowsHosts.maxCacheSize "cacheTTL" .Values.windowsHosts.cacheTTL "global" .Values.global) | nindent 2 }}
 {{- if $metricAllowList }}
   rule {
     source_labels = ["__name__"]

@@ -1030,13 +1030,17 @@ data:
   self-reporting-metric.prom: |+
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="4.5.5", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="4.6.0", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="linuxHosts", source="node-exporter", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="podLogsViaLoki", version="1.0.0"} 1
+    # HELP grafana_kubernetes_monitoring_destination_info_count A metric to report the number of enabled destinations grouped by type and configuration
+    # TYPE grafana_kubernetes_monitoring_destination_info_count gauge
+    grafana_kubernetes_monitoring_destination_info_count{rules_enabled="false", type="prometheus"} 1
+    grafana_kubernetes_monitoring_destination_info_count{type="loki"} 1
     # HELP grafana_kubernetes_monitoring_collector_info A metric to report the collectors of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_collector_info gauge
     grafana_kubernetes_monitoring_collector_info{kind="daemonset", name="alloy-logs", presets="filesystem-log-reader,daemonset", type="alloy"} 1
@@ -1334,6 +1338,7 @@ spec:
             - --web.listen-address=[$(HOST_IP)]:9101
             - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|erofs|sysfs|tracefs|tmpfs|ramfs)$
           securityContext:
+            allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
           env:
             - name: HOST_IP
@@ -1516,20 +1521,7 @@ spec:
       allowPrivilegeEscalation: false
       capabilities:
         add:
-        - CHOWN
-        - DAC_OVERRIDE
-        - FOWNER
-        - FSETID
-        - KILL
-        - SETGID
-        - SETUID
-        - SETPCAP
         - NET_BIND_SERVICE
-        - NET_RAW
-        - SYS_CHROOT
-        - MKNOD
-        - AUDIT_WRITE
-        - SETFCAP
         drop:
         - ALL
       seccompProfile:
@@ -1546,7 +1538,7 @@ spec:
   crds:
     create: false
   image:
-    tag: v1.21.2
+    tag: v1.21.3
   nameOverride: alloy-logs
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
@@ -1569,20 +1561,7 @@ spec:
       allowPrivilegeEscalation: false
       capabilities:
         add:
-        - CHOWN
-        - DAC_OVERRIDE
-        - FOWNER
-        - FSETID
-        - KILL
-        - SETGID
-        - SETUID
-        - SETPCAP
         - NET_BIND_SERVICE
-        - NET_RAW
-        - SYS_CHROOT
-        - MKNOD
-        - AUDIT_WRITE
-        - SETFCAP
         drop:
         - ALL
       seccompProfile:
@@ -1597,7 +1576,7 @@ spec:
   crds:
     create: false
   image:
-    tag: v1.21.2
+    tag: v1.21.3
   nameOverride: alloy-metrics
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
@@ -1622,20 +1601,7 @@ spec:
       allowPrivilegeEscalation: false
       capabilities:
         add:
-        - CHOWN
-        - DAC_OVERRIDE
-        - FOWNER
-        - FSETID
-        - KILL
-        - SETGID
-        - SETUID
-        - SETPCAP
         - NET_BIND_SERVICE
-        - NET_RAW
-        - SYS_CHROOT
-        - MKNOD
-        - AUDIT_WRITE
-        - SETFCAP
         drop:
         - ALL
       seccompProfile:
@@ -1655,5 +1621,5 @@ spec:
   crds:
     create: false
   image:
-    tag: v1.21.2
+    tag: v1.21.3
   nameOverride: alloy-singleton

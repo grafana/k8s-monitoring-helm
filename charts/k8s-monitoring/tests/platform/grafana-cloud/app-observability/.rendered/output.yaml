@@ -6,10 +6,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.9.3
+    helm.sh/chart: alloy-operator-0.9.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.14.3"
+    app.kubernetes.io/version: "1.14.4"
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
@@ -935,11 +935,14 @@ data:
   self-reporting-metric.prom: |+
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="4.5.5", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="4.6.0", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlpgrpc,otlphttp", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="podLogsViaLoki", version="1.0.0"} 1
+    # HELP grafana_kubernetes_monitoring_destination_info_count A metric to report the number of enabled destinations grouped by type and configuration
+    # TYPE grafana_kubernetes_monitoring_destination_info_count gauge
+    grafana_kubernetes_monitoring_destination_info_count{logs="true", metrics="true", service_graph_metrics_enabled="false", tail_sampling_enabled="false", traces="true", type="otlp"} 1
     # HELP grafana_kubernetes_monitoring_collector_info A metric to report the collectors of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_collector_info gauge
     grafana_kubernetes_monitoring_collector_info{kind="daemonset", name="alloy-logs", presets="filesystem-log-reader,daemonset", type="alloy"} 1
@@ -952,10 +955,10 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy-operator-alloy-manager
   labels:
-    helm.sh/chart: alloy-operator-0.9.3
+    helm.sh/chart: alloy-operator-0.9.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.14.3"
+    app.kubernetes.io/version: "1.14.4"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -1016,10 +1019,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-operator-alloy-manager
   labels:
-    helm.sh/chart: alloy-operator-0.9.3
+    helm.sh/chart: alloy-operator-0.9.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.14.3"
+    app.kubernetes.io/version: "1.14.4"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -1036,10 +1039,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-operator
   labels:
-    helm.sh/chart: alloy-operator-0.9.3
+    helm.sh/chart: alloy-operator-0.9.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.14.3"
+    app.kubernetes.io/version: "1.14.4"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -1057,10 +1060,10 @@ metadata:
   name: k8smon-alloy-operator-leader-election-role
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.9.3
+    helm.sh/chart: alloy-operator-0.9.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.14.3"
+    app.kubernetes.io/version: "1.14.4"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -1102,10 +1105,10 @@ metadata:
   name: k8smon-alloy-operator-leader-election-rolebinding
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.9.3
+    helm.sh/chart: alloy-operator-0.9.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.14.3"
+    app.kubernetes.io/version: "1.14.4"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -1123,10 +1126,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.9.3
+    helm.sh/chart: alloy-operator-0.9.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.14.3"
+    app.kubernetes.io/version: "1.14.4"
     app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
@@ -1150,10 +1153,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.9.3
+    helm.sh/chart: alloy-operator-0.9.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.14.3"
+    app.kubernetes.io/version: "1.14.4"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -1164,10 +1167,10 @@ spec:
   template:
     metadata:
       labels:
-        helm.sh/chart: alloy-operator-0.9.3
+        helm.sh/chart: alloy-operator-0.9.4
         app.kubernetes.io/name: alloy-operator
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "1.14.3"
+        app.kubernetes.io/version: "1.14.4"
         app.kubernetes.io/managed-by: Helm
     spec:
       serviceAccountName: k8smon-alloy-operator
@@ -1175,7 +1178,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: alloy-operator
-          image: "ghcr.io/grafana/alloy-operator:1.14.3"
+          image: "ghcr.io/grafana/alloy-operator:1.14.4"
           imagePullPolicy: IfNotPresent
           args:
             - --health-probe-bind-address=:8081
@@ -1234,20 +1237,7 @@ spec:
       allowPrivilegeEscalation: false
       capabilities:
         add:
-        - CHOWN
-        - DAC_OVERRIDE
-        - FOWNER
-        - FSETID
-        - KILL
-        - SETGID
-        - SETUID
-        - SETPCAP
         - NET_BIND_SERVICE
-        - NET_RAW
-        - SYS_CHROOT
-        - MKNOD
-        - AUDIT_WRITE
-        - SETFCAP
         drop:
         - ALL
       seccompProfile:
@@ -1298,20 +1288,7 @@ spec:
       allowPrivilegeEscalation: false
       capabilities:
         add:
-        - CHOWN
-        - DAC_OVERRIDE
-        - FOWNER
-        - FSETID
-        - KILL
-        - SETGID
-        - SETUID
-        - SETPCAP
         - NET_BIND_SERVICE
-        - NET_RAW
-        - SYS_CHROOT
-        - MKNOD
-        - AUDIT_WRITE
-        - SETFCAP
         drop:
         - ALL
       seccompProfile:
@@ -1431,7 +1408,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-4.5.5
+    helm.sh/chart: k8s-monitoring-4.6.0
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -1484,7 +1461,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-4.5.5
+    helm.sh/chart: k8s-monitoring-4.6.0
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded

@@ -83,3 +83,51 @@
   {{- include (printf "destinations.%s.supports_metrics" $destinationValues.type) $destinationValues }}
 {{- else }}false{{ end }}
 {{- end }}
+
+{{/* Inputs: . (root object) */}}
+{{/* Outputs: a list of unique destination information label sets and their counts */}}
+{{- define "destinations.list.info" }}
+{{- $destinationInfo := dict }}
+{{- range $destinationName, $destination := (include "destinations.getEnabled" $.Values.destinations | fromYaml) }}
+  {{- $defaultValues := (printf "destinations/%s-values.yaml" $destination.type) | $.Files.Get | fromYaml }}
+  {{- $destinationWithDefaults := mergeOverwrite $defaultValues $destination }}
+  {{- $labels := dict "type" $destination.type }}
+
+  {{- if has $destination.type (list "custom" "router") }}
+    {{- $ecosystem := $destinationWithDefaults.ecosystem | default "unknown" }}
+    {{- if not (has $ecosystem (list "loki" "otlp" "prometheus" "pyroscope")) }}
+      {{- $ecosystem = "unknown" }}
+    {{- end }}
+    {{- $_ := set $labels "ecosystem" $ecosystem }}
+  {{- end }}
+
+  {{- if has $destination.type (list "custom" "nop" "otlp") }}
+    {{- $_ := set $labels "metrics" (eq (include (printf "destinations.%s.supports_metrics" $destination.type) $destinationWithDefaults | trim) "true" | toString) }}
+    {{- $_ := set $labels "logs" (eq (include (printf "destinations.%s.supports_logs" $destination.type) $destinationWithDefaults | trim) "true" | toString) }}
+    {{- $_ := set $labels "traces" (eq (include (printf "destinations.%s.supports_traces" $destination.type) $destinationWithDefaults | trim) "true" | toString) }}
+  {{- end }}
+
+  {{- if has $destination.type (list "custom" "nop") }}
+    {{- $_ := set $labels "profiles" (eq (include (printf "destinations.%s.supports_profiles" $destination.type) $destinationWithDefaults | trim) "true" | toString) }}
+  {{- end }}
+
+  {{- if eq $destination.type "otlp" }}
+    {{- $_ := set $labels "service_graph_metrics_enabled" (eq (dig "processors" "serviceGraphMetrics" "enabled" false $destinationWithDefaults) true | toString) }}
+    {{- $_ := set $labels "tail_sampling_enabled" (eq (dig "processors" "tailSampling" "enabled" false $destinationWithDefaults) true | toString) }}
+  {{- end }}
+
+  {{- if eq $destination.type "prometheus" }}
+    {{- $_ := set $labels "rules_enabled" (eq (dig "rules" "enabled" false $destinationWithDefaults) true | toString) }}
+  {{- end }}
+
+  {{- $key := $labels | toJson }}
+  {{- $info := get $destinationInfo $key | default (dict "labels" $labels "count" 0) }}
+  {{- $_ := set $info "count" (add (get $info "count") 1) }}
+  {{- $_ := set $destinationInfo $key $info }}
+{{- end }}
+{{- range $key := keys $destinationInfo | sortAlpha }}
+  {{- $info := get $destinationInfo $key }}
+- labels: {{ $info.labels | toJson }}
+  count: {{ $info.count }}
+{{- end }}
+{{- end }}

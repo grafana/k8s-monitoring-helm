@@ -1,1 +1,3 @@
-{{- define "feature.autoInstrumentation.validate" }}{{- end }}
+{{- define "feature.autoInstrumentation.validate" }}
+{{- include "helper.validateRelabelCacheSettings" (dict "values" .Values "path" "autoInstrumentation") }}
+{{- end }}

@@ -36,7 +36,7 @@ telemetryServices:
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://grafana.github.io/helm-charts | beyla | 1.16.16 |
+| https://grafana.github.io/helm-charts | beyla | 1.16.17 |
 | https://grafana.github.io/helm-charts | sdkInjector(k8s-injection-controller) | 0.3.0 |
 | https://grafana.github.io/helm-charts | k8s-manifest-tail(k8s-manifest-tail) | 0.1.5 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 8.7.1 |

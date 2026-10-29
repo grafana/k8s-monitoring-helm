@@ -2,7 +2,15 @@
 
 ## Unreleased
 
+*   Add the option to set the `metricProcessingRules` for Prometheus destinations in their own `prometheus.relabel` component. (#3035) (@petewall)
+*   Allow regexes in the `namespaces` list for the Prometheus Operator Objects feature and fix the ScrapeConfigs `excludeNamespaces` filter. (#3018) (@petewall)
+*   Set `allowPrivilegeEscalation: false` on the Node Exporter container by default. If you set `privileged: true` or add the `CAP_SYS_ADMIN` capability in `telemetryServices.node-exporter.containerSecurityContext`, also set `allowPrivilegeEscalation: true`, since Kubernetes rejects that combination. The chart now fails with this guidance. (#2898) (@TylerHelmuth)
+*   Stop adding the container runtime default capabilities (including `NET_RAW` and `MKNOD`) back to the Alloy collectors. The default security context now drops all capabilities and only adds back `NET_BIND_SERVICE`, so collectors pass the `baseline` Pod Security Standard by default. Use the `root` preset or set `collectorCommon.alloy.alloy.securityContext.capabilities.add` if a collector needs more. (#2901) (@TylerHelmuth)
+*   Add `annotationAutodiscovery.pods.onlyScrapeReadyPods` to allow disabling the readiness requirement, so Pods keep being scraped through readiness flaps. (#3146) (@petewall)
 *   Update kube-state-metrics to 8.7.1, Node Exporter to 4.60.1, and Windows Exporter to 0.13.0 (@TylerHelmuth)
+*   Add support for Alloy's `prometheus.relabel` `cache_ttl` setting via `cacheTTL`. (#3097) (@TylerHelmuth)
+*   Update Alloy Operator to 0.9.4 (@TylerHelmuth)
+*   Update Beyla to 1.16.17 (@TylerHelmuth)
 
 ## 4.5.5
 
@@ -23,6 +31,7 @@
 ## 4.5.3
 
 *   Only set the cluster name in Beyla's config when using `.cluster.name`. Avoids the case of setting it to an empty string. (#3060) (@petewall)
+*   Add the ability to set the resolver and timeout for `processors.tailSampling` in OTLP destinations, choosing how the load balancing exporter routes traces to the tail sampling Alloy instances. (#2998) (@ubxt)
 *   Add `kubelet_evictions` to the default Kubelet allow list, and `kube_pod_status_ready`, `kube_poddisruptionbudget_status_current_healthy`, and `kube_poddisruptionbudget_status_desired_healthy` to the default Kube State Metrics allow list, so the provisioned alerting and recording rules have the metrics they need. (@TylerHelmuth)
 *   Update kube-state-metrics to 8.5.0, OpenCost to 2.5.31, and Node Exporter to 4.57.0 (@petewall)
 *   Update kube-state-metrics to 8.6.0 and Node Exporter to 4.59.0 (@TylerHelmuth)
