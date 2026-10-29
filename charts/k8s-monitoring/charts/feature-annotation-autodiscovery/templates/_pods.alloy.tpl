@@ -56,6 +56,7 @@ discovery.relabel "annotation_autodiscovery_pods" {
     regex = "true"
     action = "keep"
   }
+{{- if .Values.pods.onlyScrapeReadyPods }}
   // Only keep pods that are running, ready, and not init containers.
   rule {
     source_labels = [
@@ -66,6 +67,17 @@ discovery.relabel "annotation_autodiscovery_pods" {
     regex = "Running;true;false"
     action = "keep"
   }
+{{- else }}
+  // Only keep pods that are running and not init containers.
+  rule {
+    source_labels = [
+      "__meta_kubernetes_pod_phase",
+      "__meta_kubernetes_pod_container_init",
+    ]
+    regex = "Running;false"
+    action = "keep"
+  }
+{{- end }}
   rule {
     source_labels = ["__meta_kubernetes_pod_name"]
     target_label = "pod"
