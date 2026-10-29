@@ -38,7 +38,7 @@ Chart.lock: Chart.yaml
 
 .SECONDEXPANSION:
 docs/integrations/%.md: integrations/%-values.yaml $$(wildcard docs/integrations/.doc_templates/%.gotmpl)
-	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator:$(DOC_GENERATOR_IMAGE_VERSION) --file /chart/$< --template /chart/docs/integrations/.doc_templates/$(shell basename -s -values.yaml $<).gotmpl > $@
+	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator:$(DOC_GENERATOR_IMAGE_VERSION) --file /chart/$< --template /chart/docs/integrations/.doc_templates/$(patsubst %-values.yaml,%,$(notdir $<)).gotmpl > $@
 
 schema-mods/definitions/%-integration.schema.json: integrations/%-values.yaml
 	@mkdir -p $(shell dirname $@)

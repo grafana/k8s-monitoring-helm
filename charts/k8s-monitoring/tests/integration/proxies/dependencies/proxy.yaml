@@ -157,27 +157,6 @@ data:
     # Don't disable the Via header unless you know what you are doing...
     #
     DisableViaHeader Yes
-
-    #
-    # Filter: This allows you to specify the location of the filter file.
-    #
-    Filter "/etc/tinyproxy/filter"
-
-    #
-    # FilterDefaultDeny: Change the default policy of the filtering system.
-    # If this directive is commented out, or is set to "No" then the default
-    # policy is to allow everything which is not specifically denied by the
-    # filter file.
-    #
-    # However, by setting this directive to "Yes" the default policy becomes
-    # to deny everything which is _not_ specifically allowed by the filter
-    # file.
-    #
-    FilterDefaultDeny Yes
-  filter: |-
-    loki\.svc
-    prometheus\.svc
-    tempo\.svc
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -198,12 +177,13 @@ spec:
     spec:
       containers:
         - name: proxy-server
-          image: vimagick/tinyproxy@sha256:72b441b95ee1e641af948f68f09492f9f795ead72b73954414e339168c98ad8c
+          image: kalaksi/tinyproxy@sha256:5a65354cbb5f9c0fdcc8de3d3af8dd1c5ea072b3a1f52e5961a9a5cce6eba227
           ports:
             - containerPort: 8888
           volumeMounts:
             - name: config
-              mountPath: /etc/tinyproxy
+              mountPath: /etc/tinyproxy/tinyproxy.conf
+              subPath: tinyproxy.conf
       volumes:
         - name: config
           configMap:
