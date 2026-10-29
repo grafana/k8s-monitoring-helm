@@ -2307,9 +2307,14 @@ data:
           native_histogram_bucket_limit = 0
           native_histogram_min_bucket_factor = 0
         }
-        rule {
+        rule {  // extract the namespace from the job label (podMonitor/<namespace>/<name>/<index>) so the regexes below are matched against the namespace alone, and can't accidentally span into the name
           source_labels = ["job"]
-          regex = "podMonitor/(kube-system|kube-public|confidential)/.*"
+          regex = "podMonitor/([^/]+)/.*"
+          target_label = "__tmp_namespace"
+        }
+        rule {
+          source_labels = ["__tmp_namespace"]
+          regex = "kube-system|kube-public|confidential"
           action = "drop"
         }
         forward_to = argument.metrics_destinations.value
@@ -2329,9 +2334,14 @@ data:
           native_histogram_bucket_limit = 0
           native_histogram_min_bucket_factor = 0
         }
-        rule {
+        rule {  // extract the namespace from the job label (probe/<namespace>/<name>) so the regexes below are matched against the namespace alone, and can't accidentally span into the name
           source_labels = ["job"]
-          regex = "probe/(kube-system|kube-public|confidential)/.*"
+          regex = "probe/([^/]+)/.*"
+          target_label = "__tmp_namespace"
+        }
+        rule {
+          source_labels = ["__tmp_namespace"]
+          regex = "kube-system|kube-public|confidential"
           action = "drop"
         }
         forward_to = argument.metrics_destinations.value
@@ -2352,9 +2362,14 @@ data:
           native_histogram_bucket_limit = 0
           native_histogram_min_bucket_factor = 0
         }
-        rule {
+        rule {  // extract the namespace from the job label (serviceMonitor/<namespace>/<name>/<index>) so the regexes below are matched against the namespace alone, and can't accidentally span into the name
           source_labels = ["job"]
-          regex = "serviceMonitor/(kube-system|kube-public|confidential)/.*"
+          regex = "serviceMonitor/([^/]+)/.*"
+          target_label = "__tmp_namespace"
+        }
+        rule {
+          source_labels = ["__tmp_namespace"]
+          regex = "kube-system|kube-public|confidential"
           action = "drop"
         }
         forward_to = argument.metrics_destinations.value

@@ -51,3 +51,19 @@ max_cache_size = {{ $settings.maxCacheSize | int }}
   {{- end -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Detect whether a list of namespaces contains any regular expression, as opposed to only exact namespace
+names. A Kubernetes namespace name must be a valid DNS-1123 label (`[a-z0-9]([-a-z0-9]*[a-z0-9])?`, max 63
+characters), so any entry containing a character outside that alphabet, or exceeding the length limit, can
+only be a regular expression. Outputs "true" if any entry is a regex, and an empty string otherwise.
+*/}}
+{{- define "feature.prometheusOperatorObjects.namespaces.hasRegex" -}}
+{{- $hasRegex := "false" -}}
+{{- range . -}}
+  {{- if or (not (regexMatch "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" .)) (gt (len .) 63) -}}
+    {{- $hasRegex = "true" -}}
+  {{- end -}}
+{{- end -}}
+{{- $hasRegex -}}
+{{- end -}}

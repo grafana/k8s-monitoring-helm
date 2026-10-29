@@ -2,9 +2,13 @@
 {{- if .Values.probes.enabled }}
 {{- $metricAllowList := .Values.probes.metricsTuning.includeMetrics }}
 {{- $metricDenyList := .Values.probes.metricsTuning.excludeMetrics }}
+{{- $namespacesHaveRegex := "" }}
+{{- if .Values.probes.namespaces }}
+  {{- $namespacesHaveRegex = include "feature.prometheusOperatorObjects.namespaces.hasRegex" .Values.probes.namespaces }}
+{{- end }}
 // Prometheus Operator Probe objects
 prometheus.operator.probes "probes" {
-{{- if .Values.probes.namespaces }}
+{{- if and .Values.probes.namespaces (ne $namespacesHaveRegex "true") }}
   namespaces = {{ .Values.probes.namespaces | toJson }}
 {{- end }}
 {{- if or .Values.probes.labelSelectors .Values.probes.labelExpressions }}
@@ -38,10 +42,24 @@ prometheus.operator.probes "probes" {
     native_histogram_min_bucket_factor = {{ .Values.global.nativeHistogramMinBucketFactor | float64 }}
   }
 
+{{- if or (eq $namespacesHaveRegex "true") .Values.probes.excludeNamespaces }}
+  rule {  // extract the namespace from the job label (probe/<namespace>/<name>) so the regexes below are matched against the namespace alone, and can't accidentally span into the name
+    source_labels = ["job"]
+    regex = "probe/([^/]+)/.*"
+    target_label = "__tmp_namespace"
+  }
+{{- end }}
+{{- if eq $namespacesHaveRegex "true" }}
+  rule {  // namespaces contains a regex, so Probes cannot be pre-filtered by the component; keep only matching namespaces here
+    source_labels = ["__tmp_namespace"]
+    regex = {{ .Values.probes.namespaces | join "|" | quote }}
+    action = "keep"
+  }
+{{- end }}
 {{- with .Values.probes.excludeNamespaces }}
   rule {
-    source_labels = ["job"]
-    regex = "probe/({{ . | join "|" }})/.*"
+    source_labels = ["__tmp_namespace"]
+    regex = {{ . | join "|" | quote }}
     action = "drop"
   }
 {{- end }}
