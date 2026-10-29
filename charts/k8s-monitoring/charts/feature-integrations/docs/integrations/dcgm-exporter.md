@@ -21,19 +21,20 @@
 | metrics.portName | string | `"metrics"` | Name of the port to scrape metrics from. |
 | namespaces | list | `[]` | Namespaces to look for DCGM Exporter instances in. Will automatically look for DCGM Exporter instances in all namespaces unless specified here |
 
+### Metric Processing Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| metrics.cacheTTL | string | `""` | Sets the cache_ttl for the prometheus.relabel component, which switches its relabeling cache to TTL mode. Mutually exclusive with `maxCacheSize`. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.cacheTTL`. |
+| metrics.maxCacheSize | string | `100000` | Sets the max_cache_size for prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
+| metrics.tuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
+| metrics.tuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
+
 ### Metrics Settings
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | metrics.enabled | bool | `true` | Whether to enable metrics collection from DCGM Exporter. |
-
-### Metric Processing Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| metrics.maxCacheSize | string | `100000` | Sets the max_cache_size for prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.maxCacheSize`. |
-| metrics.tuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
-| metrics.tuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 
 ### Scrape Settings
 

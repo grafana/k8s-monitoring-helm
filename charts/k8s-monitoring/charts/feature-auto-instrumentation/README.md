@@ -53,6 +53,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| beyla.cacheTTL | string | `""` | Sets the cache_ttl for the prometheus.relabel component for Beyla, which switches its relabeling cache to TTL mode. Mutually exclusive with `maxCacheSize`. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.cacheTTL`. |
 | beyla.config.data | object | `{"attributes":{"kubernetes":{"enable":true}},"internal_metrics":{"prometheus":{"path":"/internal/metrics"}},"prometheus_export":{"features":["application","network","application_service_graph","application_span","application_host"],"path":"/metrics"}}` | The configuration for Grafana Beyla Some sections will be set automatically, such as the cluster name. Others will be modified depending on the value of beyla.preset. |
 | beyla.deliverTracesToApplicationObservability | bool | `true` | Whether Beyla should automatically deliver traces to the Application Observability feature. When enabled, traces will be sent to the OTLP receiver if Application Observability is configured. When disabled, only metrics (RED metrics) from the instrumented applications will be collected from Beyla, and traces will not be automatically delivered. |
 | beyla.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Beyla. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
@@ -73,6 +74,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| global.cacheTTL | string | `""` | Sets the cache_ttl for every prometheus.relabel component, which switches the relabeling cache from a fixed-size LRU cache to one that expires entries after this duration of inactivity (minimum `1m`, `10m` is a reasonable starting point). Mutually exclusive with `maxCacheSize`, so set `maxCacheSize` to `0` when using this. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) |
 | global.convertClassicHistogramsToNhcb | bool | `false` | Whether to convert classic histograms to native histograms with custom buckets (NHCB) at scrape time. |
 | global.maxCacheSize | int | `100000` | Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) This should be at least 2x-5x your largest scrape target or samples appended rate. |
 | global.namespaceOverride | string | `""` | Override the namespace for namespaced resources created by this chart. |

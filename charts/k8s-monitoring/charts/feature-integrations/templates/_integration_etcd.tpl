@@ -160,7 +160,7 @@ prometheus.scrape {{ include "helper.alloy_name" .name | quote }} {
 }
 
 prometheus.relabel {{ include "helper.alloy_name" .name | quote }} {
-  max_cache_size = {{ .metrics.maxCacheSize | default $.Values.global.maxCacheSize | int }}
+  {{- include "helper.relabelCacheArguments" (dict "maxCacheSize" .metrics.maxCacheSize "cacheTTL" .metrics.cacheTTL "global" $.Values.global) | nindent 2 }}
 
 {{- if $metricAllowList }}
   rule {

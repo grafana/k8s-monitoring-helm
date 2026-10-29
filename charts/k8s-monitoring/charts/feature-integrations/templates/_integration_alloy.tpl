@@ -137,6 +137,13 @@ declare "alloy_integration" {
     argument "max_cache_size" {
       comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
       optional = true
+      default = 100000
+    }
+
+    argument "cache_ttl" {
+      comment = "When set, switches the relabeling cache to TTL mode, expiring entries after this duration of inactivity. Requires max_cache_size to be 0."
+      optional = true
+      default = "0s"
     }
 
     argument "clustering" {
@@ -162,7 +169,8 @@ declare "alloy_integration" {
     // alloy metric relabelings (post-scrape)
     prometheus.relabel "alloy" {
       forward_to = argument.forward_to.value
-      max_cache_size = coalesce(argument.max_cache_size.value, 100000)
+      max_cache_size = argument.max_cache_size.value
+      cache_ttl = argument.cache_ttl.value
 
       // drop metrics that match the drop_metrics regex
       rule {
@@ -302,7 +310,7 @@ alloy_integration_scrape {{ include "helper.alloy_name" .name | quote }} {
   scrape_protocols = {{ include "helper.scrapeProtocols" $ }}
   scrape_classic_histograms = {{ $.Values.global.scrapeClassicHistograms }}
   scrape_native_histograms = {{ $.Values.global.scrapeNativeHistograms }}
-  max_cache_size = {{ .metrics.maxCacheSize | default $.Values.global.maxCacheSize | int }}
+  {{- include "helper.relabelCacheArguments" (dict "maxCacheSize" .metrics.maxCacheSize "cacheTTL" .metrics.cacheTTL "global" $.Values.global) | nindent 2 }}
   forward_to = argument.metrics_destinations.value
 }
 {{- end }}

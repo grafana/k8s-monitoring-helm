@@ -478,6 +478,13 @@ data:
         argument "max_cache_size" {
           comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
           optional = true
+          default = 100000
+        }
+    
+        argument "cache_ttl" {
+          comment = "When set, switches the relabeling cache to TTL mode, expiring entries after this duration of inactivity. Requires max_cache_size to be 0."
+          optional = true
+          default = "0s"
         }
     
         argument "clustering" {
@@ -503,7 +510,8 @@ data:
         // alloy metric relabelings (post-scrape)
         prometheus.relabel "alloy" {
           forward_to = argument.forward_to.value
-          max_cache_size = coalesce(argument.max_cache_size.value, 100000)
+          max_cache_size = argument.max_cache_size.value
+          cache_ttl = argument.cache_ttl.value
     
           // drop metrics that match the drop_metrics regex
           rule {
