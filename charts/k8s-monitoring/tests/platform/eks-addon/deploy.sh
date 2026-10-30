@@ -21,5 +21,6 @@ else
     --cluster-name "${CLUSTER_NAME}" \
     --region "${CLUSTER_REGION}" \
     --addon-name "${ADDON_NAME}" \
+    --tags owner=fleet-management \
     --configuration-values "$(jq --compact-output . values.json)"
 fi

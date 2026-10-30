@@ -12,4 +12,10 @@ provider "aws" {
   access_key                  = var.aws-access-key
   region                      = "ap-northeast-2"
   secret_key                  = var.aws-secret-key
+
+  default_tags {
+    tags = {
+      owner = "fleet-management"
+    }
+  }
 }
