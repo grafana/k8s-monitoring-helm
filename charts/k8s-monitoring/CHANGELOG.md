@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 4.6.0
 
 *   Add the option to set the `metricProcessingRules` for Prometheus destinations in their own `prometheus.relabel` component. (#3035) (@petewall)
 *   Allow regexes in the `namespaces` list for the Prometheus Operator Objects feature and fix the ScrapeConfigs `excludeNamespaces` filter. (#3018) (@petewall)
