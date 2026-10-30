@@ -70,17 +70,6 @@ declare "cluster_events" {
       }
     }
 
-    // if kind=Node, set the node label by copying the name field
-    stage.match {
-      selector = "{kind=\"Node\"}"
-
-      stage.labels {
-        values = {
-          "node" = "name",
-        }
-      }
-    }
-
 {{- if .Values.includeReasons }}
     stage.static_labels {
       values = {
