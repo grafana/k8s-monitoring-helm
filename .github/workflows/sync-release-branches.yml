@@ -1,0 +1,162 @@
+---
+name: Sync release branches with main
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: sync-release-branches
+  cancel-in-progress: false
+
+jobs:
+  find-release-branches:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      release_branches: ${{ steps.find.outputs.release_branches }}
+      has_branches: ${{ steps.find.outputs.has_branches }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Find release branches newer than main
+        id: find
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          main_version=$(sed -nE 's/^version:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+)([-+][^[:space:]]*)?[[:space:]]*$/\1/p' charts/k8s-monitoring/Chart.yaml | head -n 1)
+          if [[ ! "$main_version" =~ ^([0-9]+)\.([0-9]+)\. ]]; then
+            echo "::error::Could not read a numeric chart version from charts/k8s-monitoring/Chart.yaml"
+            exit 1
+          fi
+          main_major=$((10#${BASH_REMATCH[1]}))
+          main_minor=$((10#${BASH_REMATCH[2]}))
+          echo "Main chart version: ${main_version}"
+
+          git fetch origin main
+          mapfile -t remote_branches < <(git ls-remote --heads origin 'refs/heads/release-*' | awk '{sub("refs/heads/", "", $2); print $2}')
+          release_branches=()
+
+          for release_branch in "${remote_branches[@]}"; do
+            if [[ ! "$release_branch" =~ ^release-([0-9]+)\.([0-9]+)$ ]]; then
+              echo "Skipping non-versioned release branch: ${release_branch}"
+              continue
+            fi
+
+            release_major=$((10#${BASH_REMATCH[1]}))
+            release_minor=$((10#${BASH_REMATCH[2]}))
+            if (( release_major > main_major || (release_major == main_major && release_minor > main_minor) )); then
+              release_branches+=("$release_branch")
+            fi
+          done
+
+          if (( ${#release_branches[@]} > 0 )); then
+            matrix=$(printf '%s\n' "${release_branches[@]}" | jq -R . | jq -s -c .)
+          else
+            matrix='[]'
+          fi
+          echo "release_branches=${matrix}" >> "$GITHUB_OUTPUT"
+          if (( ${#release_branches[@]} > 0 )); then
+            echo "has_branches=true" >> "$GITHUB_OUTPUT"
+            echo "Release branches to sync: ${matrix}"
+          else
+            echo "has_branches=false" >> "$GITHUB_OUTPUT"
+            echo "No release branches need syncing."
+          fi
+
+  sync-release-branch:
+    needs: find-release-branches
+    if: needs.find-release-branches.outputs.has_branches == 'true'
+    name: Sync ${{ matrix.release_branch }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        release_branch: ${{ fromJson(needs.find-release-branches.outputs.release_branches) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Configure GitHub CLI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh auth setup-git
+
+      - name: Compare with latest main, rebase, and open sync PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_BRANCH: ${{ matrix.release_branch }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git fetch origin main
+          main_version=$(git show origin/main:charts/k8s-monitoring/Chart.yaml | sed -nE 's/^version:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+)([-+][^[:space:]]*)?[[:space:]]*$/\1/p' | head -n 1)
+          if [[ ! "$main_version" =~ ^([0-9]+)\.([0-9]+)\. ]]; then
+            echo "::error::Could not read a numeric chart version from origin/main"
+            exit 1
+          fi
+          main_major=$((10#${BASH_REMATCH[1]}))
+          main_minor=$((10#${BASH_REMATCH[2]}))
+
+          if [[ ! "$RELEASE_BRANCH" =~ ^release-([0-9]+)\.([0-9]+)$ ]]; then
+            echo "::error::Unexpected release branch name: ${RELEASE_BRANCH}"
+            exit 1
+          fi
+          release_major=$((10#${BASH_REMATCH[1]}))
+          release_minor=$((10#${BASH_REMATCH[2]}))
+          if (( release_major < main_major || (release_major == main_major && release_minor <= main_minor) )); then
+            echo "${RELEASE_BRANCH} is no longer newer than main ${main_major}.${main_minor}; skipping."
+            exit 0
+          fi
+
+          sync_branch="sync/main-into-${RELEASE_BRANCH}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin "${RELEASE_BRANCH}"
+          git checkout --force -B "${sync_branch}" "origin/${RELEASE_BRANCH}"
+          if ! git -c core.editor=true rebase origin/main; then
+            git rebase --abort || true
+            echo "::error::Could not rebase ${RELEASE_BRANCH} onto main."
+            exit 1
+          fi
+
+          if git ls-remote --exit-code --heads origin "${sync_branch}" >/dev/null 2>&1; then
+            git fetch origin "+refs/heads/${sync_branch}:refs/remotes/origin/${sync_branch}"
+          fi
+          git push --force-with-lease origin "HEAD:refs/heads/${sync_branch}"
+
+          pr_number=$(gh pr list \
+            --repo "${GITHUB_REPOSITORY}" \
+            --base "${RELEASE_BRANCH}" \
+            --head "${sync_branch}" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')
+
+          if [[ -n "$pr_number" ]]; then
+            gh pr edit "$pr_number" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --title "Sync ${RELEASE_BRANCH} with main" \
+              --body "Rebases the changes from ${RELEASE_BRANCH} onto the latest main so this release branch includes the latest main changes."
+            echo "Updated sync PR #${pr_number} for ${RELEASE_BRANCH}"
+          else
+            gh pr create \
+              --repo "${GITHUB_REPOSITORY}" \
+              --base "${RELEASE_BRANCH}" \
+              --head "${sync_branch}" \
+              --title "Sync ${RELEASE_BRANCH} with main" \
+              --body "Rebases the changes from ${RELEASE_BRANCH} onto the latest main so this release branch includes the latest main changes."
+          fi
