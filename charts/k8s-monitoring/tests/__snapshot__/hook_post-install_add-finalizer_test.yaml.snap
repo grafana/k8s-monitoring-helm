@@ -11,15 +11,14 @@ should create hook when operator is deployed and readiness is enabled:
         name: release-name-k8s-monitoring-add-finalizer
       spec:
         containers:
-          - command:
-              - /bin/bash
-              - -ce
-              - |
-                kubectl patch \
-                  --namespace=NAMESPACE \
-                  --patch='{"metadata":{"finalizers":["k8s.grafana.com/finalizer"]}}' \
-                  deployment/RELEASE-NAME-alloy-operator
-            image: ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.2
+          - args:
+              - patch
+              - --namespace=NAMESPACE
+              - --patch={"metadata":{"finalizers":["k8s.grafana.com/finalizer"]}}
+              - deployment/RELEASE-NAME-alloy-operator
+            command:
+              - kubectl
+            image: registry.k8s.io/kubectl:v1.34.9
             imagePullPolicy: IfNotPresent
             name: add-finalizers
             securityContext:

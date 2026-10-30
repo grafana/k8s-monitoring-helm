@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Switch the Alloy removal Helm hooks (`alloy-operator.waitForAlloyRemoval`) from the Grafana-built `helm-chart-toolbox-kubectl` image to the official, distroless `registry.k8s.io/kubectl` image. (@petewall)
+
 ## 4.6.0
 
 *   Add the option to set the `metricProcessingRules` for Prometheus destinations in their own `prometheus.relabel` component. (#3035) (@petewall)
