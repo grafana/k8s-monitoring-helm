@@ -123,4 +123,19 @@ jobs:
           TARGET_REVISION: ${{ github.event_name == 'pull_request' && format('refs/pull/{0}/merge', github.event.pull_request.number) || github.ref_name }}
           KUBECONFIG: "${{ github.workspace }}/source/charts/k8s-monitoring/${{ matrix.test }}/kubeconfig.yaml"
           TEST_DIRECTORY: "source/charts/k8s-monitoring/${{ matrix.test }}"
-          DELETE_CLUSTER: true
+          DELETE_CLUSTER: false
+
+      - name: Collect diagnostics
+        if: failure()
+        run: go run source/scripts/collect-test-diagnostics.go "${TEST_DIRECTORY}"
+        env:
+          KUBECONFIG: "${{ github.workspace }}/source/charts/k8s-monitoring/${{ matrix.test }}/kubeconfig.yaml"
+          TEST_DIRECTORY: "source/charts/k8s-monitoring/${{ matrix.test }}"
+
+      - name: Delete cluster
+        if: always()
+        continue-on-error: true
+        run: helm-chart-toolbox/tools/helm-test/delete-cluster "${TEST_DIRECTORY}"
+        env:
+          KUBECONFIG: "${{ github.workspace }}/source/charts/k8s-monitoring/${{ matrix.test }}/kubeconfig.yaml"
+          TEST_DIRECTORY: "source/charts/k8s-monitoring/${{ matrix.test }}"
