@@ -9,6 +9,7 @@
 *   Add `annotationAutodiscovery.pods.onlyScrapeReadyPods` to allow disabling the readiness requirement, so Pods keep being scraped through readiness flaps. (#3146) (@petewall)
 *   Update kube-state-metrics to 8.7.1, Node Exporter to 4.60.1, and Windows Exporter to 0.13.0 (@TylerHelmuth)
 *   Add support for Alloy's `prometheus.relabel` `cache_ttl` setting via `cacheTTL`. (#3097) (@TylerHelmuth)
+*   Update k8s-manifest-tail to 0.1.6, kube-state-metrics to 8.8.0, OpenCost to 2.5.33, and Windows Exporter to 0.13.1 (@petewall)
 *   Update Alloy Operator to 0.9.4 (@TylerHelmuth)
 *   Update Beyla to 1.16.17 (@TylerHelmuth)
 
