@@ -1028,16 +1028,15 @@ spec:
       serviceAccountName: k8smon-k8s-monitoring-add-finalizer
       containers:
         - name: add-finalizers
-          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.2"
+          image: "registry.k8s.io/kubectl:v1.34.9"
           imagePullPolicy: IfNotPresent
           command:
-            - /bin/bash
-            - -ce
-            - |
-              kubectl patch \
-                --namespace=default \
-                --patch='{"metadata":{"finalizers":["k8s.grafana.com/finalizer"]}}' \
-                deployment/k8smon-alloy-operator
+            - kubectl
+          args:
+            - patch
+            - --namespace=default
+            - --patch={"metadata":{"finalizers":["k8s.grafana.com/finalizer"]}}
+            - deployment/k8smon-alloy-operator
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -1078,27 +1077,40 @@ spec:
       nodeSelector:
         kubernetes.io/os: linux
       serviceAccountName: k8smon-k8s-monitoring-remove-alloy-and-finalizer
-      containers:
-        - name: remove-finalizers
-          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.2"
+      initContainers:
+        - name: delete-alloy-instances
+          image: "registry.k8s.io/kubectl:v1.34.9"
           imagePullPolicy: IfNotPresent
           command:
-            - /bin/bash
-            - -ce
-            - |
-              echo "Deleting Alloy instance: alloy/k8smon-alloy-logs..."
-              kubectl delete alloy/k8smon-alloy-logs --ignore-not-found=true --wait
-              kubectl wait --for=delete alloy/k8smon-alloy-logs --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-logs or it may not exist."
-
-              echo "Deleting Alloy instance: alloy/k8smon-alloy-singleton..."
-              kubectl delete alloy/k8smon-alloy-singleton --ignore-not-found=true --wait
-              kubectl wait --for=delete alloy/k8smon-alloy-singleton --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-singleton or it may not exist."
-
-              kubectl patch \
-                --namespace=default \
-                --type merge \
-                --patch='{"metadata":{"finalizers":null}}' \
-                deployment/k8smon-alloy-operator
+            - kubectl
+          args:
+            - delete
+            - alloy/k8smon-alloy-logs
+            - alloy/k8smon-alloy-singleton
+            - --ignore-not-found=true
+            - --wait=false
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 4242
+            seccompProfile:
+              type: RuntimeDefault
+      containers:
+        - name: remove-finalizers
+          image: "registry.k8s.io/kubectl:v1.34.9"
+          imagePullPolicy: IfNotPresent
+          command:
+            - kubectl
+          args:
+            - patch
+            - --namespace=default
+            - --type=merge
+            - --patch={"metadata":{"finalizers":null}}
+            - deployment/k8smon-alloy-operator
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
