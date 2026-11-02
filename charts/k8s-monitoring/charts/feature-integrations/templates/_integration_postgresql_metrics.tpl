@@ -221,6 +221,7 @@ database_observability.postgres {{ include "helper.alloy_name" .name | quote }} 
   query_samples {
     collect_interval = {{ .collectInterval | quote }}
     disable_query_redaction = {{ .disableQueryRedaction }}
+    enable_pre_classified_wait_events = {{ .enablePreClassifiedWaitEvents }}
     {{- if not (kindIs "invalid" .excludeCurrentUser) }}
     exclude_current_user = {{ .excludeCurrentUser }}
     {{- end }}

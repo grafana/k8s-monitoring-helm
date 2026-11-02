@@ -104,6 +104,7 @@ integrations:
 | databaseObservability.collectors.queryDetails.statementsLimit | number | `100` | Max number of recent queries to collect details for. |
 | databaseObservability.collectors.querySamples.collectInterval | string | `"15s"` | How frequently to collect query samples from the database. |
 | databaseObservability.collectors.querySamples.disableQueryRedaction | bool | `false` | Collect unredacted SQL query text including parameters. |
+| databaseObservability.collectors.querySamples.enablePreClassifiedWaitEvents | bool | `true` | Emit telemetry data with pre-classified wait event information. |
 | databaseObservability.collectors.querySamples.enabled | bool | `true` | Enable collection of query samples. |
 | databaseObservability.collectors.querySamples.excludeCurrentUser | bool | `true` | Deprecated. Use the top-level `databaseObservability.excludeCurrentUser` instead. When set, this takes precedence over the top-level setting. |
 | databaseObservability.collectors.schemaDetails.cacheEnabled | bool | `true` | Deprecated. Kept for backwards compatibility. |

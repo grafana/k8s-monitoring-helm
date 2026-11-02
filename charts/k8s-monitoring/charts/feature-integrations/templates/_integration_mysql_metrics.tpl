@@ -215,6 +215,7 @@ database_observability.mysql {{ include "helper.alloy_name" .name | quote }} {
   query_samples {
     collect_interval = {{ .collectInterval | quote }}
     disable_query_redaction = {{ .disableQueryRedaction }}
+    enable_pre_classified_wait_events = {{ .enablePreClassifiedWaitEvents }}
     auto_enable_setup_consumers = {{ .autoEnableSetupConsumers }}
     setup_consumers_check_interval = {{ .setupConsumersCheckInterval | quote }}
     sample_min_duration = {{ .sampleMinDuration | quote }}
