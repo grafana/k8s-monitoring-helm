@@ -120,7 +120,7 @@ prometheus.scrape "kube_dns" {
 } // prometheus.scrape "kube_dns"
 
 prometheus.relabel "kube_dns" {
-  max_cache_size = {{ .Values.kubeDNS.maxCacheSize | default .Values.global.maxCacheSize | int }}
+  {{- include "helper.relabelCacheArguments" (dict "maxCacheSize" .Values.kubeDNS.maxCacheSize "cacheTTL" .Values.kubeDNS.cacheTTL "global" .Values.global) | nindent 2 }}
 {{- if $metricAllowList }}
   rule {
     source_labels = ["__name__"]

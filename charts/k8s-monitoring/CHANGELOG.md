@@ -2,11 +2,41 @@
 
 ## Unreleased
 
+*   Switch the Alloy removal Helm hooks (`alloy-operator.waitForAlloyRemoval`) from the Grafana-built `helm-chart-toolbox-kubectl` image to the official, distroless `registry.k8s.io/kubectl` image. (@petewall)
+
+## 4.6.0
+
+*   Add the option to set the `metricProcessingRules` for Prometheus destinations in their own `prometheus.relabel` component. (#3035) (@petewall)
+*   Allow regexes in the `namespaces` list for the Prometheus Operator Objects feature and fix the ScrapeConfigs `excludeNamespaces` filter. (#3018) (@petewall)
+*   Set `allowPrivilegeEscalation: false` on the Node Exporter container by default. If you set `privileged: true` or add the `CAP_SYS_ADMIN` capability in `telemetryServices.node-exporter.containerSecurityContext`, also set `allowPrivilegeEscalation: true`, since Kubernetes rejects that combination. The chart now fails with this guidance. (#2898) (@TylerHelmuth)
+*   Stop adding the container runtime default capabilities (including `NET_RAW` and `MKNOD`) back to the Alloy collectors. The default security context now drops all capabilities and only adds back `NET_BIND_SERVICE`, so collectors pass the `baseline` Pod Security Standard by default. Use the `root` preset or set `collectorCommon.alloy.alloy.securityContext.capabilities.add` if a collector needs more. (#2901) (@TylerHelmuth)
+*   Add `annotationAutodiscovery.pods.onlyScrapeReadyPods` to allow disabling the readiness requirement, so Pods keep being scraped through readiness flaps. (#3146) (@petewall)
+*   Update kube-state-metrics to 8.7.1, Node Exporter to 4.60.1, and Windows Exporter to 0.13.0 (@TylerHelmuth)
+*   Add support for Alloy's `prometheus.relabel` `cache_ttl` setting via `cacheTTL`. (#3097) (@TylerHelmuth)
+*   Update k8s-manifest-tail to 0.1.6, kube-state-metrics to 8.8.0, OpenCost to 2.5.33, and Windows Exporter to 0.13.1 (@petewall)
+*   Update Alloy Operator to 0.9.4 (@TylerHelmuth)
+*   Update Beyla to 1.16.17 (@TylerHelmuth)
+
+## 4.5.5
+
+*   Add `applicationObservability.processors.resourceDetection.enabled` to allow disabling resource detection when it would add collector host attributes to pass-through telemetry. (#3015) (@Iro-engin)
+*   Update Alloy Operator to 0.9.3 (@TylerHelmuth)
+*   Update Beyla to 1.16.16 (@TylerHelmuth)
+*   Fix the collector `extraService` ignoring `service.externalTrafficPolicy`, `service.trafficDistribution`, and `alloy.extraPorts[].nodePort`. (#3125) (@at-blacknight)
+
+## 4.5.4
+
+*   Add `allowArbitraryFileAccess` to the ServiceMonitors feature to allow opt back into allowing ServiceMonitor objects to reference local files (`bearerTokenFile`, `tlsConfig.caFile`/`certFile`/`keyFile`). (@petewall)
 *   Fix `k8s_cluster_name` label values being joined with `;` on Beyla metrics sent through OTLP destinations, by dropping the flat per-series copy when it equals the `k8s.cluster.name` set by the chart. (@mbaykara)
+*   Update Node Exporter to 4.60.0 (@TylerHelmuth)
+*   Update Windows Exporter to 0.12.9 (@TylerHelmuth)
+*   Update Alloy Operator to 0.9.2 (@TylerHelmuth)
+*   Update the SDK Injector (k8s-injection-controller) to 0.3.0 (@TylerHelmuth)
 
 ## 4.5.3
 
 *   Only set the cluster name in Beyla's config when using `.cluster.name`. Avoids the case of setting it to an empty string. (#3060) (@petewall)
+*   Add the ability to set the resolver and timeout for `processors.tailSampling` in OTLP destinations, choosing how the load balancing exporter routes traces to the tail sampling Alloy instances. (#2998) (@ubxt)
 *   Add `kubelet_evictions` to the default Kubelet allow list, and `kube_pod_status_ready`, `kube_poddisruptionbudget_status_current_healthy`, and `kube_poddisruptionbudget_status_desired_healthy` to the default Kube State Metrics allow list, so the provisioned alerting and recording rules have the metrics they need. (@TylerHelmuth)
 *   Update kube-state-metrics to 8.5.0, OpenCost to 2.5.31, and Node Exporter to 4.57.0 (@petewall)
 *   Update kube-state-metrics to 8.6.0 and Node Exporter to 4.59.0 (@TylerHelmuth)

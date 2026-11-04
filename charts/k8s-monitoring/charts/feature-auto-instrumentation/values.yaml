@@ -37,6 +37,13 @@ global:
   # @section -- Global Settings
   maxCacheSize: 100000
 
+  # -- Sets the cache_ttl for every prometheus.relabel component, which switches the relabeling cache from a fixed-size
+  # LRU cache to one that expires entries after this duration of inactivity (minimum `1m`, `10m` is a reasonable
+  # starting point). Mutually exclusive with `maxCacheSize`, so set `maxCacheSize` to `0` when using this.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
+  # @section -- Global Settings
+  cacheTTL: ""
+
 beyla:
   # -- The configuration preset to use. Valid options are "application" or "network".
   # @section -- Beyla
@@ -107,6 +114,13 @@ beyla:
   # @default -- 100000
   # @section -- Beyla
   maxCacheSize:
+
+  # -- Sets the cache_ttl for the prometheus.relabel component for Beyla, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- Beyla
+  cacheTTL: ""
 
   config:
     # @ignored -- This allows this chart to create the ConfigMap while also keeping the default name

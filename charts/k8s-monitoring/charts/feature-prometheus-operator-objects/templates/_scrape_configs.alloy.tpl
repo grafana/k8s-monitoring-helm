@@ -2,9 +2,13 @@
 {{- if .Values.scrapeConfigs.enabled }}
 {{- $metricAllowList := .Values.scrapeConfigs.metricsTuning.includeMetrics }}
 {{- $metricDenyList := .Values.scrapeConfigs.metricsTuning.excludeMetrics }}
-// Prometheus Operator Probe objects
-prometheus.operator.scrapeconfigs "scrapeConfigs" {
+{{- $namespacesHaveRegex := "" }}
 {{- if .Values.scrapeConfigs.namespaces }}
+  {{- $namespacesHaveRegex = include "feature.prometheusOperatorObjects.namespaces.hasRegex" .Values.scrapeConfigs.namespaces }}
+{{- end }}
+// Prometheus Operator ScrapeConfig objects
+prometheus.operator.scrapeconfigs "scrapeConfigs" {
+{{- if and .Values.scrapeConfigs.namespaces (ne $namespacesHaveRegex "true") }}
   namespaces = {{ .Values.scrapeConfigs.namespaces | toJson }}
 {{- end }}
 {{- if or .Values.scrapeConfigs.labelSelectors .Values.scrapeConfigs.labelExpressions }}
@@ -34,10 +38,24 @@ prometheus.operator.scrapeconfigs "scrapeConfigs" {
     scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
   }
 
+{{- if or (eq $namespacesHaveRegex "true") .Values.scrapeConfigs.excludeNamespaces }}
+  rule {  // extract the namespace from the job label (scrapeConfig/<namespace>/<name>/...) so the regexes below are matched against the namespace alone, and can't accidentally span into the name
+    source_labels = ["job"]
+    regex = "scrapeConfig/([^/]+)/.*"
+    target_label = "__tmp_namespace"
+  }
+{{- end }}
+{{- if eq $namespacesHaveRegex "true" }}
+  rule {  // namespaces contains a regex, so ScrapeConfigs cannot be pre-filtered by the component; keep only matching namespaces here
+    source_labels = ["__tmp_namespace"]
+    regex = {{ .Values.scrapeConfigs.namespaces | join "|" | quote }}
+    action = "keep"
+  }
+{{- end }}
 {{- with .Values.scrapeConfigs.excludeNamespaces }}
   rule {
-    source_labels = ["job"]
-    regex = "probe/({{ . | join "|" }})/.*"
+    source_labels = ["__tmp_namespace"]
+    regex = {{ . | join "|" | quote }}
     action = "drop"
   }
 {{- end }}
@@ -49,7 +67,7 @@ prometheus.operator.scrapeconfigs "scrapeConfigs" {
 } // prometheus.operator.scrapeconfigs "scrapeConfigs"
 
 prometheus.relabel "scrapeConfigs" {
-  max_cache_size = {{ .Values.scrapeConfigs.maxCacheSize | default .Values.global.maxCacheSize | int }}
+  {{- include "helper.relabelCacheArguments" (dict "maxCacheSize" .Values.scrapeConfigs.maxCacheSize "cacheTTL" .Values.scrapeConfigs.cacheTTL "global" .Values.global) | nindent 2 }}
 {{- if $metricAllowList }}
   rule {
     source_labels = ["__name__"]

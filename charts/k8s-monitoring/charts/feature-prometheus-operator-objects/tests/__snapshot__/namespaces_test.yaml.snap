@@ -1,0 +1,416 @@
+should filter excluded namespaces with the correct job prefix for each object type:
+  1: |
+    |-
+      declare "prometheus_operator_objects" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+
+        // Prometheus Operator PodMonitor objects
+        prometheus.operator.podmonitors "pod_monitors" {
+          clustering {
+            enabled = true
+          }
+          scrape {
+            default_scrape_interval = "60s"
+            default_scrape_timeout = "10s"
+            scrape_classic_histograms = false
+            scrape_native_histograms = false
+            convert_classic_histograms_to_nhcb = false
+            native_histogram_bucket_limit = 0
+            native_histogram_min_bucket_factor = 0
+          }
+          rule {  // extract the namespace from the job label (podMonitor/<namespace>/<name>/<index>) so the regexes below are matched against the namespace alone, and can't accidentally span into the name
+            source_labels = ["job"]
+            regex = "podMonitor/([^/]+)/.*"
+            target_label = "__tmp_namespace"
+          }
+          rule {
+            source_labels = ["__tmp_namespace"]
+            regex = "kube-system"
+            action = "drop"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.operator.podmonitors "pod_monitors"
+
+        // Prometheus Operator Probe objects
+        prometheus.operator.probes "probes" {
+          clustering {
+            enabled = true
+          }
+          scrape {
+            default_scrape_interval = "60s"
+            default_scrape_timeout = "10s"
+            scrape_classic_histograms = false
+            scrape_native_histograms = false
+            convert_classic_histograms_to_nhcb = false
+            native_histogram_bucket_limit = 0
+            native_histogram_min_bucket_factor = 0
+          }
+          rule {  // extract the namespace from the job label (probe/<namespace>/<name>) so the regexes below are matched against the namespace alone, and can't accidentally span into the name
+            source_labels = ["job"]
+            regex = "probe/([^/]+)/.*"
+            target_label = "__tmp_namespace"
+          }
+          rule {
+            source_labels = ["__tmp_namespace"]
+            regex = "kube-system"
+            action = "drop"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.operator.probes "probes"
+
+        // Prometheus Operator ScrapeConfig objects
+        prometheus.operator.scrapeconfigs "scrapeConfigs" {
+          clustering {
+            enabled = true
+          }
+          scrape {
+            default_scrape_interval = "60s"
+            default_scrape_timeout = "10s"
+            scrape_native_histograms = false
+          }
+          rule {  // extract the namespace from the job label (scrapeConfig/<namespace>/<name>/...) so the regexes below are matched against the namespace alone, and can't accidentally span into the name
+            source_labels = ["job"]
+            regex = "scrapeConfig/([^/]+)/.*"
+            target_label = "__tmp_namespace"
+          }
+          rule {
+            source_labels = ["__tmp_namespace"]
+            regex = "kube-system"
+            action = "drop"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.operator.scrapeconfigs "scrapeConfigs"
+
+        // Prometheus Operator ServiceMonitor objects
+        prometheus.operator.servicemonitors "service_monitors" {
+          kubernetes_role = "endpointslice"
+          clustering {
+            enabled = true
+          }
+          scrape {
+            default_scrape_interval = "60s"
+            default_scrape_timeout = "10s"
+            scrape_classic_histograms = false
+            scrape_native_histograms = false
+            convert_classic_histograms_to_nhcb = false
+            native_histogram_bucket_limit = 0
+            native_histogram_min_bucket_factor = 0
+          }
+          rule {  // extract the namespace from the job label (serviceMonitor/<namespace>/<name>/<index>) so the regexes below are matched against the namespace alone, and can't accidentally span into the name
+            source_labels = ["job"]
+            regex = "serviceMonitor/([^/]+)/.*"
+            target_label = "__tmp_namespace"
+          }
+          rule {
+            source_labels = ["__tmp_namespace"]
+            regex = "kube-system"
+            action = "drop"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.operator.servicemonitors "service_monitors"
+      } // declare "prometheus_operator_objects"
+should filter via a job regex rule when the namespaces list contains a regex:
+  1: |
+    |-
+      declare "prometheus_operator_objects" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+
+        // Prometheus Operator PodMonitor objects
+        prometheus.operator.podmonitors "pod_monitors" {
+          clustering {
+            enabled = true
+          }
+          scrape {
+            default_scrape_interval = "60s"
+            default_scrape_timeout = "10s"
+            scrape_classic_histograms = false
+            scrape_native_histograms = false
+            convert_classic_histograms_to_nhcb = false
+            native_histogram_bucket_limit = 0
+            native_histogram_min_bucket_factor = 0
+          }
+          rule {  // extract the namespace from the job label (podMonitor/<namespace>/<name>/<index>) so the regexes below are matched against the namespace alone, and can't accidentally span into the name
+            source_labels = ["job"]
+            regex = "podMonitor/([^/]+)/.*"
+            target_label = "__tmp_namespace"
+          }
+          rule {  // namespaces contains a regex, so PodMonitors cannot be pre-filtered by the component; keep only matching namespaces here
+            source_labels = ["__tmp_namespace"]
+            regex = "default|team-.*"
+            action = "keep"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.operator.podmonitors "pod_monitors"
+
+        // Prometheus Operator Probe objects
+        prometheus.operator.probes "probes" {
+          clustering {
+            enabled = true
+          }
+          scrape {
+            default_scrape_interval = "60s"
+            default_scrape_timeout = "10s"
+            scrape_classic_histograms = false
+            scrape_native_histograms = false
+            convert_classic_histograms_to_nhcb = false
+            native_histogram_bucket_limit = 0
+            native_histogram_min_bucket_factor = 0
+          }
+          rule {  // extract the namespace from the job label (probe/<namespace>/<name>) so the regexes below are matched against the namespace alone, and can't accidentally span into the name
+            source_labels = ["job"]
+            regex = "probe/([^/]+)/.*"
+            target_label = "__tmp_namespace"
+          }
+          rule {  // namespaces contains a regex, so Probes cannot be pre-filtered by the component; keep only matching namespaces here
+            source_labels = ["__tmp_namespace"]
+            regex = "default|team-.*"
+            action = "keep"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.operator.probes "probes"
+
+        // Prometheus Operator ScrapeConfig objects
+        prometheus.operator.scrapeconfigs "scrapeConfigs" {
+          clustering {
+            enabled = true
+          }
+          scrape {
+            default_scrape_interval = "60s"
+            default_scrape_timeout = "10s"
+            scrape_native_histograms = false
+          }
+          rule {  // extract the namespace from the job label (scrapeConfig/<namespace>/<name>/...) so the regexes below are matched against the namespace alone, and can't accidentally span into the name
+            source_labels = ["job"]
+            regex = "scrapeConfig/([^/]+)/.*"
+            target_label = "__tmp_namespace"
+          }
+          rule {  // namespaces contains a regex, so ScrapeConfigs cannot be pre-filtered by the component; keep only matching namespaces here
+            source_labels = ["__tmp_namespace"]
+            regex = "default|team-.*"
+            action = "keep"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.operator.scrapeconfigs "scrapeConfigs"
+
+        // Prometheus Operator ServiceMonitor objects
+        prometheus.operator.servicemonitors "service_monitors" {
+          kubernetes_role = "endpointslice"
+          clustering {
+            enabled = true
+          }
+          scrape {
+            default_scrape_interval = "60s"
+            default_scrape_timeout = "10s"
+            scrape_classic_histograms = false
+            scrape_native_histograms = false
+            convert_classic_histograms_to_nhcb = false
+            native_histogram_bucket_limit = 0
+            native_histogram_min_bucket_factor = 0
+          }
+          rule {  // extract the namespace from the job label (serviceMonitor/<namespace>/<name>/<index>) so the regexes below are matched against the namespace alone, and can't accidentally span into the name
+            source_labels = ["job"]
+            regex = "serviceMonitor/([^/]+)/.*"
+            target_label = "__tmp_namespace"
+          }
+          rule {  // namespaces contains a regex, so ServiceMonitors cannot be pre-filtered by the component; keep only matching namespaces here
+            source_labels = ["__tmp_namespace"]
+            regex = "default|team-.*"
+            action = "keep"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.operator.servicemonitors "service_monitors"
+      } // declare "prometheus_operator_objects"
+should isolate the namespace from the job label before matching, so a regex can't span into the object name:
+  1: |
+    |-
+      declare "prometheus_operator_objects" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+
+        // Prometheus Operator PodMonitor objects
+        prometheus.operator.podmonitors "pod_monitors" {
+          clustering {
+            enabled = true
+          }
+          scrape {
+            default_scrape_interval = "60s"
+            default_scrape_timeout = "10s"
+            scrape_classic_histograms = false
+            scrape_native_histograms = false
+            convert_classic_histograms_to_nhcb = false
+            native_histogram_bucket_limit = 0
+            native_histogram_min_bucket_factor = 0
+          }
+          rule {  // extract the namespace from the job label (podMonitor/<namespace>/<name>/<index>) so the regexes below are matched against the namespace alone, and can't accidentally span into the name
+            source_labels = ["job"]
+            regex = "podMonitor/([^/]+)/.*"
+            target_label = "__tmp_namespace"
+          }
+          rule {  // namespaces contains a regex, so PodMonitors cannot be pre-filtered by the component; keep only matching namespaces here
+            source_labels = ["__tmp_namespace"]
+            regex = ".*-prod"
+            action = "keep"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.operator.podmonitors "pod_monitors"
+
+        // Prometheus Operator Probe objects
+        prometheus.operator.probes "probes" {
+          clustering {
+            enabled = true
+          }
+          scrape {
+            default_scrape_interval = "60s"
+            default_scrape_timeout = "10s"
+            scrape_classic_histograms = false
+            scrape_native_histograms = false
+            convert_classic_histograms_to_nhcb = false
+            native_histogram_bucket_limit = 0
+            native_histogram_min_bucket_factor = 0
+          }
+          rule {  // extract the namespace from the job label (probe/<namespace>/<name>) so the regexes below are matched against the namespace alone, and can't accidentally span into the name
+            source_labels = ["job"]
+            regex = "probe/([^/]+)/.*"
+            target_label = "__tmp_namespace"
+          }
+          rule {
+            source_labels = ["__tmp_namespace"]
+            regex = ".*-prod"
+            action = "drop"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.operator.probes "probes"
+
+        // Prometheus Operator ScrapeConfig objects
+        prometheus.operator.scrapeconfigs "scrapeConfigs" {
+          clustering {
+            enabled = true
+          }
+          scrape {
+            default_scrape_interval = "60s"
+            default_scrape_timeout = "10s"
+            scrape_native_histograms = false
+          }
+          rule {  // extract the namespace from the job label (scrapeConfig/<namespace>/<name>/...) so the regexes below are matched against the namespace alone, and can't accidentally span into the name
+            source_labels = ["job"]
+            regex = "scrapeConfig/([^/]+)/.*"
+            target_label = "__tmp_namespace"
+          }
+          rule {  // namespaces contains a regex, so ScrapeConfigs cannot be pre-filtered by the component; keep only matching namespaces here
+            source_labels = ["__tmp_namespace"]
+            regex = ".*-prod"
+            action = "keep"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.operator.scrapeconfigs "scrapeConfigs"
+
+        // Prometheus Operator ServiceMonitor objects
+        prometheus.operator.servicemonitors "service_monitors" {
+          kubernetes_role = "endpointslice"
+          clustering {
+            enabled = true
+          }
+          scrape {
+            default_scrape_interval = "60s"
+            default_scrape_timeout = "10s"
+            scrape_classic_histograms = false
+            scrape_native_histograms = false
+            convert_classic_histograms_to_nhcb = false
+            native_histogram_bucket_limit = 0
+            native_histogram_min_bucket_factor = 0
+          }
+          rule {  // extract the namespace from the job label (serviceMonitor/<namespace>/<name>/<index>) so the regexes below are matched against the namespace alone, and can't accidentally span into the name
+            source_labels = ["job"]
+            regex = "serviceMonitor/([^/]+)/.*"
+            target_label = "__tmp_namespace"
+          }
+          rule {
+            source_labels = ["__tmp_namespace"]
+            regex = ".*-prod"
+            action = "drop"
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.operator.servicemonitors "service_monitors"
+      } // declare "prometheus_operator_objects"
+should pre-filter in the component when all namespaces are exact names:
+  1: |
+    |-
+      declare "prometheus_operator_objects" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+
+        // Prometheus Operator PodMonitor objects
+        prometheus.operator.podmonitors "pod_monitors" {
+          namespaces = ["default","kube-system"]
+          clustering {
+            enabled = true
+          }
+          scrape {
+            default_scrape_interval = "60s"
+            default_scrape_timeout = "10s"
+            scrape_classic_histograms = false
+            scrape_native_histograms = false
+            convert_classic_histograms_to_nhcb = false
+            native_histogram_bucket_limit = 0
+            native_histogram_min_bucket_factor = 0
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.operator.podmonitors "pod_monitors"
+
+        // Prometheus Operator Probe objects
+        prometheus.operator.probes "probes" {
+          namespaces = ["default","kube-system"]
+          clustering {
+            enabled = true
+          }
+          scrape {
+            default_scrape_interval = "60s"
+            default_scrape_timeout = "10s"
+            scrape_classic_histograms = false
+            scrape_native_histograms = false
+            convert_classic_histograms_to_nhcb = false
+            native_histogram_bucket_limit = 0
+            native_histogram_min_bucket_factor = 0
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.operator.probes "probes"
+
+        // Prometheus Operator ScrapeConfig objects
+        prometheus.operator.scrapeconfigs "scrapeConfigs" {
+          namespaces = ["default","kube-system"]
+          clustering {
+            enabled = true
+          }
+          scrape {
+            default_scrape_interval = "60s"
+            default_scrape_timeout = "10s"
+            scrape_native_histograms = false
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.operator.scrapeconfigs "scrapeConfigs"
+
+        // Prometheus Operator ServiceMonitor objects
+        prometheus.operator.servicemonitors "service_monitors" {
+          kubernetes_role = "endpointslice"
+          namespaces = ["default","kube-system"]
+          clustering {
+            enabled = true
+          }
+          scrape {
+            default_scrape_interval = "60s"
+            default_scrape_timeout = "10s"
+            scrape_classic_histograms = false
+            scrape_native_histograms = false
+            convert_classic_histograms_to_nhcb = false
+            native_histogram_bucket_limit = 0
+            native_histogram_min_bucket_factor = 0
+          }
+          forward_to = argument.metrics_destinations.value
+        } // prometheus.operator.servicemonitors "service_monitors"
+      } // declare "prometheus_operator_objects"

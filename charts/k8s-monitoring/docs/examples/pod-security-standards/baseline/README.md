@@ -13,17 +13,16 @@ The `baseline` policy blocks known privilege escalations: privileged containers,
 
 ## Capabilities: `NET_RAW`
 
-The chart's default collector security context does `drop: ["ALL"]` and then adds back the capabilities that a container
-runtime (Docker/containerd) grants by default. That default set includes `NET_RAW`, and **`baseline` does not permit
-`NET_RAW`** , because `NET_RAW` allows a container to craft and sniff raw network packets (spoofing, ARP/DNS poisoning).
-So the chart's default collectors are rejected under `baseline` with:
+The chart's default collector security context does `drop: ["ALL"]` and only adds back `NET_BIND_SERVICE`, which
+`baseline` permits. **`baseline` does not permit `NET_RAW`**, because `NET_RAW` allows a container to craft and sniff raw
+network packets (spoofing, ARP/DNS poisoning). If you add `NET_RAW` to a collector, it is rejected under `baseline` with:
 
 ```text
 violates PodSecurity "baseline:latest": non-default capabilities (container "alloy" must not include "NET_RAW" in
 securityContext.capabilities.add)
 ```
 
-Alloy only uses `NET_RAW` when using the [`byela.ebpf` component](https://grafana.com/docs/alloy/latest/reference/components/beyla/beyla.ebpf/).
+Alloy only uses `NET_RAW` when using the [`beyla.ebpf` component](https://grafana.com/docs/alloy/latest/reference/components/beyla/beyla.ebpf/).
 
 ## `hostPath` volumes
 
@@ -75,19 +74,10 @@ destinations:
 # The `baseline` Pod Security Standard forbids privileged pods, host namespaces,
 # `hostPath` volumes, and capabilities outside a small allowed set.
 #
-# The chart's default collector security context does `drop: ["ALL"]` and then adds back
-# the *container-runtime* default capabilities. That default set includes `NET_RAW`,
-# which `baseline` does NOT permit (baseline allows the runtime defaults minus
-# `NET_RAW`, because `NET_RAW` enables packet spoofing/sniffing). So the chart's default
-# collectors are rejected by `baseline` with:
-#
-#   violates PodSecurity "baseline:latest": non-default capabilities
-#   (container "alloy" must not include "NET_RAW" in securityContext.capabilities.add)
-#
-# Alloy does not need `NET_RAW` (or any of the other added capabilities) to scrape
-# metrics, gather events, or read pod logs through the Kubernetes API, so the override
-# below clears the added capabilities on each collector. No other `securityContext`
-# changes are needed for `baseline`.
+# The chart's default collector security context does `drop: ["ALL"]` and only adds back
+# `NET_BIND_SERVICE`, which `baseline` permits, so no `securityContext` changes are needed.
+# Do not add `NET_RAW` back: `baseline` rejects it because it enables packet
+# spoofing/sniffing.
 #
 # Also avoid features that mount `hostPath` volumes, which `baseline` forbids: Host
 # Metrics, Node Logs, and the filesystem-based Pod Logs collector. This example collects
@@ -112,13 +102,6 @@ podLogsViaKubernetesApi:
 telemetryServices:
   kube-state-metrics:
     deploy: true
-
-collectorCommon:
-  alloy:
-    alloy:
-      securityContext:
-        capabilities:
-          add: ["CHOWN", "DAC_OVERRIDE", "FOWNER", "FSETID", "KILL", "SETGID", "SETUID", "SETPCAP", "NET_BIND_SERVICE", "SYS_CHROOT", "MKNOD", "AUDIT_WRITE", "SETFCAP"]
 
 collectors:
   alloy-metrics:

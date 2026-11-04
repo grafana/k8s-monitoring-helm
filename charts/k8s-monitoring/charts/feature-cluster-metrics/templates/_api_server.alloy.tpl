@@ -72,7 +72,7 @@ prometheus.scrape "apiserver" {
 } // prometheus.scrape "apiserver"
 
 prometheus.relabel "apiserver" {
-  max_cache_size = {{ .Values.apiServer.maxCacheSize | default .Values.global.maxCacheSize | int }}
+  {{- include "helper.relabelCacheArguments" (dict "maxCacheSize" .Values.apiServer.maxCacheSize "cacheTTL" .Values.apiServer.cacheTTL "global" .Values.global) | nindent 2 }}
 
 {{- if $metricAllowList }}
   rule {

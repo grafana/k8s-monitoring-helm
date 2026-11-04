@@ -1,6 +1,7 @@
 {{- define "telemetryServices.validate" }}
   {{- include "telemetryServices.validate.opencost" . }}
   {{- include "telemetryServices.validate.nodeExporter" . }}
+  {{- include "telemetryServices.validate.nodeExporterSecurityContext" . }}
   {{- include "telemetryServices.validate.beyla" . }}
   {{- include "telemetryServices.validate.sdkInjector" . }}
 {{- end }}
@@ -151,6 +152,33 @@ If a conflict is found, recommend either using the existing Node Exporter or dep
     {{- $msg = append $msg "  node-exporter:" }}
     {{- $msg = append $msg "    portConflictCheck: false" }}
     {{- fail (join "\n" $msg) }}
+  {{- end }}
+{{- end }}
+{{- end }}
+
+{{/* Kubernetes rejects allowPrivilegeEscalation=false combined with privileged=true or an added CAP_SYS_ADMIN */}}
+{{- define "telemetryServices.validate.nodeExporterSecurityContext" }}
+{{- $nodeExporter := index .Values.telemetryServices "node-exporter" }}
+{{- if $nodeExporter.deploy }}
+  {{- $securityContext := $nodeExporter.containerSecurityContext | default dict }}
+  {{- if not (dig "allowPrivilegeEscalation" true $securityContext) }}
+    {{- $reason := "" }}
+    {{- if dig "privileged" false $securityContext }}
+      {{- $reason = "privileged is set to true" }}
+    {{- else if has "CAP_SYS_ADMIN" (dig "capabilities" "add" (list) $securityContext) }}
+      {{- $reason = "the CAP_SYS_ADMIN capability is added" }}
+    {{- end }}
+    {{- if $reason }}
+      {{- $msg := list "" (printf "The Node Exporter container security context is invalid: allowPrivilegeEscalation is false, but %s." $reason) }}
+      {{- $msg = append $msg "Kubernetes does not allow this combination." }}
+      {{- $msg = append $msg "" }}
+      {{- $msg = append $msg "Please set:" }}
+      {{- $msg = append $msg "telemetryServices:" }}
+      {{- $msg = append $msg "  node-exporter:" }}
+      {{- $msg = append $msg "    containerSecurityContext:" }}
+      {{- $msg = append $msg "      allowPrivilegeEscalation: true" }}
+      {{- fail (join "\n" $msg) }}
+    {{- end }}
   {{- end }}
 {{- end }}
 {{- end }}

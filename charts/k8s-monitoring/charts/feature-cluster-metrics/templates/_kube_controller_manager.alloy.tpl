@@ -70,7 +70,7 @@ prometheus.scrape "kube_controller_manager" {
 } // prometheus.scrape "kube_controller_manager"
 
 prometheus.relabel "kube_controller_manager" {
-  max_cache_size = {{ .Values.kubeControllerManager.maxCacheSize | default .Values.global.maxCacheSize | int }}
+  {{- include "helper.relabelCacheArguments" (dict "maxCacheSize" .Values.kubeControllerManager.maxCacheSize "cacheTTL" .Values.kubeControllerManager.cacheTTL "global" .Values.global) | nindent 2 }}
 {{- if $metricAllowList }}
   rule {
     source_labels = ["__name__"]

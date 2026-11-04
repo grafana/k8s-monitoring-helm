@@ -2,11 +2,18 @@
 {{/* Inputs: . (root object),  destination (string, name of destination), destinationName (name of this destination) */}}
 {{- define "destinations.prometheus.alloy" }}
 {{- with .destination }}
+{{- /* When metricProcessingRulesBeforeWAL is set, the metricProcessingRules run in a standalone */}}
+{{- /* prometheus.relabel component placed before the WAL, so dropped series never enter it. */}}
+{{- $preWALProcessing := and .metricProcessingRules (.metricProcessingRulesBeforeWAL | default false) }}
+{{- $writeReceiver := printf "prometheus.remote_write.%s.receiver" (include "helper.alloy_name" $.destinationName) }}
+{{- if $preWALProcessing }}
+{{- $writeReceiver = printf "prometheus.relabel.%s_processing.receiver" (include "helper.alloy_name" $.destinationName) }}
+{{- end }}
 otelcol.exporter.prometheus {{ include "helper.alloy_name" $.destinationName | quote }} {
   add_metric_suffixes = {{ .openTelemetryConversion.addMetricSuffixes }}
   resource_to_telemetry_conversion = {{ .openTelemetryConversion.resourceToTelemetryConversion }}
   keep_identifying_resource_attributes = {{ .openTelemetryConversion.keepIdentifyingResourceAttributes }}
-  forward_to = [prometheus.remote_write.{{ include "helper.alloy_name" $.destinationName }}.receiver]
+  forward_to = [{{ $writeReceiver }}]
 } // otelcol.exporter.prometheus "{{ include "helper.alloy_name" $.destinationName }}"
 
 {{- $hasNamespaceLabelMetricEnrichment := gt (len (dig "metricEnrichment" "namespaceLabels" list .)) 0 }}
@@ -71,7 +78,7 @@ prometheus.enrich "{{ include "helper.alloy_name" $.destinationName }}_ns" {
 {{- if $hasPodLabelMetricEnrichment }}
   forward_to = [prometheus.enrich.{{ include "helper.alloy_name" $.destinationName }}_pod.receiver]
 {{- else }}
-  forward_to = [prometheus.remote_write.{{ include "helper.alloy_name" $.destinationName }}.receiver]
+  forward_to = [{{ $writeReceiver }}]
 {{- end }}
 } // prometheus.enrich "{{ include "helper.alloy_name" $.destinationName }}_ns"
 {{- end }}
@@ -81,10 +88,17 @@ prometheus.enrich "{{ include "helper.alloy_name" $.destinationName }}_pod" {
   targets = discovery.relabel.{{ include "helper.alloy_name" $.destinationName }}.output
   target_match_label = "__meta_kubernetes_namespace_pod"
   labels_to_copy = {{ .metricEnrichment.podLabels | toJson }}
-  forward_to = [prometheus.remote_write.{{ include "helper.alloy_name" $.destinationName }}.receiver]
+  forward_to = [{{ $writeReceiver }}]
 } // prometheus.enrich "{{ include "helper.alloy_name" $.destinationName }}_pod"
 {{- end }}
 
+{{- end }}
+
+{{- if $preWALProcessing }}
+prometheus.relabel "{{ include "helper.alloy_name" $.destinationName }}_processing" {
+{{ .metricProcessingRules | replace "write_relabel_config" "rule" | indent 2 }}
+  forward_to = [prometheus.remote_write.{{ include "helper.alloy_name" $.destinationName }}.receiver]
+} // prometheus.relabel "{{ include "helper.alloy_name" $.destinationName }}_processing"
 {{- end }}
 
 prometheus.remote_write {{ include "helper.alloy_name" $.destinationName | quote }} {
@@ -256,7 +270,7 @@ prometheus.remote_write {{ include "helper.alloy_name" $.destinationName | quote
       action = "labeldrop"
     }
 {{- end }}
-{{- if .metricProcessingRules }}
+{{- if and .metricProcessingRules (not $preWALProcessing) }}
 {{ .metricProcessingRules | indent 4 }}
 {{- end }}
 {{- if and .clusterLabels .overwriteClusterLabel }}
@@ -312,8 +326,11 @@ prometheus.remote_write {{ include "helper.alloy_name" $.destinationName | quote
 {{- $hasNamespaceLabelMetricEnrichment := gt (len (dig "metricEnrichment" "namespaceLabels" list .destination)) 0 }}
 {{- $hasPodLabelMetricEnrichment := gt (len (dig "metricEnrichment" "podLabels" list .destination)) 0 }}
 {{- $hasMetricEnrichment := or $hasNamespaceLabelMetricEnrichment $hasPodLabelMetricEnrichment }}
+{{- $preWALProcessing := and .destination.metricProcessingRules (.destination.metricProcessingRulesBeforeWAL | default false) }}
 {{- if $hasMetricEnrichment }}
 prometheus.relabel.{{ include "helper.alloy_name" $.destinationName }}.receiver
+{{- else if $preWALProcessing }}
+prometheus.relabel.{{ include "helper.alloy_name" $.destinationName }}_processing.receiver
 {{- else }}
 prometheus.remote_write.{{ include "helper.alloy_name" $.destinationName }}.receiver
 {{ end -}}

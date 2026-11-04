@@ -91,4 +91,5 @@
     {{- fail (join "\n" $msg) }}
   {{- end }}
 {{- end }}
+{{- include "helper.validateRelabelCacheSettings" (dict "values" .Values "path" "clusterMetrics") }}
 {{- end }}

@@ -44,6 +44,13 @@ global:
   # @section -- Global Settings
   maxCacheSize: 100000
 
+  # -- Sets the cache_ttl for every prometheus.relabel component, which switches the relabeling cache from a fixed-size
+  # LRU cache to one that expires entries after this duration of inactivity (minimum `1m`, `10m` is a reasonable
+  # starting point). Mutually exclusive with `maxCacheSize`, so set `maxCacheSize` to `0` when using this.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
+  # @section -- Global Settings
+  cacheTTL: ""
+
 controlPlane:
   # -- enable all Kubernetes Control Plane metrics sources. This includes api-server, kube-scheduler,
   # kube-controller-manager, and KubeDNS.
@@ -101,6 +108,13 @@ kubelet:
   # @default -- `100000`
   # @section -- Kubelet
   maxCacheSize:
+
+  # -- Sets the cache_ttl for the Kubelet prometheus.relabel component, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- Kubelet
+  cacheTTL: ""
 
   # -- How frequently to scrape Kubelet metrics.
   # Overrides `global.scrapeInterval`.
@@ -161,6 +175,13 @@ kubeletResource:
   # @section -- Kubelet Resources
   maxCacheSize:
 
+  # -- Sets the cache_ttl for the prometheus.relabel component, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- Kubelet Resources
+  cacheTTL: ""
+
   # -- How frequently to scrape Kubelet resource metrics.
   # Overrides `global.scrapeInterval`.
   # @default -- `60s`
@@ -219,6 +240,13 @@ kubeletProbes:
   # @default -- `100000`
   # @section -- Kubelet Probes
   maxCacheSize:
+
+  # -- Sets the cache_ttl for the prometheus.relabel component, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- Kubelet Probes
+  cacheTTL: ""
 
   # -- How frequently to scrape Kubelet probe metrics.
   # Overrides `global.scrapeInterval`.
@@ -315,6 +343,13 @@ cadvisor:
   # @section -- cAdvisor
   maxCacheSize:
 
+  # -- Sets the cache_ttl for the cAdvisor prometheus.relabel component, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- cAdvisor
+  cacheTTL: ""
+
 # API Server metrics gather information about the Kubernetes API Server.
 apiServer:
   # -- (bool) Scrape metrics from the API Server.
@@ -367,6 +402,13 @@ apiServer:
   # @raw
   # @section -- API Server
   maxCacheSize:
+
+  # -- Sets the cache_ttl for the API Server prometheus.relabel component, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- API Server
+  cacheTTL: ""
 
 # Metrics from the Kube Controller Manager
 kubeControllerManager:
@@ -430,6 +472,13 @@ kubeControllerManager:
   # @section -- Kube Controller Manager
   maxCacheSize:
 
+  # -- Sets the cache_ttl for the Kube Controller Manager prometheus.relabel component, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- Kube Controller Manager
+  cacheTTL: ""
+
 # Metrics from the KubeDNS
 kubeDNS:
   # -- (bool) Scrape metrics from KubeDNS
@@ -482,6 +531,13 @@ kubeDNS:
   # @raw
   # @section -- KubeDNS
   maxCacheSize:
+
+  # -- Sets the cache_ttl for the KubeDNS prometheus.relabel component, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- KubeDNS
+  cacheTTL: ""
 
 # Metrics from the Kube Proxy
 kubeProxy:
@@ -543,6 +599,13 @@ kubeProxy:
   # @raw
   # @section -- Kube Proxy
   maxCacheSize:
+
+  # -- Sets the cache_ttl for the Kube Proxy prometheus.relabel component, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- Kube Proxy
+  cacheTTL: ""
 
 # Metrics from the Kube Scheduler
 kubeScheduler:
@@ -611,6 +674,13 @@ kubeScheduler:
   # @raw
   # @section -- Kube Scheduler
   maxCacheSize:
+
+  # -- Sets the cache_ttl for the Kube Scheduler prometheus.relabel component, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- Kube Scheduler
+  cacheTTL: ""
 
 #
 # Metric sources from additional systems
@@ -711,3 +781,10 @@ kube-state-metrics:
   # @default -- `100000`
   # @section -- kube-state-metrics
   maxCacheSize:
+
+  # -- Sets the cache_ttl for the kube-state-metrics prometheus.relabel component, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- kube-state-metrics
+  cacheTTL: ""

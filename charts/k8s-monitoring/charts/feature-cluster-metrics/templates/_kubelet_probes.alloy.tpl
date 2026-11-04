@@ -65,7 +65,7 @@ prometheus.scrape "kubelet_probes" {
 } // prometheus.scrape "kubelet_probes"
 
 prometheus.relabel "kubelet_probes" {
-  max_cache_size = {{ .Values.kubeletProbes.maxCacheSize | default .Values.global.maxCacheSize | int }}
+  {{- include "helper.relabelCacheArguments" (dict "maxCacheSize" .Values.kubeletProbes.maxCacheSize "cacheTTL" .Values.kubeletProbes.cacheTTL "global" .Values.global) | nindent 2 }}
 
 {{- if $metricAllowList }}
   rule {

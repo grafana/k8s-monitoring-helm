@@ -130,7 +130,7 @@ prometheus.scrape {{ printf "%s_sidecar" (include "helper.alloy_name" .name) | q
 }
 
 prometheus.relabel {{ printf "%s_sidecar" (include "helper.alloy_name" .name) | quote }} {
-  max_cache_size = {{ .sidecarMetrics.maxCacheSize | default $.Values.global.maxCacheSize | int }}
+  {{- include "helper.relabelCacheArguments" (dict "maxCacheSize" .sidecarMetrics.maxCacheSize "cacheTTL" .sidecarMetrics.cacheTTL "global" $.Values.global) | nindent 2 }}
 {{- if .sidecarMetrics.extraMetricProcessingRules }}
 {{ .sidecarMetrics.extraMetricProcessingRules | indent 2 }}
 {{- end }}
@@ -222,7 +222,7 @@ prometheus.scrape {{ printf "%s_istiod" (include "helper.alloy_name" .name) | qu
 }
 
 prometheus.relabel {{ printf "%s_istiod" (include "helper.alloy_name" .name) | quote }} {
-  max_cache_size = {{ .istiodMetrics.maxCacheSize | default $.Values.global.maxCacheSize | int }}
+  {{- include "helper.relabelCacheArguments" (dict "maxCacheSize" .istiodMetrics.maxCacheSize "cacheTTL" .istiodMetrics.cacheTTL "global" $.Values.global) | nindent 2 }}
 {{- if .istiodMetrics.extraMetricProcessingRules }}
 {{ .istiodMetrics.extraMetricProcessingRules | indent 2 }}
 {{- end }}

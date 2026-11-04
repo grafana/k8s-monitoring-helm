@@ -80,7 +80,7 @@ lint-shell: ## Lint shell scripts
 
 .PHONY: lint-markdown
 # renovate: datasource=docker depName=davidanson/markdownlint-cli2
-MARKDOWNLINT_CLI2_VERSION = v0.23.3
+MARKDOWNLINT_CLI2_VERSION = v0.24.0
 MARKDOWN_FILES = $(shell find . -name "*.md" ! -path "./.context/*" ! -path "./version-4.0-development-plan/*" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./charts/**/data-alloy/*" ! -path "./charts/k8s-monitoring/docs/create-a-new-feature/*")
 lint-markdown: ## Lint markdown files
 	@if command -v markdownlint-cli2 &> /dev/null; then \
@@ -143,7 +143,7 @@ lint-yaml: ## Lint yaml files
 
 .PHONY: lint-alex
 # renovate: datasource=docker depName=pipelinecomponents/alex
-ALEX_VERSION = 0.24.31
+ALEX_VERSION = 0.24.39
 ALEX_FILES = $(shell find . -type f -name "*.md" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./.context/*" ! -path "./CODE_OF_CONDUCT.md" ! -name "CHANGELOG.md")
 lint-alex: ## Check for insensitive language
 	@if command -v alex &> /dev/null; then \
@@ -182,6 +182,13 @@ lint-zizmor: ## Statically analyze GitHub Action workflows
 		docker run --rm -v $(shell pwd):/src --workdir /src ghcr.io/zizmorcore/zizmor:$(ZIZMOR_VERSION) .; \
 	fi
 
+
+##@ Cleanup
+MAX_AGE_HOURS ?= 6
+DRY_RUN ?= true
+.PHONY: cleanup-gcp
+cleanup-gcp: ## Delete stale GCP platform-test resources. Requires gcloud auth. DRY_RUN=true by default; set DRY_RUN=false to delete.
+	@MAX_AGE_HOURS="$(MAX_AGE_HOURS)" DRY_RUN="$(DRY_RUN)" ./scripts/cleanup-gcp-test-resources.py
 
 ##@ General
 

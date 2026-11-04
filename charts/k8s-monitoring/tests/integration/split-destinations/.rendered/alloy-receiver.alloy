@@ -179,7 +179,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
   }
   forward_to = [
     prometheus.remote_write.allmetrics.receiver,
-    prometheus.remote_write.productionmetrics.receiver,
+    prometheus.relabel.productionmetrics_processing.receiver,
   ]
 } // prometheus.relabel "kubernetes_monitoring_telemetry"
 
@@ -303,6 +303,9 @@ otelcol.processor.transform "alltraces" {
       `delete_key(attributes, "container.image.repo_digests")`,
       `delete_key(attributes, "os.description")`,
       `delete_key(attributes, "os.build_id")`,
+      // Injected SDK resource attributes arrive as strings. Normalize the span metrics flag before export.
+      `set(attributes["span.metrics.skip"], true) where attributes["span.metrics.skip"] == "true"`,
+      `set(attributes["span.metrics.skip"], false) where attributes["span.metrics.skip"] == "false"`,
     ]
   }
 
@@ -393,8 +396,16 @@ otelcol.exporter.prometheus "productionmetrics" {
   add_metric_suffixes = true
   resource_to_telemetry_conversion = false
   keep_identifying_resource_attributes = true
-  forward_to = [prometheus.remote_write.productionmetrics.receiver]
+  forward_to = [prometheus.relabel.productionmetrics_processing.receiver]
 } // otelcol.exporter.prometheus "productionmetrics"
+prometheus.relabel "productionmetrics_processing" {
+  rule {
+    source_labels = ["namespace"]
+    regex = "production"
+    action = "keep"
+  }
+  forward_to = [prometheus.remote_write.productionmetrics.receiver]
+} // prometheus.relabel "productionmetrics_processing"
 
 prometheus.remote_write "productionmetrics" {
   endpoint {
@@ -420,11 +431,6 @@ prometheus.remote_write "productionmetrics" {
       max_backoff = "5s"
       retry_on_http_429 = true
       sample_age_limit = "0s"
-    }
-    write_relabel_config {
-      source_labels = ["namespace"]
-      regex = "production"
-      action = "keep"
     }
   }
 
@@ -476,6 +482,9 @@ otelcol.processor.transform "productiontraces" {
       `delete_key(attributes, "container.image.repo_digests")`,
       `delete_key(attributes, "os.description")`,
       `delete_key(attributes, "os.build_id")`,
+      // Injected SDK resource attributes arrive as strings. Normalize the span metrics flag before export.
+      `set(attributes["span.metrics.skip"], true) where attributes["span.metrics.skip"] == "true"`,
+      `set(attributes["span.metrics.skip"], false) where attributes["span.metrics.skip"] == "false"`,
     ]
   }
 

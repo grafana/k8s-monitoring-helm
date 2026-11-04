@@ -6,10 +6,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.8.0
+    helm.sh/chart: alloy-operator-0.9.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.13.0"
+    app.kubernetes.io/version: "1.14.4"
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
@@ -20,10 +20,10 @@ metadata:
   name: k8smon-beyla-cache
   namespace: default
   labels:
-    helm.sh/chart: beyla-1.16.11
+    helm.sh/chart: beyla-1.16.17
     app.kubernetes.io/name: beyla-cache
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "3.32.0"
+    app.kubernetes.io/version: "3.40.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: rbac
@@ -35,7 +35,7 @@ kind: ServiceAccount
 automountServiceAccountToken: true
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-8.6.0
+    helm.sh/chart: kube-state-metrics-8.8.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -53,7 +53,7 @@ metadata:
   name: k8smon-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: node-exporter-4.59.0
+    helm.sh/chart: node-exporter-4.60.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
@@ -70,11 +70,11 @@ metadata:
   name: k8smon-k8s-injection-controller
   namespace: default
   labels:
-    helm.sh/chart: sdkInjector-0.2.1
+    helm.sh/chart: sdkInjector-0.3.0
     app.kubernetes.io/name: k8s-injection-controller
     app.kubernetes.io/instance: k8smon
     control-plane: controller-manager
-    app.kubernetes.io/version: "0.2.0"
+    app.kubernetes.io/version: "0.3.0"
     app.kubernetes.io/managed-by: Helm
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/webhook/serving-cert-secret.yaml
@@ -88,11 +88,11 @@ metadata:
   name: k8smon-k8s-injection-controller-serving-cert
   namespace: default
   labels:
-    helm.sh/chart: sdkInjector-0.2.1
+    helm.sh/chart: sdkInjector-0.3.0
     app.kubernetes.io/name: k8s-injection-controller
     app.kubernetes.io/instance: k8smon
     control-plane: controller-manager
-    app.kubernetes.io/version: "0.2.0"
+    app.kubernetes.io/version: "0.3.0"
     app.kubernetes.io/managed-by: Helm
 type: Opaque
 ---
@@ -103,11 +103,11 @@ metadata:
   name: k8smon-k8s-injection-controller-sdk-config
   namespace: default
   labels:
-    helm.sh/chart: sdkInjector-0.2.1
+    helm.sh/chart: sdkInjector-0.3.0
     app.kubernetes.io/name: k8s-injection-controller
     app.kubernetes.io/instance: k8smon
     control-plane: controller-manager
-    app.kubernetes.io/version: "0.2.0"
+    app.kubernetes.io/version: "0.3.0"
     app.kubernetes.io/managed-by: Helm
 data:
   # config.SDKInject document consumed by the controller via --config. The
@@ -115,6 +115,7 @@ data:
   # absent (image_volume_root empty).
   sdk-inject.yaml: |
     debug: false
+    disable_auto_restart: false
     image_volume_root: ghcr.io/grafana/beyla/inject-sdk-image
     image_version: "0.0.13"
     injection_mode: auto
@@ -166,7 +167,7 @@ data:
         "release" = "k8smon",
         "service-discovery" = "true",
         "source" = "k8s-monitoring",
-        "sourceVersion" = "4.5.3",
+        "sourceVersion" = "4.6.0",
         "workloadName" = "alloy",
         "workloadType" = "daemonset",
       }
@@ -178,10 +179,10 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy-operator-alloy-manager
   labels:
-    helm.sh/chart: alloy-operator-0.8.0
+    helm.sh/chart: alloy-operator-0.9.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.13.0"
+    app.kubernetes.io/version: "1.14.4"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -242,10 +243,10 @@ kind: ClusterRole
 metadata:
   name: k8smon-beyla-cache
   labels:
-    helm.sh/chart: beyla-1.16.11
+    helm.sh/chart: beyla-1.16.17
     app.kubernetes.io/name: beyla-cache
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "3.32.0"
+    app.kubernetes.io/version: "3.40.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: rbac
@@ -262,7 +263,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-8.6.0
+    helm.sh/chart: kube-state-metrics-8.8.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -421,13 +422,21 @@ kind: ClusterRole
 metadata:
   name: k8smon-k8s-injection-controller-manager-role
   labels:
-    helm.sh/chart: sdkInjector-0.2.1
+    helm.sh/chart: sdkInjector-0.3.0
     app.kubernetes.io/name: k8s-injection-controller
     app.kubernetes.io/instance: k8smon
     control-plane: controller-manager
-    app.kubernetes.io/version: "0.2.0"
+    app.kubernetes.io/version: "0.3.0"
     app.kubernetes.io/managed-by: Helm
 rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
 - apiGroups:
   - ""
   resources:
@@ -483,10 +492,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-operator-alloy-manager
   labels:
-    helm.sh/chart: alloy-operator-0.8.0
+    helm.sh/chart: alloy-operator-0.9.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.13.0"
+    app.kubernetes.io/version: "1.14.4"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -503,10 +512,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-operator
   labels:
-    helm.sh/chart: alloy-operator-0.8.0
+    helm.sh/chart: alloy-operator-0.9.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.13.0"
+    app.kubernetes.io/version: "1.14.4"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -523,10 +532,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-beyla-cache
   labels:
-    helm.sh/chart: beyla-1.16.11
+    helm.sh/chart: beyla-1.16.17
     app.kubernetes.io/name: beyla-cache
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "3.32.0"
+    app.kubernetes.io/version: "3.40.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: rbac
@@ -544,7 +553,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-8.6.0
+    helm.sh/chart: kube-state-metrics-8.8.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -568,11 +577,11 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-k8s-injection-controller-manager-rolebinding
   labels:
-    helm.sh/chart: sdkInjector-0.2.1
+    helm.sh/chart: sdkInjector-0.3.0
     app.kubernetes.io/name: k8s-injection-controller
     app.kubernetes.io/instance: k8smon
     control-plane: controller-manager
-    app.kubernetes.io/version: "0.2.0"
+    app.kubernetes.io/version: "0.3.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -590,10 +599,10 @@ metadata:
   name: k8smon-alloy-operator-leader-election-role
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.8.0
+    helm.sh/chart: alloy-operator-0.9.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.13.0"
+    app.kubernetes.io/version: "1.14.4"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -639,11 +648,11 @@ metadata:
   name: k8smon-k8s-injection-controller-configmap-reader
   namespace: default
   labels:
-    helm.sh/chart: sdkInjector-0.2.1
+    helm.sh/chart: sdkInjector-0.3.0
     app.kubernetes.io/name: k8s-injection-controller
     app.kubernetes.io/instance: k8smon
     control-plane: controller-manager
-    app.kubernetes.io/version: "0.2.0"
+    app.kubernetes.io/version: "0.3.0"
     app.kubernetes.io/managed-by: Helm
 rules:
 - apiGroups:
@@ -663,11 +672,11 @@ metadata:
   name: k8smon-k8s-injection-controller-leader-election-role
   namespace: default
   labels:
-    helm.sh/chart: sdkInjector-0.2.1
+    helm.sh/chart: sdkInjector-0.3.0
     app.kubernetes.io/name: k8s-injection-controller
     app.kubernetes.io/instance: k8smon
     control-plane: controller-manager
-    app.kubernetes.io/version: "0.2.0"
+    app.kubernetes.io/version: "0.3.0"
     app.kubernetes.io/managed-by: Helm
 rules:
 - apiGroups:
@@ -712,11 +721,11 @@ metadata:
   name: k8smon-k8s-injection-controller-cert-rotator-role
   namespace: default
   labels:
-    helm.sh/chart: sdkInjector-0.2.1
+    helm.sh/chart: sdkInjector-0.3.0
     app.kubernetes.io/name: k8s-injection-controller
     app.kubernetes.io/instance: k8smon
     control-plane: controller-manager
-    app.kubernetes.io/version: "0.2.0"
+    app.kubernetes.io/version: "0.3.0"
     app.kubernetes.io/managed-by: Helm
 rules:
 - apiGroups:
@@ -743,7 +752,7 @@ metadata:
   name: k8smon-alloy-sdk-injector
   namespace: default
   labels:
-    helm.sh/chart: k8s-monitoring-4.5.3
+    helm.sh/chart: k8s-monitoring-4.6.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -759,10 +768,10 @@ metadata:
   name: k8smon-alloy-operator-leader-election-rolebinding
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.8.0
+    helm.sh/chart: alloy-operator-0.9.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.13.0"
+    app.kubernetes.io/version: "1.14.4"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -780,11 +789,11 @@ metadata:
   name: k8smon-k8s-injection-controller-configmap-reader
   namespace: default
   labels:
-    helm.sh/chart: sdkInjector-0.2.1
+    helm.sh/chart: sdkInjector-0.3.0
     app.kubernetes.io/name: k8s-injection-controller
     app.kubernetes.io/instance: k8smon
     control-plane: controller-manager
-    app.kubernetes.io/version: "0.2.0"
+    app.kubernetes.io/version: "0.3.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -802,11 +811,11 @@ metadata:
   name: k8smon-k8s-injection-controller-leader-election-rolebinding
   namespace: default
   labels:
-    helm.sh/chart: sdkInjector-0.2.1
+    helm.sh/chart: sdkInjector-0.3.0
     app.kubernetes.io/name: k8s-injection-controller
     app.kubernetes.io/instance: k8smon
     control-plane: controller-manager
-    app.kubernetes.io/version: "0.2.0"
+    app.kubernetes.io/version: "0.3.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -824,11 +833,11 @@ metadata:
   name: k8smon-k8s-injection-controller-cert-rotator-rolebinding
   namespace: default
   labels:
-    helm.sh/chart: sdkInjector-0.2.1
+    helm.sh/chart: sdkInjector-0.3.0
     app.kubernetes.io/name: k8s-injection-controller
     app.kubernetes.io/instance: k8smon
     control-plane: controller-manager
-    app.kubernetes.io/version: "0.2.0"
+    app.kubernetes.io/version: "0.3.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -846,7 +855,7 @@ metadata:
   name: k8smon-alloy-sdk-injector
   namespace: default
   labels:
-    helm.sh/chart: k8s-monitoring-4.5.3
+    helm.sh/chart: k8s-monitoring-4.6.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -866,10 +875,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.8.0
+    helm.sh/chart: alloy-operator-0.9.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.13.0"
+    app.kubernetes.io/version: "1.14.4"
     app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
@@ -893,10 +902,10 @@ metadata:
   name: beyla-k8s-cache
   namespace: default
   labels:
-    helm.sh/chart: beyla-1.16.11
+    helm.sh/chart: beyla-1.16.17
     app.kubernetes.io/name: beyla-k8s-cache
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "3.32.0"
+    app.kubernetes.io/version: "3.40.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: networking
@@ -916,7 +925,7 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-8.6.0
+    helm.sh/chart: kube-state-metrics-8.8.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -943,7 +952,7 @@ metadata:
   name: k8smon-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: node-exporter-4.59.0
+    helm.sh/chart: node-exporter-4.60.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
@@ -969,11 +978,11 @@ metadata:
   name: k8smon-k8s-injection-controller-webhook
   namespace: default
   labels:
-    helm.sh/chart: sdkInjector-0.2.1
+    helm.sh/chart: sdkInjector-0.3.0
     app.kubernetes.io/name: k8s-injection-controller
     app.kubernetes.io/instance: k8smon
     control-plane: controller-manager
-    app.kubernetes.io/version: "0.2.0"
+    app.kubernetes.io/version: "0.3.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   ports:
@@ -992,7 +1001,7 @@ metadata:
   name: k8smon-otel-receiver
   labels:
     
-    helm.sh/chart: k8s-monitoring-4.5.3
+    helm.sh/chart: k8s-monitoring-4.6.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -1026,7 +1035,7 @@ metadata:
   name: k8smon-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: node-exporter-4.59.0
+    helm.sh/chart: node-exporter-4.60.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
@@ -1077,6 +1086,7 @@ spec:
             - --web.listen-address=[$(HOST_IP)]:9100
             - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|erofs|sysfs|tracefs|tmpfs|ramfs)$
           securityContext:
+            allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
           env:
             - name: HOST_IP
@@ -1153,10 +1163,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.8.0
+    helm.sh/chart: alloy-operator-0.9.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.13.0"
+    app.kubernetes.io/version: "1.14.4"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -1167,10 +1177,10 @@ spec:
   template:
     metadata:
       labels:
-        helm.sh/chart: alloy-operator-0.8.0
+        helm.sh/chart: alloy-operator-0.9.4
         app.kubernetes.io/name: alloy-operator
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "1.13.0"
+        app.kubernetes.io/version: "1.14.4"
         app.kubernetes.io/managed-by: Helm
     spec:
       serviceAccountName: k8smon-alloy-operator
@@ -1178,7 +1188,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: alloy-operator
-          image: "ghcr.io/grafana/alloy-operator:1.13.0"
+          image: "ghcr.io/grafana/alloy-operator:1.14.4"
           imagePullPolicy: IfNotPresent
           args:
             - --health-probe-bind-address=:8081
@@ -1224,10 +1234,10 @@ metadata:
   name: beyla-k8s-cache
   namespace: default
   labels:
-    helm.sh/chart: beyla-1.16.11
+    helm.sh/chart: beyla-1.16.17
     app.kubernetes.io/name: beyla-k8s-cache
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "3.32.0"
+    app.kubernetes.io/version: "3.40.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: workload
@@ -1239,17 +1249,17 @@ spec:
   template:
     metadata:
       labels:
-        helm.sh/chart: beyla-1.16.11
+        helm.sh/chart: beyla-1.16.17
         app.kubernetes.io/name: beyla-k8s-cache
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "3.32.0"
+        app.kubernetes.io/version: "3.40.0"
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/part-of: beyla
     spec:
       serviceAccountName: k8smon-beyla-cache
       containers:
         - name: beyla-cache
-          image: docker.io/grafana/beyla-k8s-cache:3.32.0
+          image: docker.io/grafana/beyla-k8s-cache:3.40.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 50055
@@ -1266,7 +1276,7 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-8.6.0
+    helm.sh/chart: kube-state-metrics-8.8.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -1359,11 +1369,11 @@ metadata:
   name: k8smon-k8s-injection-controller
   namespace: default
   labels:
-    helm.sh/chart: sdkInjector-0.2.1
+    helm.sh/chart: sdkInjector-0.3.0
     app.kubernetes.io/name: k8s-injection-controller
     app.kubernetes.io/instance: k8smon
     control-plane: controller-manager
-    app.kubernetes.io/version: "0.2.0"
+    app.kubernetes.io/version: "0.3.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -1377,7 +1387,7 @@ spec:
       annotations:
         kubectl.kubernetes.io/default-container: manager
         # Roll the pod whenever the mounted SDK config changes.
-        checksum/sdk-config: 3eafc7f70a7e4e6a4bed2df3aa8468144c0ce4943bb88acbed0a9bb6af91ab16
+        checksum/sdk-config: 637c81294e0203fa4c87613d1077c2e3d90be18436757c07ba7a2d73ced781cc
         # Advertise the metrics endpoint for annotation-based Prometheus discovery.
         prometheus.io/path: /metrics
         prometheus.io/port: "8080"
@@ -1395,7 +1405,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: manager
-          image: "ghcr.io/grafana/k8s-injection-controller:0.2.0"
+          image: "ghcr.io/grafana/k8s-injection-controller:0.3.0"
           imagePullPolicy: IfNotPresent
           command:
             - /manager
@@ -1488,11 +1498,11 @@ kind: MutatingWebhookConfiguration
 metadata:
   name: k8smon-k8s-injection-controller-mutating-webhook
   labels:
-    helm.sh/chart: sdkInjector-0.2.1
+    helm.sh/chart: sdkInjector-0.3.0
     app.kubernetes.io/name: k8s-injection-controller
     app.kubernetes.io/instance: k8smon
     control-plane: controller-manager
-    app.kubernetes.io/version: "0.2.0"
+    app.kubernetes.io/version: "0.3.0"
     app.kubernetes.io/managed-by: Helm
 webhooks:
 - name: mpod-v1.beyla.grafana.com
@@ -1544,11 +1554,11 @@ kind: ValidatingWebhookConfiguration
 metadata:
   name: k8smon-k8s-injection-controller-validating-webhook
   labels:
-    helm.sh/chart: sdkInjector-0.2.1
+    helm.sh/chart: sdkInjector-0.3.0
     app.kubernetes.io/name: k8s-injection-controller
     app.kubernetes.io/instance: k8smon
     control-plane: controller-manager
-    app.kubernetes.io/version: "0.2.0"
+    app.kubernetes.io/version: "0.3.0"
     app.kubernetes.io/managed-by: Helm
 webhooks:
 - name: vconfigmap-v1.beyla.grafana.com
@@ -1644,20 +1654,7 @@ spec:
       allowPrivilegeEscalation: true
       capabilities:
         add:
-        - CHOWN
-        - DAC_OVERRIDE
-        - FOWNER
-        - FSETID
-        - KILL
-        - SETGID
-        - SETUID
-        - SETPCAP
         - NET_BIND_SERVICE
-        - NET_RAW
-        - SYS_CHROOT
-        - MKNOD
-        - AUDIT_WRITE
-        - SETFCAP
         drop:
         - ALL
       privileged: true
@@ -1795,7 +1792,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-4.5.3
+    helm.sh/chart: k8s-monitoring-4.6.0
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -1818,16 +1815,15 @@ spec:
       serviceAccountName: k8smon-k8s-monitoring-add-finalizer
       containers:
         - name: add-finalizers
-          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.2"
+          image: "registry.k8s.io/kubectl:v1.34.9"
           imagePullPolicy: IfNotPresent
           command:
-            - /bin/bash
-            - -ce
-            - |
-              kubectl patch \
-                --namespace=default \
-                --patch='{"metadata":{"finalizers":["k8s.grafana.com/finalizer"]}}' \
-                deployment/k8smon-alloy-operator
+            - kubectl
+          args:
+            - patch
+            - --namespace=default
+            - --patch={"metadata":{"finalizers":["k8s.grafana.com/finalizer"]}}
+            - deployment/k8smon-alloy-operator
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -1848,7 +1844,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-4.5.3
+    helm.sh/chart: k8s-monitoring-4.6.0
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
@@ -1868,23 +1864,39 @@ spec:
       nodeSelector:
         kubernetes.io/os: linux
       serviceAccountName: k8smon-k8s-monitoring-remove-alloy-and-finalizer
-      containers:
-        - name: remove-finalizers
-          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.2"
+      initContainers:
+        - name: delete-alloy-instances
+          image: "registry.k8s.io/kubectl:v1.34.9"
           imagePullPolicy: IfNotPresent
           command:
-            - /bin/bash
-            - -ce
-            - |
-              echo "Deleting Alloy instance: alloy/k8smon-alloy..."
-              kubectl delete alloy/k8smon-alloy --ignore-not-found=true --wait
-              kubectl wait --for=delete alloy/k8smon-alloy --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy or it may not exist."
-
-              kubectl patch \
-                --namespace=default \
-                --type merge \
-                --patch='{"metadata":{"finalizers":null}}' \
-                deployment/k8smon-alloy-operator
+            - kubectl
+          args:
+            - delete
+            - alloy/k8smon-alloy
+            - --ignore-not-found=true
+            - --wait=false
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 4242
+            seccompProfile:
+              type: RuntimeDefault
+      containers:
+        - name: remove-finalizers
+          image: "registry.k8s.io/kubectl:v1.34.9"
+          imagePullPolicy: IfNotPresent
+          command:
+            - kubectl
+          args:
+            - patch
+            - --namespace=default
+            - --type=merge
+            - --patch={"metadata":{"finalizers":null}}
+            - deployment/k8smon-alloy-operator
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

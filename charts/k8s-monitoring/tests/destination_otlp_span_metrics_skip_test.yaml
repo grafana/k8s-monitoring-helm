@@ -1,0 +1,75 @@
+# yamllint disable rule:document-start rule:line-length
+suite: OTLP destination span metrics resource attributes
+templates:
+  - alloy-config.yaml
+tests:
+  - it: normalizes Application Observability traces without requiring auto-instrumentation
+    set: &base
+      cluster: {name: test-cluster}
+      selfReporting: {enabled: false}
+      destinations:
+        tempo:
+          type: otlp
+          url: http://tempo:4317
+          processors:
+            transform:
+              traces:
+                resource:
+                  - 'set(attributes["custom"], "preserved")'
+      collectors:
+        alloy-receiver: {}
+      applicationObservability:
+        enabled: true
+        collector: alloy-receiver
+        receivers:
+          otlp:
+            grpc: {enabled: true}
+    asserts: &normalizes
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'set\(attributes\["span\.metrics\.skip"\], true\) where attributes\["span\.metrics\.skip"\] == "true"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'set\(attributes\["span\.metrics\.skip"\], false\) where attributes\["span\.metrics\.skip"\] == "false"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'custom.*preserved'
+
+  - it: normalizes directly used destinations without Application Observability or an injector
+    set:
+      <<: *base
+      applicationObservability.enabled: false
+      collectors:
+        alloy-receiver:
+          includeDestinations: [tempo]
+          extraConfig: |
+            otelcol.receiver.otlp "custom" {
+              grpc { endpoint = "0.0.0.0:4317" }
+              output { traces = [otelcol.processor.transform.tempo.input] }
+            }
+    asserts: *normalizes
+
+  - it: normalizes destinations when only the SDK injector deployment is enabled
+    set:
+      <<: *base
+      applicationObservability.enabled: false
+      telemetryServices.sdkInjector.deploy: true
+      collectors:
+        alloy-receiver:
+          includeDestinations: [tempo]
+          extraConfig: "// Custom OTLP pipeline"
+    asserts: *normalizes
+
+  - it: omits trace normalization for destinations with traces disabled
+    set:
+      <<: *base
+      applicationObservability.enabled: false
+      destinations.tempo.traces.enabled: false
+      collectors:
+        alloy-receiver:
+          includeDestinations: [tempo]
+          extraConfig: "// Custom OTLP pipeline"
+    asserts:
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'span\.metrics\.skip'

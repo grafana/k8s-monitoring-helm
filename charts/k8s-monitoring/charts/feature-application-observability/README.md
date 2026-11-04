@@ -206,6 +206,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| processors.resourceDetection.enabled | bool | `true` | Enable the resource detection processor. When disabled, telemetry bypasses all configured resource detectors and is sent directly to the Kubernetes attributes processor. Attributes normally added by environment, system, Kubernetes node, or custom detectors will not be added. |
 | processors.resourceDetection.env.enabled | bool | `true` | Enable getting resource attributes from the OTEL_RESOURCE_ATTRIBUTES environment variable. |
 | processors.resourceDetection.kubernetesNode.authType | string | `"serviceAccount"` | The authentication method. This should not be changed. |
 | processors.resourceDetection.kubernetesNode.enabled | bool | `false` | Enable getting resource attributes about the Kubernetes node from the API server. |
