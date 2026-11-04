@@ -2,9 +2,13 @@
 {{- if .Values.podMonitors.enabled }}
 {{- $metricAllowList := .Values.podMonitors.metricsTuning.includeMetrics }}
 {{- $metricDenyList := .Values.podMonitors.metricsTuning.excludeMetrics }}
+{{- $namespacesHaveRegex := "" }}
+{{- if .Values.podMonitors.namespaces }}
+  {{- $namespacesHaveRegex = include "feature.prometheusOperatorObjects.namespaces.hasRegex" .Values.podMonitors.namespaces }}
+{{- end }}
 // Prometheus Operator PodMonitor objects
 prometheus.operator.podmonitors "pod_monitors" {
-{{- if .Values.podMonitors.namespaces }}
+{{- if and .Values.podMonitors.namespaces (ne $namespacesHaveRegex "true") }}
   namespaces = {{ .Values.podMonitors.namespaces | toJson }}
 {{- end }}
 {{- if or .Values.podMonitors.labelSelectors .Values.podMonitors.labelExpressions }}
@@ -38,10 +42,24 @@ prometheus.operator.podmonitors "pod_monitors" {
     native_histogram_min_bucket_factor = {{ .Values.global.nativeHistogramMinBucketFactor | float64 }}
   }
 
+{{- if or (eq $namespacesHaveRegex "true") .Values.podMonitors.excludeNamespaces }}
+  rule {  // extract the namespace from the job label (podMonitor/<namespace>/<name>/<index>) so the regexes below are matched against the namespace alone, and can't accidentally span into the name
+    source_labels = ["job"]
+    regex = "podMonitor/([^/]+)/.*"
+    target_label = "__tmp_namespace"
+  }
+{{- end }}
+{{- if eq $namespacesHaveRegex "true" }}
+  rule {  // namespaces contains a regex, so PodMonitors cannot be pre-filtered by the component; keep only matching namespaces here
+    source_labels = ["__tmp_namespace"]
+    regex = {{ .Values.podMonitors.namespaces | join "|" | quote }}
+    action = "keep"
+  }
+{{- end }}
 {{- with .Values.podMonitors.excludeNamespaces }}
   rule {
-    source_labels = ["job"]
-    regex = "podMonitor/({{ . | join "|" }})/.*"
+    source_labels = ["__tmp_namespace"]
+    regex = {{ . | join "|" | quote }}
     action = "drop"
   }
 {{- end }}
@@ -53,7 +71,7 @@ prometheus.operator.podmonitors "pod_monitors" {
 } // prometheus.operator.podmonitors "pod_monitors"
 
 prometheus.relabel "podmonitors" {
-  max_cache_size = {{ .Values.podMonitors.maxCacheSize | default .Values.global.maxCacheSize | int }}
+  {{- include "helper.relabelCacheArguments" (dict "maxCacheSize" .Values.podMonitors.maxCacheSize "cacheTTL" .Values.podMonitors.cacheTTL "global" .Values.global) | nindent 2 }}
 {{- if $metricAllowList }}
   rule {
     source_labels = ["__name__"]

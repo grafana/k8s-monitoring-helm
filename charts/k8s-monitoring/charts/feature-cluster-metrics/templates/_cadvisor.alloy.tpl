@@ -65,7 +65,7 @@ prometheus.scrape "cadvisor" {
 } // prometheus.scrape "cadvisor"
 
 prometheus.relabel "cadvisor" {
-  max_cache_size = {{ .Values.cadvisor.maxCacheSize | default .Values.global.maxCacheSize | int }}
+  {{- include "helper.relabelCacheArguments" (dict "maxCacheSize" .Values.cadvisor.maxCacheSize "cacheTTL" .Values.cadvisor.cacheTTL "global" .Values.global) | nindent 2 }}
 
 {{- if $metricAllowList }}
   rule {

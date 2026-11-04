@@ -33,6 +33,7 @@
     {{- fail (join "\n" $msg) }}
   {{- end }}
 {{- end }}
+{{- include "helper.validateRelabelCacheSettings" (dict "values" .Values.linuxHosts "path" "hostMetrics.linuxHosts") }}
 {{- end }}
 
 {{- define "feature.hostMetrics.windowsHosts.validate" }}
@@ -70,6 +71,7 @@
     {{- fail (join "\n" $msg) }}
   {{- end }}
 {{- end }}
+{{- include "helper.validateRelabelCacheSettings" (dict "values" .Values.windowsHosts "path" "hostMetrics.windowsHosts") }}
 {{- end }}
 
 {{- define "feature.hostMetrics.energyMetrics.validate" }}
@@ -107,6 +109,7 @@
     {{- fail (join "\n" $msg) }}
   {{- end }}
 {{- end }}
+{{- include "helper.validateRelabelCacheSettings" (dict "values" .Values.energyMetrics "path" "hostMetrics.energyMetrics") }}
 {{- end }}
 
 {{- define "feature.hostMetrics.validate" }}

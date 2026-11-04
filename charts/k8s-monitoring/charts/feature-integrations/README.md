@@ -111,6 +111,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| global.cacheTTL | string | `""` | Sets the cache_ttl for every prometheus.relabel component, which switches the relabeling cache from a fixed-size LRU cache to one that expires entries after this duration of inactivity (minimum `1m`, `10m` is a reasonable starting point). Mutually exclusive with `maxCacheSize`, so set `maxCacheSize` to `0` when using this. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) |
 | global.convertClassicHistogramsToNhcb | bool | `false` | Whether to convert classic histograms to native histograms with custom buckets (NHCB) at scrape time. |
 | global.maxCacheSize | int | `100000` | Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) This should be at least 2x-5x your largest scrape target or samples appended rate. |
 | global.namespaceOverride | string | `""` | Override the namespace for namespaced resources created by this chart. |

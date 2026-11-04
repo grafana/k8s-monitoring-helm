@@ -70,7 +70,7 @@ declare "auto_instrumentation" {
   } // prometheus.scrape "beyla_internal"
 
   prometheus.relabel "beyla" {
-    max_cache_size = {{ .Values.beyla.maxCacheSize | default .Values.global.maxCacheSize | int }}
+    {{- include "helper.relabelCacheArguments" (dict "maxCacheSize" .Values.beyla.maxCacheSize "cacheTTL" .Values.beyla.cacheTTL "global" .Values.global) | nindent 4 }}
 {{- if $metricAllowList }}
     rule {
       source_labels = ["__name__"]

@@ -36,6 +36,13 @@ global:
   # @section -- Global Settings
   maxCacheSize: 100000
 
+  # -- Sets the cache_ttl for every prometheus.relabel component, which switches the relabeling cache from a fixed-size
+  # LRU cache to one that expires entries after this duration of inactivity (minimum `1m`, `10m` is a reasonable
+  # starting point). Mutually exclusive with `maxCacheSize`, so set `maxCacheSize` to `0` when using this.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
+  # @section -- Global Settings
+  cacheTTL: ""
+
 # Annotations that are used to discover and configure metric scraping targets. Add these annotations
 # to your services or pods to control how autodiscovery will find and scrape metrics from your service or pod.
 annotations:
@@ -129,6 +136,12 @@ pods:
   # @section -- Pod Discovery Settings
   enabled: true
 
+  # -- Only scrape Pods that are running, ready, and not init containers. Set to `false` to keep scraping a Pod
+  # through readiness flaps, such as to continue collecting metrics while a failing readiness probe is reporting
+  # the problem.
+  # @section -- Pod Discovery Settings
+  onlyScrapeReadyPods: true
+
   # -- Filter the list of discovered Pods by labels.
   # Example: `labelSelectors: { 'app': 'myapp' }` will only discover Pods with the label `app=myapp`.
   # Example: `labelSelectors: { 'app': ['myapp', 'myotherapp'] }` will only discover Pods with the label `app=myapp` or `app=myotherapp`.
@@ -218,6 +231,13 @@ extraMetricProcessingRules: ""
 # @raw
 # @section -- Metric Processing Settings
 maxCacheSize:
+
+# -- Sets the cache_ttl for the prometheus.relabel component, which switches its relabeling cache to TTL mode.
+# Mutually exclusive with `maxCacheSize`.
+# ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+# Overrides `global.cacheTTL`.
+# @section -- Metric Processing Settings
+cacheTTL: ""
 
 # -- Sets bearer_token_file line in the prometheus.scrape annotation_autodiscovery.
 # @section -- Scrape Settings

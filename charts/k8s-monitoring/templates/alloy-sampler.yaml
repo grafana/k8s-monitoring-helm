@@ -8,6 +8,13 @@
     {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
     {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-sampler" $destinationName)) | trunc $maxLength | trimSuffix "-" | lower }}
     {{- $collectorValues := merge (dict "fullnameOverride" $collectorName) ($destination.processors.tailSampling.collector | default dict) }}
+    {{- /* The "dns" and "static" resolvers address the Alloy pods by DNS, which requires the governing Service to be
+           headless so it returns individual pod IPs (and, for a StatefulSet, per-pod records). The "kubernetes"
+           resolver reads EndpointSlices directly and works with the default ClusterIP Service. */}}
+    {{- $resolver := dig "loadBalancer" "resolver" "kubernetes" $destination.processors.tailSampling }}
+    {{- if or (eq $resolver "dns") (eq $resolver "static") }}
+      {{- $collectorValues = mergeOverwrite $collectorValues (dict "service" (dict "clusterIP" "None")) }}
+    {{- end }}
     {{- $values := (dict "Values" $.Values "Files" $.Files "Capabilities" $.Capabilities "collectorName" $collectorName "collectorValues" $collectorValues) }}
     {{- $alloyValues := include "collector.alloy.values" $values | fromYaml }}
 

@@ -318,7 +318,7 @@ prometheus.scrape {{ $alloyName | quote }} {
 {{- if $emitPromRelabel }}
 
 prometheus.relabel {{ $alloyName | quote }} {
-  max_cache_size = {{ .metrics.maxCacheSize | default $.Values.global.maxCacheSize | int }}
+  {{- include "helper.relabelCacheArguments" (dict "maxCacheSize" .metrics.maxCacheSize "cacheTTL" .metrics.cacheTTL "global" $.Values.global) | nindent 2 }}
 {{- if not .databaseObservability.enabled }}
   rule {
     target_label = "instance"

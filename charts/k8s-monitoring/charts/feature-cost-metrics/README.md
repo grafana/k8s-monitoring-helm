@@ -145,6 +145,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| global.cacheTTL | string | `""` | Sets the cache_ttl for every prometheus.relabel component, which switches the relabeling cache from a fixed-size LRU cache to one that expires entries after this duration of inactivity (minimum `1m`, `10m` is a reasonable starting point). Mutually exclusive with `maxCacheSize`, so set `maxCacheSize` to `0` when using this. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) |
 | global.convertClassicHistogramsToNhcb | bool | `false` | Whether to convert classic histograms to native histograms with custom buckets (NHCB) at scrape time. |
 | global.kubernetesAPIService | string | `""` | The Kubernetes service. Change this if your cluster DNS is configured differently than the default. |
 | global.maxCacheSize | int | `100000` | Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) This should be at least 2x-5x your largest scrape target or samples appended rate. |
@@ -159,6 +160,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| opencost.cacheTTL | string | `""` | Sets the cache_ttl for the prometheus.relabel component for OpenCost, which switches its relabeling cache to TTL mode. Mutually exclusive with `maxCacheSize`. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)). Overrides `global.cacheTTL`. |
 | opencost.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for OpenCost. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | opencost.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for OpenCost. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no __meta* labels are present. |
 | opencost.jobLabel | string | `"integrations/opencost"` | The value for the job label. |

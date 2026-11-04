@@ -72,13 +72,12 @@ spec:
           {{- end }}
           imagePullPolicy: {{ $imagePullPolicy }}
           command:
-            - /bin/bash
-            - -ce
-            - |
-              kubectl patch \
-                --namespace={{ include "helper.namespace" . }} \
-                --patch='{"metadata":{"finalizers":["k8s.grafana.com/finalizer"]}}' \
-                deployment/{{ include "alloy-operator.fullname" (index .Subcharts "alloy-operator") }}
+            - kubectl
+          args:
+            - patch
+            - --namespace={{ include "helper.namespace" . }}
+            - --patch={"metadata":{"finalizers":["k8s.grafana.com/finalizer"]}}
+            - deployment/{{ include "alloy-operator.fullname" (index .Subcharts "alloy-operator") }}
           {{- with $jobSettings.resources }}
           resources:{{ toYaml . | nindent 12 }}
           {{- end }}

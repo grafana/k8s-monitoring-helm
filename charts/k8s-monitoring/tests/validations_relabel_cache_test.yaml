@@ -1,0 +1,70 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Validations - Relabel cache settings
+templates:
+  - validations.yaml
+tests:
+  - it: fails when global.cacheTTL is set without clearing global.maxCacheSize
+    set:
+      cluster:
+        name: test-cluster
+      global:
+        cacheTTL: 10m
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      clusterMetrics:
+        enabled: true
+      collectors:
+        alloy-metrics: {}
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            global.maxCacheSize and global.cacheTTL are mutually exclusive.
+            To use global.cacheTTL, please set:
+            global:
+              maxCacheSize: 0
+              cacheTTL: 10m
+
+  - it: allows global.cacheTTL when global.maxCacheSize is 0
+    set:
+      cluster:
+        name: test-cluster
+      global:
+        maxCacheSize: 0
+        cacheTTL: 10m
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      clusterMetrics:
+        enabled: true
+      telemetryServices:
+        kube-state-metrics:
+          deploy: true
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: fails when a feature source sets both maxCacheSize and cacheTTL
+    set:
+      cluster:
+        name: test-cluster
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      autoInstrumentation:
+        enabled: true
+        beyla:
+          maxCacheSize: 50000
+          cacheTTL: 10m
+      collectors:
+        alloy-metrics: {}
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            autoInstrumentation.beyla.maxCacheSize and autoInstrumentation.beyla.cacheTTL are mutually exclusive.
+            Please set only one of them.

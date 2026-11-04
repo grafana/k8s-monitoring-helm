@@ -389,3 +389,37 @@ tests:
             \s*    regex = "\^\(\?:;\*\)\?\(\[\^;\]\+\)\.\*\$"
             \s*    target_label = "instance_type"
             \s*  \}
+
+  - it: can set a cache TTL for the relabeling cache
+    set:
+      testing: {enabled: true}
+      alloy:
+        instances:
+          - name: alloy-metrics
+            labelSelectors:
+              app.kubernetes.io/name: alloy-metrics
+            metrics:
+              cacheTTL: 10m
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["metrics.alloy"]
+          pattern: alloy_integration_scrape "alloy_metrics" \{[^}]*\n\s+max_cache_size = 0\n\s+cache_ttl = "10m"\n
+
+  - it: fails when both maxCacheSize and cacheTTL are set
+    set:
+      testing: {enabled: true}
+      alloy:
+        instances:
+          - name: alloy-metrics
+            labelSelectors:
+              app.kubernetes.io/name: alloy-metrics
+            metrics:
+              maxCacheSize: 50000
+              cacheTTL: 10m
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            integrations.alloy.instances[0].metrics.maxCacheSize and integrations.alloy.instances[0].metrics.cacheTTL are mutually exclusive.
+            Please set only one of them.

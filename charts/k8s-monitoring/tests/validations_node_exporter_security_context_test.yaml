@@ -1,0 +1,108 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Validations - Node Exporter security context
+templates:
+  - validations.yaml
+set:
+  cluster:
+    name: ci-test-cluster
+  destinations:
+    metrics-service:
+      type: prometheus
+      url: http://prometheus.prometheus.svc:9090/api/v1/write
+  collectors:
+    alloy-metrics:
+      presets: [clustered]
+  hostMetrics:
+    enabled: true
+    collector: alloy-metrics
+    linuxHosts:
+      enabled: true
+  telemetryServices:
+    node-exporter:
+      deploy: true
+tests:
+  - it: does not fail with the default security context
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: fails when privileged is true and allowPrivilegeEscalation is left at the default
+    set:
+      telemetryServices:
+        node-exporter:
+          containerSecurityContext:
+            privileged: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Node Exporter container security context is invalid: allowPrivilegeEscalation is false, but privileged is set to true.
+            Kubernetes does not allow this combination.
+
+            Please set:
+            telemetryServices:
+              node-exporter:
+                containerSecurityContext:
+                  allowPrivilegeEscalation: true
+
+  - it: fails when CAP_SYS_ADMIN is added and allowPrivilegeEscalation is left at the default
+    set:
+      telemetryServices:
+        node-exporter:
+          containerSecurityContext:
+            capabilities:
+              add: [CAP_SYS_ADMIN]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Node Exporter container security context is invalid: allowPrivilegeEscalation is false, but the CAP_SYS_ADMIN capability is added.
+            Kubernetes does not allow this combination.
+
+            Please set:
+            telemetryServices:
+              node-exporter:
+                containerSecurityContext:
+                  allowPrivilegeEscalation: true
+
+  - it: does not fail when other capabilities are added
+    set:
+      telemetryServices:
+        node-exporter:
+          containerSecurityContext:
+            capabilities:
+              add: [SYS_TIME]
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: does not fail when privileged is true and allowPrivilegeEscalation is true
+    set:
+      telemetryServices:
+        node-exporter:
+          containerSecurityContext:
+            allowPrivilegeEscalation: true
+            privileged: true
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: does not fail when CAP_SYS_ADMIN is added and allowPrivilegeEscalation is true
+    set:
+      telemetryServices:
+        node-exporter:
+          containerSecurityContext:
+            allowPrivilegeEscalation: true
+            capabilities:
+              add: [CAP_SYS_ADMIN]
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: does not fail when Node Exporter is not deployed
+    set:
+      hostMetrics:
+        linuxHosts:
+          labelMatchers:
+            app.kubernetes.io/name: prometheus-node-exporter
+      telemetryServices:
+        node-exporter:
+          deploy: false
+          containerSecurityContext:
+            privileged: true
+    asserts:
+      - notFailedTemplate: {}

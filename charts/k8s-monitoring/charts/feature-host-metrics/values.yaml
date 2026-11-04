@@ -36,6 +36,13 @@ global:
   # @section -- Global Settings
   maxCacheSize: 100000
 
+  # -- Sets the cache_ttl for every prometheus.relabel component, which switches the relabeling cache from a fixed-size
+  # LRU cache to one that expires entries after this duration of inactivity (minimum `1m`, `10m` is a reasonable
+  # starting point). Mutually exclusive with `maxCacheSize`, so set `maxCacheSize` to `0` when using this.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
+  # @section -- Global Settings
+  cacheTTL: ""
+
 # Configures which node labels to attach to the metrics collected for host metrics that perform service discovery
 nodeLabels:
   # -- Whether or not to attach the nodepool label
@@ -154,6 +161,13 @@ linuxHosts:
   # @section -- Linux Host
   maxCacheSize:
 
+  # -- Sets the cache_ttl for the Node Exporter prometheus.relabel component, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- Linux Host
+  cacheTTL: ""
+
 # Windows Host metrics gathers hardware information about Windows nodes.
 windowsHosts:
   # -- Scrape node metrics
@@ -240,6 +254,13 @@ windowsHosts:
   # @section -- Windows Host
   maxCacheSize:
 
+  # -- Sets the cache_ttl for the Windows Exporter prometheus.relabel component, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- Windows Host
+  cacheTTL: ""
+
 # Kepler gathers energy metrics for the Kubernetes Cluster and the objects running inside.
 energyMetrics:
   # -- Deploy and scrape energy metrics.
@@ -308,3 +329,10 @@ energyMetrics:
   # @default -- `100000`
   # @section -- Energy Metrics
   maxCacheSize:
+
+  # -- Sets the cache_ttl for the prometheus.relabel component for Kepler, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- Energy Metrics
+  cacheTTL: ""

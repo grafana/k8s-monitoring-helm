@@ -72,6 +72,6 @@ tests:
                 value: 1
                 operator: ==
 
-            # The injected SDK actually produces telemetry: the demo app's traces arrive at the destination.
-            - query: '{resource.service.name="hello-node"}'
+            # The injected SDK produces traces, and Alloy exports the span metrics flag as a boolean.
+            - query: '{resource.service.name="hello-node" && resource.telemetry.sdk.language="nodejs" && resource.span.metrics.skip=true}'
               type: traceql

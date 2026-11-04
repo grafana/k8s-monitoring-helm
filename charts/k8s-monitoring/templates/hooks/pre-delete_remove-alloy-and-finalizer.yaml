@@ -84,6 +84,33 @@ spec:
       {{- if $imagePullSecrets }}
       imagePullSecrets:{{ toYaml $imagePullSecrets | nindent 8 }}
       {{- end }}
+      {{- if $alloyNames }}
+      initContainers:
+        - name: delete-alloy-instances
+          {{- with $jobSettings.image }}
+            {{- if .digest }}
+          image: "{{ $imageRegistry }}/{{ .repository }}@{{ .digest }}"
+            {{- else }}
+          image: "{{ $imageRegistry }}/{{ .repository }}:{{ .tag }}"
+            {{- end }}
+          {{- end }}
+          imagePullPolicy: {{ $imagePullPolicy }}
+          command:
+            - kubectl
+          args:
+            - delete
+          {{- range $alloyName := $alloyNames }}
+            - alloy/{{ $alloyName }}
+          {{- end }}
+            - --ignore-not-found=true
+            - --wait=false
+          {{- with $jobSettings.resources }}
+          resources:{{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $jobSettings.securityContext }}
+          securityContext:{{ toYaml . | nindent 12 }}
+          {{- end }}
+      {{- end }}
       containers:
         - name: remove-finalizers
           {{- with $jobSettings.image }}
@@ -95,19 +122,13 @@ spec:
           {{- end }}
           imagePullPolicy: {{ $imagePullPolicy }}
           command:
-            - /bin/bash
-            - -ce
-            - |
-{{- range $alloyName := $alloyNames }}
-              echo "Deleting Alloy instance: alloy/{{ $alloyName }}..."
-              kubectl delete alloy/{{ $alloyName }} --ignore-not-found=true --wait
-              kubectl wait --for=delete alloy/{{ $alloyName }} --timeout=60s || echo "Timed out waiting for deletion of alloy/{{ $alloyName }} or it may not exist."
-{{ end }}
-              kubectl patch \
-                --namespace={{ include "helper.namespace" . }} \
-                --type merge \
-                --patch='{"metadata":{"finalizers":null}}' \
-                deployment/{{ include "alloy-operator.fullname" (index .Subcharts "alloy-operator") }}
+            - kubectl
+          args:
+            - patch
+            - --namespace={{ include "helper.namespace" . }}
+            - --type=merge
+            - --patch={"metadata":{"finalizers":null}}
+            - deployment/{{ include "alloy-operator.fullname" (index .Subcharts "alloy-operator") }}
           {{- with $jobSettings.resources }}
           resources:{{ toYaml . | nindent 12 }}
           {{- end }}

@@ -11,22 +11,38 @@ should create hook when operator is deployed and readiness is enabled:
         name: release-name-k8s-monitoring-remove-alloy-and-finalizer
       spec:
         containers:
-          - command:
-              - /bin/bash
-              - -ce
-              - |
-                echo "Deleting Alloy instance: alloy/RELEASE-NAME-alloy-metrics..."
-                kubectl delete alloy/RELEASE-NAME-alloy-metrics --ignore-not-found=true --wait
-                kubectl wait --for=delete alloy/RELEASE-NAME-alloy-metrics --timeout=60s || echo "Timed out waiting for deletion of alloy/RELEASE-NAME-alloy-metrics or it may not exist."
-
-                kubectl patch \
-                  --namespace=NAMESPACE \
-                  --type merge \
-                  --patch='{"metadata":{"finalizers":null}}' \
-                  deployment/RELEASE-NAME-alloy-operator
-            image: ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.2
+          - args:
+              - patch
+              - --namespace=NAMESPACE
+              - --type=merge
+              - --patch={"metadata":{"finalizers":null}}
+              - deployment/RELEASE-NAME-alloy-operator
+            command:
+              - kubectl
+            image: registry.k8s.io/kubectl:v1.34.9
             imagePullPolicy: IfNotPresent
             name: remove-finalizers
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
+              runAsNonRoot: true
+              runAsUser: 4242
+              seccompProfile:
+                type: RuntimeDefault
+        initContainers:
+          - args:
+              - delete
+              - alloy/RELEASE-NAME-alloy-metrics
+              - --ignore-not-found=true
+              - --wait=false
+            command:
+              - kubectl
+            image: registry.k8s.io/kubectl:v1.34.9
+            imagePullPolicy: IfNotPresent
+            name: delete-alloy-instances
             securityContext:
               allowPrivilegeEscalation: false
               capabilities:

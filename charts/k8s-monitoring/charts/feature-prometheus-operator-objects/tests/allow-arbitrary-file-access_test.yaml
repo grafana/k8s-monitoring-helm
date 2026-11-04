@@ -1,0 +1,26 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Prometheus Operator Objects - Allow Arbitrary File Access
+templates:
+  - test/configmap.yaml
+tests:
+  - it: does not emit allow_arbitrary_file_access by default
+    set:
+      testing: {enabled: true}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: allow_arbitrary_file_access
+
+  - it: emits allow_arbitrary_file_access when enabled for ServiceMonitors
+    set:
+      testing: {enabled: true}
+      serviceMonitors:
+        allowArbitraryFileAccess: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: allow_arbitrary_file_access = true
