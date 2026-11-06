@@ -2,7 +2,7 @@
 # text linting can run without a local Node.js/Yarn installation.
 # The base image is updated by Renovate's native Dockerfile manager; the ARG
 # versions below are updated by the custom manager configured in renovate.json.
-FROM node:26-alpine@sha256:7ed4edf2b680417bf06d3f465de09bb113f877ff265b15f72a27a4c6fb76fb04
+FROM node:26-alpine@sha256:8996bb5821d62a8fd9bb27c1cb07462f3fdce6e47d640c6a881ead0b064ce216
 
 # renovate: datasource=npm depName=textlint
 ARG TEXTLINT_VERSION=15.8.0
