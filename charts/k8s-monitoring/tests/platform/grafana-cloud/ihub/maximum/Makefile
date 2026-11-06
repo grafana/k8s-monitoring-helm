@@ -1,3 +1,5 @@
+include ../../../helm-version.mk
+
 # Instrumentation Hub e2e — maximum tier.
 #
 # `make all` (run before helm-test): generate Grafana Cloud credentials, provision

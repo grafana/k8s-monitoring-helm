@@ -2,15 +2,22 @@
 
 scriptDir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 chartDir="$(dirname "${scriptDir}")"
+repoRoot="$(cd "${chartDir}/../.." && pwd)"
+helmVersion="${HELM_VERSION-$(<"${repoRoot}/.helm-version")}"
+if [[ -n "${helmVersion}" ]]; then
+    helmCommand=("${repoRoot}/scripts/helm-with-version" "${helmVersion}")
+else
+    helmCommand=(helm)
+fi
 
 releaseName="k8smon"
-helmVersion="$(yq eval '.version' "${chartDir}/Chart.yaml")"
+chartVersion="$(yq eval '.version' "${chartDir}/Chart.yaml")"
 
 # Images pulled directly from the Alloy Helm chart (Alloy Operator's AppVersion is the Alloy version)
 alloyOperatorVersion="$(yq eval '.dependencies[] | select(.name=="alloy-operator") | .version' "${chartDir}/Chart.yaml")"
-alloyHelmVersion="$(helm show chart "${chartDir}/charts/alloy-operator-${alloyOperatorVersion}.tgz" | yq eval '.appVersion')"
-alloyImage="$(         helm template test --repo https://grafana.github.io/helm-charts alloy --version "${alloyHelmVersion}" | yq eval 'select(.kind=="DaemonSet" and .metadata.name=="test-alloy") | .spec.template.spec.containers[0].image')"
-configReloaderImage="$(helm template test --repo https://grafana.github.io/helm-charts alloy --version "${alloyHelmVersion}" | yq eval 'select(.kind=="DaemonSet" and .metadata.name=="test-alloy") | .spec.template.spec.containers[1].image')"
+alloyHelmVersion="$("${helmCommand[@]}" show chart "${chartDir}/charts/alloy-operator-${alloyOperatorVersion}.tgz" | yq eval '.appVersion')"
+alloyImage="$(         "${helmCommand[@]}" template test --repo https://grafana.github.io/helm-charts alloy --version "${alloyHelmVersion}" | yq eval 'select(.kind=="DaemonSet" and .metadata.name=="test-alloy") | .spec.template.spec.containers[0].image')"
+configReloaderImage="$("${helmCommand[@]}" template test --repo https://grafana.github.io/helm-charts alloy --version "${alloyHelmVersion}" | yq eval 'select(.kind=="DaemonSet" and .metadata.name=="test-alloy") | .spec.template.spec.containers[1].image')"
 
 # Images pulled from rendered output of the example manifests
 clusterMetricsOutputFile="${chartDir}/docs/examples/features/cluster-metrics/default/output.yaml"
@@ -28,7 +35,7 @@ windowsExporterImage=$(yq eval "select(.kind==\"DaemonSet\"  and .metadata.name=
 cat << EOF
 ## Images
 
-The following is the list of images used in the ${helmVersion} version of the Kubernetes Monitoring Helm chart.
+The following is the list of images used in the ${chartVersion} version of the Kubernetes Monitoring Helm chart.
 
 ### Alloy
 
