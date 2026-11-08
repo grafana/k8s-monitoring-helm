@@ -234,6 +234,13 @@ can discover kube-state-metrics via pods:
         discovery.relabel "kube_state_metrics" {
           targets = discovery.kubernetes.kube_state_metrics.targets
 
+          // only keep targets with a matching port name
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_port_name"]
+            regex = "http"
+            action = "keep"
+          }
+
           rule {
             action = "replace"
             replacement = "kubernetes"
@@ -508,6 +515,13 @@ can discover kube-state-metrics via service:
 
         discovery.relabel "kube_state_metrics" {
           targets = discovery.kubernetes.kube_state_metrics.targets
+
+          // only keep targets with a matching port name
+          rule {
+            source_labels = ["__meta_kubernetes_service_port_name"]
+            regex = "http"
+            action = "keep"
+          }
 
           rule {
             action = "replace"

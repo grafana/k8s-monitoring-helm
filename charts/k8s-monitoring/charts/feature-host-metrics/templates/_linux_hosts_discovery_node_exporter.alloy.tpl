@@ -125,7 +125,7 @@ discovery.kubernetes "node_exporter" {
 discovery.relabel "node_exporter" {
   targets = discovery.kubernetes.node_exporter.targets
 
-  // keep only the specified metrics port name, and pods that are Running and ready
+  // Keep pods that are Running and ready
   rule {
     source_labels = [
       "__meta_kubernetes_pod_container_init",
@@ -134,6 +134,13 @@ discovery.relabel "node_exporter" {
     ]
     separator = "@"
     regex = "false@Running@true"
+    action = "keep"
+  }
+
+  // Keep only the specified metrics port
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    regex = {{ .Values.linuxHosts.portName | quote }}
     action = "keep"
   }
 

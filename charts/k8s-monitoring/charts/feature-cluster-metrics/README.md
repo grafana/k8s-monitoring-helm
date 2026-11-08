@@ -197,6 +197,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kube-state-metrics.namespacesDenylist | list | `[]` | List (or comma-separated string) of namespaces to be excluded from collecting resources. If namespaces and namespaces denylist are both set, only namespaces that are excluded in namespaces denylist will be used. Requires kube-state-metrics to be deployed by this chart. |
 | kube-state-metrics.scrapeInterval | string | `60s` | How frequently to scrape kube-state-metrics metrics. Overrides `global.scrapeInterval`. |
 | kube-state-metrics.scrapeTimeout | string | `10s` | The timeout for scraping kube-state-metrics metrics. Overrides `global.scrapeTimeout`. |
+| kube-state-metrics.service.portName | string | `"http"` | The port name used by kube-state-metrics. |
 | kube-state-metrics.service.scheme | string | `"http"` | The scrape scheme used by kube-state-metrics. |
 
 ### Kube Controller Manager
