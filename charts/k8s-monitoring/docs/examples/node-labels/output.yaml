@@ -19,7 +19,7 @@ kind: ServiceAccount
 automountServiceAccountToken: true
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-8.8.0
+    helm.sh/chart: kube-state-metrics-9.0.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -37,7 +37,7 @@ metadata:
   name: k8smon-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: node-exporter-4.60.1
+    helm.sh/chart: node-exporter-5.0.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
@@ -1239,7 +1239,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-8.8.0
+    helm.sh/chart: kube-state-metrics-9.0.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -1435,7 +1435,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-8.8.0
+    helm.sh/chart: kube-state-metrics-9.0.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -1553,7 +1553,7 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-8.8.0
+    helm.sh/chart: kube-state-metrics-9.0.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -1580,7 +1580,7 @@ metadata:
   name: k8smon-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: node-exporter-4.60.1
+    helm.sh/chart: node-exporter-5.0.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
@@ -1606,7 +1606,7 @@ metadata:
   name: k8smon-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: node-exporter-4.60.1
+    helm.sh/chart: node-exporter-5.0.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
@@ -1658,7 +1658,12 @@ spec:
             - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|erofs|sysfs|tracefs|tmpfs|ramfs)$
           securityContext:
             allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
             readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
           env:
             - name: HOST_IP
               value: 0.0.0.0
@@ -1805,7 +1810,7 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-8.8.0
+    helm.sh/chart: kube-state-metrics-9.0.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
