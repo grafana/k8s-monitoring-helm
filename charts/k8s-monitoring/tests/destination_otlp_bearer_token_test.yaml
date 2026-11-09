@@ -1,0 +1,122 @@
+# yamllint disable rule:document-start rule:line-length
+suite: Destinations - OTLP bearer token authentication
+templates:
+  - alloy-config.yaml
+set:
+  cluster: {name: test-cluster}
+  collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+  selfReporting: {enabled: false}
+  destinations:
+    test:
+      type: otlp
+      url: https://otlp.example.com
+      auth:
+        type: bearerToken
+tests:
+  - it: defaults to the Bearer scheme for a token stored in a generated secret
+    set:
+      destinations.test.auth.bearerToken: test-token
+    asserts:
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.auth\.bearer "test" \{\s+token = remote\.kubernetes\.secret\.test\.data\["bearerToken"\]\s+scheme = "Bearer"\s+\}'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'auth = otelcol\.auth\.bearer\.test\.handler'
+
+  - it: uses a custom scheme for a token stored in a generated secret
+    set:
+      destinations.test.auth.bearerToken: test-token
+      destinations.test.auth.bearerTokenScheme: Api-Token
+    asserts:
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.auth\.bearer "test" \{\s+token = remote\.kubernetes\.secret\.test\.data\["bearerToken"\]\s+scheme = "Api-Token"\s+\}'
+
+  - it: uses a custom scheme for a token from an existing secret
+    set:
+      destinations.test.auth.bearerTokenKey: API_TOKEN
+      destinations.test.auth.bearerTokenScheme: Api-Token
+      destinations.test.secret:
+        create: false
+        name: external-token
+        namespace: monitoring
+    asserts:
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.auth\.bearer "test" \{\s+token = remote\.kubernetes\.secret\.test\.data\["API_TOKEN"\]\s+scheme = "Api-Token"\s+\}'
+
+  - it: defaults to the Bearer scheme for a token expression
+    set:
+      destinations.test.auth.bearerTokenFrom: sys.env("API_TOKEN")
+    asserts:
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.auth\.bearer "test" \{\s+token = sys\.env\("API_TOKEN"\)\s+scheme = "Bearer"\s+\}'
+
+  - it: uses a custom scheme for a token expression over gRPC
+    set:
+      destinations.test.auth.bearerTokenFrom: sys.env("API_TOKEN")
+      destinations.test.auth.bearerTokenScheme: Api-Token
+    asserts:
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.exporter\.otlp "test"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.auth\.bearer "test" \{\s+token = sys\.env\("API_TOKEN"\)\s+scheme = "Api-Token"\s+\}'
+
+  - it: uses a custom scheme for a token expression over HTTP
+    set:
+      destinations.test.protocol: http
+      destinations.test.auth.bearerTokenFrom: sys.env("API_TOKEN")
+      destinations.test.auth.bearerTokenScheme: Api-Token
+    asserts:
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.exporter\.otlphttp "test"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.auth\.bearer "test" \{\s+token = sys\.env\("API_TOKEN"\)\s+scheme = "Api-Token"\s+\}'
+
+  - it: defaults to the Bearer scheme for a token file
+    set:
+      destinations.test.auth.bearerTokenFile: /var/run/secrets/api-token
+    asserts:
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'local\.file "test" \{\s+filename = "/var/run/secrets/api-token"\s+\}'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.auth\.bearer "test" \{\s+token = local\.file\.test\.content\s+scheme = "Bearer"\s+\}'
+
+  - it: uses a custom scheme for a token file over gRPC
+    set:
+      destinations.test.auth.bearerTokenFile: /var/run/secrets/api-token
+      destinations.test.auth.bearerTokenScheme: Api-Token
+    asserts:
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.auth\.bearer "test" \{\s+token = local\.file\.test\.content\s+scheme = "Api-Token"\s+\}'
+
+  - it: uses a custom scheme for a token file over HTTP
+    set:
+      destinations.test.protocol: http
+      destinations.test.auth.bearerTokenFile: /var/run/secrets/api-token
+      destinations.test.auth.bearerTokenScheme: Api-Token
+    asserts:
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.exporter\.otlphttp "test"'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.auth\.bearer "test" \{\s+token = local\.file\.test\.content\s+scheme = "Api-Token"\s+\}'
+
+  - it: does not create bearer authentication when auth is disabled
+    set:
+      destinations.test.auth.type: none
+      destinations.test.auth.bearerTokenScheme: Api-Token
+    asserts:
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.auth\.bearer'
