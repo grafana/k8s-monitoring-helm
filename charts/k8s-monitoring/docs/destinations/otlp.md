@@ -2,6 +2,25 @@
 
 This defines the options for defining a destination for OpenTelemetry data that use the OTLP protocol.
 
+## Custom token authentication scheme
+
+Set `auth.bearerTokenScheme` when the endpoint requires a scheme other than `Bearer`:
+
+```yaml
+destinations:
+  external-otlp:
+    type: otlp
+    protocol: http
+    url: https://example.com/api/v2/otlp
+    auth:
+      type: bearerToken
+      bearerTokenFrom: sys.env("API_TOKEN")
+      bearerTokenScheme: Api-Token
+```
+
+This sends `Authorization: Api-Token <token>`. The scheme applies to both HTTP and gRPC destinations and to all
+bearer token sources, including `bearerTokenFile`. The default scheme is `Bearer`.
+
 <!-- textlint-disable terminology -->
 ## Values
 
@@ -13,6 +32,7 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | auth.bearerTokenFile | string | `""` | Path to a file that containers the bearer token. |
 | auth.bearerTokenFrom | string | `""` | Raw config for accessing the bearer token. |
 | auth.bearerTokenKey | string | `"bearerToken"` | The key for storing the bearer token in the secret. |
+| auth.bearerTokenScheme | string | `"Bearer"` | The authentication scheme prepended to the bearer token in the Authorization header. |
 
 ### Authentication - OAuth2
 
