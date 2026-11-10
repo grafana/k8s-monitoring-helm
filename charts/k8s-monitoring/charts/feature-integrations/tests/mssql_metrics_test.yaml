@@ -1,0 +1,111 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Integration - MSSQL - Metrics
+templates:
+  - test/configmap.yaml
+  - mssql-secret.yaml
+tests:
+  - it: should create the MSSQL config
+    set:
+      testing: {enabled: true}
+      mssql:
+        instances:
+          - name: my-database
+            exporter:
+              dataSource:
+                host: my-db.mssql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
+      - template: mssql-secret.yaml
+        documentIndex: 0
+        containsDocument:
+          apiVersion: v1
+          kind: Secret
+          name: my-database-release-name-feature-integrations
+          namespace: NAMESPACE
+      - template: mssql-secret.yaml
+        equal:
+          path: stringData.username
+          value: db-admin
+      - template: mssql-secret.yaml
+        equal:
+          path: stringData.password
+          value: db-password
+
+  - it: works with multiple MSSQL Instances
+    set:
+      testing: {enabled: true}
+      mssql:
+        instances:
+          - name: test-db
+            exporter:
+              dataSource:
+                host: database.test.svc
+            logs: {enabled: false}
+          - name: staging-db
+            exporter:
+              dataSourceName: "sqlserver://sa:password@database.staging.svc:1433?encrypt=disable"
+            logs: {enabled: false}
+          - name: prod-db
+            exporter:
+              dataSource:
+                host: database.prod.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
+      - template: mssql-secret.yaml
+        hasDocuments:
+          count: 1  # Only one secret should be created
+      - template: mssql-secret.yaml
+        documentIndex: 0
+        containsDocument:
+          apiVersion: v1
+          kind: Secret
+          name: prod-db-release-name-feature-integrations
+          namespace: NAMESPACE
+      - template: mssql-secret.yaml
+        equal:
+          path: stringData.username
+          value: db-admin
+      - template: mssql-secret.yaml
+        equal:
+          path: stringData.password
+          value: db-password
+
+  - it: works when referencing the MSSQL Secret
+    set:
+      testing: {enabled: true}
+      mssql:
+        instances:
+          - name: test-database
+            exporter:
+              dataSource:
+                host: test-database-mssql.mssql.svc
+                auth:
+                  usernameFrom: sys.env(MSSQL_USER)
+                  passwordKey: mssql-password
+            secret:
+              create: false
+              name: test-database-mssql
+              namespace: mssql
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
+      - template: mssql-secret.yaml
+        hasDocuments:
+          count: 0  # No secret should be created
