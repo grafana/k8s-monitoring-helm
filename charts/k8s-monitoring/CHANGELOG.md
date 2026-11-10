@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Enable pre-classified wait event information by default for MySQL and PostgreSQL Database Observability (`databaseObservability.collectors.querySamples.enablePreClassifiedWaitEvents`).
 *   Switch the Alloy removal Helm hooks (`alloy-operator.waitForAlloyRemoval`) from the Grafana-built `helm-chart-toolbox-kubectl` image to the official, distroless `registry.k8s.io/kubectl` image. (@petewall)
 
 ## 4.6.0
