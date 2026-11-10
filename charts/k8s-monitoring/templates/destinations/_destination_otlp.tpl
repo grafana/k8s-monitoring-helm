@@ -699,11 +699,13 @@ local.file {{ include "helper.alloy_name" $.destinationName | quote }} {
 
 otelcol.auth.bearer {{ include "helper.alloy_name" $.destinationName | quote }} {
   token = local.file.{{ include "helper.alloy_name" $.destinationName }}.content
+  scheme = {{ .auth.bearerTokenScheme | quote }}
 } // otelcol.auth.bearer "{{ include "helper.alloy_name" $.destinationName }}"
 {{- else }}
 
 otelcol.auth.bearer {{ include "helper.alloy_name" $.destinationName | quote }} {
   token = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.bearerToken") }}
+  scheme = {{ .auth.bearerTokenScheme | quote }}
 } // otelcol.auth.bearer "{{ include "helper.alloy_name" $.destinationName }}"
 {{- end }}
 {{- else if eq (include "secrets.authType" .) "oauth2" }}
