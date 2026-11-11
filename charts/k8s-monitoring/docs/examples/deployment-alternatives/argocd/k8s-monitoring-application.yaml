@@ -4,6 +4,8 @@ kind: Application
 metadata:
   name: k8s-monitoring-application
   namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
 operation:
   sync:
     syncStrategy:
@@ -28,7 +30,7 @@ spec:
   source:
     repoURL: https://github.com/grafana/k8s-monitoring-helm.git
     path: charts/k8s-monitoring
-    targetRevision: "petewall/alloy-finalizers-stuck-uninstall"
+    targetRevision: "main"
     helm:
       releaseName: k8smon
       valuesObject:
@@ -53,9 +55,11 @@ spec:
         clusterMetrics:
           enabled: true
           collector: alloy-metrics
+
         costMetrics:
           enabled: true
           collector: alloy-metrics
+
         hostMetrics:
           enabled: true
           collector: alloy-metrics
@@ -65,14 +69,17 @@ spec:
             enabled: true
           energyMetrics:
             enabled: true
+
         clusterEvents:
           enabled: true
           collector: alloy-singleton
+
         podLogsViaLoki:
           enabled: true
           collector: alloy-logs
           structuredMetadata:
             pod: ""
+
         collectors:
           alloy-metrics:
             presets: [clustered, statefulset]
@@ -80,10 +87,12 @@ spec:
             presets: [filesystem-log-reader, daemonset]
           alloy-singleton:
             presets: [singleton]
+
         collectorCommon:
           alloy:
             annotations:
               argocd.argoproj.io/sync-wave: "1"
+
         telemetryServices:
           kube-state-metrics:
             deploy: true
