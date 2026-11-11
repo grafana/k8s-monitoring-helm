@@ -28,15 +28,35 @@ tests:
           path: spec.ttlSecondsAfterFinished
       - documentIndex: 0
         equal:
-          path: spec.template.spec.initContainers[1].args[1]
-          value: --for=delete
+          path: spec.template.spec.initContainers[0].args[3]
+          value: --wait=true
       - documentIndex: 0
         equal:
-          path: spec.template.spec.initContainers[1].args[2]
+          path: spec.template.spec.initContainers[0].args[4]
           value: --timeout=120s
       - documentIndex: 0
         matchSnapshot:
           path: spec
+
+  - it: should use the configured deletion timeout and deadline
+    set:
+      alloy-operator:
+        deploy: true
+        waitForAlloyRemoval:
+          enabled: true
+          timeoutSeconds: 10
+      collectors:
+        alloy-metrics:
+          extraConfig: " "
+    asserts:
+      - documentIndex: 0
+        equal:
+          path: spec.activeDeadlineSeconds
+          value: 70
+      - documentIndex: 0
+        equal:
+          path: spec.template.spec.initContainers[0].args[4]
+          value: --timeout=10s
 
   - it: should not create hook when operator is not deployed
     set:

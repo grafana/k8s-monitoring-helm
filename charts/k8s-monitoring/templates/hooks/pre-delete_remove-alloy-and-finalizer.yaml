@@ -106,31 +106,8 @@ spec:
             - alloy/{{ $alloyName }}
           {{- end }}
             - --ignore-not-found=true
-            - --wait=false
-          {{- with $jobSettings.resources }}
-          resources:{{ toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with $jobSettings.securityContext }}
-          securityContext:{{ toYaml . | nindent 12 }}
-          {{- end }}
-        - name: wait-for-alloy-deletion
-          {{- with $jobSettings.image }}
-            {{- if .digest }}
-          image: "{{ $imageRegistry }}/{{ .repository }}@{{ .digest }}"
-            {{- else }}
-          image: "{{ $imageRegistry }}/{{ .repository }}:{{ .tag }}"
-            {{- end }}
-          {{- end }}
-          imagePullPolicy: {{ $imagePullPolicy }}
-          command:
-            - kubectl
-          args:
-            - wait
-            - --for=delete
+            - --wait=true
             - --timeout={{ printf "%ds" $timeoutSeconds }}
-          {{- range $alloyName := $alloyNames }}
-            - alloy/{{ $alloyName }}
-          {{- end }}
           {{- with $jobSettings.resources }}
           resources:{{ toYaml . | nindent 12 }}
           {{- end }}

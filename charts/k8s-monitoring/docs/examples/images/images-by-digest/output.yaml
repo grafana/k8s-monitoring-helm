@@ -3198,29 +3198,8 @@ spec:
             - alloy/k8smon-alloy-receiver
             - alloy/k8smon-tempo-sampler
             - --ignore-not-found=true
-            - --wait=false
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-              - ALL
-            readOnlyRootFilesystem: true
-            runAsNonRoot: true
-            runAsUser: 4242
-            seccompProfile:
-              type: RuntimeDefault
-        - name: wait-for-alloy-deletion
-          image: "registry.k8s.io/kubectl@sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
-          imagePullPolicy: IfNotPresent
-          command:
-            - kubectl
-          args:
-            - wait
-            - --for=delete
+            - --wait=true
             - --timeout=120s
-            - alloy/k8smon-alloy-metrics
-            - alloy/k8smon-alloy-receiver
-            - alloy/k8smon-tempo-sampler
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

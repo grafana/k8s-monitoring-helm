@@ -962,27 +962,8 @@ spec:
             - delete
             - alloy/k8smon-alloy-metrics
             - --ignore-not-found=true
-            - --wait=false
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-              - ALL
-            readOnlyRootFilesystem: true
-            runAsNonRoot: true
-            runAsUser: 4242
-            seccompProfile:
-              type: RuntimeDefault
-        - name: wait-for-alloy-deletion
-          image: "registry.k8s.io/kubectl:v1.34.9"
-          imagePullPolicy: IfNotPresent
-          command:
-            - kubectl
-          args:
-            - wait
-            - --for=delete
+            - --wait=true
             - --timeout=120s
-            - alloy/k8smon-alloy-metrics
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

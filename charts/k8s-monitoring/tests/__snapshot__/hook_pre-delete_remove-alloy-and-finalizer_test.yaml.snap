@@ -38,32 +38,13 @@ should create hook when operator is deployed and readiness is enabled:
               - delete
               - alloy/RELEASE-NAME-alloy-metrics
               - --ignore-not-found=true
-              - --wait=false
+              - --wait=true
+              - --timeout=120s
             command:
               - kubectl
             image: registry.k8s.io/kubectl:v1.34.9
             imagePullPolicy: IfNotPresent
             name: delete-alloy-instances
-            securityContext:
-              allowPrivilegeEscalation: false
-              capabilities:
-                drop:
-                  - ALL
-              readOnlyRootFilesystem: true
-              runAsNonRoot: true
-              runAsUser: 4242
-              seccompProfile:
-                type: RuntimeDefault
-          - args:
-              - wait
-              - --for=delete
-              - --timeout=120s
-              - alloy/RELEASE-NAME-alloy-metrics
-            command:
-              - kubectl
-            image: registry.k8s.io/kubectl:v1.34.9
-            imagePullPolicy: IfNotPresent
-            name: wait-for-alloy-deletion
             securityContext:
               allowPrivilegeEscalation: false
               capabilities:
