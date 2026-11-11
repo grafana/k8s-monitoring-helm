@@ -219,6 +219,7 @@ details:
 | alloy-operator.waitForAlloyRemoval.podLabels | object | `{"linkerd.io/inject":"disabled","sidecar.istio.io/inject":"false"}` | Labels to apply to the Pod for the Alloy removal Helm Hooks (both the post-install/post-upgrade add-finalizer hook and the pre-delete removal hook). |
 | alloy-operator.waitForAlloyRemoval.resources | object | `{}` | Set the resource field for the Alloy removal Helm Hooks (both the post-install/post-upgrade add-finalizer hook and the pre-delete removal hook). |
 | alloy-operator.waitForAlloyRemoval.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":4242,"seccompProfile":{"type":"RuntimeDefault"}}` | Default security context to apply to the container. This can also be set to `null` to remove the security context entirely. Also, `runAsUser` can be set to `null` to remove it. |
+| alloy-operator.waitForAlloyRemoval.timeoutSeconds | int | `120` | Maximum time in seconds to wait for Alloy instances to be deleted before the pre-delete hook fails. The Job deadline adds 60 seconds for startup and cleanup; set this below the Helm or Flux uninstall timeout. |
 | alloy-operator.waitForAlloyRemoval.tolerations | list | `[]` | Tolerations to apply to the Alloy removal Helm Hooks (both the post-install/post-upgrade add-finalizer hook and the pre-delete removal hook). |
 
 ### Features - Annotation Autodiscovery

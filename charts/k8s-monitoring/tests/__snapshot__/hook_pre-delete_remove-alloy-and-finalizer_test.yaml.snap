@@ -1,6 +1,7 @@
 should create hook when operator is deployed and readiness is enabled:
   1: |
-    backoffLimit: 3
+    activeDeadlineSeconds: 180
+    backoffLimit: 0
     template:
       metadata:
         labels:
@@ -53,8 +54,27 @@ should create hook when operator is deployed and readiness is enabled:
               runAsUser: 4242
               seccompProfile:
                 type: RuntimeDefault
+          - args:
+              - wait
+              - --for=delete
+              - --timeout=120s
+              - alloy/RELEASE-NAME-alloy-metrics
+            command:
+              - kubectl
+            image: registry.k8s.io/kubectl:v1.34.9
+            imagePullPolicy: IfNotPresent
+            name: wait-for-alloy-deletion
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
+              runAsNonRoot: true
+              runAsUser: 4242
+              seccompProfile:
+                type: RuntimeDefault
         nodeSelector:
           kubernetes.io/os: linux
         restartPolicy: Never
         serviceAccountName: release-name-k8s-monitoring-remove-alloy-and-finalizer
-    ttlSecondsAfterFinished: 300

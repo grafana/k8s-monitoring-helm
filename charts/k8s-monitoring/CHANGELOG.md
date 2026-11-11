@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Improve the behavior of the uninstallation hook, adding a timeout to prevent hanging. (@petewall)
 *   Restore port-name filtering for kube-state-metrics and Node Exporter discovery to avoid scraping non-metrics ports. (@petewall)
 *   Enable pre-classified wait event information by default for MySQL and PostgreSQL Database Observability (`databaseObservability.collectors.querySamples.enablePreClassifiedWaitEvents`).
 *   Add the ability to set the Bearer token authentication scheme for OTLP destinations. (@petewall)

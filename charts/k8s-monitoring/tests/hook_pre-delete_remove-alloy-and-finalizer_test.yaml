@@ -16,6 +16,25 @@ tests:
       - hasDocuments:
           count: 4
       - documentIndex: 0
+        equal:
+          path: spec.backoffLimit
+          value: 0
+      - documentIndex: 0
+        equal:
+          path: spec.activeDeadlineSeconds
+          value: 180
+      - documentIndex: 0
+        notExists:
+          path: spec.ttlSecondsAfterFinished
+      - documentIndex: 0
+        equal:
+          path: spec.template.spec.initContainers[1].args[1]
+          value: --for=delete
+      - documentIndex: 0
+        equal:
+          path: spec.template.spec.initContainers[1].args[2]
+          value: --timeout=120s
+      - documentIndex: 0
         matchSnapshot:
           path: spec
 
