@@ -130,6 +130,7 @@ integrations:
 | databaseObservability.collectors.querySamples.autoEnableSetupConsumers | bool | `false` | Whether to enable some specific performance_schema.setup_consumers settings. |
 | databaseObservability.collectors.querySamples.collectInterval | string | `"10s"` | How frequently to collect query samples from the database. |
 | databaseObservability.collectors.querySamples.disableQueryRedaction | bool | `false` | Collect unredacted SQL query text including parameters. |
+| databaseObservability.collectors.querySamples.enablePreClassifiedWaitEvents | bool | `true` | Emit telemetry data with pre-classified wait event information. |
 | databaseObservability.collectors.querySamples.enabled | bool | `true` | Enable collection of query samples. |
 | databaseObservability.collectors.querySamples.sampleMinDuration | string | `"0s"` | Minimum duration for query samples to be collected. Set to "0s" to disable filtering and collect all samples regardless of their duration. |
 | databaseObservability.collectors.querySamples.setupConsumersCheckInterval | string | `"1h"` | How frequently to check if setup_consumers are correctly enabled. |
