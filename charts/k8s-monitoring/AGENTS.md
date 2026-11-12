@@ -194,6 +194,7 @@ destinations:
 -   `istio` - Monitor istio
 -   `loki` - Monitor loki
 -   `mimir` - Monitor mimir
+-   `mssql` - Monitor mssql
 -   `mysql` - Monitor mysql
 -   `postgresql` - Monitor postgresql
 -   `tempo` - Monitor tempo

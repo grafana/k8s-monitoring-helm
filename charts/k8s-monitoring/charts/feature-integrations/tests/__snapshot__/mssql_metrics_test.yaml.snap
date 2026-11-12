@@ -1,0 +1,207 @@
+should create the MSSQL config:
+  1: |
+    |-
+      declare "mssql_integration" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+
+        remote.kubernetes.secret "my_database" {
+          name      = "my-database-release-name-feature-integrations"
+          namespace = "NAMESPACE"
+        } // remote.kubernetes.secret "my_database"
+
+        prometheus.exporter.mssql "my_database" {
+          connection_string = string.format("sqlserver://%s:%s@%s:%d",
+            encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.my_database.data["username"])),
+            encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.my_database.data["password"])),
+            "my-db.mssql.svc",
+            1433,
+          )
+        }
+        prometheus.scrape "my_database" {
+          targets = prometheus.exporter.mssql.my_database.targets
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = [prometheus.relabel.my_database.receiver]
+        }
+
+        prometheus.relabel "my_database" {
+          max_cache_size = 100000
+          rule {
+            target_label = "instance"
+            replacement = "my-database"
+          }
+          rule {
+            target_label = "job"
+            replacement = "integration/mssql"
+          }
+          forward_to = argument.metrics_destinations.value
+        }
+      }
+works when referencing the MSSQL Secret:
+  1: |
+    |-
+      declare "mssql_integration" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+
+        remote.kubernetes.secret "test_database" {
+          name      = "test-database-mssql"
+          namespace = "mssql"
+        } // remote.kubernetes.secret "test_database"
+
+        prometheus.exporter.mssql "test_database" {
+          connection_string = string.format("sqlserver://%s:%s@%s:%d",
+            encoding.url_encode(sys.env(MSSQL_USER)),
+            encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_database.data["mssql-password"])),
+            "test-database-mssql.mssql.svc",
+            1433,
+          )
+        }
+        prometheus.scrape "test_database" {
+          targets = prometheus.exporter.mssql.test_database.targets
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = [prometheus.relabel.test_database.receiver]
+        }
+
+        prometheus.relabel "test_database" {
+          max_cache_size = 100000
+          rule {
+            target_label = "instance"
+            replacement = "test-database"
+          }
+          rule {
+            target_label = "job"
+            replacement = "integration/mssql"
+          }
+          forward_to = argument.metrics_destinations.value
+        }
+      }
+works with multiple MSSQL Instances:
+  1: |
+    |-
+      declare "mssql_integration" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+
+        prometheus.exporter.mssql "test_db" {
+          connection_string = string.format("sqlserver://%s:%d",
+            "database.test.svc",
+            1433,
+          )
+        }
+        prometheus.scrape "test_db" {
+          targets = prometheus.exporter.mssql.test_db.targets
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = [prometheus.relabel.test_db.receiver]
+        }
+
+        prometheus.relabel "test_db" {
+          max_cache_size = 100000
+          rule {
+            target_label = "instance"
+            replacement = "test-db"
+          }
+          rule {
+            target_label = "job"
+            replacement = "integration/mssql"
+          }
+          forward_to = argument.metrics_destinations.value
+        }
+
+        prometheus.exporter.mssql "staging_db" {
+          connection_string = "sqlserver://sa:password@database.staging.svc:1433?encrypt=disable"
+        }
+        prometheus.scrape "staging_db" {
+          targets = prometheus.exporter.mssql.staging_db.targets
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = [prometheus.relabel.staging_db.receiver]
+        }
+
+        prometheus.relabel "staging_db" {
+          max_cache_size = 100000
+          rule {
+            target_label = "instance"
+            replacement = "staging-db"
+          }
+          rule {
+            target_label = "job"
+            replacement = "integration/mssql"
+          }
+          forward_to = argument.metrics_destinations.value
+        }
+
+        remote.kubernetes.secret "prod_db" {
+          name      = "prod-db-release-name-feature-integrations"
+          namespace = "NAMESPACE"
+        } // remote.kubernetes.secret "prod_db"
+
+        prometheus.exporter.mssql "prod_db" {
+          connection_string = string.format("sqlserver://%s:%s@%s:%d",
+            encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.prod_db.data["username"])),
+            encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.prod_db.data["password"])),
+            "database.prod.svc",
+            1433,
+          )
+        }
+        prometheus.scrape "prod_db" {
+          targets = prometheus.exporter.mssql.prod_db.targets
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = [prometheus.relabel.prod_db.receiver]
+        }
+
+        prometheus.relabel "prod_db" {
+          max_cache_size = 100000
+          rule {
+            target_label = "instance"
+            replacement = "prod-db"
+          }
+          rule {
+            target_label = "job"
+            replacement = "integration/mssql"
+          }
+          forward_to = argument.metrics_destinations.value
+        }
+      }

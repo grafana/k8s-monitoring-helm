@@ -1,0 +1,115 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mssql
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: test-database-mssql
+  namespace: mssql
+stringData:
+  mssql-username: "sa"
+  mssql-password: "YourStrong!Passw0rd"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-database-mssql
+  namespace: mssql
+  labels:
+    app.kubernetes.io/name: mssql
+    app.kubernetes.io/instance: test-database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mssql
+      app.kubernetes.io/instance: test-database
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mssql
+        app.kubernetes.io/instance: test-database
+    spec:
+      containers:
+        - name: mssql
+          image: mcr.microsoft.com/mssql/server:2022-latest
+          ports:
+            - containerPort: 1433
+              name: mssql
+          env:
+            - name: ACCEPT_EULA
+              value: "Y"
+            - name: MSSQL_SA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: test-database-mssql
+                  key: mssql-password
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -Q "SELECT 1" || /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -Q "SELECT 1"
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-database-mssql
+  namespace: mssql
+  labels:
+    app.kubernetes.io/name: mssql
+    app.kubernetes.io/instance: test-database
+spec:
+  selector:
+    app.kubernetes.io/name: mssql
+    app.kubernetes.io/instance: test-database
+  ports:
+    - name: mssql
+      port: 1433
+      targetPort: 1433
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: test-database-mssql-init
+  namespace: mssql
+spec:
+  backoffLimit: 6
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: init
+          image: mcr.microsoft.com/mssql/server:2022-latest
+          env:
+            - name: MSSQL_HOST
+              value: test-database-mssql.mssql.svc
+            - name: MSSQL_SA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: test-database-mssql
+                  key: mssql-password
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -euo pipefail
+              SQLCMD="/opt/mssql-tools18/bin/sqlcmd -C"
+              if [ ! -x /opt/mssql-tools18/bin/sqlcmd ]; then SQLCMD="/opt/mssql-tools/bin/sqlcmd"; fi
+              echo "Waiting for SQL Server..."
+              for i in $(seq 1 60); do
+                if $SQLCMD -S "$MSSQL_HOST" -U sa -P "$MSSQL_SA_PASSWORD" -Q "SELECT 1" >/dev/null 2>&1; then
+                  break
+                fi
+                sleep 5
+              done
+              $SQLCMD -S "$MSSQL_HOST" -U sa -P "$MSSQL_SA_PASSWORD" -Q "IF DB_ID(N'testdb') IS NULL CREATE DATABASE [testdb];"
+              $SQLCMD -S "$MSSQL_HOST" -U sa -P "$MSSQL_SA_PASSWORD" -d testdb -Q "ALTER DATABASE [testdb] SET QUERY_STORE = ON; ALTER DATABASE [testdb] SET QUERY_STORE (OPERATION_MODE = READ_WRITE, DATA_FLUSH_INTERVAL_SECONDS = 60, INTERVAL_LENGTH_MINUTES = 1);"
+              $SQLCMD -S "$MSSQL_HOST" -U sa -P "$MSSQL_SA_PASSWORD" -d testdb -Q "IF OBJECT_ID(N'dbo.events', N'U') IS NULL CREATE TABLE dbo.events (id INT IDENTITY(1,1) PRIMARY KEY, created_at DATETIME2 DEFAULT SYSUTCDATETIME(), message NVARCHAR(255));"
+              echo "MSSQL init complete"
