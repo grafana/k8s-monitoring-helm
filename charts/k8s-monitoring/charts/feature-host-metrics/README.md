@@ -186,6 +186,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | linuxHosts.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring. |
 | linuxHosts.metricsTuning.useIntegrationAllowList | bool | `false` | Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring as well as the Node Exporter integration. |
 | linuxHosts.namespace | string | `""` | Namespace to locate Node Exporter pods. If deploying from telemetry services, this will automatically be populated. |
+| linuxHosts.portName | string | `"metrics"` | The port name used by Node Exporter pods. |
 | linuxHosts.scheme | string | `"http"` | The scrape scheme for Linux host metrics. |
 | linuxHosts.scrapeInterval | string | `60s` | How frequently to scrape Linux host metrics. Overrides `global.scrapeInterval`. |
 | linuxHosts.scrapeTimeout | string | `10s` | The timeout for scraping Linux host metrics. Overrides `global.scrapeTimeout`. |

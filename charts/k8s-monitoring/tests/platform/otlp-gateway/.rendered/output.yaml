@@ -289,6 +289,13 @@ data:
       discovery.relabel "kube_state_metrics" {
         targets = discovery.kubernetes.kube_state_metrics.targets
     
+        // only keep targets with a matching port name
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_port_name"]
+          regex = "http"
+          action = "keep"
+        }
+    
         rule {
           action = "replace"
           replacement = "kubernetes"
@@ -443,7 +450,7 @@ data:
       discovery.relabel "node_exporter" {
         targets = discovery.kubernetes.node_exporter.targets
     
-        // keep only the specified metrics port name, and pods that are Running and ready
+        // Keep pods that are Running and ready
         rule {
           source_labels = [
             "__meta_kubernetes_pod_container_init",
@@ -452,6 +459,13 @@ data:
           ]
           separator = "@"
           regex = "false@Running@true"
+          action = "keep"
+        }
+    
+        // Keep only the specified metrics port
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_port_name"]
+          regex = "metrics"
           action = "keep"
         }
     
