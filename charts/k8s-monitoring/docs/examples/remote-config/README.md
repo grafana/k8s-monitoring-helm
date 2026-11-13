@@ -5,22 +5,26 @@
 # Remote Config
 
 This example demonstrates how to configure Alloy to utilize
-[remote configuration](https://grafana.com/docs/alloy/latest/reference/config-blocks/remotecfg/). These two environment
-variables must be set:
+[remote configuration](https://grafana.com/docs/alloy/latest/reference/config-blocks/remotecfg/).
 
-*   `GCLOUD_FM_COLLECTOR_ID` - The collector id. It should uniquely identify this Alloy instance. The value in practice is:
-    *   For Deployments: `<cluster name>-<namespace>-<pod name>`
-    *   For StatefulSets: `<cluster name>-<namespace>-<pod name>`
-    *   For DaemonSets: `<cluster name>-<namespace>-<node name>`
-*   `GCLOUD_RW_API_KEY` - The Grafana Cloud Access Policy token that has the following scopes:
-    *   `fleet-management:read`
-    *   `logs:write`
-    *   `metrics:write`
-    *   `traces:write`
-    *   `profiles:write`
+By default, the chart generates a collector ID for each Alloy instance:
 
-The values file below shows enabling the `alloy-metrics` StatefulSet and the `alloy-logs` DaemonSets and a convenient
-way to set the environment variables automatically.
+*   For Deployments and StatefulSets: `<release name>-<cluster name>-<namespace>-<collector name>`
+*   For DaemonSets: `<release name>-<cluster name>-<namespace>-<collector name>-<node name>`
+
+You can override the collector ID with `remoteConfig.collectorId` or `remoteConfig.collectorIdFrom`. For example, to
+load the collector ID from an environment variable, set `collectorIdFrom: sys.env("GCLOUD_FM_COLLECTOR_ID")`.
+
+`GCLOUD_RW_API_KEY` must also be set. It should be a Grafana Cloud Access Policy token that has the following scopes:
+
+*   `fleet-management:read`
+*   `logs:write`
+*   `metrics:write`
+*   `traces:write`
+*   `profiles:write`
+
+The values file below shows enabling remote configuration for the `alloy-metrics` StatefulSet and the `alloy-logs`
+DaemonSet.
 
 ## Values
 
