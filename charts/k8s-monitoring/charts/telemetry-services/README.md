@@ -39,11 +39,11 @@ telemetryServices:
 | https://grafana.github.io/helm-charts | beyla | 1.16.17 |
 | https://grafana.github.io/helm-charts | sdkInjector(k8s-injection-controller) | 0.3.0 |
 | https://grafana.github.io/helm-charts | k8s-manifest-tail(k8s-manifest-tail) | 0.1.6 |
-| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 9.0.0 |
-| https://prometheus-community.github.io/helm-charts | node-exporter(prometheus-node-exporter) | 5.0.0 |
+| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 9.0.1 |
+| https://prometheus-community.github.io/helm-charts | node-exporter(prometheus-node-exporter) | 5.1.0 |
 | https://prometheus-community.github.io/helm-charts | windows-exporter(prometheus-windows-exporter) | 0.14.0 |
 | https://sustainable-computing-io.github.io/kepler-helm-chart | kepler | 0.6.1 |
-| oci://ghcr.io/opencost/charts | opencost | 2.5.33 |
+| oci://ghcr.io/opencost/charts | opencost | 2.5.34 |
 <!-- markdownlint-enable no-bare-urls -->
 ## Values
 
