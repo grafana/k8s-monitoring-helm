@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 4.6.1
 
 *   Improve the behavior of the uninstallation hook, adding a timeout to prevent hanging. (@petewall)
 *   Restore port-name filtering for kube-state-metrics and Node Exporter discovery to avoid scraping non-metrics ports. (@petewall)
