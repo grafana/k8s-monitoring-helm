@@ -6,7 +6,7 @@
 *   Enable pre-classified wait event information by default for MySQL and PostgreSQL Database Observability (`databaseObservability.collectors.querySamples.enablePreClassifiedWaitEvents`).
 *   Add the ability to set the Bearer token authentication scheme for OTLP destinations. (@petewall)
 *   Switch the Alloy removal Helm hooks (`alloy-operator.waitForAlloyRemoval`) from the Grafana-built `helm-chart-toolbox-kubectl` image to the official, distroless `registry.k8s.io/kubectl` image. (@petewall)
-*   Update kube-state-metrics to 9.0.0, Node Exporter to 5.0.0, and Windows Exporter to 0.14.0 (@petewall)
+*   Update kube-state-metrics to 9.0.1, Node Exporter to 5.1.0, OpenCost to 2.5.34, and Windows Exporter to 0.14.0 (@petewall)
 
 ## 4.6.0
 
