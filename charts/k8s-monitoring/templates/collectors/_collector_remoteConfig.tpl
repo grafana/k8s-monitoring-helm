@@ -32,17 +32,28 @@
 {{- define "collectors.remoteConfig.alloy" -}}
 {{- $collectorValues := include "collector.alloy.values" . | fromYaml }}
 {{- $collectorType := $collectorValues.controller.type }}
+{{- $remoteConfigBlockName := dig "remoteConfig" "name" "" $collectorValues }}
+{{- $remoteConfigBlockNameFrom := dig "remoteConfig" "nameFrom" "" $collectorValues }}
 {{- with merge $collectorValues.remoteConfig (dict "type" "remoteConfig" "name" (printf "%s-remote-cfg" .collectorName)) }}
   {{- if .enabled }}
     {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
       {{- include "secret.alloy" (deepCopy $ | merge (dict "object" .)) | nindent 0 }}
     {{- end }}
 remotecfg {
-    {{- if eq $collectorType "daemonset" }}
+{{- if .collectorIdFrom }}
+  id = {{ .collectorIdFrom }}
+{{- else if .collectorId }}
+  id = {{ .collectorId | quote }}
+{{- else if eq $collectorType "daemonset" }}
   id = string.format("{{ $.Release.Name }}-%s-%s-%s-%s", {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }}, {{ $.Release.Namespace | quote }}, {{ $.collectorName | quote }}, sys.env("K8S_NODE_NAME"))
-    {{- else }}
+{{- else }}
   id = string.format("{{ $.Release.Name }}-%s-%s-%s", {{ $.Values.cluster.nameFrom | default ($.Values.cluster.name | quote) }}, {{ $.Release.Namespace | quote }}, constants.hostname)
-    {{- end }}
+{{- end }}
+{{- if $remoteConfigBlockNameFrom }}
+  name = {{ $remoteConfigBlockNameFrom }}
+{{- else if ne $remoteConfigBlockName "" }}
+  name = {{ $remoteConfigBlockName | quote }}
+{{- end }}
 {{- if .urlFrom }}
   url = {{ .urlFrom }}
 {{- else }}

@@ -82,8 +82,12 @@ Settings for each primary Alloy instance come from several potential sources, in
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| remoteConfig.collectorId | string | `""` | The collector ID to use when connecting to the remote config server. If not set, a default ID is generated based on the release name, cluster name, namespace, collector name, and node name or hostname. |
+| remoteConfig.collectorIdFrom | string | `""` | Raw config for accessing the collector ID. Lets you insert raw Alloy references so you can load the collector ID from any number of places, such as loading values from environment variables. For example: `collectorIdFrom: sys.env("GCLOUD_FM_COLLECTOR_ID")` |
 | remoteConfig.enabled | bool | `false` | Enable fetching configuration from a remote config server. |
 | remoteConfig.extraAttributes | object | `{}` | Attributes to be added to this collector when requesting configuration. |
+| remoteConfig.name | string | `""` | A human-readable name for this collector when using remote configuration. If not set, defaults to an empty string. |
+| remoteConfig.nameFrom | string | `""` | Raw config for accessing the collector name. Lets you insert raw Alloy references so you can load the name from any number of places, such as loading values from environment variables. |
 | remoteConfig.noProxy | string | `""` | Comma-separated list of IP addresses, CIDR notations, and domain names to exclude from proxying. |
 | remoteConfig.pollFrequency | string | `"30s"` | The frequency at which to poll the remote config server for updates. |
 | remoteConfig.presetsAttribute | bool | `true` | Sent a `presets` attribute which is a comma-separated list of this Alloy instance's presets. |
