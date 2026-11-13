@@ -1,6 +1,7 @@
 should create hook when operator is deployed and readiness is enabled:
   1: |
-    backoffLimit: 3
+    activeDeadlineSeconds: 180
+    backoffLimit: 0
     template:
       metadata:
         labels:
@@ -37,7 +38,8 @@ should create hook when operator is deployed and readiness is enabled:
               - delete
               - alloy/RELEASE-NAME-alloy-metrics
               - --ignore-not-found=true
-              - --wait=false
+              - --wait=true
+              - --timeout=120s
             command:
               - kubectl
             image: registry.k8s.io/kubectl:v1.34.9
@@ -57,4 +59,3 @@ should create hook when operator is deployed and readiness is enabled:
           kubernetes.io/os: linux
         restartPolicy: Never
         serviceAccountName: release-name-k8s-monitoring-remove-alloy-and-finalizer
-    ttlSecondsAfterFinished: 300

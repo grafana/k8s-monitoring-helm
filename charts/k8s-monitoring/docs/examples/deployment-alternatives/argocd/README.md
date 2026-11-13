@@ -43,6 +43,8 @@ kind: Application
 metadata:
   name: k8s-monitoring-application
   namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
 operation:
   sync:
     syncStrategy:

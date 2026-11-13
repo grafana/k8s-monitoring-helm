@@ -20,11 +20,16 @@ Steps:
 
 ### Remove Alloy and Finalizer
 
-This pre-delete hook removes the Alloy instnaces that were created by this Helm chart, it waits for them to be removed,
-and then removes the finalizer from the Alloy Operator Deployment. This allows for the Helm chart deletion to proceed.
+This pre-delete hook requests deletion of the Alloy instances created by this Helm chart, waits for their deletion with
+a bounded timeout, and then removes the finalizer from the Alloy Operator Deployment. If Alloy instances remain when the
+timeout expires, the hook fails and leaves the operator Deployment finalizer in place so the operator can continue
+cleanup.
 
 Steps:
 
 1.  Deletes all Alloy instances created by this Helm chart
-2.  Waits for all Alloy instances to be deleted
-3.  Adds a finalizer to the Alloy Operator Deployment
+2.  Waits up to `alloy-operator.waitForAlloyRemoval.timeoutSeconds` for all Alloy instances to be deleted
+3.  Removes the finalizer from the Alloy Operator Deployment
+
+The hook Job has a deadline 60 seconds longer than the Alloy deletion timeout. Configure the deletion timeout below
+the Helm or Flux uninstall timeout so the hook can fail with diagnostics before its caller times out.

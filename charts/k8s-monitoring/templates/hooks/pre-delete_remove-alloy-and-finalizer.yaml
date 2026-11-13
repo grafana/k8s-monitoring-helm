@@ -1,6 +1,8 @@
 {{- if and (index .Values "alloy-operator").deploy (index .Values "alloy-operator").waitForAlloyRemoval.enabled }}
 {{- $jobName := (printf "%s-remove-alloy-and-finalizer" (include "helper.fullname" .)) | trunc 63 | trimSuffix "-" }}
 {{- $jobSettings := (index .Values "alloy-operator").waitForAlloyRemoval -}}
+{{- $timeoutSeconds := int $jobSettings.timeoutSeconds -}}
+{{- $activeDeadlineSeconds := add $timeoutSeconds 60 -}}
 {{- if $jobSettings.securityContext }}
 {{- if eq $jobSettings.securityContext.runAsUser nil }}
   {{- /* Fixes an issue where this wouldn't remove, but instead set it to `null` */}}
@@ -55,10 +57,11 @@ metadata:
     helm.sh/chart: {{ include "helper.chart" . }}
   annotations:
     helm.sh/hook: pre-delete
+    helm.sh/hook-weight: "0"
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 spec:
-  ttlSecondsAfterFinished: 300
-  backoffLimit: 3
+  activeDeadlineSeconds: {{ $activeDeadlineSeconds }}
+  backoffLimit: 0
   template:
     metadata:
       name: {{ $jobName }}
@@ -103,7 +106,8 @@ spec:
             - alloy/{{ $alloyName }}
           {{- end }}
             - --ignore-not-found=true
-            - --wait=false
+            - --wait=true
+            - --timeout={{ printf "%ds" $timeoutSeconds }}
           {{- with $jobSettings.resources }}
           resources:{{ toYaml . | nindent 12 }}
           {{- end }}
@@ -143,6 +147,7 @@ metadata:
   namespace: {{ include "helper.namespace" . }}
   annotations:
     helm.sh/hook: pre-delete
+    helm.sh/hook-weight: "-5"
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -152,6 +157,7 @@ metadata:
   namespace: {{ include "helper.namespace" . }}
   annotations:
     helm.sh/hook: pre-delete
+    helm.sh/hook-weight: "-5"
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 rules:
   - apiGroups: ["apps"]
@@ -168,6 +174,7 @@ metadata:
   namespace: {{ include "helper.namespace" . }}
   annotations:
     helm.sh/hook: pre-delete
+    helm.sh/hook-weight: "-5"
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 subjects:
   - kind: ServiceAccount

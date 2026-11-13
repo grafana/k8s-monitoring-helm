@@ -1073,6 +1073,7 @@ metadata:
   namespace: default
   annotations:
     helm.sh/hook: pre-delete
+    helm.sh/hook-weight: "-5"
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 ---
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
@@ -1098,6 +1099,7 @@ metadata:
   namespace: default
   annotations:
     helm.sh/hook: pre-delete
+    helm.sh/hook-weight: "-5"
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 rules:
   - apiGroups: ["apps"]
@@ -1134,6 +1136,7 @@ metadata:
   namespace: default
   annotations:
     helm.sh/hook: pre-delete
+    helm.sh/hook-weight: "-5"
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 subjects:
   - kind: ServiceAccount
@@ -1208,10 +1211,11 @@ metadata:
     helm.sh/chart: k8s-monitoring-4.6.0
   annotations:
     helm.sh/hook: pre-delete
+    helm.sh/hook-weight: "0"
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 spec:
-  ttlSecondsAfterFinished: 300
-  backoffLimit: 3
+  activeDeadlineSeconds: 180
+  backoffLimit: 0
   template:
     metadata:
       name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
@@ -1235,7 +1239,8 @@ spec:
             - delete
             - alloy/k8smon-alloy-metrics
             - --ignore-not-found=true
-            - --wait=false
+            - --wait=true
+            - --timeout=120s
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
