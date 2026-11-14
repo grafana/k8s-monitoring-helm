@@ -150,11 +150,18 @@ installing them for a better experience:
 
 The `scripts/helm-with-version` helper downloads and caches the requested Helm client version to `~/.helm_cli_cache`
 before executing it with the arguments you supply. This is useful for testing against multiple Helm releases without
-managing the binaries manually.
+managing the binaries manually. Set `HELM_CLI_CACHE_DIR` to use a different cache directory.
 
 ```bash
 scripts/helm-with-version 3.14.4 version
 scripts/helm-with-version v3.12.0 template k8smon charts/k8s-monitoring -f values.yaml
+```
+
+To use the repository's default Helm version with tools that invoke `helm` themselves, add it to `PATH` for the current
+shell:
+
+```bash
+eval "$(scripts/helm-with-version export "$(cat .helm-version)")"
 ```
 
 If you are going to be running platform tests, you might want to install the following tools:
@@ -167,7 +174,17 @@ If you are going to be running platform tests, you might want to install the fol
     -   `gh release download --repo okd-project/okd -p "openshift-install-mac-arm64*"`
 <!-- textlint-enable no-dead-link -->
 
-Each chart has a Makefile with targets to automate much of the process.
+Each chart has a Makefile with targets to automate much of the process. These Makefiles use the same Helm version as
+CI by default. To test another version for the entire Make invocation, including tools such as `ct`, set
+`HELM_VERSION` explicitly, for example:
+
+```bash
+make -C charts/k8s-monitoring HELM_VERSION=4.1.3 test
+```
+
+The `scripts/bin/helm` entry on the Makefiles' `PATH` is a symlink to `scripts/helm-with-version`. When invoked as
+`helm`, the helper uses `HELM_VERSION` and forwards all arguments to that client. It downloads the client only when
+Helm is invoked.
 
 ## Contributor Guides
 
@@ -244,6 +261,7 @@ chart and runs helm test as well.
 To run the integration tests for the `k8s-monitoring` chart, use the following commands:
 
 ```bash
+eval "$(scripts/helm-with-version export "$(cat .helm-version)")"
 helm-test charts/k8s-monitoring/tests/integration/<test dir>
 ```
 
