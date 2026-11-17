@@ -12,6 +12,7 @@ metadata:
     app.kubernetes.io/version: "1.14.4"
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/beyla/templates/serviceaccount.yaml
 apiVersion: v1
@@ -28,6 +29,7 @@ metadata:
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: rbac
 automountServiceAccountToken: true
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/serviceaccount.yaml
 apiVersion: v1
@@ -76,6 +78,7 @@ metadata:
     control-plane: controller-manager
     app.kubernetes.io/version: "0.3.0"
     app.kubernetes.io/managed-by: Helm
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/webhook/serving-cert-secret.yaml
 # Persistence layer for the controller-managed webhook serving certificate. The
@@ -95,6 +98,7 @@ metadata:
     app.kubernetes.io/version: "0.3.0"
     app.kubernetes.io/managed-by: Helm
 type: Opaque
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/sdk-config.yaml
 apiVersion: v1
@@ -131,6 +135,7 @@ data:
       - python
       - java
       - dotnet
+
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -172,6 +177,15 @@ data:
         "workloadType" = "daemonset",
       }
     }
+
+
+
+
+
+
+
+
+
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -212,6 +226,7 @@ data:
         "workloadType" = "deployment",
       }
     }
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -239,6 +254,7 @@ rules:
       - patch
       - update
       - watch
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-objects.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -276,6 +292,7 @@ rules:
   - apiGroups: ["rbac.authorization.k8s.io"]
     resources: ["clusterroles", "clusterrolebindings", "roles", "rolebindings"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete", "bind", "escalate"]
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/beyla/templates/cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -297,6 +314,7 @@ rules:
   - apiGroups: [ "" ]
     resources: [ "pods", "services", "nodes" ]
     verbs: [ "list", "watch", "get" ]
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -453,6 +471,8 @@ rules:
   resources:
     - volumeattachments
   verbs: ["list", "watch"]
+
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/rbac/manager-rbac.yaml
 # Cluster-wide permissions: resolve pod owner chains, evict pods and trigger
@@ -525,6 +545,7 @@ rules:
   verbs:
   - update
   - patch
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -545,6 +566,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-objects.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -565,6 +587,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/beyla/templates/cluster-role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -587,6 +610,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: k8smon-beyla-cache
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -631,6 +655,7 @@ subjects:
 - kind: ServiceAccount
   name: k8smon-k8s-injection-controller
   namespace: default
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/leader-election.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -676,6 +701,7 @@ rules:
     verbs:
       - create
       - patch
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/rbac/configmap-reader-rbac.yaml
 # Grants the controller get/list/watch on ConfigMaps in the watched namespace
@@ -703,6 +729,7 @@ rules:
   - get
   - list
   - watch
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/rbac/leader-election-rbac.yaml
 # Permissions to perform leader election in the controller's own namespace.
@@ -750,6 +777,7 @@ rules:
   verbs:
   - create
   - patch
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/rbac/manager-rbac.yaml
 # Self-managed webhook cert: the rotator persists the serving cert into a Secret
@@ -784,6 +812,7 @@ rules:
   verbs:
   - get
   - update
+
 ---
 # Source: k8s-monitoring/templates/sdk-injector-rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -800,6 +829,7 @@ rules:
   - apiGroups: [""]
     resources: ["configmaps"]
     verbs: ["get", "create", "update"]
+
 ---
 # Source: k8s-monitoring/templates/sdk-injector-rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -816,6 +846,7 @@ rules:
   - apiGroups: [""]
     resources: ["configmaps"]
     verbs: ["get", "create", "update"]
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/leader-election.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -837,6 +868,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/rbac/configmap-reader-rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -859,6 +891,7 @@ subjects:
 - kind: ServiceAccount
   name: k8smon-k8s-injection-controller
   namespace: default
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/rbac/leader-election-rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -881,6 +914,7 @@ subjects:
 - kind: ServiceAccount
   name: k8smon-k8s-injection-controller
   namespace: default
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/rbac/manager-rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -903,6 +937,7 @@ subjects:
 - kind: ServiceAccount
   name: k8smon-k8s-injection-controller
   namespace: default
+
 ---
 # Source: k8s-monitoring/templates/sdk-injector-rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -923,6 +958,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-daemonset
     namespace: default
+
 ---
 # Source: k8s-monitoring/templates/sdk-injector-rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -943,6 +979,7 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-deployment
     namespace: default
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/service.yaml
 apiVersion: v1
@@ -970,6 +1007,7 @@ spec:
   selector:
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/beyla/templates/cache-service.yaml
 apiVersion: v1
@@ -993,6 +1031,7 @@ spec:
       name: grpc
   selector:
     app.kubernetes.io/name: beyla-k8s-cache
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/service.yaml
 apiVersion: v1
@@ -1020,6 +1059,7 @@ spec:
   selector:    
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/node-exporter/templates/service.yaml
 apiVersion: v1
@@ -1046,6 +1086,7 @@ spec:
   selector:
     app.kubernetes.io/name: node-exporter
     app.kubernetes.io/instance: k8smon
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/webhook/service.yaml
 apiVersion: v1
@@ -1069,6 +1110,7 @@ spec:
     app.kubernetes.io/name: k8s-injection-controller
     app.kubernetes.io/instance: k8smon
     control-plane: controller-manager
+
 ---
 # Source: k8s-monitoring/templates/receiver-service.yaml
 apiVersion: v1
@@ -1103,6 +1145,7 @@ spec:
       targetPort: 4318
       protocol: TCP
       appProtocol: http
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/node-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -1236,6 +1279,7 @@ spec:
         - name: root
           hostPath:
             path: /
+
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/deployment.yaml
 apiVersion: apps/v1
@@ -1307,6 +1351,7 @@ spec:
             readOnlyRootFilesystem: true
       nodeSelector:
         kubernetes.io/os: linux
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/beyla/templates/cache-deployment.yaml
 apiVersion: apps/v1
@@ -1442,6 +1487,7 @@ spec:
           readOnlyRootFilesystem: true
       nodeSelector:
         kubernetes.io/os: linux
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/deployment.yaml
 apiVersion: apps/v1
@@ -1572,6 +1618,7 @@ spec:
         - name: sdk-config
           configMap:
             name: k8smon-k8s-injection-controller-sdk-config
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/webhook/webhook-configuration.yaml
 apiVersion: admissionregistration.k8s.io/v1
@@ -1628,6 +1675,7 @@ webhooks:
     - CREATE
     resources:
     - pods
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/sdkInjector/templates/webhook/webhook-configuration.yaml
 apiVersion: admissionregistration.k8s.io/v1
@@ -1670,6 +1718,7 @@ webhooks:
     - UPDATE
     resources:
     - configmaps
+
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
@@ -1762,6 +1811,7 @@ spec:
   crds:
     create: false
   nameOverride: alloy-daemonset
+
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
@@ -1842,6 +1892,7 @@ metadata:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
     "helm.sh/hook-weight": "5"
+
 ---
 # Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
 apiVersion: v1
@@ -1853,6 +1904,7 @@ metadata:
     helm.sh/hook: pre-delete
     helm.sh/hook-weight: "-5"
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+
 ---
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1868,6 +1920,7 @@ rules:
   - apiGroups: ["apps"]
     resources: ["deployments"]
     verbs: ["get", "list", "watch", "patch"]
+
 ---
 # Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1886,6 +1939,7 @@ rules:
   - apiGroups: ["collectors.grafana.com"]
     resources: ["alloys"]
     verbs: ["get", "list", "watch", "delete"]
+
 ---
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1905,6 +1959,7 @@ roleRef:
   kind: Role
   name: k8smon-k8s-monitoring-add-finalizer
   apiGroup: rbac.authorization.k8s.io
+
 ---
 # Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1924,6 +1979,7 @@ roleRef:
   kind: Role
   name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
   apiGroup: rbac.authorization.k8s.io
+
 ---
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
 apiVersion: batch/v1
@@ -1976,6 +2032,7 @@ spec:
             runAsUser: 4242
             seccompProfile:
               type: RuntimeDefault
+
 ---
 # Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
 apiVersion: batch/v1
@@ -2052,3 +2109,4 @@ spec:
             runAsUser: 4242
             seccompProfile:
               type: RuntimeDefault
+
