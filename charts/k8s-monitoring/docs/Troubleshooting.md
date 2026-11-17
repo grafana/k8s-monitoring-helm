@@ -128,6 +128,6 @@ Keep the rest of your intended `telemetryServices.*` overrides in the same deplo
 
 ### References
 
-- [grafana/k8s-monitoring-helm#3200](https://github.com/grafana/k8s-monitoring-helm/issues/3200)
-- [helm/helm#32132](https://github.com/helm/helm/issues/32132)
-- [helm/helm#32565](https://github.com/helm/helm/issues/32565)
+*   [grafana/k8s-monitoring-helm#3200](https://github.com/grafana/k8s-monitoring-helm/issues/3200)
+*   [helm/helm#32132](https://github.com/helm/helm/issues/32132)
+*   [helm/helm#32565](https://github.com/helm/helm/issues/32565)
