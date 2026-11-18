@@ -44,6 +44,7 @@ data:
   tenantId: "MQ=="
   username: "bG9raQ=="
   password: "bG9raXBhc3N3b3Jk"
+
 ---
 # Source: k8s-monitoring/templates/destination_secret.yaml
 apiVersion: v1
@@ -299,6 +300,17 @@ data:
       name      = "localloki-k8smon-k8s-monitoring"
       namespace = "default"
     } // remote.kubernetes.secret "localloki"
+
+
+
+
+      
+      
+
+
+
+
+
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -810,6 +822,17 @@ data:
       name      = "localprometheus-k8smon-k8s-monitoring"
       namespace = "default"
     } // remote.kubernetes.secret "localprometheus"
+
+
+
+
+      
+      
+
+
+
+
+
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -1032,6 +1055,7 @@ data:
       name      = "localprometheus-k8smon-k8s-monitoring"
       namespace = "default"
     } // remote.kubernetes.secret "localprometheus"
+
 ---
 # Source: k8s-monitoring/templates/release-info.yaml
 apiVersion: v1
@@ -1061,6 +1085,9 @@ data:
     grafana_kubernetes_monitoring_collector_info{kind="statefulset", name="alloy-metrics", presets="clustered,statefulset", replicas="1", type="alloy"} 1
     grafana_kubernetes_monitoring_collector_info{kind="deployment", name="alloy-singleton", presets="singleton", replicas="1", type="alloy"} 1
     # EOF
+    
+
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1217,6 +1244,8 @@ rules:
   resources:
     - volumeattachments
   verbs: ["list", "watch"]
+
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1267,6 +1296,7 @@ spec:
   selector:    
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/node-exporter/templates/service.yaml
 apiVersion: v1
@@ -1293,6 +1323,7 @@ spec:
   selector:
     app.kubernetes.io/name: node-exporter
     app.kubernetes.io/instance: k8smon
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/node-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -1426,6 +1457,7 @@ spec:
         - name: root
           hostPath:
             path: /
+
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/deployment.yaml
 apiVersion: apps/v1
@@ -1519,6 +1551,7 @@ spec:
           readOnlyRootFilesystem: true
       nodeSelector:
         kubernetes.io/os: linux
+
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
@@ -1559,6 +1592,7 @@ spec:
   image:
     tag: v1.21.3
   nameOverride: alloy-logs
+
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
@@ -1597,6 +1631,7 @@ spec:
   image:
     tag: v1.21.3
   nameOverride: alloy-metrics
+
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1

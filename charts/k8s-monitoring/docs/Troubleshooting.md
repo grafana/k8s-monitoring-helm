@@ -73,3 +73,61 @@ Make sure only one Alloy Operator manages a given `Alloy` instance:
     ```
 
 Two operators that are each namespace-scoped to different namespaces do not conflict.
+
+## Helm 4.2+ and null overrides for telemetry services in a wrapper chart
+
+Helm 4.2 introduced a regression where `null` overrides in a parent chart's bundled `values.yaml` are ignored for
+always-enabled subcharts ([helm/helm#32132](https://github.com/helm/helm/issues/32132)). In this chart, the affected
+case is the `telemetryServices` subchart when you wrap `k8s-monitoring` as a dependency of your own (umbrella) chart.
+
+### Symptoms
+
+When a wrapper chart's bundled `values.yaml` tries to clear default subchart values by setting them to `null`, for
+example:
+
+```yaml
+# Wrapper chart values.yaml
+k8s-monitoring:
+  telemetryServices:
+    node-exporter:
+      deploy: true
+      securityContext:
+        runAsUser: null
+        runAsGroup: null
+        fsGroup: null
+```
+
+`helm template` / `helm upgrade --install` (Helm >= 4.2) may keep the `telemetryServices` subchart defaults instead of
+applying the `null` overrides (so fields like `securityContext.runAsUser` remain at their default values).
+
+### Workaround
+
+Re-declare the affected telemetry service deployment flag at install/upgrade time so Helm applies the overrides. For
+example, pass it with `--set`:
+
+```bash
+helm upgrade --install monitoring ./wrapper-chart \
+  --set k8s-monitoring.telemetryServices.node-exporter.deploy=true
+```
+
+Or include it in a values file used at deploy time:
+
+```yaml
+# enable-node-exporter-again.yaml
+k8s-monitoring:
+  telemetryServices:
+    node-exporter:
+      deploy: true
+```
+
+```bash
+helm upgrade --install monitoring ./wrapper-chart -f enable-node-exporter-again.yaml
+```
+
+Keep the rest of your intended `telemetryServices.*` overrides in the same deploy-time values if needed.
+
+### References
+
+*   [grafana/k8s-monitoring-helm#3200](https://github.com/grafana/k8s-monitoring-helm/issues/3200)
+*   [helm/helm#32132](https://github.com/helm/helm/issues/32132)
+*   [helm/helm#32565](https://github.com/helm/helm/issues/32565)
