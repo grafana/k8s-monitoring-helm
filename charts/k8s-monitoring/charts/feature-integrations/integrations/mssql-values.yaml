@@ -1,0 +1,294 @@
+---
+# -- Name for this MSSQL instance.
+# @section -- General Settings
+name: ""
+
+# -- The collector to assign this instance to. When empty, the feature-level `integrations.collector` is used.
+# @section -- General Settings
+collector: ""
+
+# -- The value of the job label for scraped metrics and logs
+# @section -- General Settings
+jobLabel: integration/mssql
+
+# Settings for metrics collection
+metrics:
+  # -- Whether to enable metrics collection from MSSQL Exporter.
+  # @section -- Metrics Settings
+  enabled: true
+
+  # -- How frequently to scrape metrics from MSSQL Exporter.
+  # @default -- `60s`
+  # @section -- Scrape Settings
+  scrapeInterval: ""
+
+  # -- The timeout for scraping metrics from MSSQL Exporter.
+  # @default -- `10s`
+  # @section -- Scrape Settings
+  scrapeTimeout: ""
+
+  # -- (number) Sets the max_cache_size for prometheus.relabel component.
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.maxCacheSize`.
+  # @default -- `100000`
+  # @section -- Metric Processing Settings
+  maxCacheSize:
+
+  # -- Sets the cache_ttl for the prometheus.relabel component, which switches its relabeling cache to TTL mode.
+  # Mutually exclusive with `maxCacheSize`.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)).
+  # Overrides `global.cacheTTL`.
+  # @section -- Metric Processing Settings
+  cacheTTL: ""
+
+  # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+  tuning:
+    # -- Metrics to keep. Can use regular expressions.
+    # @section -- Metric Processing Settings
+    includeMetrics: []
+    # -- Metrics to drop. Can use regular expressions.
+    # @section -- Metric Processing Settings
+    excludeMetrics: []
+
+  # -- Rule blocks to be added to the prometheus.relabel component for MSSQL metrics.
+  # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block))
+  # @section -- Metric Processing Settings
+  extraMetricProcessingRules: ""
+
+# Settings for log gathering using the Pod Logs feature
+logs:
+  # -- Whether to enable special processing of MSSQL pod logs.
+  # @section -- Logs Settings
+  enabled: true
+
+  # -- The namespaces to look for MSSQL instances in.
+  # Will automatically look for MSSQL instances in all namespaces unless specified here
+  # @section -- Discovery Settings
+  namespaces: []
+
+  # -- Discover MSSQL instances based on label selectors. At least one is required.
+  # @section -- Discovery Settings
+  labelSelectors: {}
+
+# Settings for the Alloy embedded MSSQL Exporter
+exporter:
+  # -- The connection string to use for the MSSQL Exporter (`sqlserver://` URL). Takes precedence over `dataSource` when set.
+  # @section -- Exporter Settings
+  dataSourceName: ""
+
+  # -- Raw Alloy config for the exporter `connection_string` argument. Use this to get the value from other Alloy components.
+  # @section -- Exporter Settings
+  dataSourceNameFrom: ""
+
+  # The data source to use for building the MSSQL Exporter connection string.
+  dataSource:
+    # -- The MSSQL host to connect to.
+    # @section -- Exporter Settings
+    host: ""
+    # -- The MSSQL port to connect to.
+    # @section -- Exporter Settings
+    port: 1433
+    # -- The MSSQL database to connect to. When empty, the server default database is used.
+    # @section -- Exporter Settings
+    database: ""
+    auth:
+      # -- The username to use for the MSSQL connection.
+      # @section -- Exporter Settings
+      username: ""
+      # -- The key for storing the username in the secret.
+      # @section -- Exporter Settings
+      usernameKey: "username"
+      # -- Raw Alloy config for accessing the username.
+      # @section -- Exporter Settings
+      usernameFrom: ""
+      # -- The password to use for the MSSQL connection.
+      # @section -- Exporter Settings
+      password: ""
+      # -- The key for storing the password in the secret.
+      # @section -- Exporter Settings
+      passwordKey: "password"
+      # -- Raw Alloy config for accessing the password.
+      # @section -- Exporter Settings
+      passwordFrom: ""
+
+    # Connection string query parameters for `sqlserver://` URLs.
+    params:
+      # -- Encrypt the connection (`true`/`false`/`disable`).
+      # @section -- Exporter Settings
+      encrypt: ""
+      # -- Trust the server certificate (`true`/`false`).
+      # @section -- Exporter Settings
+      trustServerCertificate: ""
+      # -- Expected host name in the server certificate.
+      # @section -- Exporter Settings
+      hostNameInCertificate: ""
+      # -- Authentication mode (for example `ntlm` or `winsspi`).
+      # @section -- Exporter Settings
+      authenticator: ""
+      # -- Application name reported to SQL Server.
+      # @section -- Exporter Settings
+      appName: ""
+      # -- Additional connection string query parameters as key/value pairs.
+      # @section -- Exporter Settings
+      extra: {}
+
+  # -- A name for the connection. When set, the exporter emits `up` and `scrape_duration_seconds` metrics for the connection.
+  # @section -- Exporter Settings
+  connectionName: ""
+
+  # -- (number) Maximum number of idle connections in the connection pool.
+  # @default -- `3`
+  # @section -- Exporter Settings
+  maxIdleConnections:
+
+  # -- (number) Maximum number of open connections in the connection pool.
+  # @default -- `3`
+  # @section -- Exporter Settings
+  maxOpenConnections:
+
+  # -- Maximum lifetime of a connection. `0s` keeps connections forever.
+  # @section -- Exporter Settings
+  maxConnectionLifetime: ""
+
+  # -- Query timeout for each scrape.
+  # @default -- `10s`
+  # @section -- Exporter Settings
+  timeout: ""
+
+  # -- Collector configuration YAML that maps MSSQL queries to custom Prometheus metrics.
+  # @section -- Exporter Settings
+  queryConfig: ""
+
+  # -- Raw Alloy config for the exporter `query_config` argument (for example from another component export).
+  # @section -- Exporter Settings
+  queryConfigFrom: ""
+
+# Capture table, schema, and query information for the Database Observability feature in Grafana Cloud.
+databaseObservability:
+  # -- Whether to gather table, schema, and query information from the database. Requires exporter to be enabled.
+  # @section -- Database Observability
+  enabled: false
+
+  # -- Additional static labels to add to both metrics and logs produced by Database Observability for this instance.
+  # Keys are label names, values are label values. The reserved labels `job`, `instance`, and `dsn` cannot be overridden.
+  # @section -- Database Observability
+  labels: {}
+
+  # -- Exclude query samples from sessions opened with the login that Alloy uses.
+  # @section -- Database Observability
+  excludeCurrentUser: true
+
+  # -- A list of schemas to exclude from monitoring, in addition to always-excluded system schemas.
+  # @section -- Database Observability
+  excludeSchemas: []
+
+  # -- A list of databases to exclude from monitoring, in addition to always-excluded system databases.
+  # @section -- Database Observability
+  excludeDatabases: []
+
+  # -- A list of original SQL Server login names to exclude from query samples.
+  # @section -- Database Observability
+  excludeUsers: []
+
+  # -- Timeout for each SQL statement used by Database Observability collectors.
+  # @default -- `10s`
+  # @section -- Database Observability
+  queryTimeout: ""
+
+  # Cloud provider configuration for the database.
+  # @section -- Database Observability
+  cloudProvider:
+    # AWS configuration.
+    aws:
+      # -- ARN of the AWS RDS instance.
+      # @section -- Database Observability - Cloud Provider
+      arn: ""
+    # Azure configuration.
+    azure:
+      # -- The Subscription ID for your Azure account.
+      # @section -- Database Observability - Cloud Provider
+      subscriptionId: ""
+      # -- The Resource Group that holds the database resource.
+      # @section -- Database Observability - Cloud Provider
+      resourceGroup: ""
+      # -- The database server name.
+      # @section -- Database Observability - Cloud Provider
+      serverName: ""
+    # GCP configuration.
+    gcp:
+      # -- The Cloud SQL instance connection name in the format `project:region:instance`.
+      # @section -- Database Observability - Cloud Provider
+      connectionName: ""
+
+  collectors:
+    # Collect explain plans information.
+    explainPlans:
+      # -- Enable collection of explain plans information.
+      # @section -- Database Observability - Collectors
+      enabled: true
+      # -- How frequently to check for changed execution plans.
+      # @section -- Database Observability - Collectors
+      collectInterval: 1m
+
+    # Collect query text and parsed table names from Query Store.
+    queryDetails:
+      # -- Enable collection of query information.
+      # @section -- Database Observability - Collectors
+      enabled: true
+      # -- How frequently to collect query information from the database.
+      # @section -- Database Observability - Collectors
+      collectInterval: 1m
+
+    # Collect per-query executions, errors, and duration counters from Query Store.
+    queryMetrics:
+      # -- Enable collection of query metrics from Query Store.
+      # @section -- Database Observability - Collectors
+      enabled: true
+      # -- How frequently to collect query metrics from the database.
+      # @section -- Database Observability - Collectors
+      collectInterval: 1m
+      # -- (number) Maximum number of queries to track, ranked by recent duration.
+      # @default -- `50`
+      # @section -- Database Observability - Collectors
+      statementsLimit:
+      # -- Only queries executed within this window are eligible for tracking.
+      # @section -- Database Observability - Collectors
+      statementsLookback: 1h
+
+    # Collect query samples and wait events for tracked queries.
+    querySamples:
+      # -- Enable collection of query samples.
+      # @section -- Database Observability - Collectors
+      enabled: true
+      # -- How frequently to collect query samples from the database.
+      # @section -- Database Observability - Collectors
+      collectInterval: 10s
+      # -- Collect unredacted SQL query text including parameters.
+      # @section -- Database Observability - Collectors
+      disableQueryRedaction: false
+
+    # Collect schemas and tables from information_schema.
+    schemaDetails:
+      # -- Enable collection of schemas and tables from information_schema.
+      # @section -- Database Observability - Collectors
+      enabled: true
+      # -- How frequently to collect schemas and tables from information_schema.
+      # @section -- Database Observability - Collectors
+      collectInterval: 1m
+
+secret:
+  # -- (bool) Whether to create a secret to store credentials for this MSSQL integration instance.
+  # @default -- `true`
+  # @section -- Secret
+  create:
+  # -- If true, skip secret creation and embed the credentials directly into the configuration.
+  # @section -- Secret
+  embed: false
+  # -- The name of the secret to create.
+  # @section -- Secret
+  name: ""
+  # -- The namespace for the secret.
+  # @section -- Secret
+  namespace: ""

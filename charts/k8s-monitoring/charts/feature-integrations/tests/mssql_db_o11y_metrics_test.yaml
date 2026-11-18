@@ -1,0 +1,247 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Integration - MSSQL - Database Observability Metrics
+templates:
+  - test/configmap.yaml
+  - mssql-secret.yaml
+tests:
+  - it: should create the MSSQL config
+    set:
+      testing: {enabled: true}
+      mssql:
+        instances:
+          - name: my-database
+            exporter:
+              dataSource:
+                host: my-db.mssql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            databaseObservability:
+              enabled: true
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
+      - template: mssql-secret.yaml
+        documentIndex: 0
+        containsDocument:
+          apiVersion: v1
+          kind: Secret
+          name: my-database-release-name-feature-integrations
+          namespace: NAMESPACE
+      - template: mssql-secret.yaml
+        equal:
+          path: stringData.username
+          value: db-admin
+      - template: mssql-secret.yaml
+        equal:
+          path: stringData.password
+          value: db-password
+
+  - it: works with multiple MSSQL Instances
+    set:
+      testing: {enabled: true}
+      mssql:
+        instances:
+          - name: test-db
+            exporter:
+              dataSource:
+                host: database.test.svc
+            databaseObservability:
+              enabled: true
+            logs: {enabled: false}
+          - name: staging-db
+            exporter:
+              dataSourceName: "sqlserver://sa:password@database.staging.svc:1433?encrypt=disable"
+            databaseObservability:
+              enabled: true
+            logs: {enabled: false}
+          - name: prod-db
+            exporter:
+              dataSource:
+                host: database.prod.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            databaseObservability:
+              enabled: true
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
+      - template: mssql-secret.yaml
+        hasDocuments:
+          count: 1  # Only one secret should be created
+      - template: mssql-secret.yaml
+        documentIndex: 0
+        containsDocument:
+          apiVersion: v1
+          kind: Secret
+          name: prod-db-release-name-feature-integrations
+          namespace: NAMESPACE
+      - template: mssql-secret.yaml
+        equal:
+          path: stringData.username
+          value: db-admin
+      - template: mssql-secret.yaml
+        equal:
+          path: stringData.password
+          value: db-password
+
+  - it: renders sql_server db o11y options
+    set:
+      testing: {enabled: true}
+      mssql:
+        instances:
+          - name: azure-db
+            exporter:
+              dataSource:
+                host: azure-db.mssql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            databaseObservability:
+              enabled: true
+              excludeCurrentUser: false
+              excludeSchemas: ["reporting"]
+              excludeDatabases: ["temp_reporting"]
+              excludeUsers: ["readonly"]
+              queryTimeout: 20s
+              cloudProvider:
+                azure:
+                  subscriptionId: "sub-123"
+                  resourceGroup: "rg-prod"
+                  serverName: "my-azure-server"
+              collectors:
+                queryDetails:
+                  enabled: true
+                  collectInterval: 2m
+                queryMetrics:
+                  enabled: true
+                  collectInterval: 30s
+                  statementsLimit: 100
+                  statementsLookback: 2h
+                querySamples:
+                  enabled: true
+                  collectInterval: 15s
+                  disableQueryRedaction: true
+                schemaDetails:
+                  enabled: false
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
+  - it: keeps prometheus.relabel when metrics tuning is set under db o11y
+    set:
+      testing: {enabled: true}
+      mssql:
+        instances:
+          - name: my-database
+            exporter:
+              dataSource:
+                host: my-db.mssql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            databaseObservability:
+              enabled: true
+            metrics:
+              tuning:
+                excludeMetrics: ["mssql_deadlocks_.*"]
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
+  - it: respects an explicit jobLabel override under db o11y
+    set:
+      testing: {enabled: true}
+      mssql:
+        instances:
+          - name: my-database
+            jobLabel: my/custom-job
+            exporter:
+              dataSource:
+                host: my-db.mssql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            databaseObservability:
+              enabled: true
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
+  - it: adds custom labels to db o11y metrics and logs
+    set:
+      testing: {enabled: true}
+      mssql:
+        instances:
+          - name: my-database
+            exporter:
+              dataSource:
+                host: my-db.mssql.svc
+            databaseObservability:
+              enabled: true
+              labels:
+                environment: production
+                team: payments
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
+  - it: rejects reserved db o11y labels
+    set:
+      testing: {enabled: true}
+      mssql:
+        instances:
+          - name: my-database
+            exporter:
+              dataSource:
+                host: my-db.mssql.svc
+            databaseObservability:
+              enabled: true
+              labels:
+                job: custom
+            logs: {enabled: false}
+    asserts:
+      - template: test/configmap.yaml
+        failedTemplate:
+          errorMessage: |-
+            The label "job" in databaseObservability.labels for instance "my-database" is reserved and cannot be overridden.
+            Reserved labels: job, instance, dsn.
+            Use `jobLabel` to change the job value.
+
+  - it: requires metrics
+    set:
+      testing: {enabled: true}
+      mssql:
+        instances:
+          - name: test-database
+            metrics: {enabled: false}
+            logs: {enabled: false}
+            databaseObservability:
+              enabled: true
+    asserts:
+      - template: test/configmap.yaml
+        failedTemplate:
+          errorMessage: |-
+            Enabling Database Observability for MSSQL requires exporter metrics.
+            Please set:
+            integrations:
+              mssql:
+                instances:
+                  - name: test-database
+                    metrics:
+                      enabled: true

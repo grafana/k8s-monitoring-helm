@@ -8,6 +8,7 @@
 - istio
 - loki
 - mimir
+- mssql
 - mysql
 - postgresql
 - tempo

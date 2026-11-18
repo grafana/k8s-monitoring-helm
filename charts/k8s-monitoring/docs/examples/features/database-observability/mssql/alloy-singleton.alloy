@@ -1,0 +1,220 @@
+declare "mssql_integration" {
+  argument "metrics_destinations" {
+    comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+  }
+  argument "logs_destinations" {
+    comment = "Must be a list of log destinations where collected logs should be forwarded to"
+  }
+
+  remote.kubernetes.secret "test_db" {
+    name      = "test-database-mssql"
+    namespace = "mssql"
+  } // remote.kubernetes.secret "test_db"
+
+  prometheus.exporter.mssql "test_db" {
+    connection_string = string.format("sqlserver://%s:%s@%s:%d?database=testdb&encrypt=disable",
+      encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_db.data["mssql-username"])),
+      encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_db.data["mssql-password"])),
+      "test-database-mssql.mssql.svc",
+      1433,
+    )
+  }
+
+  database_observability.sql_server "test_db" {
+    targets = prometheus.exporter.mssql.test_db.targets
+    data_source_name = string.format("sqlserver://%s:%s@%s:%d?database=testdb&encrypt=disable",
+      encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_db.data["mssql-username"])),
+      encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_db.data["mssql-password"])),
+      "test-database-mssql.mssql.svc",
+      1433,
+    )
+    exclude_current_user = true
+    explain_plans {
+      collect_interval = "1m"
+    }
+    query_details {
+      collect_interval = "1m"
+    }
+    query_metrics {
+      collect_interval = "1m"
+      statements_lookback = "1h"
+    }
+    query_samples {
+      collect_interval = "10s"
+      disable_query_redaction = false
+    }
+    schema_details {
+      collect_interval = "1m"
+    }
+    enable_collectors = ["explain_plans","query_details","query_metrics","query_samples","schema_details"]
+
+    forward_to = [loki.relabel.database_observability_sqlserver_test_db.receiver]
+  }
+
+  loki.relabel "database_observability_sqlserver_test_db" {
+    forward_to = argument.logs_destinations.value
+    rule {
+      target_label = "job"
+      replacement = "integrations/db-o11y"
+    }
+    rule {
+      source_labels = ["instance"]
+      target_label = "dsn"
+    }
+    rule {
+      target_label = "instance"
+      replacement = "test-db"
+    }
+  }
+
+  discovery.relabel "database_observability_sqlserver_test_db" {
+    targets = database_observability.sql_server.test_db.targets
+    rule {
+      target_label = "job"
+      replacement = "integrations/db-o11y"
+    }
+    rule {
+      source_labels = ["instance"]
+      target_label = "dsn"
+    }
+    rule {
+      target_label = "instance"
+      replacement = "test-db"
+    }
+  }
+  prometheus.scrape "test_db" {
+    targets = discovery.relabel.database_observability_sqlserver_test_db.output
+    clustering {
+      enabled = true
+    }
+
+    scrape_interval = "60s"
+    scrape_timeout = "10s"
+    scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+    scrape_classic_histograms = false
+    scrape_native_histograms = false
+    forward_to = argument.metrics_destinations.value
+  }
+}
+mssql_integration "integration" {
+  metrics_destinations = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+  logs_destinations = [
+    loki.write.loki.receiver,
+  ]
+}
+// Self Reporting
+prometheus.exporter.static "kubernetes_monitoring_telemetry" {
+  text = `
+
+# HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
+# TYPE grafana_kubernetes_monitoring_build_info gauge
+grafana_kubernetes_monitoring_build_info{version="4.6.0", namespace="default"} 1
+# HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
+# TYPE grafana_kubernetes_monitoring_feature_info gauge
+grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="mssql", version="1.0.0"} 1
+grafana_kubernetes_monitoring_feature_info{feature="podLogsViaLoki", version="1.0.0"} 1
+# HELP grafana_kubernetes_monitoring_destination_info_count A metric to report the number of enabled destinations grouped by type and configuration
+# TYPE grafana_kubernetes_monitoring_destination_info_count gauge
+grafana_kubernetes_monitoring_destination_info_count{rules_enabled="false", type="prometheus"} 1
+grafana_kubernetes_monitoring_destination_info_count{type="loki"} 1
+# HELP grafana_kubernetes_monitoring_collector_info A metric to report the collectors of the Kubernetes Monitoring Helm chart
+# TYPE grafana_kubernetes_monitoring_collector_info gauge
+grafana_kubernetes_monitoring_collector_info{kind="daemonset", name="alloy-logs", presets="filesystem-log-reader,daemonset", type="alloy"} 1
+grafana_kubernetes_monitoring_collector_info{kind="deployment", name="alloy-singleton", presets="singleton", replicas="1", type="alloy"} 1
+# EOF
+  `
+} // prometheus.exporter.static "kubernetes_monitoring_telemetry"
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = prometheus.exporter.static.kubernetes_monitoring_telemetry.targets
+  scrape_interval = "60s"
+  clustering {
+    enabled = true
+  }
+  forward_to = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+} // prometheus.scrape "kubernetes_monitoring_telemetry"
+
+
+
+
+
+// Destination: loki (loki)
+otelcol.exporter.loki "loki" {
+  forward_to = [loki.write.loki.receiver]
+} // otelcol.exporter.loki "loki"
+
+loki.write "loki" {
+  endpoint {
+    url = "http://loki.loki.svc:3100/loki/api/v1/push"
+    retry_on_http_429 = true
+    tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+      password = remote.kubernetes.secret.loki.data["password"]
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+  external_labels = {
+    "cluster" = "db-o11y-mssql-test",
+    "k8s_cluster_name" = "db-o11y-mssql-test",
+  }
+} // loki.write "loki"
+
+remote.kubernetes.secret "loki" {
+  name      = "loki-k8smon-k8s-monitoring"
+  namespace = "default"
+} // remote.kubernetes.secret "loki"
+
+
+// Destination: prometheus (prometheus)
+otelcol.exporter.prometheus "prometheus" {
+  add_metric_suffixes = true
+  resource_to_telemetry_conversion = false
+  keep_identifying_resource_attributes = true
+  forward_to = [prometheus.remote_write.prometheus.receiver]
+} // otelcol.exporter.prometheus "prometheus"
+
+prometheus.remote_write "prometheus" {
+  endpoint {
+    url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
+    headers = {
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    send_native_histograms = false
+
+    queue_config {
+      capacity = 10000
+      min_shards = 1
+      max_shards = 50
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "30ms"
+      max_backoff = "5s"
+      retry_on_http_429 = true
+      sample_age_limit = "0s"
+    }
+  }
+
+  wal {
+    truncate_frequency = "2h"
+    min_keepalive_time = "5m"
+    max_keepalive_time = "8h"
+  }
+  external_labels = {
+    "cluster" = "db-o11y-mssql-test",
+    "k8s_cluster_name" = "db-o11y-mssql-test",
+  }
+} // prometheus.remote_write "prometheus"
+

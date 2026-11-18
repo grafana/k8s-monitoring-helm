@@ -1,0 +1,86 @@
+---
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Feature - Integration - MSSQL - Logs
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should add the MSSQL processing stage to the logs config
+    set:
+      testing: {enabled: true}
+      mssql:
+        instances:
+          - name: mssql
+            metrics: {enabled: false}
+            logs:
+              enabled: true
+              labelSelectors:
+                app.kubernetes.io/name: mssql
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: data["logs.alloy"]
+          value: |-
+            // Integration rules
+            discovery.relabel "test" {
+              rule {
+                source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+                separator = ";"
+                regex = "(?:mssql)"
+                target_label = "integration"
+                replacement = "mssql"
+              }
+              rule {
+                source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+                separator = ";"
+                regex = "(?:mssql)"
+                target_label = "job"
+                replacement = "integration/mssql"
+              }
+              rule {
+                source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+                separator = ";"
+                regex = "(?:mssql)"
+                target_label = "instance"
+                replacement = "mssql"
+              }
+            }
+
+            // Processing stages
+            loki.process "test" {
+              // Integration: MSSQL
+              stage.match {
+                selector = "{integration=\"mssql\"}"
+
+                stage.label_drop {
+                  values = ["integration"]
+                }
+              }
+            }
+
+  - it: should allow you to restrict the namespaces for logs
+    set:
+      testing: {enabled: true}
+      mssql:
+        instances:
+          - name: mssql
+            metrics: {enabled: false}
+            logs:
+              enabled: true
+              labelSelectors:
+                app.kubernetes.io/name: mssql
+              namespaces:
+                - k8smon
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["logs.alloy"]
+          pattern: |-
+            \s*rule {
+            \s*  source_labels = \["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name"\]
+            \s*  separator = ";"
+            \s*  regex = "\(\?:k8smon\)\;\(\?:mssql\)"
+            \s*  target_label = "integration"
+            \s*  replacement = "mssql"
+            \s*}
