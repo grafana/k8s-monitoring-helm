@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Use `sys.env()` instead of the deprecated `env()` for the service graph collector's `collector_id` label, so `alloy validate` accepts the config. (#3222) (@nobbs)
+
 ## 4.6.1
 
 *   Improve the behavior of the uninstallation hook, adding a timeout to prevent hanging. (@petewall)

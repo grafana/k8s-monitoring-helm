@@ -149,3 +149,27 @@ tests:
       - equal:
           path: spec.service.clusterIP
           value: None
+
+  - it: labels metrics with the collector pod name through sys.env
+    set:
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+        tempo:
+          type: otlp
+          url: tempo.tempo.svc:4317
+          metrics: {enabled: false}
+          logs: {enabled: false}
+          traces: {enabled: true}
+          processors:
+            serviceGraphMetrics:
+              enabled: true
+    asserts:
+      - matchRegex:
+          path: spec.alloy.configMap.content
+          pattern: 'collector_id = sys\.env\("POD_NAME"\)'
+      # Alloy deprecated the env() stdlib function, and `alloy validate` rejects it.
+      - notMatchRegex:
+          path: spec.alloy.configMap.content
+          pattern: '[^.]env\('
