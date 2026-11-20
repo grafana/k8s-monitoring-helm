@@ -30,7 +30,7 @@
       {{- if eq $dest.type "prometheus" }}
         {{- $defaultValues := "destinations/prometheus-values.yaml" | $.Files.Get | fromYaml }}
         {{- $destWithDefaults := mergeOverwrite (deepCopy $defaultValues) $dest }}
-        {{- $destWithDefaults = set $destWithDefaults "extraLabelsFrom" (dict "collector_id" "env(\"POD_NAME\")") }}
+        {{- $destWithDefaults = set $destWithDefaults "extraLabelsFrom" (dict "collector_id" "sys.env(\"POD_NAME\")") }}
 
         {{- $destinationTarget := include "destinations.prometheus.alloy.otlp.metrics.target" (dict "destination" $destWithDefaults "destinationName" $metricsDestinationName) }}
         {{- $destinationTargets = append $destinationTargets (printf "%s" $destinationTarget) }}
