@@ -10,9 +10,19 @@ loki.process "pod_logs" {
   stage.match {
     selector = {{ $criSelector | quote }}
     // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
+{{- $maxPartialLineSize := int64 .Values.cri.maxPartialLineSize }}
+{{- if and .Values.cri.maxPartialLineSizeTruncate (le $maxPartialLineSize 0) }}
+  {{- fail "Set podLogsViaLoki.cri.maxPartialLineSize to a positive number of bytes when podLogsViaLoki.cri.maxPartialLineSizeTruncate is true." }}
+{{- end }}
     stage.cri {
 {{- if .Values.cri.maxPartialLines }}
       max_partial_lines = {{ .Values.cri.maxPartialLines }}
+{{- end }}
+{{- if gt $maxPartialLineSize 0 }}
+      max_partial_line_size = {{ $maxPartialLineSize }}
+{{- end }}
+{{- if .Values.cri.maxPartialLineSizeTruncate }}
+      max_partial_line_size_truncate = true
 {{- end }}
     }
 
