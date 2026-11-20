@@ -11,6 +11,30 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["module.alloy"]
+  - it: should configure truncation only in the CRI stage
+    set:
+      testing: {enabled: true}
+      cri:
+        maxPartialLineSize: 131072
+        maxPartialLineSizeTruncate: true
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'stage\.cri \{\s*max_partial_lines = 100\s*max_partial_line_size = 131072\s*max_partial_line_size_truncate = true\s*\}'
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'stage\.docker \{\}'
+  - it: should leave truncation off when only the CRI size is set
+    set:
+      testing: {enabled: true}
+      cri.maxPartialLineSize: 131072
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'max_partial_line_size = 131072'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'max_partial_line_size_truncate'
   - it: should allow setting structured metadata
     set:
       testing: {enabled: true}
