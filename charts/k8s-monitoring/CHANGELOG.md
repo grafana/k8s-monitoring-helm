@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Fix the OTLP destination rendering an invalid Alloy config when `processors.batch.enabled` is `false`. (#3220) (@nobbs)
+
 ## 4.6.1
 
 *   Improve the behavior of the uninstallation hook, adding a timeout to prevent hanging. (@petewall)
