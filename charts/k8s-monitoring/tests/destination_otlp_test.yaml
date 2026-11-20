@@ -208,3 +208,35 @@ tests:
           pattern: '\n\}[^\n]*\n(\s*\n)*\s+output \{'
       - matchSnapshot:
           path: data["config.alloy"]
+
+  - it: sends to the memory limiter when the batch processor is disabled
+    set:
+      cluster: {name: test-cluster}
+      collectors: {alloy-singleton: {extraConfig: " ", includeDestinations: ["test"]}}
+      selfReporting: {enabled: false}
+      destinations:
+        test:
+          type: otlp
+          url: https://otlp.example.com
+          processors:
+            batch:
+              enabled: false
+            memoryLimiter:
+              enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: otelcol\.processor\.batch
+      - notMatchRegex:
+          path: data["config.alloy"]
+          pattern: '\n\}[^\n]*\n(\s*\n)*\s+output \{'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'traces = \[otelcol\.processor\.memory_limiter\.test\.input\]'
+      - matchRegex:
+          path: data["config.alloy"]
+          pattern: 'otelcol\.processor\.memory_limiter "test" \{[^}]*output \{\s+metrics = \[otelcol\.exporter\.otlp\.test\.input\]\s+logs = \[otelcol\.exporter\.otlp\.test\.input\]\s+traces = \[otelcol\.exporter\.otlp\.test\.input\]'
+      - matchSnapshot:
+          path: data["config.alloy"]
