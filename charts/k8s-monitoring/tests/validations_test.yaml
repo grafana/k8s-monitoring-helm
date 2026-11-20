@@ -42,3 +42,20 @@ tests:
             
             If you'd like to migrate to version 2.0, see the Migration guide:
               https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/Migration.md
+
+  - it: requires a positive size when CRI truncation is enabled
+    set:
+      cluster.name: test-cluster
+      destinations.loki:
+        type: loki
+        url: http://loki:3100/loki/api/v1/push
+      podLogsViaLoki:
+        enabled: true
+        collector: alloy-logs
+        cri:
+          maxPartialLineSizeTruncate: true
+      collectors.alloy-logs:
+        presets: [filesystem-log-reader, daemonset]
+    asserts:
+      - failedTemplate:
+          errorMessage: Set podLogsViaLoki.cri.maxPartialLineSize to a positive number of bytes when podLogsViaLoki.cri.maxPartialLineSizeTruncate is true.

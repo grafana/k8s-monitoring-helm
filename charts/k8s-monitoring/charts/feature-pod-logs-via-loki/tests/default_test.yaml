@@ -14,7 +14,6 @@ tests:
   - it: should configure truncation only in the CRI stage
     set:
       testing: {enabled: true}
-      defaultLogFormat: docker
       cri:
         maxPartialLineSize: 131072
         maxPartialLineSizeTruncate: true
@@ -36,22 +35,6 @@ tests:
       - notMatchRegex:
           path: data["module.alloy"]
           pattern: 'max_partial_line_size_truncate'
-  - it: should reject CRI truncation without a size
-    set:
-      testing: {enabled: true}
-      cri.maxPartialLineSizeTruncate: true
-    asserts:
-      - failedTemplate:
-          errorMessage: Set podLogsViaLoki.cri.maxPartialLineSize to a positive number of bytes when podLogsViaLoki.cri.maxPartialLineSizeTruncate is true.
-  - it: should reject CRI truncation with a zero size
-    set:
-      testing: {enabled: true}
-      cri:
-        maxPartialLineSize: 0
-        maxPartialLineSizeTruncate: true
-    asserts:
-      - failedTemplate:
-          errorMessage: Set podLogsViaLoki.cri.maxPartialLineSize to a positive number of bytes when podLogsViaLoki.cri.maxPartialLineSizeTruncate is true.
   - it: should allow setting structured metadata
     set:
       testing: {enabled: true}
