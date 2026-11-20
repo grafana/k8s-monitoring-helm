@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Fix the OTLP destination rendering an invalid Alloy config when `processors.batch.enabled` is `false`. The batch processor's `output` block and closing brace were rendered without the component header, so Alloy failed with `expected identifier, got }`. (#3220) (@nobbs)
+
 ## 4.6.1
 
 *   Improve the behavior of the uninstallation hook, adding a timeout to prevent hanging. (@petewall)
