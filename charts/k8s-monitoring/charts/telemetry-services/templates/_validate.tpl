@@ -92,20 +92,71 @@ If a conflict is found, recommend either using the existing Node Exporter or dep
 {{- define "telemetryServices.validate.nodeExporter" }}
 {{- $nodeExporter := index .Values.telemetryServices "node-exporter" }}
 {{- if $nodeExporter.deploy }}
-  {{- $conflictingArgs := list }}
-  {{- range (dig "extraArgs" (list) $nodeExporter) }}
-    {{- if hasPrefix "--collector.filesystem.fs-types-exclude" . }}
-      {{- $conflictingArgs = append $conflictingArgs . }}
-    {{- end }}
-    {{- if hasPrefix "--collector.filesystem.mount-points-exclude" . }}
-      {{- $conflictingArgs = append $conflictingArgs . }}
+  {{- $effectiveArgs := concat (dig "defaultArgs" (list) $nodeExporter) (dig "extraArgs" (list) $nodeExporter) }}
+  {{- $flagValues := dict
+    "fsTypesExcludeSet" false
+    "fsTypesExclude" ""
+    "fsTypesInclude" ""
+    "ignoredFsTypes" ""
+    "mountPointsExcludeSet" false
+    "mountPointsExclude" ""
+    "mountPointsInclude" ""
+    "ignoredMountPoints" ""
+  }}
+  {{- range $i, $arg := $effectiveArgs }}
+    {{- if eq $arg "--collector.filesystem.fs-types-exclude" }}
+      {{- $_ := set $flagValues "fsTypesExcludeSet" true }}
+      {{- if lt (add $i 1) (len $effectiveArgs) }}{{- $_ := set $flagValues "fsTypesExclude" (index $effectiveArgs (add $i 1)) }}{{- end }}
+    {{- else if hasPrefix "--collector.filesystem.fs-types-exclude=" $arg }}
+      {{- $_ := set $flagValues "fsTypesExcludeSet" true }}
+      {{- $_ := set $flagValues "fsTypesExclude" (trimPrefix "--collector.filesystem.fs-types-exclude=" $arg) }}
+    {{- else if eq $arg "--collector.filesystem.fs-types-include" }}
+      {{- if lt (add $i 1) (len $effectiveArgs) }}{{- $_ := set $flagValues "fsTypesInclude" (index $effectiveArgs (add $i 1)) }}{{- end }}
+    {{- else if hasPrefix "--collector.filesystem.fs-types-include=" $arg }}
+      {{- $_ := set $flagValues "fsTypesInclude" (trimPrefix "--collector.filesystem.fs-types-include=" $arg) }}
+    {{- else if eq $arg "--collector.filesystem.ignored-fs-types" }}
+      {{- if lt (add $i 1) (len $effectiveArgs) }}{{- $_ := set $flagValues "ignoredFsTypes" (index $effectiveArgs (add $i 1)) }}{{- end }}
+    {{- else if hasPrefix "--collector.filesystem.ignored-fs-types=" $arg }}
+      {{- $_ := set $flagValues "ignoredFsTypes" (trimPrefix "--collector.filesystem.ignored-fs-types=" $arg) }}
+    {{- else if eq $arg "--collector.filesystem.mount-points-exclude" }}
+      {{- $_ := set $flagValues "mountPointsExcludeSet" true }}
+      {{- if lt (add $i 1) (len $effectiveArgs) }}{{- $_ := set $flagValues "mountPointsExclude" (index $effectiveArgs (add $i 1)) }}{{- end }}
+    {{- else if hasPrefix "--collector.filesystem.mount-points-exclude=" $arg }}
+      {{- $_ := set $flagValues "mountPointsExcludeSet" true }}
+      {{- $_ := set $flagValues "mountPointsExclude" (trimPrefix "--collector.filesystem.mount-points-exclude=" $arg) }}
+    {{- else if eq $arg "--collector.filesystem.mount-points-include" }}
+      {{- if lt (add $i 1) (len $effectiveArgs) }}{{- $_ := set $flagValues "mountPointsInclude" (index $effectiveArgs (add $i 1)) }}{{- end }}
+    {{- else if hasPrefix "--collector.filesystem.mount-points-include=" $arg }}
+      {{- $_ := set $flagValues "mountPointsInclude" (trimPrefix "--collector.filesystem.mount-points-include=" $arg) }}
+    {{- else if eq $arg "--collector.filesystem.ignored-mount-points" }}
+      {{- if lt (add $i 1) (len $effectiveArgs) }}{{- $_ := set $flagValues "ignoredMountPoints" (index $effectiveArgs (add $i 1)) }}{{- end }}
+    {{- else if hasPrefix "--collector.filesystem.ignored-mount-points=" $arg }}
+      {{- $_ := set $flagValues "ignoredMountPoints" (trimPrefix "--collector.filesystem.ignored-mount-points=" $arg) }}
     {{- end }}
   {{- end }}
-  {{- if $conflictingArgs }}
-    {{- $msg := list "" "Node Exporter filesystem exclusion flags must be set through defaultArgs, not extraArgs." }}
-    {{- $msg = append $msg (printf "Found in telemetryServices.node-exporter.extraArgs: %s" (join ", " $conflictingArgs)) }}
-    {{- $msg = append $msg "The Node Exporter chart already supplies these flags in defaultArgs, and extraArgs appends to them." }}
-    {{- $msg = append $msg "Move the flag(s) to telemetryServices.node-exporter.defaultArgs to override the defaults." }}
+  {{- $conflicts := list }}
+  {{- if and (dig "fsTypesExcludeSet" false $flagValues) (ne (dig "ignoredFsTypes" "" $flagValues) "") }}
+    {{- $conflicts = append $conflicts "--collector.filesystem.fs-types-exclude conflicts with deprecated --collector.filesystem.ignored-fs-types" }}
+  {{- end }}
+  {{- if and (ne (dig "fsTypesExclude" "" $flagValues) "") (ne (dig "fsTypesInclude" "" $flagValues) "") }}
+    {{- $conflicts = append $conflicts "--collector.filesystem.fs-types-exclude conflicts with --collector.filesystem.fs-types-include" }}
+  {{- else if and (not (dig "fsTypesExcludeSet" false $flagValues)) (ne (dig "ignoredFsTypes" "" $flagValues) "") (ne (dig "fsTypesInclude" "" $flagValues) "") }}
+    {{- $conflicts = append $conflicts "deprecated --collector.filesystem.ignored-fs-types conflicts with --collector.filesystem.fs-types-include" }}
+  {{- end }}
+  {{- if and (dig "mountPointsExcludeSet" false $flagValues) (ne (dig "ignoredMountPoints" "" $flagValues) "") }}
+    {{- $conflicts = append $conflicts "--collector.filesystem.mount-points-exclude conflicts with deprecated --collector.filesystem.ignored-mount-points" }}
+  {{- end }}
+  {{- if and (ne (dig "mountPointsExclude" "" $flagValues) "") (ne (dig "mountPointsInclude" "" $flagValues) "") }}
+    {{- $conflicts = append $conflicts "--collector.filesystem.mount-points-exclude conflicts with --collector.filesystem.mount-points-include" }}
+  {{- else if and (not (dig "mountPointsExcludeSet" false $flagValues)) (ne (dig "ignoredMountPoints" "" $flagValues) "") (ne (dig "mountPointsInclude" "" $flagValues) "") }}
+    {{- $conflicts = append $conflicts "deprecated --collector.filesystem.ignored-mount-points conflicts with --collector.filesystem.mount-points-include" }}
+  {{- end }}
+  {{- if $conflicts }}
+    {{- $msg := list "" "The effective Node Exporter filesystem arguments contain mutually exclusive flags:" }}
+    {{- range $conflict := $conflicts }}
+      {{- $msg = append $msg (printf "  - %s" $conflict) }}
+    {{- end }}
+    {{- $msg = append $msg "Please remove one flag from each conflicting pair, or set the desired arguments together in telemetryServices.node-exporter.defaultArgs to replace the chart defaults." }}
     {{- fail (join "\n" $msg) }}
   {{- end }}
 {{- end }}
