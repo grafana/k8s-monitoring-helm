@@ -34,7 +34,7 @@ kind: ServiceAccount
 automountServiceAccountToken: true
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-9.0.1
+    helm.sh/chart: kube-state-metrics-9.1.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -54,13 +54,13 @@ metadata:
   name: k8smon-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: node-exporter-5.1.0
+    helm.sh/chart: node-exporter-6.0.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
     app.kubernetes.io/name: node-exporter
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.12.1"
+    app.kubernetes.io/version: "1.13.1"
     release: k8smon
 automountServiceAccountToken: false
 imagePullSecrets:  
@@ -1552,7 +1552,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-9.0.1
+    helm.sh/chart: kube-state-metrics-9.1.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -1855,7 +1855,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-9.0.1
+    helm.sh/chart: kube-state-metrics-9.1.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -2022,7 +2022,7 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-9.0.1
+    helm.sh/chart: kube-state-metrics-9.1.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -2050,13 +2050,13 @@ metadata:
   name: k8smon-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: node-exporter-5.1.0
+    helm.sh/chart: node-exporter-6.0.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
     app.kubernetes.io/name: node-exporter
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.12.1"
+    app.kubernetes.io/version: "1.13.1"
     release: k8smon
 spec:
   type: ClusterIP
@@ -2267,13 +2267,13 @@ metadata:
   name: k8smon-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: node-exporter-5.1.0
+    helm.sh/chart: node-exporter-6.0.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
     app.kubernetes.io/name: node-exporter
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.12.1"
+    app.kubernetes.io/version: "1.13.1"
     release: k8smon
 spec:
   selector:
@@ -2296,7 +2296,7 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: node-exporter
         app.kubernetes.io/part-of: node-exporter
-        app.kubernetes.io/version: 1.12.1
+        app.kubernetes.io/version: 1.13.1
         release: k8smon
     spec:
       automountServiceAccountToken: false
@@ -2308,7 +2308,7 @@ spec:
       serviceAccountName: k8smon-node-exporter
       containers:
         - name: node-exporter
-          image: my.registry.com/prometheus/node-exporter:v1.12.1
+          image: my.registry.com/prometheus/node-exporter:v1.13.1
           imagePullPolicy: IfNotPresent
           args:
             - --path.procfs=/host/proc
@@ -2316,7 +2316,8 @@ spec:
             - --path.rootfs=/host/root
             - --path.udev.data=/host/root/run/udev/data
             - --web.listen-address=[$(HOST_IP)]:9100
-            - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|erofs|sysfs|tracefs|tmpfs|ramfs)$
+            - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|run/containerd/.+|var/lib/docker/.+|var/lib/kubelet/.+)($|/)
+            - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs|erofs|tmpfs|ramfs)$
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -2581,7 +2582,7 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-9.0.1
+    helm.sh/chart: kube-state-metrics-9.1.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics

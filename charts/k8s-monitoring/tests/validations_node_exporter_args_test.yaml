@@ -1,0 +1,60 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Validations - Node Exporter arguments
+templates:
+  - validations.yaml
+tests:
+  - it: rejects the filesystem type exclusion flag in extraArgs
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// test"
+      telemetryServices:
+        node-exporter:
+          deploy: true
+          portConflictCheck: false
+          extraArgs:
+            - --collector.filesystem.fs-types-exclude=^tmpfs$
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Node Exporter filesystem exclusion flags must be set through defaultArgs, not extraArgs.
+            Found in telemetryServices.node-exporter.extraArgs: --collector.filesystem.fs-types-exclude=^tmpfs$
+            The Node Exporter chart already supplies these flags in defaultArgs, and extraArgs appends to them.
+            Move the flag(s) to telemetryServices.node-exporter.defaultArgs to override the defaults.
+
+  - it: rejects the mount point exclusion flag in extraArgs
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// test"
+      telemetryServices:
+        node-exporter:
+          deploy: true
+          portConflictCheck: false
+          extraArgs:
+            - --collector.filesystem.mount-points-exclude=^/proc$
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Node Exporter filesystem exclusion flags must be set through defaultArgs, not extraArgs.
+            Found in telemetryServices.node-exporter.extraArgs: --collector.filesystem.mount-points-exclude=^/proc$
+            The Node Exporter chart already supplies these flags in defaultArgs, and extraArgs appends to them.
+            Move the flag(s) to telemetryServices.node-exporter.defaultArgs to override the defaults.
+
+  - it: allows filesystem exclusion flags in defaultArgs
+    set:
+      cluster: {name: test-cluster}
+      collectors:
+        alloy-metrics:
+          extraConfig: "// test"
+      telemetryServices:
+        node-exporter:
+          deploy: true
+          portConflictCheck: false
+          defaultArgs:
+            - --collector.filesystem.fs-types-exclude=^tmpfs$
+            - --collector.filesystem.mount-points-exclude=^/proc$
+    asserts:
+      - notFailedTemplate: {}

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Update Beyla to 1.16.19, K8s Injection Controller to 0.4.0, kube-state-metrics to 9.1.0, Node Exporter to 6.0.0 (@petewall)
+
 ## 4.6.1
 
 *   Improve the behavior of the uninstallation hook, adding a timeout to prevent hanging. (@petewall)

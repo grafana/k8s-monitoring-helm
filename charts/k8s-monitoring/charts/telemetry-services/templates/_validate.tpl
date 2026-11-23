@@ -91,6 +91,24 @@ If a conflict is found, recommend either using the existing Node Exporter or dep
 */}}
 {{- define "telemetryServices.validate.nodeExporter" }}
 {{- $nodeExporter := index .Values.telemetryServices "node-exporter" }}
+{{- if $nodeExporter.deploy }}
+  {{- $conflictingArgs := list }}
+  {{- range (dig "extraArgs" (list) $nodeExporter) }}
+    {{- if hasPrefix "--collector.filesystem.fs-types-exclude" . }}
+      {{- $conflictingArgs = append $conflictingArgs . }}
+    {{- end }}
+    {{- if hasPrefix "--collector.filesystem.mount-points-exclude" . }}
+      {{- $conflictingArgs = append $conflictingArgs . }}
+    {{- end }}
+  {{- end }}
+  {{- if $conflictingArgs }}
+    {{- $msg := list "" "Node Exporter filesystem exclusion flags must be set through defaultArgs, not extraArgs." }}
+    {{- $msg = append $msg (printf "Found in telemetryServices.node-exporter.extraArgs: %s" (join ", " $conflictingArgs)) }}
+    {{- $msg = append $msg "The Node Exporter chart already supplies these flags in defaultArgs, and extraArgs appends to them." }}
+    {{- $msg = append $msg "Move the flag(s) to telemetryServices.node-exporter.defaultArgs to override the defaults." }}
+    {{- fail (join "\n" $msg) }}
+  {{- end }}
+{{- end }}
 {{- if and $nodeExporter.deploy (dig "portConflictCheck" true $nodeExporter) }}
   {{- $ourPort := dig "service" "port" 9100 $nodeExporter | int }}
   {{- $conflict := dict }}

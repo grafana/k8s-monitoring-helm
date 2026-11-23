@@ -17,9 +17,10 @@ node-exporter:
   portConflictCheck: true
 
   # @ignored
-  extraArgs:
-    # Defaults (https://github.com/prometheus/node_exporter/blob/master/collector/filesystem_linux.go#L38) + tmpfs,ramfs
-    - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|erofs|sysfs|tracefs|tmpfs|ramfs)$
+  # Excluding tmpfs and ramfs along with the defaults (https://github.com/prometheus-community/helm-charts/blob/main/charts/prometheus-node-exporter/values.yaml#L508-L510):
+  defaultArgs:
+    - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|run/containerd/.+|var/lib/docker/.+|var/lib/kubelet/.+)($|/)
+    - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs|erofs|tmpfs|ramfs)$
 
   # Disable the prometheus.io/scrape annotation
   # @ignored
