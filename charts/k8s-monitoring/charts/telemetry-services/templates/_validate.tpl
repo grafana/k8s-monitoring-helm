@@ -185,7 +185,8 @@ If a conflict is found, recommend either using the existing Node Exporter or dep
 
 {{- define "telemetryServices.validate.opencost" }}
 {{- if .Values.telemetryServices.opencost.deploy }}
-  {{- $featureDestinations := include "features.costMetrics.destinations" . | fromYamlArray }}
+  {{- /* Look up metrics destinations directly, so this works whether or not the costMetrics feature is enabled */}}
+  {{- $featureDestinations := include "destinations.get" (dict "destinations" .Values.destinations "type" "metrics" "ecosystem" "prometheus" "filter" (.Values.costMetrics.destinations | default list)) | fromYamlArray }}
 
   {{/*
   The chart mounts an emptyDir at /var/configs (OpenCost's default CONFIG_PATH) so the GCP provider

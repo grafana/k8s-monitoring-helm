@@ -17,6 +17,11 @@ node-exporter:
   portConflictCheck: true
 
   # @ignored
+  # Remove the default args, which were initially set in Node Exporter 6.0.0. This preserves the current behavior.
+  # Note that we will utilize the upstream defaults in k8s-monitoring 5.0.0.
+  defaultArgs: []
+
+  # @ignored
   extraArgs:
     # Defaults (https://github.com/prometheus/node_exporter/blob/master/collector/filesystem_linux.go#L38) + tmpfs,ramfs
     - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|erofs|sysfs|tracefs|tmpfs|ramfs)$
