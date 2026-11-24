@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Fix the memory limiter processor for OTLP destinations and Application Observability failing to load when enabled without a `limit`. It now defaults to `limitPercentage: 80` and `spikeLimitPercentage: 20`, a fixed `limit` takes precedence when set, and the chart fails with guidance if neither is valid. (@TylerHelmuth)
 *   Fix the OpenCost validator to find destinations if the costMetrics feature is not enabled. (@petewall)
 *   Update Beyla to 1.16.19, K8s Injection Controller to 0.4.0, kube-state-metrics to 9.1.0, Node Exporter to 6.0.0 (@petewall)
 

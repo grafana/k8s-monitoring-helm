@@ -530,10 +530,50 @@ otelcol.processor.batch {{ include "helper.alloy_name" $.destinationName | quote
   }
 } {{- if .processors.batch.enabled }} // otelcol.processor.batch "{{ include "helper.alloy_name" $.destinationName }}"{{- end }}
 {{- if .processors.memoryLimiter.enabled }}
+{{- $memoryLimiter := .processors.memoryLimiter }}
+{{- $limit := toString ($memoryLimiter.limit | default "") | trim }}
+{{- $hasLimit := and $limit (not (regexMatch "^0*(\\.0*)?\\s*[a-zA-Z]*$" $limit)) }}
+{{- $limitPercentage := $memoryLimiter.limitPercentage | default 0 | int }}
+{{- $spikeLimitPercentage := $memoryLimiter.spikeLimitPercentage | default 0 | int }}
+{{- if not $hasLimit }}
+  {{- if or (le $limitPercentage 0) (gt $limitPercentage 100) }}
+    {{- $msg := list "" (printf "Destination \"%s\" enables the memory limiter processor without a non-zero limit." $.destinationName) }}
+    {{- $msg = append $msg "Set either a fixed limit or a limitPercentage between 1 and 100. For example:" }}
+    {{- $msg = append $msg "destinations:" }}
+    {{- $msg = append $msg (printf "  %s:" $.destinationName) }}
+    {{- $msg = append $msg "    type: otlp" }}
+    {{- $msg = append $msg "    processors:" }}
+    {{- $msg = append $msg "      memoryLimiter:" }}
+    {{- $msg = append $msg "        enabled: true" }}
+    {{- $msg = append $msg "        limit: 512MiB" }}
+    {{- $msg = append $msg "Or:" }}
+    {{- $msg = append $msg "        limitPercentage: 80" }}
+    {{- $msg = append $msg "        spikeLimitPercentage: 20" }}
+    {{- fail (join "\n" $msg) }}
+  {{- end }}
+  {{- if or (le $spikeLimitPercentage 0) (ge $spikeLimitPercentage $limitPercentage) }}
+    {{- $msg := list "" (printf "Destination \"%s\" has a memory limiter spikeLimitPercentage (%d) that must be at least 1 and less than its limitPercentage (%d)." $.destinationName $spikeLimitPercentage $limitPercentage) }}
+    {{- $msg = append $msg "For example:" }}
+    {{- $msg = append $msg "destinations:" }}
+    {{- $msg = append $msg (printf "  %s:" $.destinationName) }}
+    {{- $msg = append $msg "    type: otlp" }}
+    {{- $msg = append $msg "    processors:" }}
+    {{- $msg = append $msg "      memoryLimiter:" }}
+    {{- $msg = append $msg "        enabled: true" }}
+    {{- $msg = append $msg "        limitPercentage: 80" }}
+    {{- $msg = append $msg "        spikeLimitPercentage: 20" }}
+    {{- fail (join "\n" $msg) }}
+  {{- end }}
+{{- end }}
 
 otelcol.processor.memory_limiter {{ include "helper.alloy_name" $.destinationName | quote }} {
-  check_interval = {{ .processors.memoryLimiter.checkInterval | quote }}
-  limit = {{ .processors.memoryLimiter.limit | quote }}
+  check_interval = {{ $memoryLimiter.checkInterval | quote }}
+{{- if $hasLimit }}
+  limit = {{ $limit | quote }}
+{{- else }}
+  limit_percentage = {{ $limitPercentage }}
+  spike_limit_percentage = {{ $spikeLimitPercentage }}
+{{- end }}
 
   output {
 {{- if eq .protocol "grpc" }}

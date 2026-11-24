@@ -158,7 +158,9 @@ bearer token sources, including `bearerTokenFile`. The default scheme is `Bearer
 |-----|------|---------|-------------|
 | processors.memoryLimiter.checkInterval | string | `"1s"` | How often to check memory usage. |
 | processors.memoryLimiter.enabled | bool | `false` | Whether to use a memory limiter. |
-| processors.memoryLimiter.limit | string | `"0MiB"` | Maximum amount of memory targeted to be allocated by the process heap. |
+| processors.memoryLimiter.limit | string | `""` | Maximum amount of memory targeted to be allocated by the process heap, as a fixed size of at least `1MiB` (for example, `512MiB`). When set, `limitPercentage` and `spikeLimitPercentage` are ignored. |
+| processors.memoryLimiter.limitPercentage | int | `80` | Maximum amount of memory targeted to be allocated by the process heap, as a percentage of the total available memory. Used when `limit` is not set. Must be between 1 and 100. |
+| processors.memoryLimiter.spikeLimitPercentage | int | `20` | Maximum spike expected between memory usage measurements, as a percentage of the total available memory. Used when `limit` is not set. Must be at least 1 and less than `limitPercentage`. |
 
 ### Resource Attributes Processor
 
