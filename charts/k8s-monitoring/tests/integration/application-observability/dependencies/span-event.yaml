@@ -1,0 +1,54 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: span-event-generator
+  namespace: alloy
+spec:
+  backoffLimit: 10
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: send-span-event
+          image: curlimages/curl:8.12.1
+          command:
+            - sh
+            - -c
+            - |
+              NOW="$(date +%s)000000000"
+              until curl --fail --silent --show-error --output /dev/null \
+                --header 'Content-Type: application/json' \
+                --data-binary @- http://k8smon-alloy-receiver.default.svc:4318/v1/traces <<EOF
+              {
+                "resourceSpans": [{
+                  "resource": {"attributes": [
+                    {"key": "service.name", "value": {"stringValue": "spanmetrics-event-test"}},
+                    {"key": "service.instance.id", "value": {"stringValue": "spanmetrics-event-test-1"}}
+                  ]},
+                  "scopeSpans": [{
+                    "scope": {"name": "spanmetrics-event-test"},
+                    "spans": [{
+                      "traceId": "0123456789abcdef0123456789abcdef",
+                      "spanId": "0123456789abcdef",
+                      "name": "spanmetrics.event.test",
+                      "kind": 2,
+                      "startTimeUnixNano": "${NOW}",
+                      "endTimeUnixNano": "${NOW}",
+                      "events": [{
+                        "timeUnixNano": "${NOW}",
+                        "name": "exception",
+                        "attributes": [{
+                          "key": "exception.type",
+                          "value": {"stringValue": "TestException"}
+                        }]
+                      }]
+                    }]
+                  }]
+                }]
+              }
+              EOF
+              do
+                echo 'Waiting for the Alloy OTLP HTTP receiver'
+                sleep 2
+              done
