@@ -106,3 +106,40 @@ tests:
               defaultClusterId: ci-test-cluster
     asserts:
       - notFailedTemplate: {}
+
+  - it: finds the metrics destination for metricsSource even when costMetrics is not enabled
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        prometheus:
+          type: prometheus
+          url: http://prometheus.prometheus.svc:9090/api/v1/write
+      collectors:
+        alloy-metrics:
+          presets: [clustered]
+      telemetryServices:
+        kube-state-metrics:
+          deploy: true
+        opencost:
+          deploy: true
+          metricsSource: prometheus
+          opencost:
+            exporter:
+              defaultClusterId: ci-test-cluster
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            OpenCost requires a url to a Prometheus data source.
+            Please set:
+            telemetryServices:
+              opencost:
+                opencost:
+                  prometheus:
+                    external:
+                      url: http://prometheus.prometheus.svc:9090/api/v1/query
+
+            Or, to configure OpenCost's metrics source yourself and skip this guided setup, set:
+            telemetryServices:
+              opencost:
+                metricsSource: custom

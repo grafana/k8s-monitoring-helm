@@ -502,15 +502,15 @@ otelcol.exporter.otlphttp.{{ include "helper.alloy_name" $.destinationName }}.in
 
 {{- define "destinations.otlp.alloy.exporter" }}
 {{- with .destination }}
+{{- /* Declared outside the batch processor block because the memory limiter block reuses it. */}}
+{{- $target := "" }}
 {{- if .processors.batch.enabled }}
 otelcol.processor.batch {{ include "helper.alloy_name" $.destinationName | quote }} {
   timeout = {{ .processors.batch.timeout | quote }}
   send_batch_size = {{ .processors.batch.size | int }}
   send_batch_max_size = {{ .processors.batch.maxSize | int }}
-{{- end }}
 
   output {
-{{- $target := "" }}
 {{- if .processors.memoryLimiter.enabled }}
   {{- $target = printf "otelcol.processor.memory_limiter.%s.input" (include "helper.alloy_name" $.destinationName) }}
 {{- else if eq .protocol "grpc" }}
@@ -528,7 +528,8 @@ otelcol.processor.batch {{ include "helper.alloy_name" $.destinationName | quote
     traces = [{{ $target }}]
 {{- end }}
   }
-} {{- if .processors.batch.enabled }} // otelcol.processor.batch "{{ include "helper.alloy_name" $.destinationName }}"{{- end }}
+} // otelcol.processor.batch "{{ include "helper.alloy_name" $.destinationName }}"
+{{- end }}
 {{- if .processors.memoryLimiter.enabled }}
 
 otelcol.processor.memory_limiter {{ include "helper.alloy_name" $.destinationName | quote }} {
