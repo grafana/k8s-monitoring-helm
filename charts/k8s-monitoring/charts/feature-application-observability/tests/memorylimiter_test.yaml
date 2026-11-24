@@ -18,3 +18,126 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["module.alloy"]
+
+  - it: uses the default percentage limits when no fixed limit is set
+    set:
+      testing: {enabled: true}
+      processors:
+        memoryLimiter:
+          enabled: true
+      receivers:
+        zipkin:
+          enabled: true
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'limit_percentage = 80\n\s+spike_limit_percentage = 20\n'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: '\slimit = '
+
+  - it: uses a fixed limit instead of the percentage limits when set
+    set:
+      testing: {enabled: true}
+      processors:
+        memoryLimiter:
+          enabled: true
+          limit: 512MiB
+      receivers:
+        zipkin:
+          enabled: true
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'limit = "512MiB"'
+      - notMatchRegex:
+          path: data["module.alloy"]
+          pattern: 'limit_percentage'
+
+  - it: treats a zero fixed limit as unset
+    set:
+      testing: {enabled: true}
+      processors:
+        memoryLimiter:
+          enabled: true
+          limit: 0MiB
+      receivers:
+        zipkin:
+          enabled: true
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'limit_percentage = 80'
+
+  - it: fails when neither a fixed limit nor a limit percentage is set
+    set:
+      testing: {enabled: true}
+      processors:
+        memoryLimiter:
+          enabled: true
+          limit: 0MiB
+          limitPercentage: 0
+      receivers:
+        zipkin:
+          enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: limitPercentage \(0\) must be between 1 and 100, or a fixed limit must be set.
+
+  - it: fails when the limit percentage is over 100
+    set:
+      testing: {enabled: true}
+      processors:
+        memoryLimiter:
+          enabled: true
+          limitPercentage: 150
+      receivers:
+        zipkin:
+          enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: limitPercentage \(150\) must be between 1 and 100, or a fixed limit must be set.
+
+  - it: fails when the spike limit percentage is not less than the limit percentage
+    set:
+      testing: {enabled: true}
+      processors:
+        memoryLimiter:
+          enabled: true
+          limitPercentage: 50
+          spikeLimitPercentage: 50
+      receivers:
+        zipkin:
+          enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: spikeLimitPercentage \(50\) must be at least 1 and less than limitPercentage \(50\)
+
+  - it: fails when the spike limit percentage is zero
+    set:
+      testing: {enabled: true}
+      processors:
+        memoryLimiter:
+          enabled: true
+          spikeLimitPercentage: 0
+      receivers:
+        zipkin:
+          enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: spikeLimitPercentage \(0\) must be at least 1 and less than limitPercentage \(80\)
+
+  - it: renders a limit without digits as a fixed limit instead of treating it as zero
+    set:
+      testing: {enabled: true}
+      processors:
+        memoryLimiter:
+          enabled: true
+          limit: MiB
+      receivers:
+        zipkin:
+          enabled: true
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'limit = "MiB"'
