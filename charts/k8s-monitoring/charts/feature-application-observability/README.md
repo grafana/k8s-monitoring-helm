@@ -116,6 +116,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | connectors.spanMetrics.dimensions | list | `[]` | Define dimensions to be added. Some are set internally by default: [service.name, span.name, span.kind, status.code] Example: - name: "http.status_code" - name: "http.method"   default: "GET" |
 | connectors.spanMetrics.dimensionsCacheSize | int | `1000` | How many dimensions to cache. DEPRECATED, please use aggregationCardinalityLimit instead. |
 | connectors.spanMetrics.enabled | bool | `false` | Use a span metrics connector which creates metrics from spans. |
+| connectors.spanMetrics.events.dimensions | list | `[{"name":"exception.type"}]` | Dimensions to add to event metrics. See the Alloy [spanmetrics docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.connector.spanmetrics/) Example: - name: exception.type - name: exception.message   default: unknown |
 | connectors.spanMetrics.events.enabled | bool | `false` | Capture events metrics, which track span events. |
 | connectors.spanMetrics.excludeDimensions | list | `[]` | List of dimensions to be excluded from the default set of dimensions. |
 | connectors.spanMetrics.exemplars.enabled | bool | `false` | Attach exemplars to histograms. |

@@ -59,3 +59,26 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["module.alloy"]
+
+  - it: configures event dimensions
+    set:
+      testing: {enabled: true}
+      connectors:
+        spanMetrics:
+          enabled: true
+          events:
+            enabled: true
+            dimensions:
+              - name: exception.type
+              - name: exception.message
+                default: "unknown"
+      receivers:
+        otlp:
+          grpc:
+            enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'events \{\n\s+enabled = true\n\s+dimension \{\n\s+name = "exception.type"\n\s+\}\n\s+dimension \{\n\s+name = "exception.message"\n\s+default = "unknown"\n\s+\}\n\s+\}'

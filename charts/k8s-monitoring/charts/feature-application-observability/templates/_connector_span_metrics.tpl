@@ -47,6 +47,14 @@ otelcol.connector.spanmetrics "{{ .name | default "default" }}" {
 {{- if .Values.connectors.spanMetrics.events.enabled }}
   events {
     enabled = true
+{{- range $dimension := .Values.connectors.spanMetrics.events.dimensions }}
+    dimension {
+      name = {{ $dimension.name | quote }}
+{{- if $dimension.default }}
+      default = {{ $dimension.default | quote }}
+{{- end }}
+    }
+{{- end }}
   }
 {{- end }}
 {{ if .Values.connectors.spanMetrics.exemplars.enabled }}
