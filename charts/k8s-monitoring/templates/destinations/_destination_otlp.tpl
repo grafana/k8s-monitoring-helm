@@ -533,13 +533,13 @@ otelcol.processor.batch {{ include "helper.alloy_name" $.destinationName | quote
 {{- if .processors.memoryLimiter.enabled }}
 {{- $memoryLimiter := .processors.memoryLimiter }}
 {{- $limit := toString ($memoryLimiter.limit | default "") | trim }}
-{{- $hasLimit := and $limit (not (regexMatch "^0*(\\.0*)?\\s*[a-zA-Z]*$" $limit)) }}
+{{- $hasLimit := and $limit (not (regexMatch "^0+(\\.0*)?\\s*[a-zA-Z]*$" $limit)) }}
 {{- $limitPercentage := $memoryLimiter.limitPercentage | default 0 | int }}
 {{- $spikeLimitPercentage := $memoryLimiter.spikeLimitPercentage | default 0 | int }}
 {{- if not $hasLimit }}
   {{- if or (le $limitPercentage 0) (gt $limitPercentage 100) }}
-    {{- $msg := list "" (printf "Destination \"%s\" enables the memory limiter processor without a non-zero limit." $.destinationName) }}
-    {{- $msg = append $msg "Set either a fixed limit or a limitPercentage between 1 and 100. For example:" }}
+    {{- $msg := list "" (printf "Destination \"%s\" has a memory limiter limitPercentage (%d) that must be between 1 and 100, or a fixed limit must be set." $.destinationName $limitPercentage) }}
+    {{- $msg = append $msg "For example:" }}
     {{- $msg = append $msg "destinations:" }}
     {{- $msg = append $msg (printf "  %s:" $.destinationName) }}
     {{- $msg = append $msg "    type: otlp" }}

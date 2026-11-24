@@ -3,13 +3,13 @@
 {{- define "feature.applicationObservability.processor.memory_limiter.alloy" }}
 {{- $memoryLimiter := .Values.processors.memoryLimiter }}
 {{- $limit := toString ($memoryLimiter.limit | default "") | trim }}
-{{- $hasLimit := and $limit (not (regexMatch "^0*(\\.0*)?\\s*[a-zA-Z]*$" $limit)) }}
+{{- $hasLimit := and $limit (not (regexMatch "^0+(\\.0*)?\\s*[a-zA-Z]*$" $limit)) }}
 {{- $limitPercentage := $memoryLimiter.limitPercentage | default 0 | int }}
 {{- $spikeLimitPercentage := $memoryLimiter.spikeLimitPercentage | default 0 | int }}
 {{- if not $hasLimit }}
   {{- if or (le $limitPercentage 0) (gt $limitPercentage 100) }}
-    {{- $msg := list "" "The memory limiter processor requires a non-zero limit." }}
-    {{- $msg = append $msg "Set either a fixed limit or a limitPercentage between 1 and 100. For example:" }}
+    {{- $msg := list "" (printf "The memory limiter processor limitPercentage (%d) must be between 1 and 100, or a fixed limit must be set." $limitPercentage) }}
+    {{- $msg = append $msg "For example:" }}
     {{- $msg = append $msg "applicationObservability:" }}
     {{- $msg = append $msg "  processors:" }}
     {{- $msg = append $msg "    memoryLimiter:" }}

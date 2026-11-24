@@ -82,7 +82,7 @@ tests:
           enabled: true
     asserts:
       - failedTemplate:
-          errorPattern: The memory limiter processor requires a non-zero limit.
+          errorPattern: limitPercentage \(0\) must be between 1 and 100, or a fixed limit must be set.
 
   - it: fails when the limit percentage is over 100
     set:
@@ -96,7 +96,7 @@ tests:
           enabled: true
     asserts:
       - failedTemplate:
-          errorPattern: The memory limiter processor requires a non-zero limit.
+          errorPattern: limitPercentage \(150\) must be between 1 and 100, or a fixed limit must be set.
 
   - it: fails when the spike limit percentage is not less than the limit percentage
     set:
@@ -126,3 +126,18 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: spikeLimitPercentage \(0\) must be at least 1 and less than limitPercentage \(80\)
+
+  - it: renders a limit without digits as a fixed limit instead of treating it as zero
+    set:
+      testing: {enabled: true}
+      processors:
+        memoryLimiter:
+          enabled: true
+          limit: MiB
+      receivers:
+        zipkin:
+          enabled: true
+    asserts:
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'limit = "MiB"'
