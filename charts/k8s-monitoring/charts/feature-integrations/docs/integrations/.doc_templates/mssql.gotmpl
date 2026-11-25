@@ -1,0 +1,83 @@
+# MSSQL Integration
+
+This integration captures metrics and logs from a Microsoft SQL Server instance. This deploys the
+[MSSQL Exporter Alloy component](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.mssql/)
+which connects to the database to generate metrics.
+
+This integration is also compatible with [Grafana Database Observability](https://grafana.com/docs/grafana-cloud/monitor-applications/database-observability/)
+using the experimental
+[`database_observability.sql_server` component](https://grafana.com/docs/alloy/latest/reference/components/database_observability/database_observability.sql_server/).
+Enabling Database Observability requires an Alloy collector running with `stabilityLevel: experimental` and
+[Query Store](https://learn.microsoft.com/sql/relational-databases/performance/monitoring-performance-by-using-the-query-store)
+enabled on the target database.
+
+## Enabling
+
+To enable this integration, create an instance:
+
+```yaml
+integrations:
+  mssql:
+    instances:
+      - name: test-db
+        exporter:
+          dataSource:
+            host: test-db.default.svc
+            port: 1433
+            auth:
+              username: sa
+              password: mssql-password
+        logs:
+          enabled: true
+          labelSelectors:
+            app: mssql-test-db
+```
+
+To enable with Database Observability, enable the `databaseObservability` flag:
+
+```yaml
+integrations:
+  mssql:
+    instances:
+      - name: test-db
+        databaseObservability:
+          enabled: true
+        exporter:
+          dataSource:
+            host: test-db.default.svc
+            port: 1433
+            auth:
+              username: sa
+              password: mssql-password
+        logs:
+          enabled: true
+          labelSelectors:
+            app.kubernetes.io/instance: test-mssql-db
+```
+
+To enable with Database Observability and a cloud provider, specify the `cloudProvider` field:
+
+```yaml
+integrations:
+  mssql:
+    instances:
+      - name: test-db
+        databaseObservability:
+          enabled: true
+          cloudProvider:
+            aws:
+              arn: "arn:aws:rds:us-east-1:123456789012:db:my-mssql-instance"
+        exporter:
+          dataSource:
+            host: test-db.default.svc
+            port: 1433
+            auth:
+              username: sa
+              password: mssql-password
+        logs:
+          enabled: true
+          labelSelectors:
+            app.kubernetes.io/instance: test-mssql-db
+```
+
+{{ template "chart.valuesSection" . }}

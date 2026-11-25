@@ -145,6 +145,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | mimir | object | `{"instances":[]}` | Scrape metrics/logs from Mimir |
 
+### Integration: MSSQL
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| mssql | object | `{"instances":[]}` | Scrape metrics/logs from MSSQL |
+
 ### Integration: MySQL
 
 | Key | Type | Default | Description |

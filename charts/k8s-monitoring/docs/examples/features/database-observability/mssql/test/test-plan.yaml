@@ -1,0 +1,75 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: db-o11y-mssql-test
+
+subject:
+  releaseName: k8smon
+  path: ../../../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: mssql.yaml
+  - file: workload.yaml
+  - preset: prometheus
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+            - name: Loki
+              type: loki
+              url: http://loki-gateway.loki.svc:8080
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: db-o11y-mssql-test
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+
+          queries:
+            # MSSQL exporter metrics (Database Observability job/instance relabeling)
+            - query: mssql_connections{cluster="$CLUSTER", job="integrations/db-o11y", instance="test-db"}
+              type: promql
+            - query: mssql_batch_requests_total{cluster="$CLUSTER", job="integrations/db-o11y", instance="test-db"}
+              type: promql
+            - query: mssql_deadlocks_total{cluster="$CLUSTER", job="integrations/db-o11y", instance="test-db"}
+              type: promql
+            - query: mssql_page_life_expectancy_seconds{cluster="$CLUSTER", job="integrations/db-o11y", instance="test-db"}
+              type: promql
+            - query: mssql_server_target_memory_bytes{cluster="$CLUSTER", job="integrations/db-o11y", instance="test-db"}
+              type: promql
+            - query: mssql_os_memory{cluster="$CLUSTER", job="integrations/db-o11y", instance="test-db"}
+              type: promql
+            - query: mssql_io_stall_seconds_total{cluster="$CLUSTER", job="integrations/db-o11y", instance="test-db"}
+              type: promql
+
+            # Database Observability logs
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/db-o11y", instance="test-db"}[1h])
+              type: logql
+
+            # MSSQL pod logs (integration log processing)
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/mssql", instance="test-db"}[1h])
+              type: logql
