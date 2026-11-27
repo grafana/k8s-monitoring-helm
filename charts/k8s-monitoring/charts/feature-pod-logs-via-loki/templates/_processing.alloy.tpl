@@ -1,4 +1,5 @@
 {{- define "feature.podLogsViaLoki.processing.alloy" }}
+{{- $maxPartialLineSize := int64 .Values.cri.maxPartialLineSize }}
 {{- $criSelector := "{tmp_container_runtime=~\"containerd|cri-o\"}" }}
 {{- $dockerSelector := "{tmp_container_runtime=\"docker\"}" }}
 {{- if eq .Values.defaultLogFormat "cri" }}
@@ -13,6 +14,12 @@ loki.process "pod_logs" {
     stage.cri {
 {{- if .Values.cri.maxPartialLines }}
       max_partial_lines = {{ .Values.cri.maxPartialLines }}
+{{- end }}
+{{- if gt $maxPartialLineSize 0 }}
+      max_partial_line_size = {{ $maxPartialLineSize }}
+{{- end }}
+{{- if .Values.cri.maxPartialLineSizeTruncate }}
+      max_partial_line_size_truncate = true
 {{- end }}
     }
 
